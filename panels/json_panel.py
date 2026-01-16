@@ -13,15 +13,20 @@ CTK_FONT_BOLD = ("Microsoft YaHei UI", 12, "bold")  # 加粗字体
 CTK_FONT_MONO = ("Consolas", 11)  # 等宽字体（JSON/Key显示）
 CTK_FONT_SMALL = ("Microsoft YaHei UI", 10)  # 小字体
 
+# 全局背景色常量（统一管理，便于修改）
+BG_COLOR_MAIN = "#242424"  # 面板主背景
+BG_COLOR_CONTENT = "#1e1e1e"  # JSON输入框/信息栏背景
+BG_COLOR_SELECT = "#404040"  # 选中项背景
+
 
 class DragSortListbox(Listbox):
     """支持拖动排序的Listbox子类（适配深色主题）"""
 
     def __init__(self, master, **kwargs):
         default_kwargs = {
-            "bg": "#1e1e1e",  # 深灰黑（更适配CTK深色主题）
+            "bg": BG_COLOR_CONTENT,  # 统一使用内容背景色
             "fg": "#f0f0f0",  # 浅白色文字
-            "selectbackground": "#404040",  # 选中项背景（中灰）
+            "selectbackground": BG_COLOR_SELECT,  # 选中项背景
             "selectforeground": "#ffffff",  # 选中项文字
             "activestyle": "none",  # 取消选中虚线框
             "bd": 0,  # 去掉边框
@@ -64,17 +69,19 @@ class JsonPanel(ctk.CTkFrame):
         self.corner_radius = 0
         self.fg_color = "transparent"
 
-        # 主布局：左侧4/5，右侧1/5
+        # 主布局：左侧4/5，右侧1/5，底部信息栏跨两列
         self.grid_rowconfigure(0, weight=1)
+        self.grid_rowconfigure(1, weight=0)  # 底部信息栏高度固定
         self.grid_columnconfigure(0, weight=4)  # 左侧占4份
         self.grid_columnconfigure(1, weight=1)  # 右侧占1份
 
         self.init_left_panel()  # 左侧JSON输入面板
         self.init_right_panel()  # 右侧Key列表+操作面板
+        self.init_info_bar()  # 底部信息提示栏
 
     def init_left_panel(self):
         """初始化左侧JSON输入面板（占4/5）"""
-        left_frame = ctk.CTkFrame(self, fg_color="#242424", corner_radius=8)
+        left_frame = ctk.CTkFrame(self, fg_color=BG_COLOR_MAIN, corner_radius=8)
         left_frame.grid(row=0, column=0, padx=10, pady=10, sticky="nsew")
 
         # 左侧面板布局配置
@@ -113,7 +120,7 @@ class JsonPanel(ctk.CTkFrame):
         self.json_textbox = ctk.CTkTextbox(
             left_frame,
             font=CTK_FONT_MONO,
-            fg_color="#1e1e1e",
+            fg_color=BG_COLOR_CONTENT,  # 内容背景色
             text_color="#f0f0f0",
             border_color="#333333",
             border_width=1,
@@ -123,7 +130,7 @@ class JsonPanel(ctk.CTkFrame):
 
     def init_right_panel(self):
         """初始化右侧Key列表+操作面板（占1/5）"""
-        right_frame = ctk.CTkFrame(self, fg_color="#242424", corner_radius=8)
+        right_frame = ctk.CTkFrame(self, fg_color=BG_COLOR_MAIN, corner_radius=8)
         right_frame.grid(row=0, column=1, padx=(0, 10), pady=10, sticky="nsew")
 
         # 右侧面板布局配置
@@ -214,6 +221,29 @@ class JsonPanel(ctk.CTkFrame):
         self.key_listbox.grid(row=2, column=0, padx=15, pady=(0, 15), sticky="nsew")
         self.key_listbox.bind("<<ListboxSelect>>", self.on_key_select)
 
+    def init_info_bar(self):
+        """初始化底部信息提示栏"""
+        # 核心修改：背景色改为和JSON输入框一致的 BG_COLOR_CONTENT (#1e1e1e)
+        self.info_frame = ctk.CTkFrame(self, fg_color=BG_COLOR_CONTENT, corner_radius=0, height=30)
+        self.info_frame.grid(row=1, column=0, columnspan=2, padx=0, pady=0, sticky="ew")
+        # 禁止框架高度被拉伸
+        self.info_frame.grid_propagate(False)
+
+        # 信息提示标签
+        self.info_label = ctk.CTkLabel(
+            self.info_frame, text="就绪", font=CTK_FONT_SMALL, text_color="#aaaaaa", anchor="w"
+        )
+        self.info_label.pack(fill="x", padx=20, pady=5)
+
+    def update_info(self, text: str, is_success: bool = True):
+        """更新底部信息栏内容
+        Args:
+            text: 提示文本
+            is_success: True=成功（绿色），False=失败（红色）
+        """
+        color = "#4caf50" if is_success else "#f44336"
+        self.info_label.configure(text=text, text_color=color)
+
     def parse_json(self):
         """解析输入的JSON文本"""
         try:
@@ -223,7 +253,8 @@ class JsonPanel(ctk.CTkFrame):
             # 获取文本框内容
             json_text = self.json_textbox.get("1.0", END).strip()
             if not json_text:
-                messagebox.showwarning("警告", "请输入JSON文本！", font=CTK_FONT_MAIN)
+                messagebox.showwarning("警告", "请输入JSON文本！")
+                self.update_info("请输入JSON文本", False)
                 return
 
             # 解析JSON
@@ -231,7 +262,8 @@ class JsonPanel(ctk.CTkFrame):
 
             # 检查是否为字典类型
             if not isinstance(self.json_data, dict):
-                messagebox.showwarning("警告", "JSON根节点必须是对象（字典）类型！", font=CTK_FONT_MAIN)
+                messagebox.showwarning("警告", "JSON根节点必须是对象（字典）类型！")
+                self.update_info("JSON根节点必须是对象类型", False)
                 return
 
             # 获取所有原始主Key并显示
@@ -249,12 +281,17 @@ class JsonPanel(ctk.CTkFrame):
             self.key_label.configure(text="JSON 主Key列表（拖动排序）")
             self.back_btn.configure(state="disabled")
 
-            messagebox.showinfo("成功", "JSON解析成功！", font=CTK_FONT_MAIN)
+            messagebox.showinfo("成功", "JSON解析成功！")
+            self.update_info("JSON解析成功", True)
 
         except json.JSONDecodeError as e:
-            messagebox.showerror("错误", f"JSON格式错误：{e!s}", font=CTK_FONT_MAIN)
+            err_msg = f"JSON格式错误：{e!s}"
+            messagebox.showerror("错误", err_msg)
+            self.update_info(err_msg, False)
         except Exception as e:
-            messagebox.showerror("错误", f"解析失败：{e!s}", font=CTK_FONT_MAIN)
+            err_msg = f"解析失败：{e!s}"
+            messagebox.showerror("错误", err_msg)
+            self.update_info(err_msg, False)
 
     def on_key_select(self, event):
         """选中Key后的回调函数"""
@@ -287,6 +324,7 @@ class JsonPanel(ctk.CTkFrame):
                     # 更新UI
                     self.key_label.configure(text=f"{pure_key} 内部Key")
                     self.back_btn.configure(state="normal")
+                    self.update_info(f"已选择列表：{pure_key}", True)
 
     def back_to_main_keys(self):
         """返回显示原始主Key列表"""
@@ -304,46 +342,59 @@ class JsonPanel(ctk.CTkFrame):
         self.current_selected_list_key = None
         self.current_list_data = None
         self.current_list_keys = []
+        self.update_info("已返回主Key列表", True)
 
     def sort_keys(self, sort_type):
         """对当前显示的Key进行升序/降序排序"""
-        if self.current_selected_list_key:
-            # 排序列表内部Key
-            if not self.current_list_keys:
-                messagebox.showwarning("警告", "暂无Key可排序！", font=CTK_FONT_MAIN)
-                return
+        try:
+            if self.current_selected_list_key:
+                # 排序列表内部Key
+                if not self.current_list_keys:
+                    messagebox.showwarning("警告", "暂无Key可排序！")
+                    self.update_info("暂无Key可排序", False)
+                    return
 
-            if sort_type == "asc":
-                self.current_list_keys.sort()
+                if sort_type == "asc":
+                    self.current_list_keys.sort()
+                    self.update_info("内部Key已升序排列", True)
+                else:
+                    self.current_list_keys.sort(reverse=True)
+                    self.update_info("内部Key已降序排列", True)
+
+                # 重新显示
+                self.key_listbox.delete(0, END)
+                for key in self.current_list_keys:
+                    self.key_listbox.insert(END, key)
             else:
-                self.current_list_keys.sort(reverse=True)
+                # 排序原始主Key
+                if not self.original_main_keys:
+                    messagebox.showwarning("警告", "暂无Key可排序！")
+                    self.update_info("暂无Key可排序", False)
+                    return
 
-            # 重新显示
-            self.key_listbox.delete(0, END)
-            for key in self.current_list_keys:
-                self.key_listbox.insert(END, key)
-        else:
-            # 排序原始主Key
-            if not self.original_main_keys:
-                messagebox.showwarning("警告", "暂无Key可排序！", font=CTK_FONT_MAIN)
-                return
+                if sort_type == "asc":
+                    self.original_main_keys.sort()
+                    self.update_info("主Key已升序排列", True)
+                else:
+                    self.original_main_keys.sort(reverse=True)
+                    self.update_info("主Key已降序排列", True)
 
-            if sort_type == "asc":
-                self.original_main_keys.sort()
-            else:
-                self.original_main_keys.sort(reverse=True)
-
-            # 重新显示
-            self.key_listbox.delete(0, END)
-            for key in self.original_main_keys:
-                value_type = " [LIST]" if isinstance(self.json_data[key], list) else ""
-                self.key_listbox.insert(END, f"{key}{value_type}")
+                # 重新显示
+                self.key_listbox.delete(0, END)
+                for key in self.original_main_keys:
+                    value_type = " [LIST]" if isinstance(self.json_data[key], list) else ""
+                    self.key_listbox.insert(END, f"{key}{value_type}")
+        except Exception as e:
+            err_msg = f"排序失败：{e!s}"
+            messagebox.showerror("错误", err_msg)
+            self.update_info(err_msg, False)
 
     def generate_excel(self):
         """根据选中的Key生成Excel文件"""
         try:
-            if not self.json_data:
-                messagebox.showwarning("警告", "请先解析有效的JSON数据！", font=CTK_FONT_MAIN)
+            if not hasattr(self, "json_data") or not self.json_data:
+                messagebox.showwarning("警告", "请先解析有效的JSON数据！")
+                self.update_info("请先解析JSON数据", False)
                 return
 
             # 情况1：选中了列表Key（如authors），显示的是列表内部Key
@@ -351,7 +402,8 @@ class JsonPanel(ctk.CTkFrame):
                 # 获取选中的列表内部Key
                 selected_indices = self.key_listbox.curselection()
                 if not selected_indices:
-                    messagebox.showwarning("警告", "请至少选择一个列表内部Key！", font=CTK_FONT_MAIN)
+                    messagebox.showwarning("警告", "请至少选择一个列表内部Key！")
+                    self.update_info("请选择至少一个内部Key", False)
                     return
 
                 # 收集选中的Key
@@ -365,7 +417,8 @@ class JsonPanel(ctk.CTkFrame):
                         excel_data.append(row_data)
 
                 if not excel_data:
-                    messagebox.showwarning("警告", "没有可导出的数据！", font=CTK_FONT_MAIN)
+                    messagebox.showwarning("警告", "没有可导出的数据！")
+                    self.update_info("无数据可导出", False)
                     return
 
                 # 转换为DataFrame
@@ -379,24 +432,25 @@ class JsonPanel(ctk.CTkFrame):
                     initialfile=f"{self.current_selected_list_key}.xlsx",
                 )
 
-                if file_path:
-                    # 写入Excel文件（工作表名使用选中的列表Key）
-                    with pd.ExcelWriter(file_path, engine="openpyxl") as writer:
-                        safe_sheet_name = self.current_selected_list_key[:31]
-                        df.to_excel(writer, sheet_name=safe_sheet_name, index=False)
+                if not file_path:
+                    self.update_info("已取消保存", False)
+                    return
 
-                    messagebox.showinfo("成功", f"Excel文件已生成：{file_path}", font=CTK_FONT_MAIN)
+                # 写入Excel文件（工作表名使用选中的列表Key）
+                with pd.ExcelWriter(file_path, engine="openpyxl") as writer:
+                    safe_sheet_name = self.current_selected_list_key[:31]
+                    df.to_excel(writer, sheet_name=safe_sheet_name, index=False)
+
+                success_msg = f"生成成功：{file_path}"
+                messagebox.showinfo("成功", success_msg)
+                self.update_info(success_msg, True)
 
             # 情况2：显示的是原始主Key
             else:
-                selected_indices = self.key_listbox.curselection()
-                if not selected_indices:
-                    messagebox.showwarning("警告", "请先选择一个列表类型的主Key！", font=CTK_FONT_MAIN)
-                    return
-
-                messagebox.showinfo(
-                    "提示", "请先选中一个列表类型的主Key（如authors），进入其内部Key列表后再导出！", font=CTK_FONT_MAIN
-                )
+                messagebox.showinfo("提示", "请先选中一个列表类型的主Key（如authors），进入其内部Key列表后再导出！")
+                self.update_info("请选择列表类型主Key并进入内部", False)
 
         except Exception as e:
-            messagebox.showerror("错误", f"生成Excel失败：{e!s}", font=CTK_FONT_MAIN)
+            err_msg = f"生成失败：{e!s}"
+            messagebox.showerror("错误", err_msg)
+            self.update_info(err_msg, False)
