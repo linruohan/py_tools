@@ -1,0 +1,5 @@
+.vscode/
+.repeproject/
+.idea/
+__pycache__/
+*.pyc

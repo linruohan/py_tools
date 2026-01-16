@@ -1,3 +1,5 @@
+"""Json Panel"""
+
 import json
 import re
 from tkinter import END, MULTIPLE, Listbox, filedialog, messagebox
@@ -5,30 +7,49 @@ from tkinter import END, MULTIPLE, Listbox, filedialog, messagebox
 import customtkinter as ctk
 import pandas as pd
 
-# 设置 customtkinter 外观
-ctk.set_appearance_mode("dark")  # 可选: "light", "dark", "system"
-ctk.set_default_color_theme("blue")
 
-class JSONToExcelTool(ctk.CTk):
-    def __init__(self):
-        super().__init__()
+class DragSortListbox(Listbox):
+    """支持拖动排序的Listbox子类"""
 
-        # 窗口配置
-        self.title("JSON 处理工具 - 转 Excel")
-        self.geometry("1000x700")
-        self.minsize(800, 600)
+    def __init__(self, master, **kwargs):
+        super().__init__(master, **kwargs)
+        self.bind("<Button-1>", self._on_click)
+        self.bind("<B1-Motion>", self._on_drag)
+        self.drag_index = None  # 记录拖动项的初始索引
 
-        # 全局变量
-        self.json_data = None
-        self.original_main_keys = []  # 保存原始主Key
-        self.current_selected_list_key = None  # 当前选中的列表Key
-        self.current_list_data = None  # 当前选中列表的数据
-        self.current_list_keys = []  # 当前列表的内部Key
+    def _on_click(self, event):
+        """鼠标点击时记录选中项索引"""
+        self.drag_index = self.nearest(event.y)
 
-        # 创建UI布局
-        self._create_widgets()
+    def _on_drag(self, event):
+        """鼠标拖动时调整选中项位置"""
+        if self.drag_index is None:
+            return
+        current_index = self.nearest(event.y)
+        if current_index != self.drag_index:
+            # 获取拖动项的内容
+            drag_item = self.get(self.drag_index)
+            # 删除原位置项
+            self.delete(self.drag_index)
+            # 插入到新位置
+            self.insert(current_index, drag_item)
+            # 更新拖动索引
+            self.drag_index = current_index
+            # 保持选中状态
+            self.selection_set(current_index)
 
-    def _create_widgets(self):
+
+class JsonPanel(ctk.CTkFrame):
+    def __init__(self, parent):
+        super().__init__(parent)
+        self.corner_radius = 0
+        self.fg_color = "transparent"
+
+        self.grid_rowconfigure(0, weight=1)
+        self.grid_columnconfigure(0, weight=1)
+        self.init_ui()
+
+    def init_ui(self):
         # ========== 顶部JSON输入区域 ==========
         input_frame = ctk.CTkFrame(self)
         input_frame.pack(fill="x", padx=20, pady=10)
@@ -58,10 +79,10 @@ class JSONToExcelTool(ctk.CTk):
         key_frame = ctk.CTkFrame(middle_frame)
         key_frame.pack(fill="both", padx=10, pady=10, expand=True)
 
-        self.key_label = ctk.CTkLabel(key_frame, text="JSON 主Key列表", font=("Arial", 12, "bold"))
+        self.key_label = ctk.CTkLabel(key_frame, text="JSON 主Key列表（支持拖动排序）", font=("Arial", 12, "bold"))
         self.key_label.pack(anchor="w", padx=10, pady=5)
 
-        # 排序按钮
+        # 排序按钮（保留升序/降序，新增拖动排序）
         sort_frame = ctk.CTkFrame(key_frame)
         sort_frame.pack(fill="x", padx=10, pady=5)
 
@@ -71,8 +92,8 @@ class JSONToExcelTool(ctk.CTk):
         sort_desc_btn = ctk.CTkButton(sort_frame, text="降序排序", command=lambda: self.sort_keys("desc"), width=80)
         sort_desc_btn.pack(side="left", padx=5)
 
-        # Key列表框（支持多选）
-        self.key_listbox = Listbox(key_frame, selectmode=MULTIPLE, font=("Consolas", 10))
+        # Key列表框（替换为支持拖动排序的自定义Listbox）
+        self.key_listbox = DragSortListbox(key_frame, selectmode=MULTIPLE, font=("Consolas", 10))
         self.key_listbox.pack(fill="both", padx=10, pady=5, expand=True)
         self.key_listbox.bind("<<ListboxSelect>>", self.on_key_select)
 
@@ -81,8 +102,9 @@ class JSONToExcelTool(ctk.CTk):
         bottom_frame.pack(fill="x", padx=20, pady=10)
 
         # 生成Excel按钮
-        generate_btn = ctk.CTkButton(bottom_frame, text="生成 Excel 文件", command=self.generate_excel,
-                                     font=("Arial", 12, "bold"), height=40)
+        generate_btn = ctk.CTkButton(
+            bottom_frame, text="生成 Excel 文件", command=self.generate_excel, font=("Arial", 12, "bold"), height=40
+        )
         generate_btn.pack(padx=10, pady=10)
 
     def parse_json(self):
@@ -117,7 +139,7 @@ class JSONToExcelTool(ctk.CTk):
                 self.key_listbox.insert(END, f"{key}{value_type}")
 
             # 更新UI状态
-            self.key_label.configure(text="JSON 主Key列表")
+            self.key_label.configure(text="JSON 主Key列表（支持拖动排序）")
             self.back_btn.configure(state="disabled")
 
             messagebox.showinfo("成功", "JSON解析成功！")
@@ -156,7 +178,7 @@ class JSONToExcelTool(ctk.CTk):
                         self.key_listbox.insert(END, key)
 
                     # 更新UI
-                    self.key_label.configure(text=f"{pure_key} 列表的内部Key")
+                    self.key_label.configure(text=f"{pure_key} 列表的内部Key（支持拖动排序）")
                     self.back_btn.configure(state="normal")
 
     def back_to_main_keys(self):
@@ -170,14 +192,14 @@ class JSONToExcelTool(ctk.CTk):
             self.key_listbox.insert(END, f"{key}{value_type}")
 
         # 重置状态
-        self.key_label.configure(text="JSON 主Key列表")
+        self.key_label.configure(text="JSON 主Key列表（支持拖动排序）")
         self.back_btn.configure(state="disabled")
         self.current_selected_list_key = None
         self.current_list_data = None
         self.current_list_keys = []
 
     def sort_keys(self, sort_type):
-        """对当前显示的Key进行排序"""
+        """对当前显示的Key进行升序/降序排序"""
         if self.current_selected_list_key:
             # 排序列表内部Key
             if not self.current_list_keys:
@@ -226,7 +248,7 @@ class JSONToExcelTool(ctk.CTk):
                     return
 
                 # 收集选中的Key
-                selected_keys = [self.current_list_keys[idx] for idx in selected_indices]
+                selected_keys = [self.key_listbox.get(idx) for idx in selected_indices]
 
                 # 提取数据
                 excel_data = []
@@ -253,7 +275,6 @@ class JSONToExcelTool(ctk.CTk):
                 if file_path:
                     # 写入Excel文件（工作表名使用选中的列表Key）
                     with pd.ExcelWriter(file_path, engine="openpyxl") as writer:
-                        # 工作表名称过长会报错，进行截断
                         safe_sheet_name = self.current_selected_list_key[:31]
                         df.to_excel(writer, sheet_name=safe_sheet_name, index=False)
 
@@ -270,16 +291,3 @@ class JSONToExcelTool(ctk.CTk):
 
         except Exception as e:
             messagebox.showerror("错误", f"生成Excel失败：{e!s}")
-
-if __name__ == "__main__":
-    # 确保安装了必要的依赖
-    try:
-        import customtkinter
-        import openpyxl
-        import pandas
-    except ImportError:
-        print("缺少依赖包，请执行以下命令安装：")
-        print("pip install customtkinter pandas openpyxl")
-    else:
-        app = JSONToExcelTool()
-        app.mainloop()
