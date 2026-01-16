@@ -1,0 +1,10 @@
+{
+    "name": "JSON处理工具",
+    "version": "1.0",
+    "authors": [
+        { "id": 1, "name": "张三", "age": 25 },
+        { "id": 2, "name": "李四", "age": 30 },
+        { "id": 3, "name": "王五", "age": 28 }
+    ],
+    "features": ["JSON解析", "Key排序", "Excel生成"]
+}
