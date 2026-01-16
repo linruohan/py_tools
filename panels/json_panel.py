@@ -12,7 +12,19 @@ class DragSortListbox(Listbox):
     """支持拖动排序的Listbox子类"""
 
     def __init__(self, master, **kwargs):
-        super().__init__(master, **kwargs)
+        default_kwargs = {
+                    "bg": "#1a1a1a",       # 深黑色背景（匹配ctk dark主题）
+                    "fg": "#ffffff",       # 白色文字
+                    "selectbackground": "#3a3a3a",  # 选中项背景色（浅灰）
+                    "selectforeground": "#ffffff",  # 选中项文字色
+                    "activestyle": "none", # 取消选中时的虚线框
+                    "bd": 0,               # 去掉边框
+                    "highlightthickness": 0, # 去掉聚焦边框
+                }
+        # 合并默认样式和传入的参数（传入的参数会覆盖默认值）
+        default_kwargs.update(kwargs)
+        super().__init__(master, **default_kwargs)
+        self.fg_color = "transparent"
         self.bind("<Button-1>", self._on_click)
         self.bind("<B1-Motion>", self._on_drag)
         self.drag_index = None  # 记录拖动项的初始索引
