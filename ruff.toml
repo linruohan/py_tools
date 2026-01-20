@@ -1,0 +1,33 @@
+# 全局配置
+exclude = [
+   ".git", ".venv", "node_modules", "build", "dist", "__pycache__", "*.pyc","tests"
+]
+line-length = 100
+indent-width = 4
+target-version = "py313"
+# extend = "../shared-ruff.toml" # 继承父目录配置
+# Lint 配置
+[lint]
+select = ["E", "F", "B", "I", "UP", "RUF"] # 启用规则集
+ignore = ["E501"] # 忽略行长度限制
+fixable = ["ALL"] # 允许自动修复所有规则
+unfixable = ["B901"] # 禁止修复的规则
+[lint.per-file-ignores]
+"__init__.py" = ["F401"] # 忽略未使用导入
+"tests/**/*.py" = ["E501", "F841"] # 测试文件忽略部分规则
+# 格式化配置
+[format]
+quote-style = "single" # 单引号
+indent-style = "space" # 空格缩进
+skip-magic-trailing-comma = false
+line-ending = "lf"
+docstring-code-format = true
+docstring-code-line-length = "dynamic"
+# 插件配置示例
+[lint.isort]
+known-first-party = ["myapp"]
+lines-between-types = 1
+[lint.flake8-quotes]
+inline-quotes = "single"
+multiline-quotes = "double"
+docstring-quotes = "double"
