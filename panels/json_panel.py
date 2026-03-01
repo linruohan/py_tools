@@ -328,6 +328,9 @@ class JsonPanel(ctk.CTkFrame):
                     for key in self.current_list_keys:
                         self.key_listbox.insert(END, key)
 
+                    # 默认选中所有Key
+                    self.key_listbox.selection_set(0, END)
+
                     # 更新UI
                     self.key_label.configure(text=f'{pure_key} 内部Key')
                     self.back_btn.configure(state='normal')
