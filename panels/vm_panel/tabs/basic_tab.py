@@ -21,10 +21,10 @@ class BasicTab(ctk.CTkFrame):
         self.chipset_type = None
         self.vcpu_entry = None
         self.cpu_mode = None
-        self.memory_entry = None
-        self.current_memory_entry = None
-        self.max_memory_entry = None
-        self.swap_entry = None
+        self.memory_combo = None
+        self.current_memory_combo = None
+        self.max_memory_combo = None
+        self.swap_combo = None
 
         # 初始化 UI
         self._init_ui()
@@ -122,7 +122,9 @@ class BasicTab(ctk.CTkFrame):
         self.cpu_mode.set('host-model')
         self.cpu_mode.grid(row=1, column=3, padx=5, pady=5, sticky='w')
 
-        # 内存配置
+        # 内存配置 - 生成 1G 2G 4G ... 128G 的选项
+        memory_options = ['1G', '2G', '4G', '8G', '16G', '32G', '64G', '128G']
+
         mem_frame = ctk.CTkFrame(self, fg_color=BG_COLOR_CONTENT, corner_radius=8)
         mem_frame.grid(row=2, column=0, sticky='ew', padx=10, pady=10)
         mem_frame.grid_columnconfigure(1, weight=1)
@@ -131,34 +133,83 @@ class BasicTab(ctk.CTkFrame):
             mem_frame, text='内存配置', font=CTK_FONT_BOLD, text_color='#81c784'
         ).grid(row=0, column=0, columnspan=3, padx=10, pady=5, sticky='w')
 
-        # 内存大小
+        # 内存大小（下拉框）
         ctk.CTkLabel(
-            mem_frame, text='内存 (MB):', font=CTK_FONT_MAIN, width=80, anchor='w'
+            mem_frame, text='内存:', font=CTK_FONT_MAIN, width=60, anchor='w'
         ).grid(row=1, column=0, padx=10, pady=5, sticky='w')
-        self.memory_entry = ctk.CTkEntry(mem_frame, placeholder_text='2048', width=100)
-        self.memory_entry.grid(row=1, column=1, padx=5, pady=5, sticky='w')
-        self.memory_entry.insert(0, '2048')
+        self.memory_combo = ctk.CTkOptionMenu(
+            mem_frame, values=memory_options, width=100, font=CTK_FONT_SMALL
+        )
+        self.memory_combo.set('2G')
+        self.memory_combo.grid(row=1, column=1, padx=5, pady=5, sticky='w')
 
-        # 当前内存（动态内存）
+        # 当前内存（下拉框）
         ctk.CTkLabel(
-            mem_frame, text='当前内存 (MB):', font=CTK_FONT_MAIN, width=100, anchor='w'
+            mem_frame, text='当前内存:', font=CTK_FONT_MAIN, width=80, anchor='w'
         ).grid(row=1, column=2, padx=10, pady=5, sticky='w')
-        self.current_memory_entry = ctk.CTkEntry(mem_frame, placeholder_text='2048', width=100)
-        self.current_memory_entry.grid(row=1, column=3, padx=5, pady=5, sticky='w')
-        self.current_memory_entry.insert(0, '2048')
+        self.current_memory_combo = ctk.CTkOptionMenu(
+            mem_frame, values=memory_options, width=100, font=CTK_FONT_SMALL
+        )
+        self.current_memory_combo.set('2G')
+        self.current_memory_combo.grid(row=1, column=3, padx=5, pady=5, sticky='w')
 
-        # 最大内存（动态内存）
+        # 最大内存（下拉框）
         ctk.CTkLabel(
-            mem_frame, text='最大内存 (MB):', font=CTK_FONT_MAIN, width=100, anchor='w'
+            mem_frame, text='最大内存:', font=CTK_FONT_MAIN, width=80, anchor='w'
         ).grid(row=2, column=0, padx=10, pady=5, sticky='w')
-        self.max_memory_entry = ctk.CTkEntry(mem_frame, placeholder_text='4096', width=100)
-        self.max_memory_entry.grid(row=2, column=1, padx=5, pady=5, sticky='w')
-        self.max_memory_entry.insert(0, '4096')
+        self.max_memory_combo = ctk.CTkOptionMenu(
+            mem_frame, values=memory_options, width=100, font=CTK_FONT_SMALL
+        )
+        self.max_memory_combo.set('4G')
+        self.max_memory_combo.grid(row=2, column=1, padx=5, pady=5, sticky='w')
 
-        # 交换内存
+        # 交换内存（输入框）
         ctk.CTkLabel(
-            mem_frame, text='交换内存 (KB):', font=CTK_FONT_MAIN, width=100, anchor='w'
+            mem_frame, text='交换内存 (MB):', font=CTK_FONT_MAIN, width=100, anchor='w'
         ).grid(row=2, column=2, padx=10, pady=5, sticky='w')
-        self.swap_entry = ctk.CTkEntry(mem_frame, placeholder_text='0', width=100)
+        self.swap_entry = ctk.CTkEntry(mem_frame, placeholder_text='0', width=100, font=CTK_FONT_SMALL)
         self.swap_entry.grid(row=2, column=3, padx=5, pady=5, sticky='w')
         self.swap_entry.insert(0, '0')
+
+    def _parse_memory_value(self, value: str) -> int:
+        """解析内存值字符串为 MB 整数.
+
+        Args:
+            value: 内存值字符串，如 '4G' 或 '512M'
+
+        Returns:
+            内存值（MB）
+        """
+        if not value:
+            return 2048
+        value = value.strip().upper()
+        if value.endswith('G'):
+            return int(value[:-1]) * 1024
+        elif value.endswith('M'):
+            return int(value[:-1])
+        else:
+            try:
+                return int(value)
+            except ValueError:
+                return 2048
+
+    def get_basic_config(self) -> dict:
+        """获取基础配置.
+
+        Returns:
+            包含基础配置数据的字典
+        """
+        return {
+            'name': self.vm_name_entry.get().strip() or 'vm0',
+            'description': self.vm_desc_entry.get().strip(),
+            'uuid': self.uuid_entry.get().strip(),
+            'machine': self.machine_type.get(),
+            'virt_type': self.virt_type.get(),
+            'chipset': self.chipset_type.get(),
+            'vcpu': int(self.vcpu_entry.get().strip() or '2'),
+            'cpu_mode': self.cpu_mode.get(),
+            'memory': self._parse_memory_value(self.memory_combo.get()),
+            'current_memory': self._parse_memory_value(self.current_memory_combo.get()),
+            'max_memory': self._parse_memory_value(self.max_memory_combo.get()),
+            'swap': int(self.swap_entry.get().strip() or '0'),
+        }

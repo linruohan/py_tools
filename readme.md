@@ -44,4 +44,4 @@ f"--macos-app-name={app_name}.app",  # 设置应用名称
 "--windows-icon-from-ico=src/assets/app_icon.ico",  # Windows 应用图标
 ```
 
-python -m nuitka --follow-imports --enable-plugin=tk-inter --include-package=customtkinter --include-data-dir=test_images=test_images --include-data-files=readme.md=readme.md --warn-unusual-code --warn-implicit-exceptions --nofollow-import-to=tkinter.test --nofollow-import-to=PIL.ImageQt --remove-output --output-dir=dist --output-file=PyTools --standalone --windows-console-mode=disable --windows-icon-from-ico=mytool.ico main.py
+python -m nuitka --follow-imports --enable-plugin=tk-inter --include-package=customtkinter --include-data-dir=test_images=test_images --include-data-files=readme.md=readme.md --warn-unusual-code --warn-implicit-exceptions --nofollow-import-to=tkinter.test --nofollow-import-to=PIL.ImageQt --remove-output --output-dir=dist --output-file=PyTools --standalone --mingw64 --windows-console-mode=disable --windows-icon-from-ico=mytool.ico main.py

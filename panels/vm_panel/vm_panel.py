@@ -209,9 +209,9 @@ class VmPanel(ctk.CTkFrame):
         self.chipset_type = self.basic_tab.chipset_type
         self.vcpu_entry = self.basic_tab.vcpu_entry
         self.cpu_mode = self.basic_tab.cpu_mode
-        self.memory_entry = self.basic_tab.memory_entry
-        self.current_memory_entry = self.basic_tab.current_memory_entry
-        self.max_memory_entry = self.basic_tab.max_memory_entry
+        self.memory_combo = self.basic_tab.memory_combo
+        self.current_memory_combo = self.basic_tab.current_memory_combo
+        self.max_memory_combo = self.basic_tab.max_memory_combo
         self.swap_entry = self.basic_tab.swap_entry
 
         self.firmware_type = self.os_tab.firmware_type
@@ -306,8 +306,7 @@ class VmPanel(ctk.CTkFrame):
         # 绑定 Entry 的 KeyRelease 事件
         entry_widgets = [
             self.vm_name_entry, self.vm_desc_entry, self.uuid_entry,
-            self.vcpu_entry, self.memory_entry, self.current_memory_entry,
-            self.max_memory_entry, self.swap_entry, self.boot_timeout_entry,
+            self.vcpu_entry, self.swap_entry, self.boot_timeout_entry,
             self.graphics_listen, self.vram_entry, self.balloon_target_entry,
         ]
         for widget in entry_widgets:
@@ -320,6 +319,7 @@ class VmPanel(ctk.CTkFrame):
             self.boot_device_1, self.boot_device_2, self.boot_device_3,
             self.graphics_type, self.video_model, self.usb_controller,
             self.watchdog_model, self.watchdog_action, self.rtc_clock,
+            self.memory_combo, self.current_memory_combo, self.max_memory_combo,
         ]
         for widget in option_widgets:
             widget.configure(command=lambda *args: self._update_xml_preview())
@@ -393,12 +393,9 @@ class VmPanel(ctk.CTkFrame):
             self.basic_tab.vcpu_entry.delete(0, END)
             self.basic_tab.vcpu_entry.insert(0, '2')
             self.basic_tab.cpu_mode.set('host-model')
-            self.basic_tab.memory_entry.delete(0, END)
-            self.basic_tab.memory_entry.insert(0, '2048')
-            self.basic_tab.current_memory_entry.delete(0, END)
-            self.basic_tab.current_memory_entry.insert(0, '2048')
-            self.basic_tab.max_memory_entry.delete(0, END)
-            self.basic_tab.max_memory_entry.insert(0, '4096')
+            self.basic_tab.memory_combo.set('2G')
+            self.basic_tab.current_memory_combo.set('2G')
+            self.basic_tab.max_memory_combo.set('4G')
             self.basic_tab.swap_entry.delete(0, END)
             self.basic_tab.swap_entry.insert(0, '0')
 
@@ -483,10 +480,10 @@ class VmPanel(ctk.CTkFrame):
             'uuid': uuid_val,
             'vcpu': int(self.vcpu_entry.get().strip() or '2'),
             'cpu_mode': self.cpu_mode.get(),
-            'memory': int(self.memory_entry.get().strip() or '2048'),
-            'current_memory': int(self.current_memory_entry.get().strip() or self.memory_entry.get().strip() or '2048'),
-            'max_memory': int(self.max_memory_entry.get().strip() or '4096'),
-            'swap': int(self.swap_entry.get().strip() or '0'),
+            'memory': self.basic_tab._parse_memory_value(self.memory_combo.get()),
+            'current_memory': self.basic_tab._parse_memory_value(self.current_memory_combo.get()),
+            'max_memory': self.basic_tab._parse_memory_value(self.max_memory_combo.get()),
+            'swap': int(self.basic_tab.swap_entry.get().strip() or '0'),
             'virt_type': self.virt_type.get(),
             'machine': self.machine_type.get().strip() or 'q35',
             'chipset': self.chipset_type.get(),
