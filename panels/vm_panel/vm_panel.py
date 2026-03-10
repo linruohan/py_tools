@@ -1,347 +1,14 @@
 """VmPanel - 虚拟机 XML 配置生成面板."""
 
-import json
-import uuid
-import xml.etree.ElementTree as ET
-from xml.dom import minidom
+import subprocess
 from tkinter import END, filedialog, messagebox
 
 import customtkinter as ctk
 
-# 全局样式常量
-CTK_FONT_MAIN = ('Microsoft YaHei UI', 12)
-CTK_FONT_BOLD = ('Microsoft YaHei UI', 12, 'bold')
-CTK_FONT_MONO = ('Consolas', 11)
-CTK_FONT_SMALL = ('Microsoft YaHei UI', 10)
-
-BG_COLOR_MAIN = '#242424'
-BG_COLOR_CONTENT = '#1e1e1e'
-BG_COLOR_SELECT = '#404040'
-
-
-class ScrollableDiskFrame(ctk.CTkScrollableFrame):
-    """可滚动磁盘配置框架."""
-
-    def __init__(self, master, on_change_callback=None, **kwargs):
-        super().__init__(master, **kwargs)
-        self.disk_entries = []
-        self.disk_count = 0
-        self.on_change_callback = on_change_callback
-
-    def add_disk(self):
-        """添加磁盘配置行."""
-        frame = ctk.CTkFrame(self, fg_color='transparent')
-        frame.grid(row=self.disk_count, column=0, sticky='ew', pady=5)
-
-        # 磁盘名称
-        name_entry = ctk.CTkEntry(
-            frame, placeholder_text='磁盘名称', width=120, font=CTK_FONT_SMALL
-        )
-        name_entry.grid(row=0, column=0, padx=5)
-
-        # 磁盘路径
-        path_entry = ctk.CTkEntry(
-            frame, placeholder_text='/path/to/disk.qcow2', width=200, font=CTK_FONT_SMALL
-        )
-        path_entry.grid(row=0, column=1, padx=5)
-
-        # 磁盘类型
-        disk_type = ctk.CTkOptionMenu(
-            frame, values=['qcow2', 'raw', 'vmdk', 'vdi'], width=80, font=CTK_FONT_SMALL
-        )
-        disk_type.set('qcow2')
-        disk_type.grid(row=0, column=2, padx=5)
-
-        # 磁盘总线
-        bus_type = ctk.CTkOptionMenu(
-            frame, values=['virtio', 'sata', 'ide', 'scsi'], width=70, font=CTK_FONT_SMALL
-        )
-        bus_type.set('virtio')
-        bus_type.grid(row=0, column=3, padx=5)
-
-        # 删除按钮
-        del_btn = ctk.CTkButton(
-            frame,
-            text='删除',
-            width=50,
-            fg_color='#f44336',
-            hover_color='#d32f2f',
-            font=CTK_FONT_SMALL,
-            command=lambda: self.remove_disk(frame),
-        )
-        del_btn.grid(row=0, column=4, padx=5)
-
-        # 绑定变化事件
-        for widget in [name_entry, path_entry]:
-            widget.bind('<KeyRelease>', lambda e: self._trigger_change())
-        for widget in [disk_type, bus_type]:
-            widget.configure(command=self._trigger_change)
-
-        self.disk_entries.append(
-            {'frame': frame, 'name': name_entry, 'path': path_entry, 'type': disk_type, 'bus': bus_type}
-        )
-        self.disk_count += 1
-
-    def _trigger_change(self):
-        """触发变化回调."""
-        if self.on_change_callback:
-            self.on_change_callback()
-
-    def remove_disk(self, frame):
-        """删除磁盘配置行."""
-        for i, entry in enumerate(self.disk_entries):
-            if entry['frame'] == frame:
-                frame.destroy()
-                self.disk_entries.pop(i)
-                self.disk_count -= 1
-                # 重新布局
-                for j, e in enumerate(self.disk_entries):
-                    e['frame'].grid(row=j, column=0, sticky='ew', pady=5)
-                break
-
-    def get_disks(self):
-        """获取所有磁盘配置."""
-        disks = []
-        for entry in self.disk_entries:
-            name = entry['name'].get().strip()
-            path = entry['path'].get().strip()
-            if name and path:
-                disks.append(
-                    {
-                        'name': name,
-                        'path': path,
-                        'type': entry['type'].get(),
-                        'bus': entry['bus'].get(),
-                    }
-                )
-        return disks
-
-
-class ScrollableNetworkFrame(ctk.CTkScrollableFrame):
-    """可滚动网络配置框架."""
-
-    def __init__(self, master, on_change_callback=None, **kwargs):
-        super().__init__(master, **kwargs)
-        self.network_entries = []
-        self.network_count = 0
-        self.on_change_callback = on_change_callback
-
-    def add_network(self):
-        """添加网络配置行."""
-        frame = ctk.CTkFrame(self, fg_color='transparent')
-        frame.grid(row=self.network_count, column=0, sticky='ew', pady=5)
-
-        # 网卡名称
-        name_entry = ctk.CTkEntry(
-            frame, placeholder_text='网卡名称', width=100, font=CTK_FONT_SMALL
-        )
-        name_entry.grid(row=0, column=0, padx=5)
-
-        # 网络模式
-        network_mode = ctk.CTkOptionMenu(
-            frame,
-            values=['NAT', 'Bridge', 'Macvtap', 'Virtual Network'],
-            width=130,
-            font=CTK_FONT_SMALL,
-        )
-        network_mode.set('NAT')
-        network_mode.grid(row=0, column=1, padx=5)
-
-        # 网桥/网络名称
-        bridge_entry = ctk.CTkEntry(
-            frame, placeholder_text='网桥名称', width=120, font=CTK_FONT_SMALL
-        )
-        bridge_entry.grid(row=0, column=2, padx=5)
-
-        # 模型类型
-        model_type = ctk.CTkOptionMenu(
-            frame, values=['virtio', 'e1000', 'rtl8139', 'vmxnet3'], width=80, font=CTK_FONT_SMALL
-        )
-        model_type.set('virtio')
-        model_type.grid(row=0, column=3, padx=5)
-
-        # MAC 地址
-        mac_entry = ctk.CTkEntry(
-            frame, placeholder_text='MAC 地址', width=140, font=CTK_FONT_SMALL
-        )
-        mac_entry.grid(row=0, column=4, padx=5)
-
-        # 生成随机 MAC 按钮
-        gen_mac_btn = ctk.CTkButton(
-            frame,
-            text='生成',
-            width=50,
-            fg_color='#2196f3',
-            hover_color='#1976d2',
-            font=CTK_FONT_SMALL,
-            command=lambda: self.generate_mac(mac_entry),
-        )
-        gen_mac_btn.grid(row=0, column=5, padx=5)
-
-        # 删除按钮
-        del_btn = ctk.CTkButton(
-            frame,
-            text='删除',
-            width=50,
-            fg_color='#f44336',
-            hover_color='#d32f2f',
-            font=CTK_FONT_SMALL,
-            command=lambda: self.remove_network(frame),
-        )
-        del_btn.grid(row=0, column=6, padx=5)
-
-        # 绑定变化事件
-        for widget in [name_entry, bridge_entry, mac_entry]:
-            widget.bind('<KeyRelease>', lambda e: self._trigger_change())
-        for widget in [network_mode, model_type]:
-            widget.configure(command=self._trigger_change)
-
-        self.network_entries.append(
-            {
-                'frame': frame,
-                'name': name_entry,
-                'mode': network_mode,
-                'bridge': bridge_entry,
-                'model': model_type,
-                'mac': mac_entry,
-            }
-        )
-        self.network_count += 1
-
-    def _trigger_change(self):
-        """触发变化回调."""
-        if self.on_change_callback:
-            self.on_change_callback()
-
-    def remove_network(self, frame):
-        """删除网络配置行."""
-        for i, entry in enumerate(self.network_entries):
-            if entry['frame'] == frame:
-                frame.destroy()
-                self.network_entries.pop(i)
-                self.network_count -= 1
-                # 重新布局
-                for j, e in enumerate(self.network_entries):
-                    e['frame'].grid(row=j, column=0, sticky='ew', pady=5)
-                break
-
-    def generate_mac(self, mac_entry: ctk.CTkEntry):
-        """生成随机 MAC 地址."""
-        mac = ':'.join(['{:02x}'.format(uuid.random().int % 256) for _ in range(6)])
-        mac_entry.delete(0, END)
-        mac_entry.insert(0, mac)
-
-    def get_networks(self):
-        """获取所有网络配置."""
-        networks = []
-        for entry in self.network_entries:
-            name = entry['name'].get().strip()
-            bridge = entry['bridge'].get().strip()
-            mac = entry['mac'].get().strip()
-            if name or bridge or mac:
-                networks.append(
-                    {
-                        'name': name or f'nic{len(networks)}',
-                        'mode': entry['mode'].get(),
-                        'bridge': bridge,
-                        'model': entry['model'].get(),
-                        'mac': mac if mac else self._generate_mac(),
-                    }
-                )
-        return networks
-
-    def _generate_mac(self):
-        """生成随机 MAC 地址."""
-        return ':'.join(['{:02x}'.format(uuid.random().int % 256) for _ in range(6)])
-
-
-class ScrollableHostdevFrame(ctk.CTkScrollableFrame):
-    """可滚动 PCI 直通设备配置框架."""
-
-    def __init__(self, master, on_change_callback=None, **kwargs):
-        super().__init__(master, **kwargs)
-        self.hostdev_entries = []
-        self.hostdev_count = 0
-        self.on_change_callback = on_change_callback
-
-    def add_hostdev(self):
-        """添加 PCI 直通设备配置行."""
-        frame = ctk.CTkFrame(self, fg_color='transparent')
-        frame.grid(row=self.hostdev_count, column=0, sticky='ew', pady=5)
-
-        # 设备名称
-        name_entry = ctk.CTkEntry(
-            frame, placeholder_text='设备名称', width=100, font=CTK_FONT_SMALL
-        )
-        name_entry.grid(row=0, column=0, padx=5)
-
-        # PCI 地址 (domain:bus:slot.function)
-        pci_entry = ctk.CTkEntry(
-            frame, placeholder_text='0000:00:00.0', width=140, font=CTK_FONT_SMALL
-        )
-        pci_entry.grid(row=0, column=1, padx=5)
-
-        # 设备类型
-        dev_type = ctk.CTkOptionMenu(
-            frame, values=['pci', 'usb', 'mdev'], width=70, font=CTK_FONT_SMALL
-        )
-        dev_type.set('pci')
-        dev_type.grid(row=0, column=2, padx=5)
-
-        # 删除按钮
-        del_btn = ctk.CTkButton(
-            frame,
-            text='删除',
-            width=50,
-            fg_color='#f44336',
-            hover_color='#d32f2f',
-            font=CTK_FONT_SMALL,
-            command=lambda: self.remove_hostdev(frame),
-        )
-        del_btn.grid(row=0, column=3, padx=5)
-
-        # 绑定变化事件
-        for widget in [name_entry, pci_entry]:
-            widget.bind('<KeyRelease>', lambda e: self._trigger_change())
-        dev_type.configure(command=self._trigger_change)
-
-        self.hostdev_entries.append(
-            {'frame': frame, 'name': name_entry, 'pci': pci_entry, 'type': dev_type}
-        )
-        self.hostdev_count += 1
-
-    def _trigger_change(self):
-        """触发变化回调."""
-        if self.on_change_callback:
-            self.on_change_callback()
-
-    def remove_hostdev(self, frame):
-        """删除 PCI 直通设备配置行."""
-        for i, entry in enumerate(self.hostdev_entries):
-            if entry['frame'] == frame:
-                frame.destroy()
-                self.hostdev_entries.pop(i)
-                self.hostdev_count -= 1
-                # 重新布局
-                for j, e in enumerate(self.hostdev_entries):
-                    e['frame'].grid(row=j, column=0, sticky='ew', pady=5)
-                break
-
-    def get_hostdevs(self):
-        """获取所有 PCI 直通设备配置."""
-        hostdevs = []
-        for entry in self.hostdev_entries:
-            name = entry['name'].get().strip()
-            pci = entry['pci'].get().strip()
-            if pci:
-                hostdevs.append(
-                    {
-                        'name': name or f'hostdev{len(hostdevs)}',
-                        'pci': pci,
-                        'type': entry['type'].get(),
-                    }
-                )
-        return hostdevs
+from .styles import CTK_FONT_MAIN, CTK_FONT_BOLD, CTK_FONT_MONO, CTK_FONT_SMALL
+from .styles import BG_COLOR_MAIN, BG_COLOR_CONTENT
+from .frames import ScrollableDiskFrame, ScrollableNetworkFrame, ScrollableHostdevFrame
+from .xml_builder import build_libvirt_xml
 
 
 class VmPanel(ctk.CTkFrame):
@@ -495,6 +162,7 @@ class VmPanel(ctk.CTkFrame):
         ).grid(row=0, column=0, padx=5, pady=5, sticky='w')
         self.vm_name_entry = ctk.CTkEntry(row1, placeholder_text='vm-name', width=200)
         self.vm_name_entry.grid(row=0, column=1, padx=5, pady=5, sticky='w')
+        self.vm_name_entry.insert(0, 'vm0')
 
         ctk.CTkLabel(
             row1, text='描述:', font=CTK_FONT_MAIN, width=60, anchor='w'
@@ -710,12 +378,16 @@ class VmPanel(ctk.CTkFrame):
         other_frame.grid(row=7, column=0, sticky='ew', padx=10, pady=5)
 
         # 启用 ACPI
-        self.acpi_check = ctk.CTkCheckBox(other_frame, text='启用 ACPI', font=CTK_FONT_SMALL, command=self._update_xml_preview)
+        self.acpi_check = ctk.CTkCheckBox(
+            other_frame, text='启用 ACPI', font=CTK_FONT_SMALL, command=self._update_xml_preview
+        )
         self.acpi_check.grid(row=0, column=0, padx=10)
         self.acpi_check.select()
 
         # 启用 APIC
-        self.apic_check = ctk.CTkCheckBox(other_frame, text='启用 APIC', font=CTK_FONT_SMALL, command=self._update_xml_preview)
+        self.apic_check = ctk.CTkCheckBox(
+            other_frame, text='启用 APIC', font=CTK_FONT_SMALL, command=self._update_xml_preview
+        )
         self.apic_check.grid(row=0, column=1, padx=10)
         self.apic_check.select()
 
@@ -812,7 +484,7 @@ class VmPanel(ctk.CTkFrame):
         """构建 XML 预览（不抛出错误）."""
         try:
             data = self.collect_vm_data()
-            return self._build_libvirt_xml(data)
+            return build_libvirt_xml(data)
         except Exception:
             return '<!-- 配置不完整或无效，请检查输入 -->'
 
@@ -910,7 +582,7 @@ class VmPanel(ctk.CTkFrame):
         """生成 XML 配置."""
         try:
             self.vm_data = self.collect_vm_data()
-            xml_str = self._build_libvirt_xml(self.vm_data)
+            xml_str = build_libvirt_xml(self.vm_data)
             self.xml_textbox.delete('1.0', END)
             self.xml_textbox.insert('1.0', xml_str)
             self.update_info('XML 生成成功')
@@ -920,159 +592,6 @@ class VmPanel(ctk.CTkFrame):
         except Exception as e:
             messagebox.showerror('错误', f'生成失败：{e!s}')
             self.update_info(f'生成失败：{e!s}', False)
-
-    def _build_libvirt_xml(self, data: dict) -> str:
-        """构建 libvirt domain XML."""
-        # 根元素
-        domain = ET.Element('domain', type='kvm')
-
-        # 名称
-        name = ET.SubElement(domain, 'name')
-        name.text = data['name']
-
-        # 描述
-        if data['description']:
-            desc = ET.SubElement(domain, 'description')
-            desc.text = data['description']
-
-        # 内存 (KB)
-        memory = ET.SubElement(domain, 'memory', unit='KiB')
-        memory.text = str(data['memory'] * 1024)
-
-        # 当前内存
-        current_memory = ET.SubElement(domain, 'currentMemory', unit='KiB')
-        current_memory.text = str(data['memory'] * 1024)
-
-        # vCPU
-        vcpu = ET.SubElement(domain, 'vcpu')
-        vcpu.text = str(data['vcpu'])
-
-        # 操作系统
-        os_elem = ET.SubElement(domain, 'os')
-        os_type = ET.SubElement(os_elem, 'type', arch='x86_64', machine=data['machine'])
-        if data['virt_type'] == 'hvm':
-            os_type.text = 'hvm'
-        else:
-            os_type.text = 'linux'
-
-        # 引导设备
-        boot = ET.SubElement(os_elem, 'boot', dev=data['boot_device'])
-
-        # UEFI 固件
-        if data['firmware'] == 'UEFI':
-            loader = ET.SubElement(
-                os_elem, 'loader', readonly='yes', type='pflash'
-            )
-            loader.text = '/usr/share/OVMF/OVMF_CODE.fd'
-            nvram = ET.SubElement(os_elem, 'nvram')
-            nvram.text = f'/var/lib/libvirt/qemu/nvram/{data["name"]}._VARS.fd'
-
-        # 功能特性
-        features = ET.SubElement(domain, 'features')
-        if data['features']['acpi']:
-            ET.SubElement(features, 'acpi')
-        if data['features']['apic']:
-            ET.SubElement(features, 'apic')
-        if data['features']['hyperv']:
-            hyperv = ET.SubElement(features, 'hyperv')
-            ET.SubElement(hyperv, 'vpindex', mode='native')
-            ET.SubElement(hyperv, 'synic', mode='native')
-
-        # IOMMU
-        if data['features']['iommu']:
-            iommu = ET.SubElement(domain, 'iommu', type='intel')
-
-        # 时钟
-        clock = ET.SubElement(domain, 'clock', offset='utc')
-        ET.SubElement(clock, 'timer', name='rtc', tickpolicy='catchup')
-        ET.SubElement(clock, 'timer', name='pit', tickpolicy='delay')
-        ET.SubElement(clock, 'timer', name='hpet', present='no')
-
-        # 设备
-        devices = ET.SubElement(domain, 'devices')
-
-        # 磁盘
-        for i, disk in enumerate(data['disks']):
-            disk_elem = ET.SubElement(
-                devices, 'disk', type='file', device='disk'
-            )
-            driver = ET.SubElement(
-                disk_elem, 'driver', name='qemu', type=disk['type'], cache='none'
-            )
-            source = ET.SubElement(
-                disk_elem, 'source', file=disk['path']
-            )
-            target = ET.SubElement(
-                disk_elem, 'target', dev=f'vd{chr(ord("a") + i)}', bus=disk['bus']
-            )
-
-        # 网络
-        for i, network in enumerate(data['networks']):
-            interface = ET.SubElement(
-                devices, 'interface', type='network' if network['mode'] == 'NAT' else 'bridge'
-            )
-            if network['mac']:
-                ET.SubElement(interface, 'mac', address=network['mac'])
-            if network['mode'] == 'NAT':
-                ET.SubElement(interface, 'source', network='default')
-            else:
-                ET.SubElement(interface, 'source', bridge=network['bridge'] or 'br0')
-            ET.SubElement(interface, 'model', type=network['model'])
-
-        # 控制台
-        console = ET.SubElement(devices, 'console', type='pty')
-        ET.SubElement(console, 'target', type='serial', port='0')
-
-        # 输入设备
-        ET.SubElement(devices, 'input', type='tablet', bus='usb')
-        ET.SubElement(devices, 'input', type='mouse', bus='ps2')
-
-        # 图形 (VNC)
-        graphics = ET.SubElement(
-            devices, 'graphics', type='vnc', port='-1', autoport='yes', listen='0.0.0.0'
-        )
-        listen = ET.SubElement(graphics, 'listen', type='address')
-
-        # 视频
-        video = ET.SubElement(devices, 'video')
-        ET.SubElement(video, 'model', type='qxl', ram='65536', vram='65536', vgamem='16384')
-
-        # PCI 直通设备
-        for hostdev in data['hostdevs']:
-            hd = ET.SubElement(
-                devices, 'hostdev', mode='subsystem', type='pci', managed='yes'
-            )
-            source = ET.SubElement(hd, 'source')
-            # 解析 PCI 地址
-            try:
-                parts = hostdev['pci'].replace(',', ':').split(':')
-                if len(parts) >= 4:
-                    addr = parts[3].split('.')
-                    ET.SubElement(
-                        source, 'address',
-                        domain=parts[0],
-                        bus=parts[1],
-                        slot=parts[2],
-                        function=addr[1] if len(addr) > 1 else '0',
-                    )
-            except (IndexError, ValueError):
-                pass
-
-        # USB 设备
-        for usb in data['usb_devices']:
-            if ':' in usb:
-                vendor, product = usb.split(':')
-                usb_elem = ET.SubElement(
-                    devices, 'hostdev', mode='subsystem', type='usb', managed='yes'
-                )
-                source = ET.SubElement(usb_elem, 'source')
-                ET.SubElement(source, 'vendor', id=f'0x{vendor}')
-                ET.SubElement(source, 'product', id=f'0x{product}')
-
-        # 生成格式化的 XML
-        xml_str = ET.tostring(domain, encoding='unicode')
-        parsed = minidom.parseString(xml_str)
-        return parsed.toprettyxml(indent='  ')
 
     def save_xml(self) -> None:
         """保存 XML 到文件."""
@@ -1109,9 +628,6 @@ class VmPanel(ctk.CTkFrame):
             messagebox.showwarning('警告', '请先生成 XML!')
             self.update_info('请先生成 XML', False)
             return
-
-        # 检查 virsh 是否可用
-        import subprocess
 
         try:
             # 尝试定义虚拟机

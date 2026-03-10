@@ -38,7 +38,15 @@ python -m nuitka --follow-imports --enable-plugin=tk-inter --include-package=cus
 - `panels/` - 功能面板模块
   - `home_panel.py` - 主页面板，包含多 Tab 展示各种 CTk 组件
   - `json_panel.py` - JSON 解析与 Excel 导出工具
-  - `vm_panel.py` - KVM/QEMU 虚拟机 XML 配置生成器
+  - `vm_panel/` - KVM/QEMU 虚拟机 XML 配置生成模块
+    - `__init__.py` - 模块入口，导出 `VmPanel`
+    - `styles.py` - 全局样式常量
+    - `frames/` - 可滚动配置框架子模块
+      - `disk_frame.py` - 磁盘配置框架
+      - `network_frame.py` - 网络配置框架
+      - `hostdev_frame.py` - PCI 设备配置框架
+    - `xml_builder.py` - libvirt XML 构建器
+    - `vm_panel.py` - VmPanel 主类
 - `drag.py` - 拖拽排序功能示例
 - `example/` - customtkinter 示例代码
 
@@ -55,6 +63,7 @@ python -m nuitka --follow-imports --enable-plugin=tk-inter --include-package=cus
 - 磁盘配置：支持多磁盘，类型 (qcow2/raw/vmdk)、总线 (virtio/sata/ide/scsi)
 - 网络配置：支持多网卡，模式 (NAT/Bridge/Macvtap)、MAC 地址生成
 - 高级配置：PCI 直通、USB 设备、ACPI/APIC/Hyper-V/IOMMU 特性
+- **动态 XML 预览**：配置变更时自动更新 XML 预览
 - XML 生成：生成标准 libvirt domain XML
 - 保存/创建：保存 XML 文件或通过 virsh 创建虚拟机
 
