@@ -1,14 +1,25 @@
 """VmPanel - 虚拟机 XML 配置生成面板."""
 
 import subprocess
+import uuid
 from tkinter import END, filedialog, messagebox
 
 import customtkinter as ctk
 
 from .styles import CTK_FONT_MAIN, CTK_FONT_BOLD, CTK_FONT_MONO, CTK_FONT_SMALL
 from .styles import BG_COLOR_MAIN, BG_COLOR_CONTENT
-from .frames import ScrollableDiskFrame, ScrollableNetworkFrame, ScrollableHostdevFrame
 from .xml_builder import build_libvirt_xml
+from .tabs import (
+    BasicTab,
+    OSTab,
+    StorageTab,
+    NetworkTab,
+    DevicesTab,
+    FeaturesTab,
+    HostdevTab,
+    MemoryTab,
+    ClockTab,
+)
 
 
 class VmPanel(ctk.CTkFrame):
@@ -52,22 +63,25 @@ class VmPanel(ctk.CTkFrame):
         )
         self.tabview.grid(row=1, column=0, padx=15, pady=10, sticky='nsew')
 
-        # 添加配置 Tab
+        # 添加配置 Tab - 按 libvirt 规范分类
         self.tab_basic = self.tabview.add('基础配置')
-        self.tab_disk = self.tabview.add('磁盘配置')
-        self.tab_network = self.tabview.add('网络配置')
-        self.tab_advanced = self.tabview.add('高级配置')
+        self.tab_os = self.tabview.add('引导/OS')
+        self.tab_storage = self.tabview.add('存储')
+        self.tab_network = self.tabview.add('网络')
+        self.tab_devices = self.tabview.add('设备')
+        self.tab_features = self.tabview.add('功能特性')
+        self.tab_hostdev = self.tabview.add('PCI 直通')
+        self.tab_memory = self.tabview.add('内存管理')
+        self.tab_clock = self.tabview.add('时钟/看门狗')
 
         # 配置每个 Tab 的网格
-        for tab_name in ['基础配置', '磁盘配置', '网络配置', '高级配置']:
-            self.tabview.tab(tab_name).grid_columnconfigure(0, weight=1)
-            self.tabview.tab(tab_name).grid_rowconfigure(0, weight=0)
+        for tab_name in ['基础配置', '引导/OS', '存储', '网络', '设备', '功能特性', 'PCI 直通', '内存管理', '时钟/看门狗']:
+            tab = self.tabview.tab(tab_name)
+            tab.grid_columnconfigure(0, weight=1)
+            tab.grid_rowconfigure(0, weight=1)
 
         # 初始化各个 Tab
-        self._init_basic_tab()
-        self._init_disk_tab()
-        self._init_network_tab()
-        self._init_advanced_tab()
+        self._init_tabs()
 
         # 底部 XML 预览区
         self._create_xml_preview(main_frame)
@@ -148,260 +162,93 @@ class VmPanel(ctk.CTkFrame):
         )
         create_btn.pack(side='left', padx=5)
 
-    def _init_basic_tab(self) -> None:
-        """初始化基础配置 Tab."""
-        tab = self.tabview.tab('基础配置')
+    def _init_tabs(self) -> None:
+        """初始化所有 Tab."""
+        # 基础配置 Tab
+        self.basic_tab = BasicTab(self.tab_basic)
+        self.basic_tab.grid(row=0, column=0, sticky='nsew')
 
-        # 第一行：虚拟机名称和描述
-        row1 = ctk.CTkFrame(tab, fg_color='transparent')
-        row1.grid(row=0, column=0, sticky='ew', padx=10, pady=5)
-        row1.grid_columnconfigure(1, weight=1)
+        # 引导/OS Tab
+        self.os_tab = OSTab(self.tab_os)
+        self.os_tab.grid(row=0, column=0, sticky='nsew')
 
-        ctk.CTkLabel(
-            row1, text='虚拟机名称:', font=CTK_FONT_MAIN, width=100, anchor='w'
-        ).grid(row=0, column=0, padx=5, pady=5, sticky='w')
-        self.vm_name_entry = ctk.CTkEntry(row1, placeholder_text='vm-name', width=200)
-        self.vm_name_entry.grid(row=0, column=1, padx=5, pady=5, sticky='w')
-        self.vm_name_entry.insert(0, 'vm0')
+        # 存储 Tab
+        self.storage_tab = StorageTab(self.tab_storage, on_change_callback=self._update_xml_preview)
+        self.storage_tab.grid(row=0, column=0, sticky='nsew')
 
-        ctk.CTkLabel(
-            row1, text='描述:', font=CTK_FONT_MAIN, width=60, anchor='w'
-        ).grid(row=0, column=2, padx=5, pady=5, sticky='w')
-        self.vm_desc_entry = ctk.CTkEntry(row1, placeholder_text='虚拟机描述', width=200)
-        self.vm_desc_entry.grid(row=0, column=3, padx=5, pady=5, sticky='w')
+        # 网络 Tab
+        self.network_tab = NetworkTab(self.tab_network, on_change_callback=self._update_xml_preview)
+        self.network_tab.grid(row=0, column=0, sticky='nsew')
 
-        # 第二行：CPU 和内存
-        row2 = ctk.CTkFrame(tab, fg_color='transparent')
-        row2.grid(row=1, column=0, sticky='ew', padx=10, pady=5)
-        row2.grid_columnconfigure(1, weight=1)
+        # 设备 Tab
+        self.devices_tab = DevicesTab(self.tab_devices, on_change_callback=self._update_xml_preview)
+        self.devices_tab.grid(row=0, column=0, sticky='nsew')
 
-        ctk.CTkLabel(row1, text='vCPU:', font=CTK_FONT_MAIN, width=60, anchor='w').grid(
-            row=1, column=0, padx=5, pady=5, sticky='w'
-        )
-        self.vcpu_entry = ctk.CTkEntry(row2, placeholder_text='2', width=100)
-        self.vcpu_entry.grid(row=0, column=1, padx=5, pady=5, sticky='w')
-        self.vcpu_entry.insert(0, '2')
+        # 功能特性 Tab
+        self.features_tab = FeaturesTab(self.tab_features, on_change_callback=self._update_xml_preview)
+        self.features_tab.grid(row=0, column=0, sticky='nsew')
 
-        ctk.CTkLabel(
-            row2, text='内存 (MB):', font=CTK_FONT_MAIN, width=80, anchor='w'
-        ).grid(row=0, column=2, padx=5, pady=5, sticky='w')
-        self.memory_entry = ctk.CTkEntry(row2, placeholder_text='2048', width=100)
-        self.memory_entry.grid(row=0, column=3, padx=5, pady=5, sticky='w')
-        self.memory_entry.insert(0, '2048')
+        # PCI 直通 Tab
+        self.hostdev_tab = HostdevTab(self.tab_hostdev, on_change_callback=self._update_xml_preview)
+        self.hostdev_tab.grid(row=0, column=0, sticky='nsew')
 
-        # 第三行：虚拟化类型和机器类型
-        row3 = ctk.CTkFrame(tab, fg_color='transparent')
-        row3.grid(row=2, column=0, sticky='ew', padx=10, pady=5)
+        # 内存管理 Tab
+        self.memory_tab = MemoryTab(self.tab_memory, on_change_callback=self._update_xml_preview)
+        self.memory_tab.grid(row=0, column=0, sticky='nsew')
 
-        ctk.CTkLabel(row3, text='虚拟化:', font=CTK_FONT_MAIN, width=80, anchor='w').grid(
-            row=0, column=0, padx=5, pady=5, sticky='w'
-        )
-        self.virt_type = ctk.CTkOptionMenu(
-            row3, values=['hvm', 'pv'], width=100, font=CTK_FONT_SMALL
-        )
-        self.virt_type.set('hvm')
-        self.virt_type.grid(row=0, column=1, padx=5, pady=5, sticky='w')
+        # 时钟/看门狗 Tab
+        self.clock_tab = ClockTab(self.tab_clock, on_change_callback=self._update_xml_preview)
+        self.clock_tab.grid(row=0, column=0, sticky='nsew')
 
-        ctk.CTkLabel(row3, text='机器类型:', font=CTK_FONT_MAIN, width=80, anchor='w').grid(
-            row=0, column=2, padx=5, pady=5, sticky='w'
-        )
-        self.machine_type = ctk.CTkEntry(row3, placeholder_text='q35', width=100)
-        self.machine_type.grid(row=0, column=3, padx=5, pady=5, sticky='w')
-        self.machine_type.insert(0, 'q35')
+        # 保存引用以便访问
+        self.vm_name_entry = self.basic_tab.vm_name_entry
+        self.vm_desc_entry = self.basic_tab.vm_desc_entry
+        self.uuid_entry = self.basic_tab.uuid_entry
+        self.machine_type = self.basic_tab.machine_type
+        self.virt_type = self.basic_tab.virt_type
+        self.chipset_type = self.basic_tab.chipset_type
+        self.vcpu_entry = self.basic_tab.vcpu_entry
+        self.cpu_mode = self.basic_tab.cpu_mode
+        self.memory_entry = self.basic_tab.memory_entry
+        self.current_memory_entry = self.basic_tab.current_memory_entry
+        self.max_memory_entry = self.basic_tab.max_memory_entry
+        self.swap_entry = self.basic_tab.swap_entry
 
-        ctk.CTkLabel(row3, text='固件:', font=CTK_FONT_MAIN, width=50, anchor='w').grid(
-            row=0, column=4, padx=5, pady=5, sticky='w'
-        )
-        self.firmware_type = ctk.CTkOptionMenu(
-            row3, values=['BIOS', 'UEFI'], width=80, font=CTK_FONT_SMALL
-        )
-        self.firmware_type.set('BIOS')
-        self.firmware_type.grid(row=0, column=5, padx=5, pady=5, sticky='w')
+        self.firmware_type = self.os_tab.firmware_type
+        self.secure_boot = self.os_tab.secure_boot
+        self.boot_device_1 = self.os_tab.boot_device_1
+        self.boot_device_2 = self.os_tab.boot_device_2
+        self.boot_device_3 = self.os_tab.boot_device_3
+        self.boot_timeout_entry = self.os_tab.boot_timeout_entry
 
-        # 第四行：操作系统
-        row4 = ctk.CTkFrame(tab, fg_color='transparent')
-        row4.grid(row=3, column=0, sticky='ew', padx=10, pady=5)
+        self.disk_frame = self.storage_tab.disk_frame
+        self.network_frame = self.network_tab.network_frame
 
-        ctk.CTkLabel(row4, text='操作系统:', font=CTK_FONT_MAIN, width=80, anchor='w').grid(
-            row=0, column=0, padx=5, pady=5, sticky='w'
-        )
-        self.os_type = ctk.CTkOptionMenu(
-            row4,
-            values=['Linux', 'Windows', 'FreeBSD', 'Other'],
-            width=120,
-            font=CTK_FONT_SMALL,
-        )
-        self.os_type.set('Linux')
-        self.os_type.grid(row=0, column=1, padx=5, pady=5, sticky='w')
+        self.graphics_type = self.devices_tab.graphics_type
+        self.graphics_listen = self.devices_tab.graphics_listen
+        self.video_model = self.devices_tab.video_model
+        self.vram_entry = self.devices_tab.vram_entry
+        self.usb_controller = self.devices_tab.usb_controller
+        self.usb_entry = self.devices_tab.usb_entry
+        self.usb_list = self.devices_tab.usb_list
+        self.usb_display = self.devices_tab.usb_display
+        self.disable_usb_check = self.devices_tab.disable_usb_check
+        self.disable_sound_check = self.devices_tab.disable_sound_check
 
-        ctk.CTkLabel(
-            row4, text='引导设备:', font=CTK_FONT_MAIN, width=80, anchor='w'
-        ).grid(row=0, column=2, padx=5, pady=5, sticky='w')
-        self.boot_device = ctk.CTkOptionMenu(
-            row4, values=['hd', 'cdrom', 'network'], width=100, font=CTK_FONT_SMALL
-        )
-        self.boot_device.set('hd')
-        self.boot_device.grid(row=0, column=3, padx=5, pady=5, sticky='w')
+        self.acpi_check = self.features_tab.acpi_check
+        self.apic_check = self.features_tab.apic_check
+        self.hyperv_check = self.features_tab.hyperv_check
+        self.iommu_check = self.features_tab.iommu_check
 
-    def _init_disk_tab(self) -> None:
-        """初始化磁盘配置 Tab."""
-        tab = self.tabview.tab('磁盘配置')
+        self.hostdev_frame = self.hostdev_tab.hostdev_frame
 
-        # 工具栏
-        toolbar = ctk.CTkFrame(tab, fg_color='transparent')
-        toolbar.grid(row=0, column=0, sticky='ew', padx=10, pady=5)
+        self.balloon_check = self.memory_tab.balloon_check
+        self.balloon_target_entry = self.memory_tab.balloon_target_entry
 
-        add_disk_btn = ctk.CTkButton(
-            toolbar,
-            text='添加磁盘',
-            command=lambda: (self.add_disk(), self._update_xml_preview()),
-            fg_color='#4caf50',
-            hover_color='#388e3c',
-            width=100,
-        )
-        add_disk_btn.pack(side='left', padx=5)
-
-        # 磁盘列表
-        self.disk_frame = ScrollableDiskFrame(
-            tab, corner_radius=0, fg_color=BG_COLOR_CONTENT, on_change_callback=self._update_xml_preview
-        )
-        self.disk_frame.grid(row=1, column=0, sticky='nsew', padx=10, pady=5)
-        tab.grid_rowconfigure(1, weight=1)
-
-        # 默认添加一个磁盘
-        self.add_disk()
-
-    def _init_network_tab(self) -> None:
-        """初始化网络配置 Tab."""
-        tab = self.tabview.tab('网络配置')
-
-        # 工具栏
-        toolbar = ctk.CTkFrame(tab, fg_color='transparent')
-        toolbar.grid(row=0, column=0, sticky='ew', padx=10, pady=5)
-
-        add_net_btn = ctk.CTkButton(
-            toolbar,
-            text='添加网卡',
-            command=lambda: (self.add_network(), self._update_xml_preview()),
-            fg_color='#4caf50',
-            hover_color='#388e3c',
-            width=100,
-        )
-        add_net_btn.pack(side='left', padx=5)
-
-        # 网络列表
-        self.network_frame = ScrollableNetworkFrame(
-            tab, corner_radius=0, fg_color=BG_COLOR_CONTENT, on_change_callback=self._update_xml_preview
-        )
-        self.network_frame.grid(row=1, column=0, sticky='nsew', padx=10, pady=5)
-        tab.grid_rowconfigure(1, weight=1)
-
-        # 默认添加一个网卡
-        self.add_network()
-
-    def _init_advanced_tab(self) -> None:
-        """初始化高级配置 Tab."""
-        tab = self.tabview.tab('高级配置')
-
-        # GPU/PCI 直通
-        gpu_label = ctk.CTkLabel(
-            tab,
-            text='GPU / PCI 直通设备',
-            font=CTK_FONT_BOLD,
-            text_color='#81c784',
-            anchor='w',
-        )
-        gpu_label.grid(row=0, column=0, sticky='ew', padx=10, pady=5)
-
-        # 添加工具栏
-        gpu_toolbar = ctk.CTkFrame(tab, fg_color='transparent')
-        gpu_toolbar.grid(row=1, column=0, sticky='ew', padx=10, pady=5)
-
-        add_gpu_btn = ctk.CTkButton(
-            gpu_toolbar,
-            text='添加 PCI 设备',
-            command=self.add_hostdev,
-            fg_color='#ff9800',
-            hover_color='#f57c00',
-            width=120,
-        )
-        add_gpu_btn.pack(side='left', padx=5)
-
-        # PCI 设备列表
-        self.hostdev_frame = ScrollableHostdevFrame(
-            tab, corner_radius=0, fg_color=BG_COLOR_CONTENT, height=150, on_change_callback=self._update_xml_preview
-        )
-        self.hostdev_frame.grid(row=2, column=0, sticky='ew', padx=10, pady=5)
-
-        # USB 设备
-        usb_label = ctk.CTkLabel(
-            tab,
-            text='USB 设备 (Vendor:Product)',
-            font=CTK_FONT_BOLD,
-            text_color='#64b5f6',
-            anchor='w',
-        )
-        usb_label.grid(row=3, column=0, sticky='ew', padx=10, pady=(15, 5))
-
-        usb_frame = ctk.CTkFrame(tab, fg_color='transparent')
-        usb_frame.grid(row=4, column=0, sticky='ew', padx=10, pady=5)
-
-        self.usb_entry = ctk.CTkEntry(
-            usb_frame, placeholder_text='例如：8087:8008', width=200
-        )
-        self.usb_entry.grid(row=0, column=0, padx=5, sticky='w')
-        self.usb_entry.bind('<KeyRelease>', lambda e: self._update_xml_preview())
-
-        add_usb_btn = ctk.CTkButton(
-            usb_frame,
-            text='添加 USB',
-            command=lambda: (self.add_usb(), self._update_xml_preview()),
-            fg_color='#00bcd4',
-            hover_color='#0097a7',
-            width=100,
-        )
-        add_usb_btn.grid(row=0, column=1, padx=5)
-
-        self.usb_list = []
-        self.usb_display = ctk.CTkLabel(
-            tab, text='', font=CTK_FONT_SMALL, text_color='#aaaaaa', anchor='w'
-        )
-        self.usb_display.grid(row=5, column=0, sticky='ew', padx=10, pady=5)
-
-        # 其他选项
-        other_label = ctk.CTkLabel(
-            tab, text='其他选项', font=CTK_FONT_BOLD, text_color='#ba68c8', anchor='w'
-        )
-        other_label.grid(row=6, column=0, sticky='ew', padx=10, pady=(15, 5))
-
-        other_frame = ctk.CTkFrame(tab, fg_color='transparent')
-        other_frame.grid(row=7, column=0, sticky='ew', padx=10, pady=5)
-
-        # 启用 ACPI
-        self.acpi_check = ctk.CTkCheckBox(
-            other_frame, text='启用 ACPI', font=CTK_FONT_SMALL, command=self._update_xml_preview
-        )
-        self.acpi_check.grid(row=0, column=0, padx=10)
-        self.acpi_check.select()
-
-        # 启用 APIC
-        self.apic_check = ctk.CTkCheckBox(
-            other_frame, text='启用 APIC', font=CTK_FONT_SMALL, command=self._update_xml_preview
-        )
-        self.apic_check.grid(row=0, column=1, padx=10)
-        self.apic_check.select()
-
-        # 启用 Hyper-V
-        self.hyperv_check = ctk.CTkCheckBox(
-            other_frame, text='启用 Hyper-V', font=CTK_FONT_SMALL, command=self._update_xml_preview
-        )
-        self.hyperv_check.grid(row=0, column=2, padx=10)
-
-        # 启用 IOMMU
-        self.iommu_check = ctk.CTkCheckBox(
-            other_frame, text='启用 IOMMU', font=CTK_FONT_SMALL, command=self._update_xml_preview
-        )
-        self.iommu_check.grid(row=0, column=3, padx=10)
+        self.watchdog_model = self.clock_tab.watchdog_model
+        self.watchdog_action = self.clock_tab.watchdog_action
+        self.rtc_clock = self.clock_tab.rtc_clock
+        self.kvm_clock_check = self.clock_tab.kvm_clock_check
 
     def _create_xml_preview(self, parent) -> None:
         """创建 XML 预览区."""
@@ -457,12 +304,33 @@ class VmPanel(ctk.CTkFrame):
     def _bind_basic_events(self) -> None:
         """绑定基础配置的变化事件，实现动态 XML 预览."""
         # 绑定 Entry 的 KeyRelease 事件
-        for widget in [self.vm_name_entry, self.vm_desc_entry, self.vcpu_entry,
-                       self.memory_entry, self.machine_type]:
+        entry_widgets = [
+            self.vm_name_entry, self.vm_desc_entry, self.uuid_entry,
+            self.vcpu_entry, self.memory_entry, self.current_memory_entry,
+            self.max_memory_entry, self.swap_entry, self.boot_timeout_entry,
+            self.graphics_listen, self.vram_entry, self.balloon_target_entry,
+        ]
+        for widget in entry_widgets:
             widget.bind('<KeyRelease>', lambda e: self._update_xml_preview())
 
-        # 绑定 OptionMenu 的变化事件
-        for widget in [self.virt_type, self.firmware_type, self.os_type, self.boot_device]:
+        # 绑定 OptionMenu 的变化事件（使用 lambda 忽略参数）
+        option_widgets = [
+            self.virt_type, self.machine_type, self.chipset_type,
+            self.cpu_mode, self.firmware_type,
+            self.boot_device_1, self.boot_device_2, self.boot_device_3,
+            self.graphics_type, self.video_model, self.usb_controller,
+            self.watchdog_model, self.watchdog_action, self.rtc_clock,
+        ]
+        for widget in option_widgets:
+            widget.configure(command=lambda *args: self._update_xml_preview())
+
+        # 绑定 Checkbox 的变化事件
+        checkbox_widgets = [
+            self.secure_boot, self.disable_usb_check, self.disable_sound_check,
+            self.acpi_check, self.apic_check, self.hyperv_check, self.iommu_check,
+            self.balloon_check, self.kvm_clock_check,
+        ]
+        for widget in checkbox_widgets:
             widget.configure(command=self._update_xml_preview)
 
     def _update_xml_preview(self) -> None:
@@ -488,62 +356,104 @@ class VmPanel(ctk.CTkFrame):
         except Exception:
             return '<!-- 配置不完整或无效，请检查输入 -->'
 
-    # ========== 磁盘配置方法 ==========
+    # ========== 存储配置方法 ==========
     def add_disk(self) -> None:
         """添加磁盘配置行."""
-        self.disk_frame.add_disk()
+        self.storage_tab.add_disk()
+
+    def add_cdrom(self) -> None:
+        """添加光驱配置行."""
+        self.storage_tab.add_cdrom()
 
     # ========== 网络配置方法 ==========
     def add_network(self) -> None:
         """添加网络配置行."""
-        self.network_frame.add_network()
+        self.network_tab.add_network()
 
     # ========== 高级配置方法 ==========
     def add_hostdev(self) -> None:
         """添加 PCI 直通设备."""
-        self.hostdev_frame.add_hostdev()
+        self.hostdev_tab.add_hostdev()
 
     def add_usb(self) -> None:
         """添加 USB 设备."""
-        usb_id = self.usb_entry.get().strip()
-        if not usb_id or ':' not in usb_id:
-            messagebox.showwarning('警告', '请输入有效的 USB 设备 ID (格式：Vendor:Product)!')
-            return
-        self.usb_list.append(usb_id)
-        self.usb_display.configure(text=f'已添加 USB: {", ".join(self.usb_list)}')
-        self.usb_entry.delete(0, END)
-        self.update_info(f'已添加 USB 设备：{usb_id}')
+        self.devices_tab.add_usb()
 
     # ========== 核心功能方法 ==========
     def clear_all(self) -> None:
         """清空所有配置."""
         if messagebox.askyesno('确认', '确定要清空所有配置吗？'):
-            # 清空基础配置
-            self.vm_name_entry.delete(0, END)
-            self.vm_desc_entry.delete(0, END)
-            self.vcpu_entry.delete(0, END)
-            self.vcpu_entry.insert(0, '2')
-            self.memory_entry.delete(0, END)
-            self.memory_entry.insert(0, '2048')
-            self.machine_type.delete(0, END)
-            self.machine_type.insert(0, 'q35')
+            # 清空基础配置 Tab
+            self.basic_tab.vm_name_entry.delete(0, END)
+            self.basic_tab.vm_desc_entry.delete(0, END)
+            self.basic_tab.uuid_entry.delete(0, END)
+            self.basic_tab.machine_type.set('q35')
+            self.basic_tab.virt_type.set('hvm')
+            self.basic_tab.chipset_type.set('Q35')
+            self.basic_tab.vcpu_entry.delete(0, END)
+            self.basic_tab.vcpu_entry.insert(0, '2')
+            self.basic_tab.cpu_mode.set('host-model')
+            self.basic_tab.memory_entry.delete(0, END)
+            self.basic_tab.memory_entry.insert(0, '2048')
+            self.basic_tab.current_memory_entry.delete(0, END)
+            self.basic_tab.current_memory_entry.insert(0, '2048')
+            self.basic_tab.max_memory_entry.delete(0, END)
+            self.basic_tab.max_memory_entry.insert(0, '4096')
+            self.basic_tab.swap_entry.delete(0, END)
+            self.basic_tab.swap_entry.insert(0, '0')
 
-            # 清空磁盘
-            for entry in self.disk_frame.disk_entries[:]:
-                self.disk_frame.remove_disk(entry['frame'])
+            # 清空引导/OS Tab
+            self.os_tab.firmware_type.set('BIOS')
+            self.os_tab.secure_boot.deselect()
+            self.os_tab.boot_device_1.set('hd')
+            self.os_tab.boot_device_2.set('cdrom')
+            self.os_tab.boot_device_3.set('none')
+            self.os_tab.boot_timeout_entry.delete(0, END)
+            self.os_tab.boot_timeout_entry.insert(0, '-1')
 
-            # 清空网络
-            for entry in self.network_frame.network_entries[:]:
-                self.network_frame.remove_network(entry['frame'])
+            # 清空存储 Tab
+            for entry in self.storage_tab.disk_frame.disk_entries[:]:
+                self.storage_tab.disk_frame.remove_disk(entry['frame'])
 
-            # 清空 PCI 设备
-            for entry in self.hostdev_frame.hostdev_entries[:]:
-                self.hostdev_frame.remove_hostdev(entry['frame'])
+            # 清空网络 Tab
+            for entry in self.network_tab.network_frame.network_entries[:]:
+                self.network_tab.network_frame.remove_network(entry['frame'])
 
-            # 清空 USB
-            self.usb_list.clear()
-            self.usb_display.configure(text='')
-            self.usb_entry.delete(0, END)
+            # 清空设备 Tab
+            self.devices_tab.graphics_type.set('vnc')
+            self.devices_tab.graphics_listen.delete(0, END)
+            self.devices_tab.graphics_listen.insert(0, '0.0.0.0')
+            self.devices_tab.video_model.set('qxl')
+            self.devices_tab.vram_entry.delete(0, END)
+            self.devices_tab.vram_entry.insert(0, '64')
+            self.devices_tab.usb_controller.set('qemu-xhci')
+            self.devices_tab.disable_usb_check.deselect()
+            self.devices_tab.disable_sound_check.deselect()
+            self.devices_tab.usb_list.clear()
+            self.devices_tab.usb_display.configure(text='')
+            self.devices_tab.usb_entry.delete(0, END)
+
+            # 清空功能特性 Tab
+            self.features_tab.acpi_check.select()
+            self.features_tab.apic_check.select()
+            self.features_tab.hyperv_check.deselect()
+            self.features_tab.iommu_check.deselect()
+
+            # 清空 PCI 直通 Tab
+            for entry in self.hostdev_tab.hostdev_frame.hostdev_entries[:]:
+                self.hostdev_tab.hostdev_frame.remove_hostdev(entry['frame'])
+
+            # 清空内存管理 Tab
+            self.memory_tab.balloon_check.deselect()
+            self.memory_tab.balloon_target_entry.delete(0, END)
+            self.memory_tab.balloon_target_entry.insert(0, '2048')
+            self.memory_tab.balloon_target_entry.configure(state='disabled')
+
+            # 清空时钟/看门狗 Tab
+            self.clock_tab.watchdog_model.set('none')
+            self.clock_tab.watchdog_action.set('reset')
+            self.clock_tab.rtc_clock.set('utc')
+            self.clock_tab.kvm_clock_check.select()
 
             # 清空 XML 预览
             self.xml_textbox.delete('1.0', END)
@@ -556,26 +466,43 @@ class VmPanel(ctk.CTkFrame):
         if not vm_name:
             raise ValueError('虚拟机名称不能为空!')
 
+        # 收集 UUID（如果没有则生成）
+        uuid_val = self.uuid_entry.get().strip()
+        if not uuid_val:
+            uuid_val = str(uuid.uuid4())
+
+        # 收集引导设备
+        boot_devices = []
+        for dev in [self.boot_device_1.get(), self.boot_device_2.get(), self.boot_device_3.get()]:
+            if dev and dev != 'none':
+                boot_devices.append(dev)
+
         return {
             'name': vm_name,
             'description': self.vm_desc_entry.get().strip(),
+            'uuid': uuid_val,
             'vcpu': int(self.vcpu_entry.get().strip() or '2'),
+            'cpu_mode': self.cpu_mode.get(),
             'memory': int(self.memory_entry.get().strip() or '2048'),
+            'current_memory': int(self.current_memory_entry.get().strip() or self.memory_entry.get().strip() or '2048'),
+            'max_memory': int(self.max_memory_entry.get().strip() or '4096'),
+            'swap': int(self.swap_entry.get().strip() or '0'),
             'virt_type': self.virt_type.get(),
             'machine': self.machine_type.get().strip() or 'q35',
+            'chipset': self.chipset_type.get(),
             'firmware': self.firmware_type.get(),
-            'os_type': self.os_type.get(),
-            'boot_device': self.boot_device.get(),
-            'disks': self.disk_frame.get_disks(),
-            'networks': self.network_frame.get_networks(),
-            'hostdevs': self.hostdev_frame.get_hostdevs(),
-            'usb_devices': self.usb_list.copy(),
-            'features': {
-                'acpi': self.acpi_check.get(),
-                'apic': self.apic_check.get(),
-                'hyperv': self.hyperv_check.get(),
-                'iommu': self.iommu_check.get(),
-            },
+            'secure_boot': self.secure_boot.get(),
+            'boot_devices': boot_devices,
+            'boot_timeout': int(self.boot_timeout_entry.get().strip() or '-1'),
+            'disks': self.storage_tab.get_disks(),
+            'networks': self.network_tab.get_networks(),
+            'hostdevs': self.hostdev_tab.get_hostdevs(),
+            'graphics': self.devices_tab.get_graphics_config(),
+            'usb': self.devices_tab.get_usb_config(),
+            'features': self.features_tab.get_features(),
+            'watchdog': self.clock_tab.get_watchdog_config(),
+            'balloon': self.memory_tab.get_balloon_config(),
+            'clock': self.clock_tab.get_clock_config(),
         }
 
     def generate_xml(self) -> None:

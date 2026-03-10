@@ -41,12 +41,23 @@ python -m nuitka --follow-imports --enable-plugin=tk-inter --include-package=cus
   - `vm_panel/` - KVM/QEMU 虚拟机 XML 配置生成模块
     - `__init__.py` - 模块入口，导出 `VmPanel`
     - `styles.py` - 全局样式常量
+    - `tabs/` - Tab 配置子模块（每个 Tab 独立类）
+      - `__init__.py` - 导出所有 Tab 类
+      - `basic_tab.py` - 基础配置 Tab（系统、CPU、内存）
+      - `os_tab.py` - 引导/OS 配置 Tab
+      - `storage_tab.py` - 存储配置 Tab
+      - `network_tab.py` - 网络配置 Tab
+      - `devices_tab.py` - 设备配置 Tab（图形、USB）
+      - `features_tab.py` - 功能特性 Tab（ACPI/APIC/Hyper-V/IOMMU）
+      - `hostdev_tab.py` - PCI 直通设备 Tab
+      - `memory_tab.py` - 内存管理 Tab（balloon）
+      - `clock_tab.py` - 时钟/看门狗 Tab
     - `frames/` - 可滚动配置框架子模块
       - `disk_frame.py` - 磁盘配置框架
       - `network_frame.py` - 网络配置框架
       - `hostdev_frame.py` - PCI 设备配置框架
     - `xml_builder.py` - libvirt XML 构建器
-    - `vm_panel.py` - VmPanel 主类
+    - `vm_panel.py` - VmPanel 主类（组合各 Tab 模块）
 - `drag.py` - 拖拽排序功能示例
 - `example/` - customtkinter 示例代码
 
@@ -59,10 +70,16 @@ python -m nuitka --follow-imports --enable-plugin=tk-inter --include-package=cus
 - `libvirt` / `virsh` - 虚拟机管理 (可选)
 
 ### VmPanel 虚拟机配置
-- 基础配置：名称、描述、vCPU、内存、机器类型、固件 (BIOS/UEFI)
-- 磁盘配置：支持多磁盘，类型 (qcow2/raw/vmdk)、总线 (virtio/sata/ide/scsi)
-- 网络配置：支持多网卡，模式 (NAT/Bridge/Macvtap)、MAC 地址生成
-- 高级配置：PCI 直通、USB 设备、ACPI/APIC/Hyper-V/IOMMU 特性
+- **9 个配置 Tab**：
+  - 基础配置：虚拟机名称、描述、UUID、机型 (q35/pc/virt)、虚拟化类型 (hvm/pv)、芯片组、vCPU、CPU 模式、内存/当前内存/最大内存/交换内存
+  - 引导/OS：固件 (BIOS/UEFI)、安全启动、3 个引导设备、超时设置
+  - 存储：磁盘列表 (qcow2/raw/vmdk/vdi)、总线 (virtio/sata/ide/scsi)、光驱 (cdrom)
+  - 网络：网卡列表、模式 (NAT/Bridge/Macvtap)、MAC 地址生成
+  - 设备：图形显示 (vnc/spice)、视频模型、VRAM、USB 控制器、USB 设备
+  - 功能特性：ACPI、APIC、Hyper-V、IOMMU
+  - PCI 直通：PCI 设备列表 (domain:bus:slot.function)
+  - 内存管理：内存平衡 (balloon)
+  - 时钟/看门狗：RTC 时钟、KVM 时钟、看门狗模型/动作
 - **动态 XML 预览**：配置变更时自动更新 XML 预览
 - XML 生成：生成标准 libvirt domain XML
 - 保存/创建：保存 XML 文件或通过 virsh 创建虚拟机

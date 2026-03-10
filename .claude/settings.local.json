@@ -7,7 +7,9 @@
       "Bash(python -c \"import ast; ast.parse\\(open\\('main.py', encoding='utf-8'\\).read\\(\\)\\)\" && echo \"Syntax OK\")",
       "Bash(python -c \"\nimport sys\nsys.path.insert\\(0, '.'\\)\nfrom panels.vm_panel import VmPanel, ScrollableDiskFrame, ScrollableNetworkFrame, ScrollableHostdevFrame\nprint\\('Import successful!'\\)\nprint\\('ScrollableDiskFrame has on_change_callback:', hasattr\\(ScrollableDiskFrame, 'on_change_callback'\\)\\)\n\")",
       "Bash(python -c \"\nfrom panels.vm_panel import VmPanel\nfrom panels.vm_panel.scrollable_frames import ScrollableDiskFrame, ScrollableNetworkFrame, ScrollableHostdevFrame\nfrom panels.vm_panel.xml_builder import build_libvirt_xml\nfrom panels.vm_panel.styles import CTK_FONT_MAIN, BG_COLOR_MAIN\nprint\\('All imports successful!'\\)\nprint\\('VmPanel:', VmPanel\\)\nprint\\('ScrollableDiskFrame:', ScrollableDiskFrame\\)\n\")",
-      "Bash(python -c \"\nfrom panels.vm_panel import VmPanel\nfrom panels.vm_panel.frames import ScrollableDiskFrame, ScrollableNetworkFrame, ScrollableHostdevFrame\nfrom panels.vm_panel.frames.disk_frame import ScrollableDiskFrame as DiskFrame\nprint\\('All imports successful!'\\)\n\")"
+      "Bash(python -c \"\nfrom panels.vm_panel import VmPanel\nfrom panels.vm_panel.frames import ScrollableDiskFrame, ScrollableNetworkFrame, ScrollableHostdevFrame\nfrom panels.vm_panel.frames.disk_frame import ScrollableDiskFrame as DiskFrame\nprint\\('All imports successful!'\\)\n\")",
+      "WebFetch(domain:www.libvirt.org)",
+      "Bash(python main.py)"
     ]
   }
 }
