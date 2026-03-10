@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "WebSearch",
+      "Bash(python -c \"import ast; ast.parse\\(open\\('panels/vm_panel.py'\\).read\\(\\)\\)\" && echo \"Syntax OK\")",
+      "Bash(python -c \"import ast; ast.parse\\(open\\('panels/vm_panel.py', encoding='utf-8'\\).read\\(\\)\\)\" && echo \"Syntax OK\")",
+      "Bash(python -c \"import ast; ast.parse\\(open\\('main.py', encoding='utf-8'\\).read\\(\\)\\)\" && echo \"Syntax OK\")"
+    ]
+  }
+}

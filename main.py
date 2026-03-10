@@ -8,6 +8,7 @@ from PIL import Image
 
 from panels.home_panel import HomePanel
 from panels.json_panel import JsonPanel
+from panels.vm_panel import VmPanel
 
 
 class App(ctk.CTk):
@@ -34,7 +35,7 @@ class App(ctk.CTk):
         # create navigation frame
         self.navigation_frame = ctk.CTkFrame(self, corner_radius=0)
         self.navigation_frame.grid(row=0, column=0, sticky='nsew')
-        self.navigation_frame.grid_rowconfigure(4, weight=1)
+        self.navigation_frame.grid_rowconfigure(5, weight=1)
 
         self.navigation_frame_label = ctk.CTkLabel(
             self.navigation_frame,
@@ -56,29 +57,30 @@ class App(ctk.CTk):
 
         self.json_button = self.sidebar_btn(
             self.navigation_frame,
-            name='json',
+            name='JSON',
             dark_image_name='chat_dark',
             light_image_name='chat_light',
             command=lambda: self.select_frame_by_name('json'),
             grid=(2, 0),
         )
 
-        self.frame_3_button = self.sidebar_btn(
+        self.vm_button = self.sidebar_btn(
             self.navigation_frame,
-            name='Frame 3',
+            name='VM',
             dark_image_name='add_user_dark',
             light_image_name='add_user_light',
-            command=lambda: self.select_frame_by_name('frame_3'),
+            command=lambda: self.select_frame_by_name('vm'),
             grid=(3, 0),
         )
+
         # create home frame
         self.home_panel = HomePanel(self)
         self.json_panel = JsonPanel(self)
-        self.third_panel = ctk.CTkFrame(self, corner_radius=0, fg_color='transparent')
+        self.vm_panel = VmPanel(self)
         self.frame_mapping = {
             'home': (self.home_button, self.home_panel),
             'json': (self.json_button, self.json_panel),
-            'frame_3': (self.frame_3_button, self.third_panel),
+            'vm': (self.vm_button, self.vm_panel),
         }
         # select default frame
         self.select_frame_by_name('home')
