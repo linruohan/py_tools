@@ -3,7 +3,33 @@
 import customtkinter as ctk
 
 from .styles import BG_COLOR_CONTENT, CTK_FONT_BOLD, CTK_FONT_SMALL
-from .tabs import BasicTab, DevicesTab, StorageTab
+from .tabs import (
+    BasicTab,
+    BlockIOTuningTab,
+    CPUAllocationTab,
+    CPUModelTopologyTab,
+    CPUTuningTab,
+    DevicesTab,
+    DiskThrottleGroupTab,
+    EventsConfigurationTab,
+    FibreChannelVMIDTab,
+    HypervisorFeaturesTab,
+    IOThreadsAllocationTab,
+    KeyWrapTab,
+    LaunchSecurityTab,
+    MemoryAllocationTab,
+    MemoryBackingTab,
+    MemoryTuningTab,
+    NUMANodeTuningTab,
+    OSBootingTab,
+    PerformanceMonitoringTab,
+    PowerManagementTab,
+    ResourcePartitioningTab,
+    SecurityLabelTab,
+    SMBIOSSystemTab,
+    StorageTab,
+    TimeKeepingTab,
+)
 
 
 class TabToggleSwitch(ctk.CTkFrame):
@@ -27,7 +53,6 @@ class TabToggleSwitch(ctk.CTkFrame):
         self.on_change_callback = on_change_callback
         self.disabled = disabled
 
-        # 创建开关变量和控件
         self.toggle_var = ctk.BooleanVar(value=default_on and not disabled)
 
         self.toggle_switch = ctk.CTkCheckBox(
@@ -57,7 +82,6 @@ class TabToggleSwitch(ctk.CTkFrame):
 class TabTogglePanel(ctk.CTkFrame):
     """Tab 切换开关面板 - 管理所有 Tab 的开关."""
 
-    # 定义所有 Tab 的配置
     TABS_CONFIG = {
         'general_metadata': {
             'name': '基础信息',
@@ -70,134 +94,134 @@ class TabTogglePanel(ctk.CTkFrame):
             'name': '系统引导',
             'disabled': False,
             'default_on': True,
-            'class': None,
-            'has_callback': False,
+            'class': OSBootingTab,
+            'has_callback': True,
         },
         'smbios_system': {
-            'name': 'SMBIOS 系统信息',
+            'name': 'SMBIOS',
             'disabled': False,
             'default_on': False,
-            'class': None,
-            'has_callback': False,
+            'class': SMBIOSSystemTab,
+            'has_callback': True,
         },
         'cpu_allocation': {
-            'name': 'CPU 分配',
+            'name': 'CPU分配',
             'disabled': False,
             'default_on': True,
-            'class': None,
-            'has_callback': False,
+            'class': CPUAllocationTab,
+            'has_callback': True,
         },
         'iothreads_allocation': {
-            'name': 'IO 线程分配',
+            'name': 'IO线程',
             'disabled': False,
             'default_on': False,
-            'class': None,
-            'has_callback': False,
+            'class': IOThreadsAllocationTab,
+            'has_callback': True,
         },
         'cpu_tuning': {
-            'name': 'CPU 优化',
+            'name': 'CPU优化',
             'disabled': False,
             'default_on': False,
-            'class': None,
-            'has_callback': False,
+            'class': CPUTuningTab,
+            'has_callback': True,
         },
         'memory_allocation': {
             'name': '内存分配',
             'disabled': False,
             'default_on': True,
-            'class': None,
-            'has_callback': False,
+            'class': MemoryAllocationTab,
+            'has_callback': True,
         },
         'memory_backing': {
             'name': '内存后端',
             'disabled': False,
             'default_on': False,
-            'class': None,
-            'has_callback': False,
+            'class': MemoryBackingTab,
+            'has_callback': True,
         },
         'memory_tuning': {
             'name': '内存优化',
             'disabled': False,
             'default_on': False,
-            'class': None,
-            'has_callback': False,
+            'class': MemoryTuningTab,
+            'has_callback': True,
         },
         'numa_node_tuning': {
-            'name': 'NUMA 节点优化',
+            'name': 'NUMA优化',
             'disabled': False,
             'default_on': False,
-            'class': None,
-            'has_callback': False,
+            'class': NUMANodeTuningTab,
+            'has_callback': True,
         },
         'block_io_tuning': {
-            'name': '块 I/O 优化',
+            'name': '块IO优化',
             'disabled': False,
             'default_on': False,
-            'class': None,
-            'has_callback': False,
+            'class': BlockIOTuningTab,
+            'has_callback': True,
         },
         'resource_partitioning': {
             'name': '资源分区',
             'disabled': False,
             'default_on': False,
-            'class': None,
-            'has_callback': False,
+            'class': ResourcePartitioningTab,
+            'has_callback': True,
         },
         'fibre_channel_vmid': {
-            'name': '光纤通道 VMID',
+            'name': 'FC VMID',
             'disabled': False,
             'default_on': False,
-            'class': None,
-            'has_callback': False,
+            'class': FibreChannelVMIDTab,
+            'has_callback': True,
         },
         'cpu_model_topology': {
-            'name': 'CPU 模型与拓扑',
+            'name': 'CPU模型',
             'disabled': False,
             'default_on': False,
-            'class': None,
-            'has_callback': False,
+            'class': CPUModelTopologyTab,
+            'has_callback': True,
         },
         'events_configuration': {
             'name': '事件配置',
             'disabled': False,
             'default_on': False,
-            'class': None,
-            'has_callback': False,
+            'class': EventsConfigurationTab,
+            'has_callback': True,
         },
         'power_management': {
             'name': '电源管理',
             'disabled': False,
             'default_on': False,
-            'class': None,
-            'has_callback': False,
+            'class': PowerManagementTab,
+            'has_callback': True,
         },
         'disk_throttle_group': {
-            'name': '磁盘节流组管理',
+            'name': '磁盘节流组',
             'disabled': False,
             'default_on': False,
-            'class': None,
-            'has_callback': False,
+            'class': DiskThrottleGroupTab,
+            'has_callback': True,
         },
         'hypervisor_features': {
             'name': '虚拟化特性',
             'disabled': False,
             'default_on': False,
-            'class': None,
-            'has_callback': False,
+            'class': HypervisorFeaturesTab,
+            'has_callback': True,
         },
         'time_keeping': {
             'name': '时间同步',
             'disabled': False,
             'default_on': False,
-            'class': None,
-            'has_callback': False,
+            'class': TimeKeepingTab,
+            'has_callback': True,
         },
         'performance_monitoring': {
-            'name': '性能监控事件',
+            'name': '性能监控',
             'disabled': False,
             'default_on': False,
-            'class': None,
-            'has_callback': False,
+            'class': PerformanceMonitoringTab,
+            'has_callback': True,
         },
         'devices': {
             'name': '设备',
@@ -210,22 +234,22 @@ class TabTogglePanel(ctk.CTkFrame):
             'name': '安全标签',
             'disabled': False,
             'default_on': False,
-            'class': None,
-            'has_callback': False,
+            'class': SecurityLabelTab,
+            'has_callback': True,
         },
         'key_wrap': {
-            'name': '密钥封装',
+            'name': '密钥包装',
             'disabled': False,
-            'default_on': True,
-            'class': StorageTab,
+            'default_on': False,
+            'class': KeyWrapTab,
             'has_callback': True,
         },
         'launch_security': {
             'name': '启动安全',
             'disabled': False,
             'default_on': False,
-            'class': None,
-            'has_callback': False,
+            'class': LaunchSecurityTab,
+            'has_callback': True,
         },
     }
 
@@ -237,28 +261,24 @@ class TabTogglePanel(ctk.CTkFrame):
         self.toggle_switches = {}
         self.expanded = True
 
-        # 创建开关面板
         self._create_switches()
 
     def _create_switches(self) -> None:
         """创建所有 Tab 的开关."""
-        # 配置列权重 - 所有列权重为 0，保持左对齐
-        for col in range(25):
+        for col in range(30):
             self.grid_columnconfigure(col, weight=0)
 
-        # 标题
         ctk.CTkLabel(
             self,
-            text='Tab 显示控制:',
+            text='Tab显示:',
             font=CTK_FONT_BOLD,
             text_color='#64b5f6',
         ).grid(row=0, column=0, padx=10, pady=5, sticky='w')
 
-        # 创建开关 - 两行布局
         tab_keys = list(self.TABS_CONFIG.keys())
-        mid_point = len(tab_keys) // 2
+        mid_point = (len(tab_keys) + 1) // 3
+        mid_point2 = 2 * (len(tab_keys) + 1) // 3
 
-        # 第一行
         for i, tab_key in enumerate(tab_keys[:mid_point]):
             tab_config = self.TABS_CONFIG[tab_key]
             switch = TabToggleSwitch(
@@ -272,8 +292,7 @@ class TabTogglePanel(ctk.CTkFrame):
             switch.grid(row=1, column=i, padx=5, pady=2, sticky='w')
             self.toggle_switches[tab_key] = switch
 
-        # 第二行
-        for i, tab_key in enumerate(tab_keys[mid_point:]):
+        for i, tab_key in enumerate(tab_keys[mid_point:mid_point2]):
             tab_config = self.TABS_CONFIG[tab_key]
             switch = TabToggleSwitch(
                 self,
@@ -286,7 +305,19 @@ class TabTogglePanel(ctk.CTkFrame):
             switch.grid(row=2, column=i, padx=5, pady=2, sticky='w')
             self.toggle_switches[tab_key] = switch
 
-        # 展开/收起按钮
+        for i, tab_key in enumerate(tab_keys[mid_point2:]):
+            tab_config = self.TABS_CONFIG[tab_key]
+            switch = TabToggleSwitch(
+                self,
+                tab_name=tab_key,
+                tab_display_name=tab_config['name'],
+                on_change_callback=self._on_tab_toggle,
+                disabled=tab_config['disabled'],
+                default_on=tab_config.get('default_on', True),
+            )
+            switch.grid(row=3, column=i, padx=5, pady=2, sticky='w')
+            self.toggle_switches[tab_key] = switch
+
         self.toggle_btn = ctk.CTkButton(
             self,
             text='▼',
@@ -297,8 +328,8 @@ class TabTogglePanel(ctk.CTkFrame):
             font=CTK_FONT_SMALL,
             command=self._toggle_panel,
         )
-        btn_col = max(mid_point, len(tab_keys) - mid_point)
-        self.toggle_btn.grid(row=1, column=btn_col, rowspan=2, padx=10, pady=2, sticky='e')
+        btn_col = max(mid_point, mid_point2 - mid_point, len(tab_keys) - mid_point2)
+        self.toggle_btn.grid(row=1, column=btn_col + 1, rowspan=3, padx=10, pady=2, sticky='e')
 
     def _on_tab_toggle(self, tab_name: str, enabled: bool) -> None:
         """Tab 开关改变时的回调."""
@@ -308,21 +339,24 @@ class TabTogglePanel(ctk.CTkFrame):
     def _toggle_panel(self) -> None:
         """展开/收起面板."""
         if self.expanded:
-            # 收起 - 隐藏第二行
-            mid_point = len(self.TABS_CONFIG) // 2
+            tab_keys = list(self.TABS_CONFIG.keys())
+            mid_point2 = 2 * (len(tab_keys) + 1) // 3
             for i, (tab_key, switch) in enumerate(self.toggle_switches.items()):
-                if i >= mid_point:
+                if i >= mid_point2:
                     switch.grid_remove()
             self.toggle_btn.configure(text='▲')
             self.expanded = False
         else:
-            # 展开 - 显示所有
-            mid_point = len(self.TABS_CONFIG) // 2
+            tab_keys = list(self.TABS_CONFIG.keys())
+            mid_point = (len(tab_keys) + 1) // 3
+            mid_point2 = 2 * (len(tab_keys) + 1) // 3
             for i, (tab_key, switch) in enumerate(self.toggle_switches.items()):
                 if i < mid_point:
                     switch.grid(row=1, column=i, padx=5, pady=2, sticky='w')
-                else:
+                elif i < mid_point2:
                     switch.grid(row=2, column=(i - mid_point), padx=5, pady=2, sticky='w')
+                else:
+                    switch.grid(row=3, column=(i - mid_point2), padx=5, pady=2, sticky='w')
             self.toggle_btn.configure(text='▼')
             self.expanded = True
 
