@@ -24,38 +24,43 @@ class ScrollableNetworkFrame(ctk.CTkScrollableFrame):
 
         # 网卡名称
         name_entry = ctk.CTkEntry(
-            frame, placeholder_text='网卡名称', width=100, font=CTK_FONT_SMALL
+            frame, placeholder_text='网卡名称', width=80, font=CTK_FONT_SMALL
         )
-        name_entry.grid(row=0, column=0, padx=5)
+        name_entry.grid(row=0, column=0, padx=2)
+        name_entry.bind('<KeyRelease>', lambda e: self._trigger_change())
 
         # 网络模式
         network_mode = ctk.CTkOptionMenu(
             frame,
-            values=['NAT', 'Bridge', 'Macvtap', 'Virtual Network'],
+            values=['NAT', 'Bridge', 'Macvtap', 'Virtual Network', 'Direct Attachment', 'User'],
             width=130,
             font=CTK_FONT_SMALL,
         )
         network_mode.set('NAT')
-        network_mode.grid(row=0, column=1, padx=5)
+        network_mode.grid(row=0, column=1, padx=2)
+        network_mode.configure(command=self._trigger_change)
 
         # 网桥/网络名称
         bridge_entry = ctk.CTkEntry(
-            frame, placeholder_text='网桥名称', width=120, font=CTK_FONT_SMALL
+            frame, placeholder_text='网桥名称', width=100, font=CTK_FONT_SMALL
         )
-        bridge_entry.grid(row=0, column=2, padx=5)
+        bridge_entry.grid(row=0, column=2, padx=2)
+        bridge_entry.bind('<KeyRelease>', lambda e: self._trigger_change())
 
         # 模型类型
         model_type = ctk.CTkOptionMenu(
-            frame, values=['virtio', 'e1000', 'rtl8139', 'vmxnet3'], width=80, font=CTK_FONT_SMALL
+            frame, values=['virtio', 'virtio-transitional', 'virtio-non-transitional', 'e1000', 'rtl8139', 'vmxnet3', 'ne2k_pci'], width=180, font=CTK_FONT_SMALL
         )
         model_type.set('virtio')
-        model_type.grid(row=0, column=3, padx=5)
+        model_type.grid(row=0, column=3, padx=2)
+        model_type.configure(command=self._trigger_change)
 
         # MAC 地址
         mac_entry = ctk.CTkEntry(
-            frame, placeholder_text='MAC 地址', width=140, font=CTK_FONT_SMALL
+            frame, placeholder_text='MAC 地址', width=130, font=CTK_FONT_SMALL
         )
-        mac_entry.grid(row=0, column=4, padx=5)
+        mac_entry.grid(row=0, column=4, padx=2)
+        mac_entry.bind('<KeyRelease>', lambda e: self._trigger_change())
 
         # 生成随机 MAC 按钮
         gen_mac_btn = ctk.CTkButton(
@@ -67,25 +72,44 @@ class ScrollableNetworkFrame(ctk.CTkScrollableFrame):
             font=CTK_FONT_SMALL,
             command=lambda: self.generate_mac(mac_entry),
         )
-        gen_mac_btn.grid(row=0, column=5, padx=5)
+        gen_mac_btn.grid(row=0, column=5, padx=2)
+
+        # vhost 多队列
+        vhost_check = ctk.CTkCheckBox(frame, text='vhost', width=50, font=CTK_FONT_SMALL)
+        vhost_check.grid(row=0, column=6, padx=2)
+        vhost_check.configure(command=self._trigger_change)
+
+        # 多队列数
+        queues_entry = ctk.CTkEntry(
+            frame, placeholder_text='队列数', width=50, font=CTK_FONT_SMALL
+        )
+        queues_entry.grid(row=0, column=7, padx=2)
+        queues_entry.insert(0, '1')
+        queues_entry.bind('<KeyRelease>', lambda e: self._trigger_change())
+
+        # VLAN ID
+        vlan_entry = ctk.CTkEntry(
+            frame, placeholder_text='VLAN', width=50, font=CTK_FONT_SMALL
+        )
+        vlan_entry.grid(row=0, column=8, padx=2)
+        vlan_entry.bind('<KeyRelease>', lambda e: self._trigger_change())
+
+        # 链路状态
+        link_check = ctk.CTkCheckBox(frame, text='Link Down', width=70, font=CTK_FONT_SMALL)
+        link_check.grid(row=0, column=9, padx=2)
+        link_check.configure(command=self._trigger_change)
 
         # 删除按钮
         del_btn = ctk.CTkButton(
             frame,
-            text='删除',
-            width=50,
+            text='X',
+            width=25,
             fg_color='#f44336',
             hover_color='#d32f2f',
             font=CTK_FONT_SMALL,
             command=lambda: self.remove_network(frame),
         )
-        del_btn.grid(row=0, column=6, padx=5)
-
-        # 绑定变化事件
-        for widget in [name_entry, bridge_entry, mac_entry]:
-            widget.bind('<KeyRelease>', lambda e: self._trigger_change())
-        for widget in [network_mode, model_type]:
-            widget.configure(command=self._trigger_change)
+        del_btn.grid(row=0, column=10, padx=2)
 
         self.network_entries.append(
             {
@@ -95,6 +119,10 @@ class ScrollableNetworkFrame(ctk.CTkScrollableFrame):
                 'bridge': bridge_entry,
                 'model': model_type,
                 'mac': mac_entry,
+                'vhost': vhost_check,
+                'queues': queues_entry,
+                'vlan': vlan_entry,
+                'link_down': link_check,
             }
         )
         self.network_count += 1
@@ -137,6 +165,10 @@ class ScrollableNetworkFrame(ctk.CTkScrollableFrame):
                         'bridge': bridge,
                         'model': entry['model'].get(),
                         'mac': mac if mac else self._generate_mac(),
+                        'vhost': entry['vhost'].get(),
+                        'queues': int(entry['queues'].get().strip() or '1'),
+                        'vlan': entry['vlan'].get().strip() or None,
+                        'link_down': entry['link_down'].get(),
                     }
                 )
         return networks

@@ -1,5 +1,6 @@
 {
     "python.languageServer": "None",
     "editor.formatOnSave": true,
-    "window.density.editorTabHeight": "compact"
+    "window.density.editorTabHeight": "compact",
+    "files.autoSave": "onFocusChange"
 }

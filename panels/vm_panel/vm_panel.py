@@ -2,24 +2,44 @@
 
 import subprocess
 import uuid
+
 from tkinter import END, filedialog, messagebox
 
 import customtkinter as ctk
 
-from .styles import CTK_FONT_MAIN, CTK_FONT_BOLD, CTK_FONT_MONO, CTK_FONT_SMALL
-from .styles import BG_COLOR_MAIN, BG_COLOR_CONTENT
-from .xml_builder import build_libvirt_xml
+from .styles import (
+    BG_COLOR_CONTENT,
+    BG_COLOR_MAIN,
+    CTK_FONT_BOLD,
+    CTK_FONT_MONO,
+    CTK_FONT_SMALL,
+)
+from .tab_toggle import TabTogglePanel
 from .tabs import (
     BasicTab,
-    OSTab,
-    StorageTab,
-    NetworkTab,
+    ClockTab,
     DevicesTab,
     FeaturesTab,
     HostdevTab,
     MemoryTab,
-    ClockTab,
+    NetworkTab,
+    OSTab,
+    StorageTab,
 )
+from .xml_builder import build_libvirt_xml
+
+# 定义所有可用的 Tab 配置
+TABS_CONFIG = {
+    'basic': {'name': '基础配置', 'class': BasicTab, 'has_callback': False},
+    'os': {'name': '引导/OS', 'class': OSTab, 'has_callback': False},
+    'storage': {'name': '存储', 'class': StorageTab, 'has_callback': True},
+    'network': {'name': '网络', 'class': NetworkTab, 'has_callback': True},
+    'devices': {'name': '设备', 'class': DevicesTab, 'has_callback': True},
+    'features': {'name': '功能特性', 'class': FeaturesTab, 'has_callback': True},
+    'hostdev': {'name': 'PCI 直通', 'class': HostdevTab, 'has_callback': True},
+    'memory': {'name': '内存管理', 'class': MemoryTab, 'has_callback': True},
+    'clock': {'name': '时钟/看门狗', 'class': ClockTab, 'has_callback': True},
+}
 
 
 class VmPanel(ctk.CTkFrame):
@@ -32,11 +52,21 @@ class VmPanel(ctk.CTkFrame):
         self.fg_color = 'transparent'
 
         # 主布局：1 行 1 列
-        self.grid_rowconfigure(0, weight=1)
+        self.grid_rowconfigure(3, weight=1)
         self.grid_columnconfigure(0, weight=1)
 
         self.vm_data = {}
         self._updating_xml = False  # 防止递归更新
+
+        # Tab 管理
+        self.tab_instances = {}  # 存储已创建的 Tab 实例
+        self.tab_enabled = {}  # 存储 Tab 启用状态
+
+        # 从 TabTogglePanel 获取默认配置
+        self.tabs_default_config = {
+            tab_key: config.get('default_on', False)
+            for tab_key, config in TabTogglePanel.TABS_CONFIG.items()
+        }
 
         # 初始化 UI
         self.init_ui()
@@ -47,12 +77,27 @@ class VmPanel(ctk.CTkFrame):
         main_frame = ctk.CTkFrame(self, fg_color=BG_COLOR_MAIN, corner_radius=8)
         main_frame.grid(row=0, column=0, padx=10, pady=10, sticky='nsew')
 
-        # 配置内部网格
-        main_frame.grid_rowconfigure(2, weight=1)
+        # 配置 VmPanel 自身的网格权重，确保 main_frame 能正确扩展
+        self.grid_rowconfigure(0, weight=1)
+        self.grid_columnconfigure(0, weight=1)
+
+        # 配置内部网格 - 修复 rowconfigure 配置
+        main_frame.grid_rowconfigure(0, weight=0)  # 工具栏
+        main_frame.grid_rowconfigure(1, weight=0)  # Tab 开关面板
+        main_frame.grid_rowconfigure(2, weight=1)  # Tab 配置区（主要区域）
+        main_frame.grid_rowconfigure(3, weight=1)  # XML 预览区
+        main_frame.grid_rowconfigure(4, weight=0)  # 信息栏
         main_frame.grid_columnconfigure(0, weight=1)
 
         # 顶部工具栏
         self._create_toolbar(main_frame)
+
+        # Tab 开关面板
+        self.tab_toggle_panel = TabTogglePanel(
+            main_frame,
+            on_tab_toggle_callback=self._on_tab_toggle,
+        )
+        self.tab_toggle_panel.grid(row=1, column=0, padx=15, pady=(5, 10), sticky='ew')
 
         # Tab 配置区
         self.tabview = ctk.CTkTabview(
@@ -61,26 +106,33 @@ class VmPanel(ctk.CTkFrame):
             segmented_button_unselected_color=('#DCE4EE', '#2B2B2B'),
             text_color=('gray10', '#DCE4EE'),
         )
-        self.tabview.grid(row=1, column=0, padx=15, pady=10, sticky='nsew')
+        self.tabview.grid(row=2, column=0, padx=15, pady=(5, 10), sticky='nsew')
 
-        # 添加配置 Tab - 按 libvirt 规范分类
-        self.tab_basic = self.tabview.add('基础配置')
-        self.tab_os = self.tabview.add('引导/OS')
-        self.tab_storage = self.tabview.add('存储')
-        self.tab_network = self.tabview.add('网络')
-        self.tab_devices = self.tabview.add('设备')
-        self.tab_features = self.tabview.add('功能特性')
-        self.tab_hostdev = self.tabview.add('PCI 直通')
-        self.tab_memory = self.tabview.add('内存管理')
-        self.tab_clock = self.tabview.add('时钟/看门狗')
+        # 初始化默认启用的 Tab 状态
+        for tab_key, default_enabled in self.tabs_default_config.items():
+            self.tab_enabled[tab_key] = default_enabled
 
-        # 配置每个 Tab 的网格
-        for tab_name in ['基础配置', '引导/OS', '存储', '网络', '设备', '功能特性', 'PCI 直通', '内存管理', '时钟/看门狗']:
-            tab = self.tabview.tab(tab_name)
-            tab.grid_columnconfigure(0, weight=1)
-            tab.grid_rowconfigure(0, weight=1)
+        # 添加默认启用的 Tab
+        first_tab = None
+        for tab_key, enabled in self.tab_enabled.items():
+            if enabled:
+                tab_name = TABS_CONFIG[tab_key]['name']
+                tab = self.tabview.add(tab_name)
+                self.tab_instances[tab_key] = {'tab': tab, 'widget': None}
 
-        # 初始化各个 Tab
+                # 配置网格
+                tab.grid_columnconfigure(0, weight=1)
+                tab.grid_rowconfigure(0, weight=1)
+
+                # 记录第一个 tab
+                if first_tab is None:
+                    first_tab = tab_name
+
+        # 在初始化 tab 内容之前，先切换到第一个 tab，确保 tab 页面已激活
+        if first_tab:
+            self.tabview.set(first_tab)
+
+        # 初始化各个 Tab 的内容
         self._init_tabs()
 
         # 底部 XML 预览区
@@ -162,99 +214,200 @@ class VmPanel(ctk.CTkFrame):
         )
         create_btn.pack(side='left', padx=5)
 
+    def _on_tab_toggle(self, tab_key: str, enabled: bool) -> None:
+        """Tab 开关改变时的回调，参考 001.py 的 toggle_tab 实现."""
+        tab_config = TABS_CONFIG.get(tab_key)
+        if not tab_config:
+            return
+
+        tab_name = tab_config['name']
+
+        if enabled:
+            # 开关打开：添加/恢复 Tab
+            # 检查 Tab 是否已在 tab_instances 中
+            if tab_key not in self.tab_instances:
+                # Tab 不存在，创建新 Tab
+                tab = self.tabview.add(tab_name)
+                self.tab_instances[tab_key] = {'tab': tab, 'widget': None}
+
+                # 配置网格
+                tab.grid_columnconfigure(0, weight=1)
+                tab.grid_rowconfigure(0, weight=1)
+
+                # 创建 Tab 内容
+                self._create_tab_content(tab_key, tab)
+
+                # 切换到此 Tab
+                self.tabview.set(tab_name)
+            elif self.tab_instances[tab_key].get('widget') is None:
+                # Tab 在 tab_instances 中但 widget 不存在，需要重新创建
+                # 对于默认 Tab，tab 可能已经在 tabview 中（只是被隐藏了）
+                tab = self.tab_instances[tab_key]['tab']
+
+                # 如果 tab 也不存在了，需要重新添加
+                try:
+                    self.tabview.tab(tab_name)
+                except ValueError:
+                    # tab 不存在，重新添加
+                    tab = self.tabview.add(tab_name)
+                    self.tab_instances[tab_key]['tab'] = tab
+
+                # 重新创建 Tab 内容
+                self._create_tab_content(tab_key, tab)
+
+                # 切换到此 Tab
+                self.tabview.set(tab_name)
+
+            self.tab_enabled[tab_key] = True
+            self.update_info(f'已启用 Tab: {tab_name}')
+        else:
+            # 开关关闭：隐藏 Tab
+            if tab_key in self.tab_instances:
+                tab_widget = self.tab_instances[tab_key].get('widget')
+                if tab_widget:
+                    tab_widget.destroy()
+                    self.tab_instances[tab_key]['widget'] = None
+
+                # 尝试从 tabview 中删除 tab
+                try:
+                    self.tabview.delete(tab_name)
+                except ValueError:
+                    # 标签页不存在，无需处理
+                    pass
+
+            self.tab_enabled[tab_key] = False
+            self.update_info(f'已禁用 Tab: {tab_name}')
+
+        # 更新 XML 预览
+        self._update_xml_preview()
+
+    def _create_tab_content(self, tab_key: str, tab_parent) -> None:
+        """创建 Tab 内容."""
+        tab_config = TABS_CONFIG.get(tab_key)
+        if not tab_config:
+            return
+
+        tab_class = tab_config['class']
+        has_callback = tab_config.get('has_callback', False)
+
+        if has_callback:
+            tab_instance = tab_class(tab_parent, on_change_callback=self._update_xml_preview)
+        else:
+            tab_instance = tab_class(tab_parent)
+
+        # 确保 tab_parent 的 grid 配置正确
+        tab_parent.grid_columnconfigure(0, weight=1)
+        tab_parent.grid_rowconfigure(0, weight=1)
+
+        tab_instance.grid(row=0, column=0, sticky='nsew')
+        self.tab_instances[tab_key]['widget'] = tab_instance
+
+        # 更新引用
+        self._update_tab_references()
+
     def _init_tabs(self) -> None:
         """初始化所有 Tab."""
+        # 通过统一方法创建所有 Tab 内容
+        for tab_key in TABS_CONFIG:
+            tab_info = self.tab_instances.get(tab_key)
+            if tab_info:
+                tab_widget = tab_info['tab']
+                if tab_widget:
+                    self._create_tab_content(tab_key, tab_widget)
+
+        # 更新引用
+        self._update_tab_references()
+
+    def _update_tab_references(self) -> None:
+        """更新 Tab 引用."""
         # 基础配置 Tab
-        self.basic_tab = BasicTab(self.tab_basic)
-        self.basic_tab.grid(row=0, column=0, sticky='nsew')
+        if 'basic' in self.tab_instances and self.tab_instances['basic'].get('widget'):
+            self.basic_tab = self.tab_instances['basic']['widget']
+            self.vm_name_entry = self.basic_tab.vm_name_entry
+            self.vm_desc_entry = self.basic_tab.vm_desc_entry
+            self.uuid_entry = self.basic_tab.uuid_entry
+            self.machine_type = self.basic_tab.machine_type
+            self.virt_type = self.basic_tab.virt_type
+            self.chipset_type = self.basic_tab.chipset_type
+            self.vcpu_entry = self.basic_tab.vcpu_entry
+            self.cpu_mode = self.basic_tab.cpu_mode
+            self.memory_combo = self.basic_tab.memory_combo
+            self.current_memory_combo = self.basic_tab.current_memory_combo
+            self.max_memory_combo = self.basic_tab.max_memory_combo
+            self.swap_entry = self.basic_tab.swap_entry
 
         # 引导/OS Tab
-        self.os_tab = OSTab(self.tab_os)
-        self.os_tab.grid(row=0, column=0, sticky='nsew')
+        if 'os' in self.tab_instances and self.tab_instances['os'].get('widget'):
+            self.os_tab = self.tab_instances['os']['widget']
+            self.firmware_type = self.os_tab.firmware_type
+            self.secure_boot = self.os_tab.secure_boot
+            self.boot_device_1 = self.os_tab.boot_device_1
+            self.boot_device_2 = self.os_tab.boot_device_2
+            self.boot_device_3 = self.os_tab.boot_device_3
+            self.boot_timeout_entry = self.os_tab.boot_timeout_entry
 
         # 存储 Tab
-        self.storage_tab = StorageTab(self.tab_storage, on_change_callback=self._update_xml_preview)
-        self.storage_tab.grid(row=0, column=0, sticky='nsew')
+        if 'storage' in self.tab_instances and self.tab_instances['storage'].get('widget'):
+            self.storage_tab = self.tab_instances['storage']['widget']
+            self.disk_frame = self.storage_tab.disk_frame
 
         # 网络 Tab
-        self.network_tab = NetworkTab(self.tab_network, on_change_callback=self._update_xml_preview)
-        self.network_tab.grid(row=0, column=0, sticky='nsew')
+        if 'network' in self.tab_instances and self.tab_instances['network'].get('widget'):
+            self.network_tab = self.tab_instances['network']['widget']
+            self.network_frame = self.network_tab.network_frame
 
         # 设备 Tab
-        self.devices_tab = DevicesTab(self.tab_devices, on_change_callback=self._update_xml_preview)
-        self.devices_tab.grid(row=0, column=0, sticky='nsew')
+        if 'devices' in self.tab_instances and self.tab_instances['devices'].get('widget'):
+            self.devices_tab = self.tab_instances['devices']['widget']
+            self.graphics_type = self.devices_tab.graphics_type
+            self.graphics_listen = self.devices_tab.graphics_listen
+            self.graphics_port = self.devices_tab.graphics_port
+            self.video_model = self.devices_tab.video_model
+            self.vram_entry = self.devices_tab.vram_entry
+            self.usb_controller = self.devices_tab.usb_controller
+            self.usb_entry = self.devices_tab.usb_entry
+            self.usb_list = self.devices_tab.usb_list
+            self.usb_display = self.devices_tab.usb_display
+            self.disable_usb_check = self.devices_tab.disable_usb_check
+            self.disable_sound_check = self.devices_tab.disable_sound_check
+            self.serial_type = self.devices_tab.serial_type
+            self.serial_port = self.devices_tab.serial_port
+            self.tpm_model = self.devices_tab.tpm_model
+            self.tpm_version = self.devices_tab.tpm_version
+            self.audio_model = self.devices_tab.audio_model
 
         # 功能特性 Tab
-        self.features_tab = FeaturesTab(self.tab_features, on_change_callback=self._update_xml_preview)
-        self.features_tab.grid(row=0, column=0, sticky='nsew')
+        if 'features' in self.tab_instances and self.tab_instances['features'].get('widget'):
+            self.features_tab = self.tab_instances['features']['widget']
+            self.acpi_check = self.features_tab.acpi_check
+            self.apic_check = self.features_tab.apic_check
+            self.hyperv_check = self.features_tab.hyperv_check
+            self.iommu_check = self.features_tab.iommu_check
 
         # PCI 直通 Tab
-        self.hostdev_tab = HostdevTab(self.tab_hostdev, on_change_callback=self._update_xml_preview)
-        self.hostdev_tab.grid(row=0, column=0, sticky='nsew')
+        if 'hostdev' in self.tab_instances and self.tab_instances['hostdev'].get('widget'):
+            self.hostdev_tab = self.tab_instances['hostdev']['widget']
+            self.hostdev_frame = self.hostdev_tab.hostdev_frame
 
         # 内存管理 Tab
-        self.memory_tab = MemoryTab(self.tab_memory, on_change_callback=self._update_xml_preview)
-        self.memory_tab.grid(row=0, column=0, sticky='nsew')
+        if 'memory' in self.tab_instances and self.tab_instances['memory'].get('widget'):
+            self.memory_tab = self.tab_instances['memory']['widget']
+            self.balloon_check = self.memory_tab.balloon_check
+            self.balloon_target_entry = self.memory_tab.balloon_target_entry
 
         # 时钟/看门狗 Tab
-        self.clock_tab = ClockTab(self.tab_clock, on_change_callback=self._update_xml_preview)
-        self.clock_tab.grid(row=0, column=0, sticky='nsew')
-
-        # 保存引用以便访问
-        self.vm_name_entry = self.basic_tab.vm_name_entry
-        self.vm_desc_entry = self.basic_tab.vm_desc_entry
-        self.uuid_entry = self.basic_tab.uuid_entry
-        self.machine_type = self.basic_tab.machine_type
-        self.virt_type = self.basic_tab.virt_type
-        self.chipset_type = self.basic_tab.chipset_type
-        self.vcpu_entry = self.basic_tab.vcpu_entry
-        self.cpu_mode = self.basic_tab.cpu_mode
-        self.memory_combo = self.basic_tab.memory_combo
-        self.current_memory_combo = self.basic_tab.current_memory_combo
-        self.max_memory_combo = self.basic_tab.max_memory_combo
-        self.swap_entry = self.basic_tab.swap_entry
-
-        self.firmware_type = self.os_tab.firmware_type
-        self.secure_boot = self.os_tab.secure_boot
-        self.boot_device_1 = self.os_tab.boot_device_1
-        self.boot_device_2 = self.os_tab.boot_device_2
-        self.boot_device_3 = self.os_tab.boot_device_3
-        self.boot_timeout_entry = self.os_tab.boot_timeout_entry
-
-        self.disk_frame = self.storage_tab.disk_frame
-        self.network_frame = self.network_tab.network_frame
-
-        self.graphics_type = self.devices_tab.graphics_type
-        self.graphics_listen = self.devices_tab.graphics_listen
-        self.video_model = self.devices_tab.video_model
-        self.vram_entry = self.devices_tab.vram_entry
-        self.usb_controller = self.devices_tab.usb_controller
-        self.usb_entry = self.devices_tab.usb_entry
-        self.usb_list = self.devices_tab.usb_list
-        self.usb_display = self.devices_tab.usb_display
-        self.disable_usb_check = self.devices_tab.disable_usb_check
-        self.disable_sound_check = self.devices_tab.disable_sound_check
-
-        self.acpi_check = self.features_tab.acpi_check
-        self.apic_check = self.features_tab.apic_check
-        self.hyperv_check = self.features_tab.hyperv_check
-        self.iommu_check = self.features_tab.iommu_check
-
-        self.hostdev_frame = self.hostdev_tab.hostdev_frame
-
-        self.balloon_check = self.memory_tab.balloon_check
-        self.balloon_target_entry = self.memory_tab.balloon_target_entry
-
-        self.watchdog_model = self.clock_tab.watchdog_model
-        self.watchdog_action = self.clock_tab.watchdog_action
-        self.rtc_clock = self.clock_tab.rtc_clock
-        self.kvm_clock_check = self.clock_tab.kvm_clock_check
+        if 'clock' in self.tab_instances and self.tab_instances['clock'].get('widget'):
+            self.clock_tab = self.tab_instances['clock']['widget']
+            self.watchdog_model = self.clock_tab.watchdog_model
+            self.watchdog_action = self.clock_tab.watchdog_action
+            self.rtc_clock = self.clock_tab.rtc_clock
+            self.kvm_clock_check = self.clock_tab.kvm_clock_check
 
     def _create_xml_preview(self, parent) -> None:
         """创建 XML 预览区."""
         preview_frame = ctk.CTkFrame(parent, fg_color=BG_COLOR_CONTENT, corner_radius=8)
-        preview_frame.grid(row=2, column=0, padx=15, pady=(0, 10), sticky='nsew')
-        parent.grid_rowconfigure(2, weight=1)
+        preview_frame.grid(row=3, column=0, padx=15, pady=(0, 10), sticky='nsew')
+        parent.grid_rowconfigure(3, weight=1)
 
         # 预览区标题
         preview_label = ctk.CTkLabel(
@@ -284,7 +437,7 @@ class VmPanel(ctk.CTkFrame):
         self.info_frame = ctk.CTkFrame(
             parent, fg_color=BG_COLOR_CONTENT, corner_radius=0, height=30
         )
-        self.info_frame.grid(row=3, column=0, sticky='ew')
+        self.info_frame.grid(row=4, column=0, sticky='ew')
         self.info_frame.grid_propagate(False)
 
         self.info_label = ctk.CTkLabel(
@@ -304,32 +457,111 @@ class VmPanel(ctk.CTkFrame):
     def _bind_basic_events(self) -> None:
         """绑定基础配置的变化事件，实现动态 XML 预览."""
         # 绑定 Entry 的 KeyRelease 事件
-        entry_widgets = [
-            self.vm_name_entry, self.vm_desc_entry, self.uuid_entry,
-            self.vcpu_entry, self.swap_entry, self.boot_timeout_entry,
-            self.graphics_listen, self.vram_entry, self.balloon_target_entry,
-        ]
+        entry_widgets = []
+        if hasattr(self, 'vm_name_entry'):
+            entry_widgets.append(self.vm_name_entry)
+        if hasattr(self, 'vm_desc_entry'):
+            entry_widgets.append(self.vm_desc_entry)
+        if hasattr(self, 'uuid_entry'):
+            entry_widgets.append(self.uuid_entry)
+        if hasattr(self, 'vcpu_entry'):
+            entry_widgets.append(self.vcpu_entry)
+        if hasattr(self, 'swap_entry'):
+            entry_widgets.append(self.swap_entry)
+        if hasattr(self, 'boot_timeout_entry'):
+            entry_widgets.append(self.boot_timeout_entry)
+        if hasattr(self, 'graphics_listen'):
+            entry_widgets.append(self.graphics_listen)
+        if hasattr(self, 'graphics_port'):
+            entry_widgets.append(self.graphics_port)
+        if hasattr(self, 'vram_entry'):
+            entry_widgets.append(self.vram_entry)
+        if hasattr(self, 'balloon_target_entry'):
+            entry_widgets.append(self.balloon_target_entry)
+        if hasattr(self, 'basic_tab'):
+            if hasattr(self.basic_tab, 'cpu_sockets_entry'):
+                entry_widgets.append(self.basic_tab.cpu_sockets_entry)
+            if hasattr(self.basic_tab, 'cpu_cores_entry'):
+                entry_widgets.append(self.basic_tab.cpu_cores_entry)
+            if hasattr(self.basic_tab, 'cpu_threads_entry'):
+                entry_widgets.append(self.basic_tab.cpu_threads_entry)
+
         for widget in entry_widgets:
             widget.bind('<KeyRelease>', lambda e: self._update_xml_preview())
 
         # 绑定 OptionMenu 的变化事件（使用 lambda 忽略参数）
-        option_widgets = [
-            self.virt_type, self.machine_type, self.chipset_type,
-            self.cpu_mode, self.firmware_type,
-            self.boot_device_1, self.boot_device_2, self.boot_device_3,
-            self.graphics_type, self.video_model, self.usb_controller,
-            self.watchdog_model, self.watchdog_action, self.rtc_clock,
-            self.memory_combo, self.current_memory_combo, self.max_memory_combo,
-        ]
+        option_widgets = []
+        if hasattr(self, 'virt_type'):
+            option_widgets.append(self.virt_type)
+        if hasattr(self, 'machine_type'):
+            option_widgets.append(self.machine_type)
+        if hasattr(self, 'chipset_type'):
+            option_widgets.append(self.chipset_type)
+        if hasattr(self, 'cpu_mode'):
+            option_widgets.append(self.cpu_mode)
+        if hasattr(self, 'firmware_type'):
+            option_widgets.append(self.firmware_type)
+        if hasattr(self, 'boot_device_1'):
+            option_widgets.append(self.boot_device_1)
+        if hasattr(self, 'boot_device_2'):
+            option_widgets.append(self.boot_device_2)
+        if hasattr(self, 'boot_device_3'):
+            option_widgets.append(self.boot_device_3)
+        if hasattr(self, 'graphics_type'):
+            option_widgets.append(self.graphics_type)
+        if hasattr(self, 'video_model'):
+            option_widgets.append(self.video_model)
+        if hasattr(self, 'usb_controller'):
+            option_widgets.append(self.usb_controller)
+        if hasattr(self, 'watchdog_model'):
+            option_widgets.append(self.watchdog_model)
+        if hasattr(self, 'watchdog_action'):
+            option_widgets.append(self.watchdog_action)
+        if hasattr(self, 'rtc_clock'):
+            option_widgets.append(self.rtc_clock)
+        if hasattr(self, 'memory_combo'):
+            option_widgets.append(self.memory_combo)
+        if hasattr(self, 'current_memory_combo'):
+            option_widgets.append(self.current_memory_combo)
+        if hasattr(self, 'max_memory_combo'):
+            option_widgets.append(self.max_memory_combo)
+        if hasattr(self, 'devices_tab'):
+            if hasattr(self.devices_tab, 'serial_type'):
+                option_widgets.append(self.devices_tab.serial_type)
+            if hasattr(self.devices_tab, 'tpm_model'):
+                option_widgets.append(self.devices_tab.tpm_model)
+            if hasattr(self.devices_tab, 'tpm_version'):
+                option_widgets.append(self.devices_tab.tpm_version)
+            if hasattr(self.devices_tab, 'audio_model'):
+                option_widgets.append(self.devices_tab.audio_model)
+        if hasattr(self, 'basic_tab'):
+            if hasattr(self.basic_tab, 'numa_enabled'):
+                option_widgets.append(self.basic_tab.numa_enabled)
+
         for widget in option_widgets:
             widget.configure(command=lambda *args: self._update_xml_preview())
 
         # 绑定 Checkbox 的变化事件
-        checkbox_widgets = [
-            self.secure_boot, self.disable_usb_check, self.disable_sound_check,
-            self.acpi_check, self.apic_check, self.hyperv_check, self.iommu_check,
-            self.balloon_check, self.kvm_clock_check,
-        ]
+        checkbox_widgets = []
+        if hasattr(self, 'secure_boot'):
+            checkbox_widgets.append(self.secure_boot)
+        if hasattr(self, 'disable_usb_check'):
+            checkbox_widgets.append(self.disable_usb_check)
+        if hasattr(self, 'disable_sound_check'):
+            checkbox_widgets.append(self.disable_sound_check)
+        if hasattr(self, 'acpi_check'):
+            checkbox_widgets.append(self.acpi_check)
+        if hasattr(self, 'apic_check'):
+            checkbox_widgets.append(self.apic_check)
+        if hasattr(self, 'hyperv_check'):
+            checkbox_widgets.append(self.hyperv_check)
+        if hasattr(self, 'iommu_check'):
+            checkbox_widgets.append(self.iommu_check)
+        if hasattr(self, 'balloon_check'):
+            checkbox_widgets.append(self.balloon_check)
+        if hasattr(self, 'kvm_clock_check'):
+            checkbox_widgets.append(self.kvm_clock_check)
+
         for widget in checkbox_widgets:
             widget.configure(command=self._update_xml_preview)
 
@@ -359,98 +591,112 @@ class VmPanel(ctk.CTkFrame):
     # ========== 存储配置方法 ==========
     def add_disk(self) -> None:
         """添加磁盘配置行."""
-        self.storage_tab.add_disk()
+        if hasattr(self, 'storage_tab'):
+            self.storage_tab.add_disk()
 
     def add_cdrom(self) -> None:
         """添加光驱配置行."""
-        self.storage_tab.add_cdrom()
+        if hasattr(self, 'storage_tab'):
+            self.storage_tab.add_cdrom()
 
     # ========== 网络配置方法 ==========
     def add_network(self) -> None:
         """添加网络配置行."""
-        self.network_tab.add_network()
+        if hasattr(self, 'network_tab'):
+            self.network_tab.add_network()
 
     # ========== 高级配置方法 ==========
     def add_hostdev(self) -> None:
         """添加 PCI 直通设备."""
-        self.hostdev_tab.add_hostdev()
+        if hasattr(self, 'hostdev_tab'):
+            self.hostdev_tab.add_hostdev()
 
     def add_usb(self) -> None:
         """添加 USB 设备."""
-        self.devices_tab.add_usb()
+        if hasattr(self, 'devices_tab'):
+            self.devices_tab.add_usb()
 
     # ========== 核心功能方法 ==========
     def clear_all(self) -> None:
         """清空所有配置."""
         if messagebox.askyesno('确认', '确定要清空所有配置吗？'):
             # 清空基础配置 Tab
-            self.basic_tab.vm_name_entry.delete(0, END)
-            self.basic_tab.vm_desc_entry.delete(0, END)
-            self.basic_tab.uuid_entry.delete(0, END)
-            self.basic_tab.machine_type.set('q35')
-            self.basic_tab.virt_type.set('hvm')
-            self.basic_tab.chipset_type.set('Q35')
-            self.basic_tab.vcpu_entry.delete(0, END)
-            self.basic_tab.vcpu_entry.insert(0, '2')
-            self.basic_tab.cpu_mode.set('host-model')
-            self.basic_tab.memory_combo.set('2G')
-            self.basic_tab.current_memory_combo.set('2G')
-            self.basic_tab.max_memory_combo.set('4G')
-            self.basic_tab.swap_entry.delete(0, END)
-            self.basic_tab.swap_entry.insert(0, '0')
+            if hasattr(self, 'basic_tab'):
+                self.basic_tab.vm_name_entry.delete(0, END)
+                self.basic_tab.vm_desc_entry.delete(0, END)
+                self.basic_tab.uuid_entry.delete(0, END)
+                self.basic_tab.machine_type.set('q35')
+                self.basic_tab.virt_type.set('hvm')
+                self.basic_tab.chipset_type.set('Q35')
+                self.basic_tab.vcpu_entry.delete(0, END)
+                self.basic_tab.vcpu_entry.insert(0, '2')
+                self.basic_tab.cpu_mode.set('host-model')
+                self.basic_tab.memory_combo.set('2G')
+                self.basic_tab.current_memory_combo.set('2G')
+                self.basic_tab.max_memory_combo.set('4G')
+                self.basic_tab.swap_entry.delete(0, END)
+                self.basic_tab.swap_entry.insert(0, '0')
 
             # 清空引导/OS Tab
-            self.os_tab.firmware_type.set('BIOS')
-            self.os_tab.secure_boot.deselect()
-            self.os_tab.boot_device_1.set('hd')
-            self.os_tab.boot_device_2.set('cdrom')
-            self.os_tab.boot_device_3.set('none')
-            self.os_tab.boot_timeout_entry.delete(0, END)
-            self.os_tab.boot_timeout_entry.insert(0, '-1')
+            if hasattr(self, 'os_tab'):
+                self.os_tab.firmware_type.set('BIOS')
+                self.os_tab.secure_boot.deselect()
+                self.os_tab.boot_device_1.set('hd')
+                self.os_tab.boot_device_2.set('cdrom')
+                self.os_tab.boot_device_3.set('none')
+                self.os_tab.boot_timeout_entry.delete(0, END)
+                self.os_tab.boot_timeout_entry.insert(0, '-1')
 
             # 清空存储 Tab
-            for entry in self.storage_tab.disk_frame.disk_entries[:]:
-                self.storage_tab.disk_frame.remove_disk(entry['frame'])
+            if hasattr(self, 'storage_tab'):
+                for entry in self.storage_tab.disk_frame.disk_entries[:]:
+                    self.storage_tab.disk_frame.remove_disk(entry['frame'])
 
             # 清空网络 Tab
-            for entry in self.network_tab.network_frame.network_entries[:]:
-                self.network_tab.network_frame.remove_network(entry['frame'])
+            if hasattr(self, 'network_tab'):
+                for entry in self.network_tab.network_frame.network_entries[:]:
+                    self.network_tab.network_frame.remove_network(entry['frame'])
 
             # 清空设备 Tab
-            self.devices_tab.graphics_type.set('vnc')
-            self.devices_tab.graphics_listen.delete(0, END)
-            self.devices_tab.graphics_listen.insert(0, '0.0.0.0')
-            self.devices_tab.video_model.set('qxl')
-            self.devices_tab.vram_entry.delete(0, END)
-            self.devices_tab.vram_entry.insert(0, '64')
-            self.devices_tab.usb_controller.set('qemu-xhci')
-            self.devices_tab.disable_usb_check.deselect()
-            self.devices_tab.disable_sound_check.deselect()
-            self.devices_tab.usb_list.clear()
-            self.devices_tab.usb_display.configure(text='')
-            self.devices_tab.usb_entry.delete(0, END)
+            if hasattr(self, 'devices_tab'):
+                self.devices_tab.graphics_type.set('vnc')
+                self.devices_tab.graphics_listen.delete(0, END)
+                self.devices_tab.graphics_listen.insert(0, '0.0.0.0')
+                self.devices_tab.video_model.set('qxl')
+                self.devices_tab.vram_entry.delete(0, END)
+                self.devices_tab.vram_entry.insert(0, '64')
+                self.devices_tab.usb_controller.set('qemu-xhci')
+                self.devices_tab.disable_usb_check.deselect()
+                self.devices_tab.disable_sound_check.deselect()
+                self.devices_tab.usb_list.clear()
+                self.devices_tab.usb_display.configure(text='')
+                self.devices_tab.usb_entry.delete(0, END)
 
             # 清空功能特性 Tab
-            self.features_tab.acpi_check.select()
-            self.features_tab.apic_check.select()
-            self.features_tab.hyperv_check.deselect()
-            self.features_tab.iommu_check.deselect()
+            if hasattr(self, 'features_tab'):
+                self.features_tab.acpi_check.select()
+                self.features_tab.apic_check.select()
+                self.features_tab.hyperv_check.deselect()
+                self.features_tab.iommu_check.deselect()
 
             # 清空 PCI 直通 Tab
-            for entry in self.hostdev_tab.hostdev_frame.hostdev_entries[:]:
-                self.hostdev_tab.hostdev_frame.remove_hostdev(entry['frame'])
+            if hasattr(self, 'hostdev_tab'):
+                for entry in self.hostdev_tab.hostdev_frame.hostdev_entries[:]:
+                    self.hostdev_tab.hostdev_frame.remove_hostdev(entry['frame'])
 
             # 清空内存管理 Tab
-            self.memory_tab.balloon_check.deselect()
-            self.memory_tab.balloon_target_entry.delete(0, END)
-            self.memory_tab.balloon_target_entry.insert(0, '2048')
-            self.memory_tab.balloon_target_entry.configure(state='disabled')
+            if hasattr(self, 'memory_tab'):
+                self.memory_tab.balloon_check.deselect()
+                self.memory_tab.balloon_target_entry.delete(0, END)
+                self.memory_tab.balloon_target_entry.insert(0, '2048')
+                self.memory_tab.balloon_target_entry.configure(state='disabled')
 
             # 清空时钟/看门狗 Tab
-            self.clock_tab.watchdog_model.set('none')
-            self.clock_tab.watchdog_action.set('reset')
-            self.clock_tab.rtc_clock.set('utc')
-            self.clock_tab.kvm_clock_check.select()
+            if hasattr(self, 'clock_tab'):
+                self.clock_tab.watchdog_model.set('none')
+                self.clock_tab.watchdog_action.set('reset')
+                self.clock_tab.rtc_clock.set('utc')
+                self.clock_tab.kvm_clock_check.select()
 
             # 清空 XML 预览
             self.xml_textbox.delete('1.0', END)
@@ -470,36 +716,108 @@ class VmPanel(ctk.CTkFrame):
 
         # 收集引导设备
         boot_devices = []
-        for dev in [self.boot_device_1.get(), self.boot_device_2.get(), self.boot_device_3.get()]:
-            if dev and dev != 'none':
-                boot_devices.append(dev)
+        for dev in [
+            getattr(self, 'boot_device_1', None),
+            getattr(self, 'boot_device_2', None),
+            getattr(self, 'boot_device_3', None),
+        ]:
+            if dev:
+                dev_val = dev.get()
+                if dev_val and dev_val != 'none':
+                    boot_devices.append(dev_val)
+
+        # 获取 Tab 开关状态
+        tab_states = (
+            self.tab_toggle_panel.get_all_states() if hasattr(self, 'tab_toggle_panel') else {}
+        )
 
         return {
             'name': vm_name,
-            'description': self.vm_desc_entry.get().strip(),
+            'description': getattr(self, 'vm_desc_entry', None).get().strip()
+            if getattr(self, 'vm_desc_entry', None)
+            else '',
             'uuid': uuid_val,
-            'vcpu': int(self.vcpu_entry.get().strip() or '2'),
-            'cpu_mode': self.cpu_mode.get(),
-            'memory': self.basic_tab._parse_memory_value(self.memory_combo.get()),
-            'current_memory': self.basic_tab._parse_memory_value(self.current_memory_combo.get()),
-            'max_memory': self.basic_tab._parse_memory_value(self.max_memory_combo.get()),
-            'swap': int(self.basic_tab.swap_entry.get().strip() or '0'),
-            'virt_type': self.virt_type.get(),
-            'machine': self.machine_type.get().strip() or 'q35',
-            'chipset': self.chipset_type.get(),
-            'firmware': self.firmware_type.get(),
-            'secure_boot': self.secure_boot.get(),
+            'vcpu': int(getattr(self, 'vcpu_entry', None).get().strip() or '2'),
+            'cpu_mode': getattr(self, 'cpu_mode', None).get()
+            if getattr(self, 'cpu_mode', None)
+            else 'host-model',
+            'cpu_topology': self.basic_tab.get_basic_config().get('cpu_topology', {})
+            if hasattr(self, 'basic_tab')
+            else {},
+            'numa': self.basic_tab.get_basic_config().get('numa', False)
+            if hasattr(self, 'basic_tab')
+            else False,
+            'memory': self.basic_tab._parse_memory_value(getattr(self, 'memory_combo', None).get())
+            if getattr(self, 'memory_combo', None)
+            else 2048,
+            'current_memory': self.basic_tab._parse_memory_value(
+                getattr(self, 'current_memory_combo', None).get()
+            )
+            if getattr(self, 'current_memory_combo', None)
+            else 2048,
+            'max_memory': self.basic_tab._parse_memory_value(
+                getattr(self, 'max_memory_combo', None).get()
+            )
+            if getattr(self, 'max_memory_combo', None)
+            else 4096,
+            'swap': int(getattr(self, 'swap_entry', None).get().strip() or '0'),
+            'virt_type': getattr(self, 'virt_type', None).get()
+            if getattr(self, 'virt_type', None)
+            else 'hvm',
+            'machine': getattr(self, 'machine_type', None).get().strip() or 'q35',
+            'chipset': getattr(self, 'chipset_type', None).get()
+            if getattr(self, 'chipset_type', None)
+            else 'Q35',
+            'firmware': getattr(self, 'firmware_type', None).get()
+            if getattr(self, 'firmware_type', None)
+            else 'BIOS',
+            'secure_boot': getattr(self, 'secure_boot', None).get()
+            if getattr(self, 'secure_boot', None)
+            else False,
             'boot_devices': boot_devices,
-            'boot_timeout': int(self.boot_timeout_entry.get().strip() or '-1'),
-            'disks': self.storage_tab.get_disks(),
-            'networks': self.network_tab.get_networks(),
-            'hostdevs': self.hostdev_tab.get_hostdevs(),
-            'graphics': self.devices_tab.get_graphics_config(),
-            'usb': self.devices_tab.get_usb_config(),
-            'features': self.features_tab.get_features(),
-            'watchdog': self.clock_tab.get_watchdog_config(),
-            'balloon': self.memory_tab.get_balloon_config(),
-            'clock': self.clock_tab.get_clock_config(),
+            'boot_timeout': int(getattr(self, 'boot_timeout_entry', None).get().strip() or '-1'),
+            'disks': self.storage_tab.get_disks()
+            if hasattr(self, 'storage_tab') and tab_states.get('storage', True)
+            else [],
+            'networks': self.network_tab.get_networks()
+            if hasattr(self, 'network_tab') and tab_states.get('network', True)
+            else [],
+            'hostdevs': self.hostdev_tab.get_hostdevs()
+            if hasattr(self, 'hostdev_tab') and tab_states.get('hostdev', True)
+            else [],
+            'graphics': self.devices_tab.get_graphics_config()
+            if hasattr(self, 'devices_tab') and tab_states.get('devices', True)
+            else {
+                'type': 'none',
+                'listen': '0.0.0.0',
+                'port': '-1',
+                'video_model': 'qxl',
+                'vram': 64,
+            },
+            'usb': self.devices_tab.get_usb_config()
+            if hasattr(self, 'devices_tab') and tab_states.get('devices', True)
+            else {'controller': 'none', 'disabled': True, 'sound_disabled': True, 'devices': []},
+            'serial': self.devices_tab.get_serial_config()
+            if hasattr(self, 'devices_tab') and tab_states.get('devices', True)
+            else {'type': 'none', 'port': '0'},
+            'tpm': self.devices_tab.get_tpm_config()
+            if hasattr(self, 'devices_tab') and tab_states.get('devices', True)
+            else None,
+            'audio': self.devices_tab.get_audio_config()
+            if hasattr(self, 'devices_tab') and tab_states.get('devices', True)
+            else None,
+            'features': self.features_tab.get_features()
+            if hasattr(self, 'features_tab') and tab_states.get('features', True)
+            else {'acpi': False, 'apic': False, 'hyperv': False, 'iommu': False},
+            'watchdog': self.clock_tab.get_watchdog_config()
+            if hasattr(self, 'clock_tab') and tab_states.get('clock', True)
+            else None,
+            'balloon': self.memory_tab.get_balloon_config()
+            if hasattr(self, 'memory_tab') and tab_states.get('memory', True)
+            else None,
+            'clock': self.clock_tab.get_clock_config()
+            if hasattr(self, 'clock_tab') and tab_states.get('clock', True)
+            else {'rtc': 'utc', 'kvm_clock': False},
         }
 
     def generate_xml(self) -> None:
@@ -566,7 +884,8 @@ class VmPanel(ctk.CTkFrame):
             if result.returncode == 0:
                 vm_name = self.vm_data.get('name', 'vm')
                 messagebox.showinfo(
-                    '成功', f'虚拟机 {vm_name} 定义成功!\n\n请运行以下命令启动:\n  virsh start {vm_name}'
+                    '成功',
+                    f'虚拟机 {vm_name} 定义成功!\n\n请运行以下命令启动:\n  virsh start {vm_name}',
                 )
                 self.update_info(f'虚拟机 {vm_name} 定义成功')
             else:

@@ -8,9 +8,10 @@ from ..styles import CTK_FONT_MAIN, CTK_FONT_BOLD, CTK_FONT_SMALL, BG_COLOR_CONT
 class OSTab(ctk.CTkFrame):
     """引导/OS 配置 Tab."""
 
-    def __init__(self, master, **kwargs):
+    def __init__(self, master, on_change_callback=None, **kwargs):
         super().__init__(master, **kwargs)
         self.configure(fg_color='transparent')
+        self.on_change_callback = on_change_callback
 
         # 控件引用
         self.firmware_type = None
@@ -37,7 +38,7 @@ class OSTab(ctk.CTkFrame):
 
         ctk.CTkLabel(
             fw_frame, text='固件配置', font=CTK_FONT_BOLD, text_color='#64b5f6'
-        ).grid(row=0, column=0, columnspan=3, padx=10, pady=5, sticky='w')
+        ).grid(row=0, column=0, columnspan=4, padx=10, pady=5, sticky='w')
 
         # 固件类型
         ctk.CTkLabel(
@@ -48,6 +49,7 @@ class OSTab(ctk.CTkFrame):
         )
         self.firmware_type.set('BIOS')
         self.firmware_type.grid(row=1, column=1, padx=5, pady=5, sticky='w')
+        self.firmware_type.configure(command=self._trigger_change)
 
         # 安全启动
         ctk.CTkLabel(
@@ -55,6 +57,7 @@ class OSTab(ctk.CTkFrame):
         ).grid(row=1, column=2, padx=10, pady=5, sticky='w')
         self.secure_boot = ctk.CTkCheckBox(fw_frame, text='启用', font=CTK_FONT_SMALL)
         self.secure_boot.grid(row=1, column=3, padx=5, pady=5, sticky='w')
+        self.secure_boot.configure(command=self._trigger_change)
 
         # 引导设备
         boot_frame = ctk.CTkFrame(self, fg_color=BG_COLOR_CONTENT, corner_radius=8)
@@ -63,7 +66,7 @@ class OSTab(ctk.CTkFrame):
 
         ctk.CTkLabel(
             boot_frame, text='引导顺序', font=CTK_FONT_BOLD, text_color='#4caf50'
-        ).grid(row=0, column=0, columnspan=3, padx=10, pady=5, sticky='w')
+        ).grid(row=0, column=0, columnspan=4, padx=10, pady=5, sticky='w')
 
         # 第一引导设备
         ctk.CTkLabel(
@@ -74,6 +77,7 @@ class OSTab(ctk.CTkFrame):
         )
         self.boot_device_1.set('hd')
         self.boot_device_1.grid(row=1, column=1, padx=5, pady=5, sticky='w')
+        self.boot_device_1.configure(command=self._trigger_change)
 
         # 第二引导设备
         ctk.CTkLabel(
@@ -84,6 +88,7 @@ class OSTab(ctk.CTkFrame):
         )
         self.boot_device_2.set('cdrom')
         self.boot_device_2.grid(row=1, column=3, padx=5, pady=5, sticky='w')
+        self.boot_device_2.configure(command=self._trigger_change)
 
         # 第三引导设备
         ctk.CTkLabel(
@@ -94,6 +99,7 @@ class OSTab(ctk.CTkFrame):
         )
         self.boot_device_3.set('network')
         self.boot_device_3.grid(row=2, column=1, padx=5, pady=5, sticky='w')
+        self.boot_device_3.configure(command=self._trigger_change)
 
         # 超时
         ctk.CTkLabel(
@@ -102,3 +108,22 @@ class OSTab(ctk.CTkFrame):
         self.boot_timeout_entry = ctk.CTkEntry(boot_frame, placeholder_text='-1', width=100)
         self.boot_timeout_entry.grid(row=2, column=3, padx=5, pady=5, sticky='w')
         self.boot_timeout_entry.insert(0, '-1')
+        self.boot_timeout_entry.bind('<KeyRelease>', lambda e: self._trigger_change())
+
+    def _trigger_change(self):
+        """触发变化回调."""
+        if self.on_change_callback:
+            self.on_change_callback()
+
+    def get_os_config(self):
+        """获取 OS 配置."""
+        boot_devices = []
+        for dev in [self.boot_device_1.get(), self.boot_device_2.get(), self.boot_device_3.get()]:
+            if dev and dev != 'none':
+                boot_devices.append(dev)
+        return {
+            'firmware': self.firmware_type.get(),
+            'secure_boot': self.secure_boot.get(),
+            'boot_devices': boot_devices,
+            'boot_timeout': int(self.boot_timeout_entry.get().strip() or '-1'),
+        }

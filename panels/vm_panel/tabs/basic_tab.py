@@ -8,9 +8,10 @@ from ..styles import CTK_FONT_MAIN, CTK_FONT_BOLD, CTK_FONT_SMALL, BG_COLOR_CONT
 class BasicTab(ctk.CTkFrame):
     """基础配置 Tab."""
 
-    def __init__(self, master, **kwargs):
+    def __init__(self, master, on_change_callback=None, **kwargs):
         super().__init__(master, **kwargs)
         self.configure(fg_color='transparent')
+        self.on_change_callback = on_change_callback
 
         # 控件引用
         self.vm_name_entry = None
@@ -25,6 +26,13 @@ class BasicTab(ctk.CTkFrame):
         self.current_memory_combo = None
         self.max_memory_combo = None
         self.swap_combo = None
+        # CPU Topology
+        self.cpu_sockets_entry = None
+        self.cpu_cores_entry = None
+        self.cpu_threads_entry = None
+        # NUMA
+        self.numa_enabled = None
+        self.numa_frame = None
 
         # 初始化 UI
         self._init_ui()
@@ -102,25 +110,65 @@ class BasicTab(ctk.CTkFrame):
 
         ctk.CTkLabel(
             cpu_frame, text='CPU 配置', font=CTK_FONT_BOLD, text_color='#4caf50'
-        ).grid(row=0, column=0, columnspan=3, padx=10, pady=5, sticky='w')
+        ).grid(row=0, column=0, columnspan=6, padx=10, pady=5, sticky='w')
 
-        # vCPU 数量
+        # 第一行：vCPU 数量和 CPU 模式
         ctk.CTkLabel(
-            cpu_frame, text='vCPU:', font=CTK_FONT_MAIN, width=80, anchor='w'
+            cpu_frame, text='vCPU:', font=CTK_FONT_MAIN, width=60, anchor='w'
         ).grid(row=1, column=0, padx=10, pady=5, sticky='w')
-        self.vcpu_entry = ctk.CTkEntry(cpu_frame, placeholder_text='2', width=100)
+        self.vcpu_entry = ctk.CTkEntry(cpu_frame, placeholder_text='2', width=80)
         self.vcpu_entry.grid(row=1, column=1, padx=5, pady=5, sticky='w')
         self.vcpu_entry.insert(0, '2')
+        self.vcpu_entry.bind('<KeyRelease>', lambda e: self._trigger_change())
 
-        # CPU 模式
         ctk.CTkLabel(
             cpu_frame, text='CPU 模式:', font=CTK_FONT_MAIN, width=80, anchor='w'
         ).grid(row=1, column=2, padx=10, pady=5, sticky='w')
         self.cpu_mode = ctk.CTkOptionMenu(
-            cpu_frame, values=['host-passthrough', 'host-model', 'custom'], width=150, font=CTK_FONT_SMALL
+            cpu_frame, values=['host-passthrough', 'host-model', 'custom', 'host-model-required'], width=180, font=CTK_FONT_SMALL
         )
         self.cpu_mode.set('host-model')
         self.cpu_mode.grid(row=1, column=3, padx=5, pady=5, sticky='w')
+        self.cpu_mode.configure(command=self._trigger_change)
+
+        # CPU Topology
+        ctk.CTkLabel(
+            cpu_frame, text='Sockets:', font=CTK_FONT_MAIN, width=60, anchor='w'
+        ).grid(row=2, column=0, padx=10, pady=5, sticky='w')
+        self.cpu_sockets_entry = ctk.CTkEntry(cpu_frame, width=60, font=CTK_FONT_SMALL)
+        self.cpu_sockets_entry.grid(row=2, column=1, padx=5, pady=5, sticky='w')
+        self.cpu_sockets_entry.insert(0, '1')
+        self.cpu_sockets_entry.bind('<KeyRelease>', lambda e: self._trigger_change())
+
+        ctk.CTkLabel(
+            cpu_frame, text='Cores:', font=CTK_FONT_MAIN, width=60, anchor='w'
+        ).grid(row=2, column=2, padx=10, pady=5, sticky='w')
+        self.cpu_cores_entry = ctk.CTkEntry(cpu_frame, width=60, font=CTK_FONT_SMALL)
+        self.cpu_cores_entry.grid(row=2, column=3, padx=5, pady=5, sticky='w')
+        self.cpu_cores_entry.insert(0, '2')
+        self.cpu_cores_entry.bind('<KeyRelease>', lambda e: self._trigger_change())
+
+        ctk.CTkLabel(
+            cpu_frame, text='Threads:', font=CTK_FONT_MAIN, width=60, anchor='w'
+        ).grid(row=2, column=4, padx=10, pady=5, sticky='w')
+        self.cpu_threads_entry = ctk.CTkEntry(cpu_frame, width=60, font=CTK_FONT_SMALL)
+        self.cpu_threads_entry.grid(row=2, column=5, padx=5, pady=5, sticky='w')
+        self.cpu_threads_entry.insert(0, '1')
+        self.cpu_threads_entry.bind('<KeyRelease>', lambda e: self._trigger_change())
+
+        # NUMA 配置
+        numa_frame = ctk.CTkFrame(self, fg_color=BG_COLOR_CONTENT, corner_radius=8)
+        numa_frame.grid(row=3, column=0, sticky='ew', padx=10, pady=10)
+        numa_frame.grid_columnconfigure(1, weight=1)
+
+        ctk.CTkLabel(
+            numa_frame, text='NUMA 配置', font=CTK_FONT_BOLD, text_color='#ab47bc'
+        ).grid(row=0, column=0, columnspan=4, padx=10, pady=5, sticky='w')
+
+        self.numa_enabled = ctk.CTkCheckBox(
+            numa_frame, text='启用 NUMA', font=CTK_FONT_SMALL, command=self._trigger_change
+        )
+        self.numa_enabled.grid(row=1, column=0, padx=10, pady=5, sticky='w')
 
         # 内存配置 - 生成 1G 2G 4G ... 128G 的选项
         memory_options = ['1G', '2G', '4G', '8G', '16G', '32G', '64G', '128G']
@@ -193,6 +241,11 @@ class BasicTab(ctk.CTkFrame):
             except ValueError:
                 return 2048
 
+    def _trigger_change(self):
+        """触发变化回调."""
+        if self.on_change_callback:
+            self.on_change_callback()
+
     def get_basic_config(self) -> dict:
         """获取基础配置.
 
@@ -208,6 +261,12 @@ class BasicTab(ctk.CTkFrame):
             'chipset': self.chipset_type.get(),
             'vcpu': int(self.vcpu_entry.get().strip() or '2'),
             'cpu_mode': self.cpu_mode.get(),
+            'cpu_topology': {
+                'sockets': int(self.cpu_sockets_entry.get().strip() or '1'),
+                'cores': int(self.cpu_cores_entry.get().strip() or '2'),
+                'threads': int(self.cpu_threads_entry.get().strip() or '1'),
+            },
+            'numa': self.numa_enabled.get(),
             'memory': self._parse_memory_value(self.memory_combo.get()),
             'current_memory': self._parse_memory_value(self.current_memory_combo.get()),
             'max_memory': self._parse_memory_value(self.max_memory_combo.get()),

@@ -50,9 +50,19 @@ def build_libvirt_xml(data: dict) -> str:
         swap_elem = ET.SubElement(domain, 'memtune')
         ET.SubElement(swap_elem, 'hard_limit', unit='KiB').text = str(swap)
 
-    # vCPU
+    # vCPU 和 CPU topology
     vcpu = ET.SubElement(domain, 'vcpu')
     vcpu.text = str(data['vcpu'])
+
+    # CPU topology
+    cpu_topology = data.get('cpu_topology', {})
+    if cpu_topology:
+        sockets = cpu_topology.get('sockets', 1)
+        cores = cpu_topology.get('cores', data['vcpu'])
+        threads = cpu_topology.get('threads', 1)
+        vcpu.set('sockets', str(sockets))
+        vcpu.set('cores', str(cores))
+        vcpu.set('threads', str(threads))
 
     # CPU 模式
     cpu_mode = data.get('cpu_mode')
@@ -61,17 +71,25 @@ def build_libvirt_xml(data: dict) -> str:
     elif cpu_mode == 'custom':
         cpu_elem = ET.SubElement(domain, 'cpu')
 
+    # NUMA
+    if data.get('numa'):
+        numa_elem = ET.SubElement(domain, 'numa')
+        # 单 NUMA 节点配置
+        memory_mb = data['memory']
+        ET.SubElement(numa_elem, 'cell', id='0', cpus=f'0-{data["vcpu"]-1}', memory=str(memory_mb), unit='KiB')
+
     # 操作系统
     os_elem = ET.SubElement(domain, 'os')
 
     # 引导设备（支持多个）
     boot_devices = data.get('boot_devices', ['hd'])
     for dev in boot_devices:
-        ET.SubElement(os_elem, 'boot', dev=dev)
+        if dev != 'none':
+            ET.SubElement(os_elem, 'boot', dev=dev)
 
     # 引导超时
     boot_timeout = data.get('boot_timeout', -1)
-    if boot_timeout > 0:
+    if boot_timeout and boot_timeout > 0:
         ET.SubElement(os_elem, 'bootmenu', timeout=str(boot_timeout))
 
     # 机型
@@ -149,10 +167,15 @@ def build_libvirt_xml(data: dict) -> str:
         )
 
         # 驱动（CDROM 不需要 driver）
-        if disk_type != 'cdrom' and disk.get('type'):
-            driver = ET.SubElement(
-                disk_elem, 'driver', name='qemu', type=disk['type'], cache='none'
-            )
+        if disk_type != 'cdrom' and disk.get('type') and disk.get('type') != 'cdrom':
+            driver_attrs = {'name': 'qemu', 'type': disk['type']}
+            if disk.get('cache'):
+                driver_attrs['cache'] = disk['cache']
+            if disk.get('io'):
+                driver_attrs['io'] = disk['io']
+            if disk.get('discard') and disk['discard']:
+                driver_attrs['discard'] = 'unmap'
+            driver = ET.SubElement(disk_elem, 'driver', **driver_attrs)
 
         # 源文件
         if disk.get('path'):
@@ -169,9 +192,17 @@ def build_libvirt_xml(data: dict) -> str:
             # CDROM 需要 readonly
             ET.SubElement(disk_elem, 'readonly')
         else:
+            target_attrs = {'dev': f'vd{chr(ord("a") + i)}', 'bus': disk.get('bus', 'virtio')}
             ET.SubElement(
-                disk_elem, 'target', dev=f'vd{chr(ord("a") + i)}', bus=disk.get('bus', 'virtio')
+                disk_elem, 'target', **target_attrs
             )
+            # 丢弃支持
+            if disk.get('discard') and disk['discard']:
+                ET.SubElement(disk_elem, 'discard', unmap='on')
+
+        # 只读
+        if disk.get('readonly') and disk_type != 'cdrom':
+            ET.SubElement(disk_elem, 'readonly')
 
         # 磁盘名称
         if disk.get('name'):
@@ -180,6 +211,8 @@ def build_libvirt_xml(data: dict) -> str:
     # 网络
     for network in data.get('networks', []):
         iface_type = 'network' if network.get('mode') == 'NAT' else 'bridge'
+        if network.get('mode') == 'Macvtap':
+            iface_type = 'direct'
         interface = ET.SubElement(
             devices, 'interface', type=iface_type
         )
@@ -187,10 +220,28 @@ def build_libvirt_xml(data: dict) -> str:
             ET.SubElement(interface, 'mac', address=network['mac'])
         if network.get('mode') == 'NAT':
             ET.SubElement(interface, 'source', network='default')
+        elif network.get('mode') == 'Macvtap':
+            ET.SubElement(interface, 'source', dev=network.get('bridge') or 'eth0', mode='bridge')
         else:
             bridge = network.get('bridge') or 'br0'
             ET.SubElement(interface, 'source', bridge=bridge)
-        ET.SubElement(interface, 'model', type=network.get('model', 'virtio'))
+        model_attrs = {'type': network.get('model', 'virtio')}
+        ET.SubElement(interface, 'model', **model_attrs)
+
+        # 多队列支持
+        queues = network.get('queues', 1)
+        if queues and queues > 1:
+            ET.SubElement(interface, 'driver', name='vhost', queues=str(queues))
+
+        # VLAN
+        vlan = network.get('vlan')
+        if vlan:
+            ET.SubElement(interface, 'vlan').append(ET.Element('tag', id=vlan))
+
+        # 链路状态
+        if network.get('link_down'):
+            ET.SubElement(interface, 'link', state='down')
+
         if network.get('name'):
             ET.SubElement(interface, 'alias', name=network['name'])
 
@@ -228,6 +279,28 @@ def build_libvirt_xml(data: dict) -> str:
             source = ET.SubElement(usb_elem, 'source')
             ET.SubElement(source, 'vendor', id=f'0x{vendor}')
             ET.SubElement(source, 'product', id=f'0x{product}')
+
+    # 串口配置
+    serial = data.get('serial', {})
+    if serial and serial.get('type') and serial['type'] != 'none':
+        serial_elem = ET.SubElement(devices, 'serial', type=serial['type'])
+        if serial.get('type') == 'pty':
+            ET.SubElement(serial_elem, 'target', port=serial.get('port', '0'))
+        elif serial.get('type') == 'tcp':
+            ET.SubElement(serial_elem, 'protocol', type='telnet')
+            ET.SubElement(serial_elem, 'source', mode='bind', host='0.0.0.0', service=serial.get('port', '0'))
+
+    # TPM 配置
+    tpm = data.get('tpm')
+    if tpm and tpm.get('model') and tpm['model'] != 'none':
+        tpm_elem = ET.SubElement(devices, 'tpm', model=tpm['model'])
+        if tpm.get('version') == '2.0':
+            ET.SubElement(tpm_elem, 'backend', type='emulator', version='2.0')
+
+    # 音频配置
+    audio = data.get('audio')
+    if audio and audio.get('model') and audio['model'] != 'none':
+        ET.SubElement(devices, 'sound', model=audio['model'])
 
     # 内存平衡
     balloon = data.get('balloon')

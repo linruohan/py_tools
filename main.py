@@ -18,8 +18,8 @@ class App(ctk.CTk):
         """Initialize the App class."""
         super().__init__()
         self.title('py_tools')
-        width = 800
-        height = 450
+        width = 1200
+        height = 900
         self.geometry(f'{width}x{height}')
         self.center_window(width, height)
 

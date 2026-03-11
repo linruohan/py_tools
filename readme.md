@@ -6,7 +6,7 @@ ruff check --fix # 检查语法,并修复
 ruff format # 格式化代码
 ```
 
-## pyinstaller打包
+## pyinstaller打包(推荐)
 
 ### 生成main.spec
 
@@ -17,7 +17,8 @@ pyinstaller --noconfirm --onedir --windowed --add-data "c:/software/Python3/lib/
 
 pyinstaller main.spec
 
-## nuitka 打包
+## nuitka 打包(不推荐)
+> 打包后无法运行
 
 ```bash
 "--follow-imports",  # 跟踪导入
