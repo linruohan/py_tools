@@ -2,7 +2,7 @@
 
 import customtkinter as ctk
 
-from ..styles import CTK_FONT_MAIN, CTK_FONT_BOLD, CTK_FONT_SMALL, BG_COLOR_CONTENT
+from ..styles import BG_COLOR_CONTENT, CTK_FONT_BOLD, CTK_FONT_MAIN, CTK_FONT_SMALL
 
 
 class ClockTab(ctk.CTkFrame):
@@ -34,27 +34,32 @@ class ClockTab(ctk.CTkFrame):
         wd_frame.grid(row=0, column=0, sticky='ew', padx=10, pady=10)
         wd_frame.grid_columnconfigure(1, weight=1)
 
-        ctk.CTkLabel(
-            wd_frame, text='看门狗', font=CTK_FONT_BOLD, text_color='#ef5350'
-        ).grid(row=0, column=0, columnspan=3, padx=10, pady=5, sticky='w')
+        ctk.CTkLabel(wd_frame, text='看门狗', font=CTK_FONT_BOLD, text_color='#ef5350').grid(
+            row=0, column=0, columnspan=3, padx=10, pady=5, sticky='w'
+        )
 
         # 看门狗模型
-        ctk.CTkLabel(
-            wd_frame, text='模型:', font=CTK_FONT_MAIN, width=60, anchor='w'
-        ).grid(row=1, column=0, padx=10, pady=5, sticky='w')
+        ctk.CTkLabel(wd_frame, text='模型:', font=CTK_FONT_MAIN, width=60, anchor='w').grid(
+            row=1, column=0, padx=10, pady=5, sticky='w'
+        )
         self.watchdog_model = ctk.CTkOptionMenu(
-            wd_frame, values=['none', 'i6300esb', 'ib700', 'diag288'], width=120, font=CTK_FONT_SMALL
+            wd_frame,
+            values=['none', 'i6300esb', 'ib700', 'diag288'],
+            width=120,
+            font=CTK_FONT_SMALL,
         )
         self.watchdog_model.set('none')
         self.watchdog_model.grid(row=1, column=1, padx=5, pady=5, sticky='w')
 
         # 看门狗动作
-        ctk.CTkLabel(
-            wd_frame, text='动作:', font=CTK_FONT_MAIN, width=50, anchor='w'
-        ).grid(row=1, column=2, padx=10, pady=5, sticky='w')
+        ctk.CTkLabel(wd_frame, text='动作:', font=CTK_FONT_MAIN, width=50, anchor='w').grid(
+            row=1, column=2, padx=10, pady=5, sticky='w'
+        )
         self.watchdog_action = ctk.CTkOptionMenu(
-            wd_frame, values=['reset', 'shutdown', 'poweroff', 'inject-nmi', 'none'],
-            width=120, font=CTK_FONT_SMALL
+            wd_frame,
+            values=['reset', 'shutdown', 'poweroff', 'inject-nmi', 'none'],
+            width=120,
+            font=CTK_FONT_SMALL,
         )
         self.watchdog_action.set('reset')
         self.watchdog_action.grid(row=1, column=3, padx=5, pady=5, sticky='w')
@@ -64,14 +69,14 @@ class ClockTab(ctk.CTkFrame):
         time_frame.grid(row=1, column=0, sticky='ew', padx=10, pady=10)
         time_frame.grid_columnconfigure(1, weight=1)
 
-        ctk.CTkLabel(
-            time_frame, text='时间同步', font=CTK_FONT_BOLD, text_color='#4db6ac'
-        ).grid(row=0, column=0, columnspan=3, padx=10, pady=5, sticky='w')
+        ctk.CTkLabel(time_frame, text='时间同步', font=CTK_FONT_BOLD, text_color='#4db6ac').grid(
+            row=0, column=0, columnspan=3, padx=10, pady=5, sticky='w'
+        )
 
         # RTC 时钟
-        ctk.CTkLabel(
-            time_frame, text='RTC:', font=CTK_FONT_MAIN, width=50, anchor='w'
-        ).grid(row=1, column=0, padx=10, pady=5, sticky='w')
+        ctk.CTkLabel(time_frame, text='RTC:', font=CTK_FONT_MAIN, width=50, anchor='w').grid(
+            row=1, column=0, padx=10, pady=5, sticky='w'
+        )
         self.rtc_clock = ctk.CTkOptionMenu(
             time_frame, values=['utc', 'localtime'], width=100, font=CTK_FONT_SMALL
         )

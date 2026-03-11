@@ -2,7 +2,7 @@
 
 import customtkinter as ctk
 
-from ..styles import CTK_FONT_MAIN, CTK_FONT_BOLD, CTK_FONT_SMALL, BG_COLOR_CONTENT
+from ..styles import BG_COLOR_CONTENT, CTK_FONT_BOLD, CTK_FONT_MAIN, CTK_FONT_SMALL
 
 
 class OSTab(ctk.CTkFrame):
@@ -36,14 +36,14 @@ class OSTab(ctk.CTkFrame):
         fw_frame.grid(row=0, column=0, sticky='ew', padx=10, pady=10)
         fw_frame.grid_columnconfigure(1, weight=1)
 
-        ctk.CTkLabel(
-            fw_frame, text='固件配置', font=CTK_FONT_BOLD, text_color='#64b5f6'
-        ).grid(row=0, column=0, columnspan=4, padx=10, pady=5, sticky='w')
+        ctk.CTkLabel(fw_frame, text='固件配置', font=CTK_FONT_BOLD, text_color='#64b5f6').grid(
+            row=0, column=0, columnspan=4, padx=10, pady=5, sticky='w'
+        )
 
         # 固件类型
-        ctk.CTkLabel(
-            fw_frame, text='固件:', font=CTK_FONT_MAIN, width=80, anchor='w'
-        ).grid(row=1, column=0, padx=10, pady=5, sticky='w')
+        ctk.CTkLabel(fw_frame, text='固件:', font=CTK_FONT_MAIN, width=80, anchor='w').grid(
+            row=1, column=0, padx=10, pady=5, sticky='w'
+        )
         self.firmware_type = ctk.CTkOptionMenu(
             fw_frame, values=['BIOS', 'UEFI', 'EFIVARS'], width=120, font=CTK_FONT_SMALL
         )
@@ -52,9 +52,9 @@ class OSTab(ctk.CTkFrame):
         self.firmware_type.configure(command=self._trigger_change)
 
         # 安全启动
-        ctk.CTkLabel(
-            fw_frame, text='安全启动:', font=CTK_FONT_MAIN, width=80, anchor='w'
-        ).grid(row=1, column=2, padx=10, pady=5, sticky='w')
+        ctk.CTkLabel(fw_frame, text='安全启动:', font=CTK_FONT_MAIN, width=80, anchor='w').grid(
+            row=1, column=2, padx=10, pady=5, sticky='w'
+        )
         self.secure_boot = ctk.CTkCheckBox(fw_frame, text='启用', font=CTK_FONT_SMALL)
         self.secure_boot.grid(row=1, column=3, padx=5, pady=5, sticky='w')
         self.secure_boot.configure(command=self._trigger_change)
@@ -64,14 +64,14 @@ class OSTab(ctk.CTkFrame):
         boot_frame.grid(row=1, column=0, sticky='ew', padx=10, pady=10)
         boot_frame.grid_columnconfigure(1, weight=1)
 
-        ctk.CTkLabel(
-            boot_frame, text='引导顺序', font=CTK_FONT_BOLD, text_color='#4caf50'
-        ).grid(row=0, column=0, columnspan=4, padx=10, pady=5, sticky='w')
+        ctk.CTkLabel(boot_frame, text='引导顺序', font=CTK_FONT_BOLD, text_color='#4caf50').grid(
+            row=0, column=0, columnspan=4, padx=10, pady=5, sticky='w'
+        )
 
         # 第一引导设备
-        ctk.CTkLabel(
-            boot_frame, text='第一引导:', font=CTK_FONT_MAIN, width=80, anchor='w'
-        ).grid(row=1, column=0, padx=10, pady=5, sticky='w')
+        ctk.CTkLabel(boot_frame, text='第一引导:', font=CTK_FONT_MAIN, width=80, anchor='w').grid(
+            row=1, column=0, padx=10, pady=5, sticky='w'
+        )
         self.boot_device_1 = ctk.CTkOptionMenu(
             boot_frame, values=['hd', 'cdrom', 'network', 'floppy'], width=100, font=CTK_FONT_SMALL
         )
@@ -80,31 +80,37 @@ class OSTab(ctk.CTkFrame):
         self.boot_device_1.configure(command=self._trigger_change)
 
         # 第二引导设备
-        ctk.CTkLabel(
-            boot_frame, text='第二引导:', font=CTK_FONT_MAIN, width=80, anchor='w'
-        ).grid(row=1, column=2, padx=10, pady=5, sticky='w')
+        ctk.CTkLabel(boot_frame, text='第二引导:', font=CTK_FONT_MAIN, width=80, anchor='w').grid(
+            row=1, column=2, padx=10, pady=5, sticky='w'
+        )
         self.boot_device_2 = ctk.CTkOptionMenu(
-            boot_frame, values=['none', 'hd', 'cdrom', 'network', 'floppy'], width=100, font=CTK_FONT_SMALL
+            boot_frame,
+            values=['none', 'hd', 'cdrom', 'network', 'floppy'],
+            width=100,
+            font=CTK_FONT_SMALL,
         )
         self.boot_device_2.set('cdrom')
         self.boot_device_2.grid(row=1, column=3, padx=5, pady=5, sticky='w')
         self.boot_device_2.configure(command=self._trigger_change)
 
         # 第三引导设备
-        ctk.CTkLabel(
-            boot_frame, text='第三引导:', font=CTK_FONT_MAIN, width=80, anchor='w'
-        ).grid(row=2, column=0, padx=10, pady=5, sticky='w')
+        ctk.CTkLabel(boot_frame, text='第三引导:', font=CTK_FONT_MAIN, width=80, anchor='w').grid(
+            row=2, column=0, padx=10, pady=5, sticky='w'
+        )
         self.boot_device_3 = ctk.CTkOptionMenu(
-            boot_frame, values=['none', 'hd', 'cdrom', 'network', 'floppy'], width=100, font=CTK_FONT_SMALL
+            boot_frame,
+            values=['none', 'hd', 'cdrom', 'network', 'floppy'],
+            width=100,
+            font=CTK_FONT_SMALL,
         )
         self.boot_device_3.set('network')
         self.boot_device_3.grid(row=2, column=1, padx=5, pady=5, sticky='w')
         self.boot_device_3.configure(command=self._trigger_change)
 
         # 超时
-        ctk.CTkLabel(
-            boot_frame, text='超时 (ms):', font=CTK_FONT_MAIN, width=80, anchor='w'
-        ).grid(row=2, column=2, padx=10, pady=5, sticky='w')
+        ctk.CTkLabel(boot_frame, text='超时 (ms):', font=CTK_FONT_MAIN, width=80, anchor='w').grid(
+            row=2, column=2, padx=10, pady=5, sticky='w'
+        )
         self.boot_timeout_entry = ctk.CTkEntry(boot_frame, placeholder_text='-1', width=100)
         self.boot_timeout_entry.grid(row=2, column=3, padx=5, pady=5, sticky='w')
         self.boot_timeout_entry.insert(0, '-1')

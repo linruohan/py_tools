@@ -2,8 +2,8 @@
 
 import customtkinter as ctk
 
-from ..styles import CTK_FONT_BOLD, BG_COLOR_CONTENT
 from ..frames import ScrollableHostdevFrame
+from ..styles import BG_COLOR_CONTENT, CTK_FONT_BOLD
 
 
 class HostdevTab(ctk.CTkFrame):
@@ -49,7 +49,10 @@ class HostdevTab(ctk.CTkFrame):
 
         # PCI 设备列表
         self.hostdev_frame = ScrollableHostdevFrame(
-            hostdev_frame, corner_radius=0, fg_color=BG_COLOR_CONTENT, on_change_callback=self._trigger_change
+            hostdev_frame,
+            corner_radius=0,
+            fg_color=BG_COLOR_CONTENT,
+            on_change_callback=self._trigger_change,
         )
         self.hostdev_frame.grid(row=2, column=0, sticky='nsew', padx=10, pady=5)
 

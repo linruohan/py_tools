@@ -2,7 +2,7 @@
 
 import customtkinter as ctk
 
-from ..styles import CTK_FONT_MAIN, CTK_FONT_BOLD, CTK_FONT_SMALL, BG_COLOR_CONTENT
+from ..styles import BG_COLOR_CONTENT, CTK_FONT_BOLD, CTK_FONT_MAIN, CTK_FONT_SMALL
 
 
 class DevicesTab(ctk.CTkFrame):
@@ -56,9 +56,9 @@ class DevicesTab(ctk.CTkFrame):
         ).grid(row=0, column=0, columnspan=6, padx=10, pady=5, sticky='w')
 
         # 图形类型
-        ctk.CTkLabel(
-            graphics_frame, text='图形:', font=CTK_FONT_MAIN, width=70, anchor='w'
-        ).grid(row=1, column=0, padx=10, pady=5, sticky='w')
+        ctk.CTkLabel(graphics_frame, text='图形:', font=CTK_FONT_MAIN, width=70, anchor='w').grid(
+            row=1, column=0, padx=10, pady=5, sticky='w'
+        )
         self.graphics_type = ctk.CTkOptionMenu(
             graphics_frame, values=['vnc', 'spice', 'none'], width=90, font=CTK_FONT_SMALL
         )
@@ -67,29 +67,32 @@ class DevicesTab(ctk.CTkFrame):
         self.graphics_type.configure(command=self._trigger_change)
 
         # 监听地址
-        ctk.CTkLabel(
-            graphics_frame, text='监听:', font=CTK_FONT_MAIN, width=50, anchor='w'
-        ).grid(row=1, column=2, padx=5, pady=5, sticky='w')
+        ctk.CTkLabel(graphics_frame, text='监听:', font=CTK_FONT_MAIN, width=50, anchor='w').grid(
+            row=1, column=2, padx=5, pady=5, sticky='w'
+        )
         self.graphics_listen = ctk.CTkEntry(graphics_frame, width=100, font=CTK_FONT_SMALL)
         self.graphics_listen.grid(row=1, column=3, padx=5, pady=5, sticky='w')
         self.graphics_listen.insert(0, '0.0.0.0')
         self.graphics_listen.bind('<KeyRelease>', lambda e: self._trigger_change())
 
         # 端口
-        ctk.CTkLabel(
-            graphics_frame, text='端口:', font=CTK_FONT_MAIN, width=40, anchor='w'
-        ).grid(row=1, column=4, padx=5, pady=5, sticky='w')
+        ctk.CTkLabel(graphics_frame, text='端口:', font=CTK_FONT_MAIN, width=40, anchor='w').grid(
+            row=1, column=4, padx=5, pady=5, sticky='w'
+        )
         self.graphics_port = ctk.CTkEntry(graphics_frame, width=60, font=CTK_FONT_SMALL)
         self.graphics_port.grid(row=1, column=5, padx=5, pady=5, sticky='w')
         self.graphics_port.insert(0, '-1')
         self.graphics_port.bind('<KeyRelease>', lambda e: self._trigger_change())
 
         # 视频模型
-        ctk.CTkLabel(
-            graphics_frame, text='视频:', font=CTK_FONT_MAIN, width=50, anchor='w'
-        ).grid(row=2, column=0, padx=10, pady=5, sticky='w')
+        ctk.CTkLabel(graphics_frame, text='视频:', font=CTK_FONT_MAIN, width=50, anchor='w').grid(
+            row=2, column=0, padx=10, pady=5, sticky='w'
+        )
         self.video_model = ctk.CTkOptionMenu(
-            graphics_frame, values=['qxl', 'virtio', 'vmvga', 'bochs', 'ramfb', 'virtio-vga', 'virtio-vga-gl'], width=120, font=CTK_FONT_SMALL
+            graphics_frame,
+            values=['qxl', 'virtio', 'vmvga', 'bochs', 'ramfb', 'virtio-vga', 'virtio-vga-gl'],
+            width=120,
+            font=CTK_FONT_SMALL,
         )
         self.video_model.set('qxl')
         self.video_model.grid(row=2, column=1, padx=5, pady=5, sticky='w')
@@ -109,27 +112,42 @@ class DevicesTab(ctk.CTkFrame):
         usb_frame.grid(row=1, column=0, sticky='ew', padx=10, pady=10)
         usb_frame.grid_columnconfigure(1, weight=1)
 
-        ctk.CTkLabel(
-            usb_frame, text='USB 控制器', font=CTK_FONT_BOLD, text_color='#2196f3'
-        ).grid(row=0, column=0, columnspan=3, padx=10, pady=5, sticky='w')
+        ctk.CTkLabel(usb_frame, text='USB 控制器', font=CTK_FONT_BOLD, text_color='#2196f3').grid(
+            row=0, column=0, columnspan=3, padx=10, pady=5, sticky='w'
+        )
 
         # USB 控制器模型
-        ctk.CTkLabel(
-            usb_frame, text='控制器:', font=CTK_FONT_MAIN, width=80, anchor='w'
-        ).grid(row=1, column=0, padx=10, pady=5, sticky='w')
+        ctk.CTkLabel(usb_frame, text='控制器:', font=CTK_FONT_MAIN, width=80, anchor='w').grid(
+            row=1, column=0, padx=10, pady=5, sticky='w'
+        )
         self.usb_controller = ctk.CTkOptionMenu(
-            usb_frame, values=['qemu-xhci', 'piix3-uhci', 'piix4-uhci', 'nec-xhci', 'vt82c686b-uhci', 'ich9-ehci1', 'none'],
-            width=150, font=CTK_FONT_SMALL
+            usb_frame,
+            values=[
+                'qemu-xhci',
+                'piix3-uhci',
+                'piix4-uhci',
+                'nec-xhci',
+                'vt82c686b-uhci',
+                'ich9-ehci1',
+                'none',
+            ],
+            width=150,
+            font=CTK_FONT_SMALL,
         )
         self.usb_controller.set('qemu-xhci')
         self.usb_controller.grid(row=1, column=1, padx=5, pady=5, sticky='w')
         self.usb_controller.configure(command=self._trigger_change)
 
         # USB 直通设备
-        ctk.CTkLabel(
-            usb_frame, text='USB 设备:', font=CTK_FONT_MAIN, width=80, anchor='w'
-        ).grid(row=1, column=2, padx=10, pady=5, sticky='w')
-        self.usb_entry = ctk.CTkEntry(usb_frame, placeholder_text='Vendor:Product (如 8087:8008)', width=180, font=CTK_FONT_SMALL)
+        ctk.CTkLabel(usb_frame, text='USB 设备:', font=CTK_FONT_MAIN, width=80, anchor='w').grid(
+            row=1, column=2, padx=10, pady=5, sticky='w'
+        )
+        self.usb_entry = ctk.CTkEntry(
+            usb_frame,
+            placeholder_text='Vendor:Product (如 8087:8008)',
+            width=180,
+            font=CTK_FONT_SMALL,
+        )
         self.usb_entry.grid(row=1, column=3, padx=5, pady=5, sticky='w')
         self.usb_entry.bind('<KeyRelease>', lambda e: self._trigger_change())
 
@@ -155,25 +173,28 @@ class DevicesTab(ctk.CTkFrame):
         serial_frame.grid(row=3, column=0, sticky='ew', padx=10, pady=10)
         serial_frame.grid_columnconfigure(1, weight=1)
 
-        ctk.CTkLabel(
-            serial_frame, text='串口配置', font=CTK_FONT_BOLD, text_color='#ff9800'
-        ).grid(row=0, column=0, columnspan=4, padx=10, pady=5, sticky='w')
+        ctk.CTkLabel(serial_frame, text='串口配置', font=CTK_FONT_BOLD, text_color='#ff9800').grid(
+            row=0, column=0, columnspan=4, padx=10, pady=5, sticky='w'
+        )
 
         # 串口类型
-        ctk.CTkLabel(
-            serial_frame, text='类型:', font=CTK_FONT_MAIN, width=60, anchor='w'
-        ).grid(row=1, column=0, padx=10, pady=5, sticky='w')
+        ctk.CTkLabel(serial_frame, text='类型:', font=CTK_FONT_MAIN, width=60, anchor='w').grid(
+            row=1, column=0, padx=10, pady=5, sticky='w'
+        )
         self.serial_type = ctk.CTkOptionMenu(
-            serial_frame, values=['pty', 'tcp', 'udp', 'unix', 'spicevmc', 'none'], width=100, font=CTK_FONT_SMALL
+            serial_frame,
+            values=['pty', 'tcp', 'udp', 'unix', 'spicevmc', 'none'],
+            width=100,
+            font=CTK_FONT_SMALL,
         )
         self.serial_type.set('pty')
         self.serial_type.grid(row=1, column=1, padx=5, pady=5, sticky='w')
         self.serial_type.configure(command=self._trigger_change)
 
         # 端口号
-        ctk.CTkLabel(
-            serial_frame, text='端口:', font=CTK_FONT_MAIN, width=50, anchor='w'
-        ).grid(row=1, column=2, padx=10, pady=5, sticky='w')
+        ctk.CTkLabel(serial_frame, text='端口:', font=CTK_FONT_MAIN, width=50, anchor='w').grid(
+            row=1, column=2, padx=10, pady=5, sticky='w'
+        )
         self.serial_port = ctk.CTkEntry(serial_frame, width=80, font=CTK_FONT_SMALL)
         self.serial_port.grid(row=1, column=3, padx=5, pady=5, sticky='w')
         self.serial_port.insert(0, '0')
@@ -184,25 +205,28 @@ class DevicesTab(ctk.CTkFrame):
         tpm_frame.grid(row=2, column=0, sticky='ew', padx=10, pady=10)
         tpm_frame.grid_columnconfigure(1, weight=1)
 
-        ctk.CTkLabel(
-            tpm_frame, text='TPM 设备', font=CTK_FONT_BOLD, text_color='#7986cb'
-        ).grid(row=0, column=0, columnspan=4, padx=10, pady=5, sticky='w')
+        ctk.CTkLabel(tpm_frame, text='TPM 设备', font=CTK_FONT_BOLD, text_color='#7986cb').grid(
+            row=0, column=0, columnspan=4, padx=10, pady=5, sticky='w'
+        )
 
         # TPM 模型
-        ctk.CTkLabel(
-            tpm_frame, text='模型:', font=CTK_FONT_MAIN, width=60, anchor='w'
-        ).grid(row=1, column=0, padx=10, pady=5, sticky='w')
+        ctk.CTkLabel(tpm_frame, text='模型:', font=CTK_FONT_MAIN, width=60, anchor='w').grid(
+            row=1, column=0, padx=10, pady=5, sticky='w'
+        )
         self.tpm_model = ctk.CTkOptionMenu(
-            tpm_frame, values=['none', 'tpm-crb', 'tpm-tis', 'tpm-spapr'], width=100, font=CTK_FONT_SMALL
+            tpm_frame,
+            values=['none', 'tpm-crb', 'tpm-tis', 'tpm-spapr'],
+            width=100,
+            font=CTK_FONT_SMALL,
         )
         self.tpm_model.set('none')
         self.tpm_model.grid(row=1, column=1, padx=5, pady=5, sticky='w')
         self.tpm_model.configure(command=self._trigger_change)
 
         # TPM 版本
-        ctk.CTkLabel(
-            tpm_frame, text='版本:', font=CTK_FONT_MAIN, width=50, anchor='w'
-        ).grid(row=1, column=2, padx=10, pady=5, sticky='w')
+        ctk.CTkLabel(tpm_frame, text='版本:', font=CTK_FONT_MAIN, width=50, anchor='w').grid(
+            row=1, column=2, padx=10, pady=5, sticky='w'
+        )
         self.tpm_version = ctk.CTkOptionMenu(
             tpm_frame, values=['1.2', '2.0'], width=60, font=CTK_FONT_SMALL
         )
@@ -215,9 +239,9 @@ class DevicesTab(ctk.CTkFrame):
         ctrl_frame.grid(row=4, column=0, sticky='ew', padx=10, pady=10)
         ctrl_frame.grid_columnconfigure(1, weight=1)
 
-        ctk.CTkLabel(
-            ctrl_frame, text='控制器', font=CTK_FONT_BOLD, text_color='#ff7043'
-        ).grid(row=0, column=0, columnspan=3, padx=10, pady=5, sticky='w')
+        ctk.CTkLabel(ctrl_frame, text='控制器', font=CTK_FONT_BOLD, text_color='#ff7043').grid(
+            row=0, column=0, columnspan=3, padx=10, pady=5, sticky='w'
+        )
 
         # 禁用 USB
         self.disable_usb_check = ctk.CTkCheckBox(
@@ -232,11 +256,14 @@ class DevicesTab(ctk.CTkFrame):
         self.disable_sound_check.grid(row=1, column=1, padx=10, pady=5, sticky='w')
 
         # 音频模型
-        ctk.CTkLabel(
-            ctrl_frame, text='音频:', font=CTK_FONT_MAIN, width=50, anchor='w'
-        ).grid(row=1, column=2, padx=10, pady=5, sticky='w')
+        ctk.CTkLabel(ctrl_frame, text='音频:', font=CTK_FONT_MAIN, width=50, anchor='w').grid(
+            row=1, column=2, padx=10, pady=5, sticky='w'
+        )
         self.audio_model = ctk.CTkOptionMenu(
-            ctrl_frame, values=['ich9', 'ich6', 'ac97', 'hda', 'none'], width=80, font=CTK_FONT_SMALL
+            ctrl_frame,
+            values=['ich9', 'ich6', 'ac97', 'hda', 'none'],
+            width=80,
+            font=CTK_FONT_SMALL,
         )
         self.audio_model.set('ich9')
         self.audio_model.grid(row=1, column=3, padx=5, pady=5, sticky='w')
@@ -250,6 +277,7 @@ class DevicesTab(ctk.CTkFrame):
     def add_usb(self) -> None:
         """添加 USB 设备."""
         from tkinter import messagebox
+
         usb_id = self.usb_entry.get().strip()
         if not usb_id or ':' not in usb_id:
             messagebox.showwarning('警告', '请输入有效的 USB 设备 ID (格式：Vendor:Product)!')
@@ -302,4 +330,14 @@ class DevicesTab(ctk.CTkFrame):
             return None
         return {
             'model': model,
+        }
+
+    def get_devices_config(self):
+        """获取所有设备配置."""
+        return {
+            'graphics': self.get_graphics_config(),
+            'usb': self.get_usb_config(),
+            'serial': self.get_serial_config(),
+            'tpm': self.get_tpm_config(),
+            'audio': self.get_audio_config(),
         }

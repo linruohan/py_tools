@@ -2,7 +2,7 @@
 
 import customtkinter as ctk
 
-from ..styles import CTK_FONT_MAIN, CTK_FONT_BOLD, CTK_FONT_SMALL, BG_COLOR_CONTENT
+from ..styles import BG_COLOR_CONTENT, CTK_FONT_BOLD, CTK_FONT_MAIN, CTK_FONT_SMALL
 
 
 class MemoryTab(ctk.CTkFrame):
@@ -30,14 +30,16 @@ class MemoryTab(ctk.CTkFrame):
         balloon_frame.grid(row=0, column=0, sticky='ew', padx=10, pady=10)
         balloon_frame.grid_columnconfigure(1, weight=1)
 
-        ctk.CTkLabel(
-            balloon_frame, text='内存平衡', font=CTK_FONT_BOLD, text_color='#9ccc65'
-        ).grid(row=0, column=0, columnspan=3, padx=10, pady=5, sticky='w')
+        ctk.CTkLabel(balloon_frame, text='内存平衡', font=CTK_FONT_BOLD, text_color='#9ccc65').grid(
+            row=0, column=0, columnspan=3, padx=10, pady=5, sticky='w'
+        )
 
         # 启用内存平衡
         self.balloon_check = ctk.CTkCheckBox(
-            balloon_frame, text='启用内存平衡', font=CTK_FONT_SMALL,
-            command=self._toggle_balloon_entry
+            balloon_frame,
+            text='启用内存平衡',
+            font=CTK_FONT_SMALL,
+            command=self._toggle_balloon_entry,
         )
         self.balloon_check.grid(row=1, column=0, padx=10, pady=5, sticky='w')
 

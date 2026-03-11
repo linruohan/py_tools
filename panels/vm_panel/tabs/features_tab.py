@@ -2,7 +2,7 @@
 
 import customtkinter as ctk
 
-from ..styles import CTK_FONT_BOLD, CTK_FONT_SMALL, BG_COLOR_CONTENT
+from ..styles import BG_COLOR_CONTENT, CTK_FONT_BOLD, CTK_FONT_SMALL
 
 
 class FeaturesTab(ctk.CTkFrame):

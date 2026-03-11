@@ -1,6 +1,7 @@
 """Libvirt XML 构建器."""
 
 import xml.etree.ElementTree as ET
+
 from xml.dom import minidom
 
 
@@ -76,7 +77,14 @@ def build_libvirt_xml(data: dict) -> str:
         numa_elem = ET.SubElement(domain, 'numa')
         # 单 NUMA 节点配置
         memory_mb = data['memory']
-        ET.SubElement(numa_elem, 'cell', id='0', cpus=f'0-{data["vcpu"]-1}', memory=str(memory_mb), unit='KiB')
+        ET.SubElement(
+            numa_elem,
+            'cell',
+            id='0',
+            cpus=f'0-{data["vcpu"] - 1}',
+            memory=str(memory_mb),
+            unit='KiB',
+        )
 
     # 操作系统
     os_elem = ET.SubElement(domain, 'os')
@@ -104,16 +112,12 @@ def build_libvirt_xml(data: dict) -> str:
     # UEFI 固件
     firmware = data.get('firmware', 'BIOS')
     if firmware == 'UEFI':
-        loader = ET.SubElement(
-            os_elem, 'loader', readonly='yes', type='pflash'
-        )
+        loader = ET.SubElement(os_elem, 'loader', readonly='yes', type='pflash')
         loader.text = '/usr/share/OVMF/OVMF_CODE.fd'
         nvram = ET.SubElement(os_elem, 'nvram')
         nvram.text = f'/var/lib/libvirt/qemu/nvram/{data["name"]}_VARS.fd'
     elif firmware == 'EFIVARS':
-        loader = ET.SubElement(
-            os_elem, 'loader', readonly='yes', type='pflash'
-        )
+        loader = ET.SubElement(os_elem, 'loader', readonly='yes', type='pflash')
         loader.text = '/usr/share/OVMF/OVMF_CODE.fd'
         nvram = ET.SubElement(os_elem, 'nvram')
         nvram.text = f'/var/lib/libvirt/qemu/nvram/{data["name"]}_VARS.fd'
@@ -179,9 +183,7 @@ def build_libvirt_xml(data: dict) -> str:
 
         # 源文件
         if disk.get('path'):
-            ET.SubElement(
-                disk_elem, 'source', file=disk['path']
-            )
+            ET.SubElement(disk_elem, 'source', file=disk['path'])
 
         # 目标设备
         if disk_type == 'cdrom':
@@ -193,9 +195,7 @@ def build_libvirt_xml(data: dict) -> str:
             ET.SubElement(disk_elem, 'readonly')
         else:
             target_attrs = {'dev': f'vd{chr(ord("a") + i)}', 'bus': disk.get('bus', 'virtio')}
-            ET.SubElement(
-                disk_elem, 'target', **target_attrs
-            )
+            ET.SubElement(disk_elem, 'target', **target_attrs)
             # 丢弃支持
             if disk.get('discard') and disk['discard']:
                 ET.SubElement(disk_elem, 'discard', unmap='on')
@@ -213,9 +213,7 @@ def build_libvirt_xml(data: dict) -> str:
         iface_type = 'network' if network.get('mode') == 'NAT' else 'bridge'
         if network.get('mode') == 'Macvtap':
             iface_type = 'direct'
-        interface = ET.SubElement(
-            devices, 'interface', type=iface_type
-        )
+        interface = ET.SubElement(devices, 'interface', type=iface_type)
         if network.get('mac'):
             ET.SubElement(interface, 'mac', address=network['mac'])
         if network.get('mode') == 'NAT':
@@ -249,19 +247,24 @@ def build_libvirt_xml(data: dict) -> str:
     graphics = data.get('graphics', {})
     if graphics and graphics.get('type') and graphics['type'] != 'none':
         graphics_elem = ET.SubElement(
-            devices, 'graphics',
+            devices,
+            'graphics',
             type=graphics['type'],
             port='-1',
             autoport='yes',
-            listen=graphics.get('listen', '0.0.0.0')
+            listen=graphics.get('listen', '0.0.0.0'),
         )
-        ET.SubElement(graphics_elem, 'listen', type='address', address=graphics.get('listen', '0.0.0.0'))
+        ET.SubElement(
+            graphics_elem, 'listen', type='address', address=graphics.get('listen', '0.0.0.0')
+        )
 
     # 视频
     video_model = graphics.get('video_model', 'qxl') if graphics else 'qxl'
     vram = graphics.get('vram', 64) if graphics else 64
     video = ET.SubElement(devices, 'video')
-    ET.SubElement(video, 'model', type=video_model, ram='65536', vram=str(vram * 1024), vgamem='16384')
+    ET.SubElement(
+        video, 'model', type=video_model, ram='65536', vram=str(vram * 1024), vgamem='16384'
+    )
 
     # USB 控制器
     usb_config = data.get('usb', {})
@@ -288,7 +291,9 @@ def build_libvirt_xml(data: dict) -> str:
             ET.SubElement(serial_elem, 'target', port=serial.get('port', '0'))
         elif serial.get('type') == 'tcp':
             ET.SubElement(serial_elem, 'protocol', type='telnet')
-            ET.SubElement(serial_elem, 'source', mode='bind', host='0.0.0.0', service=serial.get('port', '0'))
+            ET.SubElement(
+                serial_elem, 'source', mode='bind', host='0.0.0.0', service=serial.get('port', '0')
+            )
 
     # TPM 配置
     tpm = data.get('tpm')
@@ -319,9 +324,7 @@ def build_libvirt_xml(data: dict) -> str:
 
     # PCI 直通设备
     for hostdev in data.get('hostdevs', []):
-        hd = ET.SubElement(
-            devices, 'hostdev', mode='subsystem', type='pci', managed='yes'
-        )
+        hd = ET.SubElement(devices, 'hostdev', mode='subsystem', type='pci', managed='yes')
         source = ET.SubElement(hd, 'source')
         # 解析 PCI 地址
         try:
@@ -335,7 +338,8 @@ def build_libvirt_xml(data: dict) -> str:
                     func_parts = parts[3].split('.')
                     function = func_parts[1] if len(func_parts) > 1 else func_parts[0]
                     ET.SubElement(
-                        source, 'address',
+                        source,
+                        'address',
                         domain=domain_bus,
                         bus=bus,
                         slot=slot,

@@ -2,8 +2,8 @@
 
 import customtkinter as ctk
 
-from ..styles import BG_COLOR_CONTENT
 from ..frames import ScrollableDiskFrame
+from ..styles import BG_COLOR_CONTENT
 
 
 class StorageTab(ctk.CTkFrame):
@@ -51,7 +51,10 @@ class StorageTab(ctk.CTkFrame):
 
         # 磁盘列表
         self.disk_frame = ScrollableDiskFrame(
-            self, corner_radius=0, fg_color=BG_COLOR_CONTENT, on_change_callback=self._trigger_change
+            self,
+            corner_radius=0,
+            fg_color=BG_COLOR_CONTENT,
+            on_change_callback=self._trigger_change,
         )
         self.disk_frame.grid(row=1, column=0, sticky='nsew', padx=10, pady=5)
         self.grid_rowconfigure(1, weight=1)

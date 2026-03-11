@@ -51,7 +51,10 @@ class ScrollableDiskFrame(ctk.CTkScrollableFrame):
 
         # 缓存模式
         cache_mode = ctk.CTkOptionMenu(
-            frame, values=['none', 'writeback', 'writethrough', 'unsafe', 'directsync'], width=90, font=CTK_FONT_SMALL
+            frame,
+            values=['none', 'writeback', 'writethrough', 'unsafe', 'directsync'],
+            width=90,
+            font=CTK_FONT_SMALL,
         )
         cache_mode.set('none')
         cache_mode.grid(row=0, column=4, padx=2)
@@ -59,7 +62,10 @@ class ScrollableDiskFrame(ctk.CTkScrollableFrame):
 
         # IO 模式
         io_mode = ctk.CTkOptionMenu(
-            frame, values=['native', 'native_cached', 'threads', 'directsync'], width=90, font=CTK_FONT_SMALL
+            frame,
+            values=['native', 'native_cached', 'threads', 'directsync'],
+            width=90,
+            font=CTK_FONT_SMALL,
         )
         io_mode.set('native')
         io_mode.grid(row=0, column=5, padx=2)
@@ -155,7 +161,10 @@ class ScrollableDiskFrame(ctk.CTkScrollableFrame):
 
         # 缓存模式
         cache_mode = ctk.CTkOptionMenu(
-            frame, values=['none', 'writeback', 'writethrough', 'unsafe', 'directsync'], width=90, font=CTK_FONT_SMALL
+            frame,
+            values=['none', 'writeback', 'writethrough', 'unsafe', 'directsync'],
+            width=90,
+            font=CTK_FONT_SMALL,
         )
         cache_mode.set('none')
         cache_mode.grid(row=0, column=4, padx=2)
@@ -163,14 +172,19 @@ class ScrollableDiskFrame(ctk.CTkScrollableFrame):
 
         # IO 模式
         io_mode = ctk.CTkOptionMenu(
-            frame, values=['native', 'native_cached', 'threads', 'directsync'], width=90, font=CTK_FONT_SMALL
+            frame,
+            values=['native', 'native_cached', 'threads', 'directsync'],
+            width=90,
+            font=CTK_FONT_SMALL,
         )
         io_mode.set('native')
         io_mode.grid(row=0, column=5, padx=2)
         io_mode.configure(command=self._trigger_change)
 
         # 只读 - CDROM 固定选中
-        readonly_check = ctk.CTkCheckBox(frame, text='RO', width=35, font=CTK_FONT_SMALL, state='disabled')
+        readonly_check = ctk.CTkCheckBox(
+            frame, text='RO', width=35, font=CTK_FONT_SMALL, state='disabled'
+        )
         readonly_check.grid(row=0, column=6, padx=2)
         readonly_check.select()
 

@@ -1,6 +1,7 @@
 """网络配置框架."""
 
 import uuid
+
 from tkinter import END
 
 import customtkinter as ctk
@@ -23,9 +24,7 @@ class ScrollableNetworkFrame(ctk.CTkScrollableFrame):
         frame.grid(row=self.network_count, column=0, sticky='ew', pady=5)
 
         # 网卡名称
-        name_entry = ctk.CTkEntry(
-            frame, placeholder_text='网卡名称', width=80, font=CTK_FONT_SMALL
-        )
+        name_entry = ctk.CTkEntry(frame, placeholder_text='网卡名称', width=80, font=CTK_FONT_SMALL)
         name_entry.grid(row=0, column=0, padx=2)
         name_entry.bind('<KeyRelease>', lambda e: self._trigger_change())
 
@@ -49,16 +48,25 @@ class ScrollableNetworkFrame(ctk.CTkScrollableFrame):
 
         # 模型类型
         model_type = ctk.CTkOptionMenu(
-            frame, values=['virtio', 'virtio-transitional', 'virtio-non-transitional', 'e1000', 'rtl8139', 'vmxnet3', 'ne2k_pci'], width=180, font=CTK_FONT_SMALL
+            frame,
+            values=[
+                'virtio',
+                'virtio-transitional',
+                'virtio-non-transitional',
+                'e1000',
+                'rtl8139',
+                'vmxnet3',
+                'ne2k_pci',
+            ],
+            width=180,
+            font=CTK_FONT_SMALL,
         )
         model_type.set('virtio')
         model_type.grid(row=0, column=3, padx=2)
         model_type.configure(command=self._trigger_change)
 
         # MAC 地址
-        mac_entry = ctk.CTkEntry(
-            frame, placeholder_text='MAC 地址', width=130, font=CTK_FONT_SMALL
-        )
+        mac_entry = ctk.CTkEntry(frame, placeholder_text='MAC 地址', width=130, font=CTK_FONT_SMALL)
         mac_entry.grid(row=0, column=4, padx=2)
         mac_entry.bind('<KeyRelease>', lambda e: self._trigger_change())
 
@@ -80,17 +88,13 @@ class ScrollableNetworkFrame(ctk.CTkScrollableFrame):
         vhost_check.configure(command=self._trigger_change)
 
         # 多队列数
-        queues_entry = ctk.CTkEntry(
-            frame, placeholder_text='队列数', width=50, font=CTK_FONT_SMALL
-        )
+        queues_entry = ctk.CTkEntry(frame, placeholder_text='队列数', width=50, font=CTK_FONT_SMALL)
         queues_entry.grid(row=0, column=7, padx=2)
         queues_entry.insert(0, '1')
         queues_entry.bind('<KeyRelease>', lambda e: self._trigger_change())
 
         # VLAN ID
-        vlan_entry = ctk.CTkEntry(
-            frame, placeholder_text='VLAN', width=50, font=CTK_FONT_SMALL
-        )
+        vlan_entry = ctk.CTkEntry(frame, placeholder_text='VLAN', width=50, font=CTK_FONT_SMALL)
         vlan_entry.grid(row=0, column=8, padx=2)
         vlan_entry.bind('<KeyRelease>', lambda e: self._trigger_change())
 
@@ -146,7 +150,7 @@ class ScrollableNetworkFrame(ctk.CTkScrollableFrame):
 
     def generate_mac(self, mac_entry: ctk.CTkEntry):
         """生成随机 MAC 地址."""
-        mac = ':'.join(['{:02x}'.format(uuid.random().int % 256) for _ in range(6)])
+        mac = ':'.join([f'{uuid.random().int % 256:02x}' for _ in range(6)])
         mac_entry.delete(0, END)
         mac_entry.insert(0, mac)
 
@@ -175,4 +179,4 @@ class ScrollableNetworkFrame(ctk.CTkScrollableFrame):
 
     def _generate_mac(self):
         """生成随机 MAC 地址."""
-        return ':'.join(['{:02x}'.format(uuid.random().int % 256) for _ in range(6)])
+        return ':'.join([f'{uuid.random().int % 256:02x}' for _ in range(6)])
