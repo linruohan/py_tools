@@ -28,7 +28,6 @@ class VmPanel(ctk.CTkFrame):
         self.fg_color = 'transparent'
 
         # 主布局：1 行 1 列
-        self.grid_rowconfigure(3, weight=1)
         self.grid_columnconfigure(0, weight=1)
 
         self.vm_data = {}
@@ -57,13 +56,16 @@ class VmPanel(ctk.CTkFrame):
         self.grid_rowconfigure(0, weight=1)
         self.grid_columnconfigure(0, weight=1)
 
-        # 配置内部网格 - 修复 rowconfigure 配置
+        # 配置内部网格 - 合理分配权重让控件占满空间
         main_frame.grid_rowconfigure(0, weight=0)  # 工具栏
         main_frame.grid_rowconfigure(1, weight=0)  # Tab 开关面板
         main_frame.grid_rowconfigure(2, weight=1)  # Tab 配置区（主要区域）
         main_frame.grid_rowconfigure(3, weight=1)  # XML 预览区
         main_frame.grid_rowconfigure(4, weight=0)  # 信息栏
         main_frame.grid_columnconfigure(0, weight=1)
+
+        # 确保 tabview 内部的 tab 页面也能正确扩展
+        # 需要在 tabview 创建后配置其内部页面
 
         # 顶部工具栏
         self._create_toolbar(main_frame)
@@ -308,6 +310,28 @@ class VmPanel(ctk.CTkFrame):
 
     def _update_tab_references(self) -> None:
         """更新 Tab 引用."""
+        # Basic Tab
+        if 'general_metadata' in self.tab_instances and self.tab_instances['general_metadata'].get(
+            'widget'
+        ):
+            self.basic_tab = self.tab_instances['general_metadata']['widget']
+            self.name_entry = self.basic_tab.vm_name_entry
+            self.title_entry = self.basic_tab.vm_desc_entry
+            self.uuid_entry = self.basic_tab.uuid_entry
+            self.machine_entry = self.basic_tab.machine_type
+            self.virt_type_entry = self.basic_tab.virt_type
+            self.chipset_entry = self.basic_tab.chipset_type
+            self.vcpu_entry = self.basic_tab.vcpu_entry
+            self.cpu_mode_entry = self.basic_tab.cpu_mode
+            self.memory_entry = self.basic_tab.memory_combo
+            self.current_memory_entry = self.basic_tab.current_memory_combo
+            self.max_memory_entry = self.basic_tab.max_memory_combo
+            self.swap_entry = self.basic_tab.swap_entry
+
+        # Storage Tab
+        if 'storage' in self.tab_instances and self.tab_instances['storage'].get('widget'):
+            self.storage_tab = self.tab_instances['storage']['widget']
+
         # Devices Tab
         if 'devices' in self.tab_instances and self.tab_instances['devices'].get('widget'):
             self.devices_tab = self.tab_instances['devices']['widget']
@@ -332,7 +356,6 @@ class VmPanel(ctk.CTkFrame):
         """创建 XML 预览区."""
         preview_frame = ctk.CTkFrame(parent, fg_color=BG_COLOR_CONTENT, corner_radius=8)
         preview_frame.grid(row=3, column=0, padx=15, pady=(0, 10), sticky='nsew')
-        parent.grid_rowconfigure(3, weight=1)
 
         # 预览区标题
         preview_label = ctk.CTkLabel(
@@ -381,6 +404,12 @@ class VmPanel(ctk.CTkFrame):
 
     def _bind_basic_events(self) -> None:
         """绑定基础配置的变化事件，实现动态 XML 预览."""
+        # 绑定 Basic Tab 中的控件
+        if hasattr(self, 'basic_tab'):
+            # Basic Tab 的所有输入框已经在 basic_tab.py 中绑定了 KeyRelease 事件
+            # 这里只需要确保文本框的变化能触发更新
+            pass
+
         # 绑定 Devices Tab 中的控件
         if hasattr(self, 'devices_tab'):
             # 绑定 Entry 的 KeyRelease 事件
@@ -485,11 +514,22 @@ class VmPanel(ctk.CTkFrame):
             self.tab_toggle_panel.get_all_states() if hasattr(self, 'tab_toggle_panel') else {}
         )
 
-        return {
-            'devices': self.devices_tab.get_devices_config()
-            if hasattr(self, 'devices_tab') and tab_states.get('devices', True)
-            else {},
-        }
+        data = {}
+
+        # 收集基础信息 Tab 数据
+        if hasattr(self, 'basic_tab') and tab_states.get('general_metadata', True):
+            basic_config = self.basic_tab.get_basic_config()
+            data.update(basic_config)
+
+        # 收集存储 Tab 数据
+        if hasattr(self, 'storage_tab') and tab_states.get('storage', True):
+            data['disks'] = self.storage_tab.get_disks()
+
+        # 收集设备 Tab 数据
+        if hasattr(self, 'devices_tab') and tab_states.get('devices', True):
+            data['devices'] = self.devices_tab.get_devices_config()
+
+        return data
 
     def generate_xml(self) -> None:
         """生成 XML 配置."""

@@ -45,6 +45,7 @@ class DevicesTab(ctk.CTkFrame):
         self.grid_rowconfigure(1, weight=0)
         self.grid_rowconfigure(2, weight=0)
         self.grid_rowconfigure(3, weight=0)
+        self.grid_rowconfigure(4, weight=1)  # 填充剩余垂直空间
 
         # 图形配置
         graphics_frame = ctk.CTkFrame(self, fg_color=BG_COLOR_CONTENT, corner_radius=8)

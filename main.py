@@ -36,6 +36,7 @@ class App(ctk.CTk):
         self.navigation_frame = ctk.CTkFrame(self, corner_radius=0)
         self.navigation_frame.grid(row=0, column=0, sticky='nsew')
         self.navigation_frame.grid_rowconfigure(5, weight=1)
+        self.navigation_frame.grid_columnconfigure(0, weight=1)
 
         self.navigation_frame_label = ctk.CTkLabel(
             self.navigation_frame,

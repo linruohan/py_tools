@@ -17,19 +17,34 @@ def build_libvirt_xml(data: dict) -> str:
     # 根元素
     domain = ET.Element('domain', type='kvm')
 
-    # 名称
+    # 名称（必填）
     name = ET.SubElement(domain, 'name')
-    name.text = data['name']
+    name.text = data.get('name', 'vm0')
 
-    # 描述
+    # 标题（必填）
+    if data.get('title'):
+        title_elem = ET.SubElement(domain, 'title')
+        title_elem.text = data['title']
+
+    # 描述（可选）
     if data.get('description'):
         desc = ET.SubElement(domain, 'description')
         desc.text = data['description']
 
-    # UUID
+    # UUID（可选）
     if data.get('uuid'):
         uuid_elem = ET.SubElement(domain, 'uuid')
         uuid_elem.text = data['uuid']
+
+    # GenID（可选）
+    if data.get('genid'):
+        genid_elem = ET.SubElement(domain, 'genid')
+        genid_elem.text = data['genid']
+
+    # Metadata（可选）
+    if data.get('metadata'):
+        metadata_elem = ET.SubElement(domain, 'metadata')
+        metadata_elem.text = data['metadata']
 
     # 内存 (KiB)
     memory = ET.SubElement(domain, 'memory', unit='KiB')

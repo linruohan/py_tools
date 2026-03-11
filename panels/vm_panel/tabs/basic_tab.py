@@ -13,6 +13,9 @@ class BasicTab(ctk.CTkFrame):
         self.configure(fg_color='transparent')
         self.on_change_callback = on_change_callback
 
+        # 架构类型变量
+        self.arch_type = ctk.StringVar(value='x86')
+
         # 控件引用
         self.vm_name_entry = None
         self.vm_desc_entry = None
@@ -25,107 +28,152 @@ class BasicTab(ctk.CTkFrame):
         self.memory_combo = None
         self.current_memory_combo = None
         self.max_memory_combo = None
-        self.swap_combo = None
+        self.swap_entry = None
         # CPU Topology
         self.cpu_sockets_entry = None
         self.cpu_cores_entry = None
         self.cpu_threads_entry = None
-        # NUMA
-        self.numa_enabled = None
-        self.numa_frame = None
 
         # 初始化 UI
         self._init_ui()
 
     def _init_ui(self) -> None:
         """初始化界面."""
-        # 配置 grid 权重
+        # 配置 grid 权重 - 3 列布局
         self.grid_columnconfigure(0, weight=1)
-        self.grid_rowconfigure(0, weight=0)
-        self.grid_rowconfigure(1, weight=0)
-        self.grid_rowconfigure(2, weight=0)
+        self.grid_columnconfigure(1, weight=1)
+        self.grid_columnconfigure(2, weight=1)
+        self.grid_rowconfigure(0, weight=1)
 
-        # 系统配置
+        # 内存配置选项
+        memory_options = ['1G', '2G', '4G', '8G', '16G', '32G', '64G', '128G']
+
+        # ===== 第 1 列：系统配置 =====
         sys_frame = ctk.CTkFrame(self, fg_color=BG_COLOR_CONTENT, corner_radius=8)
-        sys_frame.grid(row=0, column=0, sticky='ew', padx=10, pady=10)
+        sys_frame.grid(row=0, column=0, sticky='nsew', padx=5, pady=10)
         sys_frame.grid_columnconfigure(1, weight=1)
+        # 配置所有行的权重
+        for i in range(8):
+            sys_frame.grid_rowconfigure(i, weight=0)
 
         ctk.CTkLabel(sys_frame, text='系统配置', font=CTK_FONT_BOLD, text_color='#64b5f6').grid(
-            row=0, column=0, columnspan=4, padx=10, pady=5, sticky='w'
+            row=0, column=0, columnspan=2, padx=10, pady=5, sticky='w'
         )
 
-        # 第一行：虚拟机名称和描述
-        ctk.CTkLabel(sys_frame, text='虚拟机名称:', font=CTK_FONT_MAIN, width=100, anchor='w').grid(
-            row=1, column=0, padx=5, pady=5, sticky='w'
+        # 架构选择器
+        ctk.CTkLabel(sys_frame, text='架构:', font=CTK_FONT_MAIN, width=90, anchor='w').grid(
+            row=1, column=0, padx=10, pady=5, sticky='w'
         )
-        self.vm_name_entry = ctk.CTkEntry(sys_frame, placeholder_text='vm-name', width=200)
-        self.vm_name_entry.grid(row=1, column=1, padx=5, pady=5, sticky='w')
+        arch_frame = ctk.CTkFrame(sys_frame, fg_color='transparent')
+        arch_frame.grid(row=1, column=1, padx=5, pady=5, sticky='ew')
+        arch_frame.grid_columnconfigure(0, weight=1)
+        arch_frame.grid_columnconfigure(1, weight=1)
+
+        self.arch_x86_radio = ctk.CTkRadioButton(
+            arch_frame,
+            text='x86',
+            variable=self.arch_type,
+            value='x86',
+            command=self._on_arch_change,
+            font=CTK_FONT_MAIN,
+        )
+        self.arch_x86_radio.grid(row=0, column=0, padx=5, sticky='w')
+
+        self.arch_arm_radio = ctk.CTkRadioButton(
+            arch_frame,
+            text='ARM',
+            variable=self.arch_type,
+            value='arm',
+            command=self._on_arch_change,
+            font=CTK_FONT_MAIN,
+        )
+        self.arch_arm_radio.grid(row=0, column=1, padx=5, sticky='w')
+
+        # 虚拟机名称
+        ctk.CTkLabel(sys_frame, text='虚拟机名称:', font=CTK_FONT_MAIN, width=90, anchor='w').grid(
+            row=2, column=0, padx=10, pady=5, sticky='w'
+        )
+        self.vm_name_entry = ctk.CTkEntry(sys_frame, placeholder_text='vm-name', width=180)
+        self.vm_name_entry.grid(row=2, column=1, padx=5, pady=5, sticky='ew')
         self.vm_name_entry.insert(0, 'vm0')
+        self.vm_name_entry.bind('<KeyRelease>', lambda e: self._trigger_change())
 
-        ctk.CTkLabel(sys_frame, text='描述:', font=CTK_FONT_MAIN, width=60, anchor='w').grid(
-            row=1, column=2, padx=5, pady=5, sticky='w'
+        # 描述
+        ctk.CTkLabel(sys_frame, text='描述:', font=CTK_FONT_MAIN, width=90, anchor='w').grid(
+            row=3, column=0, padx=10, pady=5, sticky='w'
         )
-        self.vm_desc_entry = ctk.CTkEntry(sys_frame, placeholder_text='虚拟机描述', width=200)
-        self.vm_desc_entry.grid(row=1, column=3, padx=5, pady=5, sticky='w')
+        self.vm_desc_entry = ctk.CTkEntry(sys_frame, placeholder_text='虚拟机描述', width=180)
+        self.vm_desc_entry.grid(row=3, column=1, padx=5, pady=5, sticky='ew')
+        self.vm_desc_entry.bind('<KeyRelease>', lambda e: self._trigger_change())
 
-        # 第二行：UUID 和 机型
-        ctk.CTkLabel(sys_frame, text='UUID:', font=CTK_FONT_MAIN, width=60, anchor='w').grid(
-            row=2, column=0, padx=5, pady=5, sticky='w'
+        # UUID
+        ctk.CTkLabel(sys_frame, text='UUID:', font=CTK_FONT_MAIN, width=90, anchor='w').grid(
+            row=4, column=0, padx=10, pady=5, sticky='w'
         )
-        self.uuid_entry = ctk.CTkEntry(sys_frame, placeholder_text='自动生成', width=300)
-        self.uuid_entry.grid(row=2, column=1, padx=5, pady=5, sticky='w')
+        self.uuid_entry = ctk.CTkEntry(sys_frame, placeholder_text='自动生成', width=180)
+        self.uuid_entry.grid(row=4, column=1, padx=5, pady=5, sticky='ew')
+        self.uuid_entry.bind('<KeyRelease>', lambda e: self._trigger_change())
 
-        ctk.CTkLabel(sys_frame, text='机型:', font=CTK_FONT_MAIN, width=60, anchor='w').grid(
-            row=2, column=2, padx=5, pady=5, sticky='w'
+        # 机型
+        ctk.CTkLabel(sys_frame, text='机型:', font=CTK_FONT_MAIN, width=90, anchor='w').grid(
+            row=5, column=0, padx=10, pady=5, sticky='w'
         )
         self.machine_type = ctk.CTkOptionMenu(
             sys_frame,
             values=['q35', 'pc', 'pc-i440fx', 'virt', 'arm-virt'],
-            width=120,
+            width=180,
             font=CTK_FONT_SMALL,
         )
-        self.machine_type.set('q35')
-        self.machine_type.grid(row=2, column=3, padx=5, pady=5, sticky='w')
+        self.machine_type.set('virt')
+        self.machine_type.grid(row=5, column=1, padx=5, pady=5, sticky='ew')
+        self.machine_type.configure(command=self._trigger_change)
 
-        # 第三行：虚拟化类型和芯片组
-        ctk.CTkLabel(sys_frame, text='虚拟化:', font=CTK_FONT_MAIN, width=80, anchor='w').grid(
-            row=3, column=0, padx=5, pady=5, sticky='w'
+        # 虚拟化类型
+        ctk.CTkLabel(sys_frame, text='虚拟化:', font=CTK_FONT_MAIN, width=90, anchor='w').grid(
+            row=6, column=0, padx=10, pady=5, sticky='w'
         )
         self.virt_type = ctk.CTkOptionMenu(
-            sys_frame, values=['hvm', 'pv', 'exe'], width=100, font=CTK_FONT_SMALL
+            sys_frame, values=['hvm', 'pv', 'exe'], width=180, font=CTK_FONT_SMALL
         )
         self.virt_type.set('hvm')
-        self.virt_type.grid(row=3, column=1, padx=5, pady=5, sticky='w')
+        self.virt_type.grid(row=6, column=1, padx=5, pady=5, sticky='ew')
+        self.virt_type.configure(command=self._trigger_change)
 
-        ctk.CTkLabel(sys_frame, text='芯片组:', font=CTK_FONT_MAIN, width=70, anchor='w').grid(
-            row=3, column=2, padx=5, pady=5, sticky='w'
+        # 芯片组
+        ctk.CTkLabel(sys_frame, text='芯片组:', font=CTK_FONT_MAIN, width=90, anchor='w').grid(
+            row=7, column=0, padx=10, pady=5, sticky='w'
         )
         self.chipset_type = ctk.CTkOptionMenu(
-            sys_frame, values=['PIIX3', 'PIIX4', 'Q35', 'virtio'], width=100, font=CTK_FONT_SMALL
+            sys_frame, values=['PIIX3', 'PIIX4', 'Q35', 'virtio'], width=180, font=CTK_FONT_SMALL
         )
-        self.chipset_type.set('Q35')
-        self.chipset_type.grid(row=3, column=3, padx=5, pady=5, sticky='w')
+        self.chipset_type.set('virtio')
+        self.chipset_type.grid(row=7, column=1, padx=5, pady=5, sticky='ew')
+        self.chipset_type.configure(command=self._trigger_change)
 
-        # CPU 配置
+        # ===== 第 2 列：CPU 配置 =====
         cpu_frame = ctk.CTkFrame(self, fg_color=BG_COLOR_CONTENT, corner_radius=8)
-        cpu_frame.grid(row=1, column=0, sticky='ew', padx=10, pady=10)
+        cpu_frame.grid(row=0, column=1, sticky='nsew', padx=5, pady=10)
         cpu_frame.grid_columnconfigure(1, weight=1)
+        # 配置所有行的权重
+        for i in range(6):
+            cpu_frame.grid_rowconfigure(i, weight=0)
 
         ctk.CTkLabel(cpu_frame, text='CPU 配置', font=CTK_FONT_BOLD, text_color='#4caf50').grid(
-            row=0, column=0, columnspan=6, padx=10, pady=5, sticky='w'
+            row=0, column=0, columnspan=2, padx=10, pady=5, sticky='w'
         )
 
-        # 第一行：vCPU 数量和 CPU 模式
-        ctk.CTkLabel(cpu_frame, text='vCPU:', font=CTK_FONT_MAIN, width=60, anchor='w').grid(
+        # vCPU 数量
+        ctk.CTkLabel(cpu_frame, text='vCPU:', font=CTK_FONT_MAIN, width=90, anchor='w').grid(
             row=1, column=0, padx=10, pady=5, sticky='w'
         )
-        self.vcpu_entry = ctk.CTkEntry(cpu_frame, placeholder_text='2', width=80)
-        self.vcpu_entry.grid(row=1, column=1, padx=5, pady=5, sticky='w')
+        self.vcpu_entry = ctk.CTkEntry(cpu_frame, placeholder_text='2', width=180)
+        self.vcpu_entry.grid(row=1, column=1, padx=5, pady=5, sticky='ew')
         self.vcpu_entry.insert(0, '2')
         self.vcpu_entry.bind('<KeyRelease>', lambda e: self._trigger_change())
 
-        ctk.CTkLabel(cpu_frame, text='CPU 模式:', font=CTK_FONT_MAIN, width=80, anchor='w').grid(
-            row=1, column=2, padx=10, pady=5, sticky='w'
+        # CPU 模式
+        ctk.CTkLabel(cpu_frame, text='CPU 模式:', font=CTK_FONT_MAIN, width=90, anchor='w').grid(
+            row=2, column=0, padx=10, pady=5, sticky='w'
         )
         self.cpu_mode = ctk.CTkOptionMenu(
             cpu_frame,
@@ -134,98 +182,91 @@ class BasicTab(ctk.CTkFrame):
             font=CTK_FONT_SMALL,
         )
         self.cpu_mode.set('host-model')
-        self.cpu_mode.grid(row=1, column=3, padx=5, pady=5, sticky='w')
+        self.cpu_mode.grid(row=2, column=1, padx=5, pady=5, sticky='ew')
         self.cpu_mode.configure(command=self._trigger_change)
 
-        # CPU Topology
-        ctk.CTkLabel(cpu_frame, text='Sockets:', font=CTK_FONT_MAIN, width=60, anchor='w').grid(
-            row=2, column=0, padx=10, pady=5, sticky='w'
+        # CPU Topology - Sockets
+        ctk.CTkLabel(cpu_frame, text='Sockets:', font=CTK_FONT_MAIN, width=90, anchor='w').grid(
+            row=3, column=0, padx=10, pady=5, sticky='w'
         )
-        self.cpu_sockets_entry = ctk.CTkEntry(cpu_frame, width=60, font=CTK_FONT_SMALL)
-        self.cpu_sockets_entry.grid(row=2, column=1, padx=5, pady=5, sticky='w')
+        self.cpu_sockets_entry = ctk.CTkEntry(cpu_frame, width=180, font=CTK_FONT_SMALL)
+        self.cpu_sockets_entry.grid(row=3, column=1, padx=5, pady=5, sticky='ew')
         self.cpu_sockets_entry.insert(0, '1')
         self.cpu_sockets_entry.bind('<KeyRelease>', lambda e: self._trigger_change())
 
-        ctk.CTkLabel(cpu_frame, text='Cores:', font=CTK_FONT_MAIN, width=60, anchor='w').grid(
-            row=2, column=2, padx=10, pady=5, sticky='w'
+        # CPU Topology - Cores
+        ctk.CTkLabel(cpu_frame, text='Cores:', font=CTK_FONT_MAIN, width=90, anchor='w').grid(
+            row=4, column=0, padx=10, pady=5, sticky='w'
         )
-        self.cpu_cores_entry = ctk.CTkEntry(cpu_frame, width=60, font=CTK_FONT_SMALL)
-        self.cpu_cores_entry.grid(row=2, column=3, padx=5, pady=5, sticky='w')
+        self.cpu_cores_entry = ctk.CTkEntry(cpu_frame, width=180, font=CTK_FONT_SMALL)
+        self.cpu_cores_entry.grid(row=4, column=1, padx=5, pady=5, sticky='ew')
         self.cpu_cores_entry.insert(0, '2')
         self.cpu_cores_entry.bind('<KeyRelease>', lambda e: self._trigger_change())
 
-        ctk.CTkLabel(cpu_frame, text='Threads:', font=CTK_FONT_MAIN, width=60, anchor='w').grid(
-            row=2, column=4, padx=10, pady=5, sticky='w'
+        # CPU Topology - Threads
+        ctk.CTkLabel(cpu_frame, text='Threads:', font=CTK_FONT_MAIN, width=90, anchor='w').grid(
+            row=5, column=0, padx=10, pady=5, sticky='w'
         )
-        self.cpu_threads_entry = ctk.CTkEntry(cpu_frame, width=60, font=CTK_FONT_SMALL)
-        self.cpu_threads_entry.grid(row=2, column=5, padx=5, pady=5, sticky='w')
+        self.cpu_threads_entry = ctk.CTkEntry(cpu_frame, width=180, font=CTK_FONT_SMALL)
+        self.cpu_threads_entry.grid(row=5, column=1, padx=5, pady=5, sticky='ew')
         self.cpu_threads_entry.insert(0, '1')
         self.cpu_threads_entry.bind('<KeyRelease>', lambda e: self._trigger_change())
 
-        # NUMA 配置
-        numa_frame = ctk.CTkFrame(self, fg_color=BG_COLOR_CONTENT, corner_radius=8)
-        numa_frame.grid(row=3, column=0, sticky='ew', padx=10, pady=10)
-        numa_frame.grid_columnconfigure(1, weight=1)
-
-        ctk.CTkLabel(numa_frame, text='NUMA 配置', font=CTK_FONT_BOLD, text_color='#ab47bc').grid(
-            row=0, column=0, columnspan=4, padx=10, pady=5, sticky='w'
-        )
-
-        self.numa_enabled = ctk.CTkCheckBox(
-            numa_frame, text='启用 NUMA', font=CTK_FONT_SMALL, command=self._trigger_change
-        )
-        self.numa_enabled.grid(row=1, column=0, padx=10, pady=5, sticky='w')
-
-        # 内存配置 - 生成 1G 2G 4G ... 128G 的选项
-        memory_options = ['1G', '2G', '4G', '8G', '16G', '32G', '64G', '128G']
-
+        # ===== 第 3 列：内存配置 =====
         mem_frame = ctk.CTkFrame(self, fg_color=BG_COLOR_CONTENT, corner_radius=8)
-        mem_frame.grid(row=2, column=0, sticky='ew', padx=10, pady=10)
+        mem_frame.grid(row=0, column=2, sticky='nsew', padx=5, pady=10)
         mem_frame.grid_columnconfigure(1, weight=1)
+        # 配置所有行的权重
+        for i in range(5):
+            mem_frame.grid_rowconfigure(i, weight=0)
 
         ctk.CTkLabel(mem_frame, text='内存配置', font=CTK_FONT_BOLD, text_color='#81c784').grid(
-            row=0, column=0, columnspan=3, padx=10, pady=5, sticky='w'
+            row=0, column=0, columnspan=2, padx=10, pady=5, sticky='w'
         )
 
-        # 内存大小（下拉框）
-        ctk.CTkLabel(mem_frame, text='内存:', font=CTK_FONT_MAIN, width=60, anchor='w').grid(
+        # 内存大小
+        ctk.CTkLabel(mem_frame, text='内存:', font=CTK_FONT_MAIN, width=90, anchor='w').grid(
             row=1, column=0, padx=10, pady=5, sticky='w'
         )
         self.memory_combo = ctk.CTkOptionMenu(
-            mem_frame, values=memory_options, width=100, font=CTK_FONT_SMALL
+            mem_frame, values=memory_options, width=180, font=CTK_FONT_SMALL
         )
         self.memory_combo.set('2G')
-        self.memory_combo.grid(row=1, column=1, padx=5, pady=5, sticky='w')
+        self.memory_combo.grid(row=1, column=1, padx=5, pady=5, sticky='ew')
+        self.memory_combo.configure(command=self._trigger_change)
 
-        # 当前内存（下拉框）
-        ctk.CTkLabel(mem_frame, text='当前内存:', font=CTK_FONT_MAIN, width=80, anchor='w').grid(
-            row=1, column=2, padx=10, pady=5, sticky='w'
-        )
-        self.current_memory_combo = ctk.CTkOptionMenu(
-            mem_frame, values=memory_options, width=100, font=CTK_FONT_SMALL
-        )
-        self.current_memory_combo.set('2G')
-        self.current_memory_combo.grid(row=1, column=3, padx=5, pady=5, sticky='w')
-
-        # 最大内存（下拉框）
-        ctk.CTkLabel(mem_frame, text='最大内存:', font=CTK_FONT_MAIN, width=80, anchor='w').grid(
+        # 当前内存
+        ctk.CTkLabel(mem_frame, text='当前内存:', font=CTK_FONT_MAIN, width=90, anchor='w').grid(
             row=2, column=0, padx=10, pady=5, sticky='w'
         )
+        self.current_memory_combo = ctk.CTkOptionMenu(
+            mem_frame, values=memory_options, width=180, font=CTK_FONT_SMALL
+        )
+        self.current_memory_combo.set('2G')
+        self.current_memory_combo.grid(row=2, column=1, padx=5, pady=5, sticky='ew')
+        self.current_memory_combo.configure(command=self._trigger_change)
+
+        # 最大内存
+        ctk.CTkLabel(mem_frame, text='最大内存:', font=CTK_FONT_MAIN, width=90, anchor='w').grid(
+            row=3, column=0, padx=10, pady=5, sticky='w'
+        )
         self.max_memory_combo = ctk.CTkOptionMenu(
-            mem_frame, values=memory_options, width=100, font=CTK_FONT_SMALL
+            mem_frame, values=memory_options, width=180, font=CTK_FONT_SMALL
         )
         self.max_memory_combo.set('4G')
-        self.max_memory_combo.grid(row=2, column=1, padx=5, pady=5, sticky='w')
+        self.max_memory_combo.grid(row=3, column=1, padx=5, pady=5, sticky='ew')
+        self.max_memory_combo.configure(command=self._trigger_change)
 
-        # 交换内存（输入框）
+        # 交换内存
         ctk.CTkLabel(
-            mem_frame, text='交换内存 (MB):', font=CTK_FONT_MAIN, width=100, anchor='w'
-        ).grid(row=2, column=2, padx=10, pady=5, sticky='w')
+            mem_frame, text='交换内存 (MB):', font=CTK_FONT_MAIN, width=90, anchor='w'
+        ).grid(row=4, column=0, padx=10, pady=5, sticky='w')
         self.swap_entry = ctk.CTkEntry(
-            mem_frame, placeholder_text='0', width=100, font=CTK_FONT_SMALL
+            mem_frame, placeholder_text='0', width=180, font=CTK_FONT_SMALL
         )
-        self.swap_entry.grid(row=2, column=3, padx=5, pady=5, sticky='w')
+        self.swap_entry.grid(row=4, column=1, padx=5, pady=5, sticky='ew')
         self.swap_entry.insert(0, '0')
+        self.swap_entry.bind('<KeyRelease>', lambda e: self._trigger_change())
 
     def _parse_memory_value(self, value: str) -> int:
         """解析内存值字符串为 MB 整数.
@@ -254,6 +295,15 @@ class BasicTab(ctk.CTkFrame):
         if self.on_change_callback:
             self.on_change_callback()
 
+    def _on_arch_change(self):
+        """架构切换时更新机型."""
+        arch = self.arch_type.get()
+        if arch == 'x86':
+            self.machine_type.set('virt')
+        elif arch == 'arm':
+            self.machine_type.set('arm-virt')
+        self._trigger_change()
+
     def get_basic_config(self) -> dict:
         """获取基础配置.
 
@@ -261,6 +311,7 @@ class BasicTab(ctk.CTkFrame):
             包含基础配置数据的字典
         """
         return {
+            'arch': self.arch_type.get(),
             'name': self.vm_name_entry.get().strip() or 'vm0',
             'description': self.vm_desc_entry.get().strip(),
             'uuid': self.uuid_entry.get().strip(),
@@ -274,7 +325,6 @@ class BasicTab(ctk.CTkFrame):
                 'cores': int(self.cpu_cores_entry.get().strip() or '2'),
                 'threads': int(self.cpu_threads_entry.get().strip() or '1'),
             },
-            'numa': self.numa_enabled.get(),
             'memory': self._parse_memory_value(self.memory_combo.get()),
             'current_memory': self._parse_memory_value(self.current_memory_combo.get()),
             'max_memory': self._parse_memory_value(self.max_memory_combo.get()),

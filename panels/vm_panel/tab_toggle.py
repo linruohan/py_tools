@@ -3,7 +3,7 @@
 import customtkinter as ctk
 
 from .styles import BG_COLOR_CONTENT, CTK_FONT_BOLD, CTK_FONT_SMALL
-from .tabs import DevicesTab
+from .tabs import BasicTab, DevicesTab, StorageTab
 
 
 class TabToggleSwitch(ctk.CTkFrame):
@@ -63,8 +63,8 @@ class TabTogglePanel(ctk.CTkFrame):
             'name': '基础信息',
             'disabled': False,
             'default_on': True,
-            'class': None,
-            'has_callback': False,
+            'class': BasicTab,
+            'has_callback': True,
         },
         'os_booting': {
             'name': '系统引导',
@@ -216,9 +216,9 @@ class TabTogglePanel(ctk.CTkFrame):
         'key_wrap': {
             'name': '密钥封装',
             'disabled': False,
-            'default_on': False,
-            'class': None,
-            'has_callback': False,
+            'default_on': True,
+            'class': StorageTab,
+            'has_callback': True,
         },
         'launch_security': {
             'name': '启动安全',

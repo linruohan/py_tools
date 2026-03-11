@@ -46,3 +46,34 @@ f"--macos-app-name={app_name}.app",  # 设置应用名称
 ```
 
 python -m nuitka --follow-imports --enable-plugin=tk-inter --include-package=customtkinter --include-data-dir=test_images=test_images --include-data-files=readme.md=readme.md --warn-unusual-code --warn-implicit-exceptions --nofollow-import-to=tkinter.test --nofollow-import-to=PIL.ImageQt --remove-output --output-dir=dist --output-file=PyTools --standalone --mingw64 --windows-console-mode=disable --windows-icon-from-ico=mytool.ico main.py
+
+
+## VM 虚拟机
+https://www.libvirt.org/formatdomain.html
+
+### 🔧 基础配置（默认启用）
+1. 基础信息 - 虚拟机的基本元数据配置
+2. 系统引导 - 操作系统引导配置
+3. CPU 分配 - CPU 资源分配设置
+4. 内存分配 - 内存资源分配设置
+5. 设备 - 各类设备配置
+### 📊 高级配置（可选启用）
+6. SMBIOS 系统信息 - SMBIOS 系统信息配置
+7. IO 线程分配 - I/O 线程资源分配
+8. CPU 优化 - CPU 性能调优参数
+9. 内存后端 - 内存后端存储配置
+10. 内存优化 - 内存性能调优
+11. NUMA 节点优化 - NUMA 架构相关优化
+12. 块 I/O 优化 - 块设备 I/O 性能调优
+13. 资源分区 - 资源隔离与分区配置
+14. 光纤通道 VMID - 光纤通道虚拟机标识
+15. CPU 模型与拓扑 - CPU 模型和拓扑结构
+16. 事件配置 - 系统事件配置
+17. 电源管理 - 电源管理策略
+18. 磁盘节流组管理 - 磁盘 I/O 限流组配置
+19. 虚拟化特性 - Hypervisor 特性配置
+20. 时间同步 - 时间同步机制配置
+21. 性能监控事件 - 性能监控相关事件
+22. 安全标签 - 安全标签配置
+23. 密钥封装 - 密钥封装配置
+24. 启动安全 - 启动时安全配置
