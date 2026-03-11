@@ -110,3 +110,7 @@ class BlockIOTuningTab(ctk.CTkFrame):
             'read_iops_sec': self.read_iops_sec.get().strip(),
             'write_iops_sec': self.write_iops_sec.get().strip(),
         }
+
+    def to_xml(self) -> dict:
+        """生成XML配置字典."""
+        return {'block_io_tuning': self.get_config()}

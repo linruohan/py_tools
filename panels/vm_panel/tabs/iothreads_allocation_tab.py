@@ -87,3 +87,7 @@ class IOThreadsAllocationTab(ctk.CTkFrame):
             'thread_pool_min': int(self.thread_pool_min.get().strip() or '0'),
             'thread_pool_max': int(self.thread_pool_max.get().strip() or '0'),
         }
+
+    def to_xml(self) -> dict:
+        """生成XML配置字典."""
+        return {'iothreads_allocation': self.get_config()}

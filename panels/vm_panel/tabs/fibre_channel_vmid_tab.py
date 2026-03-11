@@ -88,3 +88,7 @@ class FibreChannelVMIDTab(ctk.CTkFrame):
         return {
             'appid': self.appid.get().strip(),
         }
+
+    def to_xml(self) -> dict:
+        """生成XML配置字典."""
+        return {'fibre_channel_vmid': self.get_config()}

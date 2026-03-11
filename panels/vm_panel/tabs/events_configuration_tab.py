@@ -121,3 +121,7 @@ class EventsConfigurationTab(ctk.CTkFrame):
             'on_crash': self.on_crash.get(),
             'on_lockfailure': self.on_lockfailure.get(),
         }
+
+    def to_xml(self) -> dict:
+        """生成XML配置字典."""
+        return {'events_configuration': self.get_config()}

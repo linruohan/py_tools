@@ -73,3 +73,10 @@ class ResourcePartitioningTab(ctk.CTkFrame):
             'partition': self.partition.get().strip(),
             'fibrechannel_appid': self.fibrechannel_appid.get().strip(),
         }
+
+    def to_xml(self) -> dict:
+        """生成XML配置字典."""
+        return {
+            'resource_partitioning': {'partition': self.partition.get().strip()},
+            'fibre_channel_vmid': {'appid': self.fibrechannel_appid.get().strip()},
+        }

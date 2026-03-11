@@ -366,3 +366,7 @@ class SMBIOSSystemTab(ctk.CTkFrame):
     def get_config(self) -> dict:
         """获取配置数据."""
         return self.inner_panel.collect_data()
+
+    def to_xml(self) -> dict:
+        """生成XML配置字典."""
+        return {'smbios_system': self.get_config()}

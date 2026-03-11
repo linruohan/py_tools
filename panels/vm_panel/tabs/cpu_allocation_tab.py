@@ -178,3 +178,7 @@ class CPUAllocationTab(ctk.CTkFrame):
                 'order': int(self.vcpu_order.get().strip() or '1'),
             },
         }
+
+    def to_xml(self) -> dict:
+        """生成XML配置字典."""
+        return {'cpu_allocation': self.get_config()}

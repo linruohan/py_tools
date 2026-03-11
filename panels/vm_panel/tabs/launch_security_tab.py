@@ -141,3 +141,7 @@ class LaunchSecurityTab(ctk.CTkFrame):
             'reduced_phys_bits_value': self.reduced_phys_bits_value.get().strip(),
             'kernel_hashes': self.kernel_hashes.get(),
         }
+
+    def to_xml(self) -> dict:
+        """生成XML配置字典."""
+        return {'launch_security': self.get_config()}

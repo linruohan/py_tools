@@ -177,3 +177,7 @@ class MemoryAllocationTab(ctk.CTkFrame):
             'unit': self.memory_unit.get(),
             'dump_core': self.dump_core.get(),
         }
+
+    def to_xml(self) -> dict:
+        """生成XML配置字典."""
+        return {'memory_allocation': self.get_config()}

@@ -90,3 +90,7 @@ class PowerManagementTab(ctk.CTkFrame):
             'suspend_to_mem': self.suspend_to_mem.get(),
             'suspend_to_disk': self.suspend_to_disk.get(),
         }
+
+    def to_xml(self) -> dict:
+        """生成XML配置字典."""
+        return {'power_management': self.get_config()}

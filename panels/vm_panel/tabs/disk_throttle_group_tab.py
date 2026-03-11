@@ -137,3 +137,7 @@ class DiskThrottleGroupTab(ctk.CTkFrame):
         return {
             'throttle_groups': self.throttle_groups.copy(),
         }
+
+    def to_xml(self) -> dict:
+        """生成XML配置字典."""
+        return {'disk_throttle_group': self.get_config()}

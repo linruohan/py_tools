@@ -27,7 +27,6 @@ from .tabs import (
     ResourcePartitioningTab,
     SecurityLabelTab,
     SMBIOSSystemTab,
-    StorageTab,
     TimeKeepingTab,
 )
 
@@ -276,8 +275,7 @@ class TabTogglePanel(ctk.CTkFrame):
         ).grid(row=0, column=0, padx=10, pady=5, sticky='w')
 
         tab_keys = list(self.TABS_CONFIG.keys())
-        mid_point = (len(tab_keys) + 1) // 3
-        mid_point2 = 2 * (len(tab_keys) + 1) // 3
+        mid_point = (len(tab_keys) + 1) // 2
 
         for i, tab_key in enumerate(tab_keys[:mid_point]):
             tab_config = self.TABS_CONFIG[tab_key]
@@ -292,7 +290,7 @@ class TabTogglePanel(ctk.CTkFrame):
             switch.grid(row=1, column=i, padx=5, pady=2, sticky='w')
             self.toggle_switches[tab_key] = switch
 
-        for i, tab_key in enumerate(tab_keys[mid_point:mid_point2]):
+        for i, tab_key in enumerate(tab_keys[mid_point:]):
             tab_config = self.TABS_CONFIG[tab_key]
             switch = TabToggleSwitch(
                 self,
@@ -305,19 +303,6 @@ class TabTogglePanel(ctk.CTkFrame):
             switch.grid(row=2, column=i, padx=5, pady=2, sticky='w')
             self.toggle_switches[tab_key] = switch
 
-        for i, tab_key in enumerate(tab_keys[mid_point2:]):
-            tab_config = self.TABS_CONFIG[tab_key]
-            switch = TabToggleSwitch(
-                self,
-                tab_name=tab_key,
-                tab_display_name=tab_config['name'],
-                on_change_callback=self._on_tab_toggle,
-                disabled=tab_config['disabled'],
-                default_on=tab_config.get('default_on', True),
-            )
-            switch.grid(row=3, column=i, padx=5, pady=2, sticky='w')
-            self.toggle_switches[tab_key] = switch
-
         self.toggle_btn = ctk.CTkButton(
             self,
             text='▼',
@@ -328,8 +313,8 @@ class TabTogglePanel(ctk.CTkFrame):
             font=CTK_FONT_SMALL,
             command=self._toggle_panel,
         )
-        btn_col = max(mid_point, mid_point2 - mid_point, len(tab_keys) - mid_point2)
-        self.toggle_btn.grid(row=1, column=btn_col + 1, rowspan=3, padx=10, pady=2, sticky='e')
+        btn_col = max(mid_point, len(tab_keys) - mid_point)
+        self.toggle_btn.grid(row=1, column=btn_col + 1, rowspan=2, padx=10, pady=2, sticky='e')
 
     def _on_tab_toggle(self, tab_name: str, enabled: bool) -> None:
         """Tab 开关改变时的回调."""
@@ -340,23 +325,20 @@ class TabTogglePanel(ctk.CTkFrame):
         """展开/收起面板."""
         if self.expanded:
             tab_keys = list(self.TABS_CONFIG.keys())
-            mid_point2 = 2 * (len(tab_keys) + 1) // 3
+            mid_point = (len(tab_keys) + 1) // 2
             for i, (tab_key, switch) in enumerate(self.toggle_switches.items()):
-                if i >= mid_point2:
+                if i >= mid_point:
                     switch.grid_remove()
             self.toggle_btn.configure(text='▲')
             self.expanded = False
         else:
             tab_keys = list(self.TABS_CONFIG.keys())
-            mid_point = (len(tab_keys) + 1) // 3
-            mid_point2 = 2 * (len(tab_keys) + 1) // 3
+            mid_point = (len(tab_keys) + 1) // 2
             for i, (tab_key, switch) in enumerate(self.toggle_switches.items()):
                 if i < mid_point:
                     switch.grid(row=1, column=i, padx=5, pady=2, sticky='w')
-                elif i < mid_point2:
-                    switch.grid(row=2, column=(i - mid_point), padx=5, pady=2, sticky='w')
                 else:
-                    switch.grid(row=3, column=(i - mid_point2), padx=5, pady=2, sticky='w')
+                    switch.grid(row=2, column=(i - mid_point), padx=5, pady=2, sticky='w')
             self.toggle_btn.configure(text='▼')
             self.expanded = True
 

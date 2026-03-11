@@ -330,3 +330,44 @@ class BasicTab(ctk.CTkFrame):
             'max_memory': self._parse_memory_value(self.max_memory_combo.get()),
             'swap': int(self.swap_entry.get().strip() or '0'),
         }
+
+    def get_config(self) -> dict:
+        """获取配置数据（兼容新接口）."""
+        return self.get_basic_config()
+
+    def to_xml(self) -> dict:
+        """生成XML配置字典.
+
+        Returns:
+            包含XML配置的字典，用于XML生成器
+        """
+        config = self.get_basic_config()
+        return {
+            'name': config['name'],
+            'title': config.get('description', ''),
+            'description': config.get('description', ''),
+            'uuid': config.get('uuid', ''),
+            'memory_allocation': {
+                'memory': config['memory'] * 1024,
+                'current_memory': config['current_memory'] * 1024,
+                'max_memory': config['max_memory'] * 1024,
+                'unit': 'KiB',
+            },
+            'cpu_allocation': {
+                'max_vcpu': config['vcpu'],
+                'current_vcpu': config['vcpu'],
+                'placement': 'static',
+                'topology': config.get('cpu_topology', {}),
+            },
+            'cpu_model_topology': {
+                'model': {
+                    'mode': config.get('cpu_mode', 'host-model'),
+                },
+            },
+            'os_booting': {
+                'type': 'guest_firmware',
+                'os_type': 'hvm',
+                'arch': config.get('arch', 'x86_64'),
+                'machine': config.get('machine', 'q35'),
+            },
+        }

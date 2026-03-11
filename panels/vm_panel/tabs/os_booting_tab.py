@@ -436,3 +436,7 @@ class OSBootingTab(ctk.CTkFrame):
         if instance and hasattr(instance, 'get_config'):
             return instance.get_config()
         return {'type': 'guest_firmware'}
+
+    def to_xml(self) -> dict:
+        """生成XML配置字典."""
+        return {'os_booting': self.get_config()}

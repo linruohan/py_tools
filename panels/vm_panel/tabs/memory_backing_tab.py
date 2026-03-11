@@ -159,3 +159,7 @@ class MemoryBackingTab(ctk.CTkFrame):
             'locked': self.locked.get(),
             'discard': self.discard.get(),
         }
+
+    def to_xml(self) -> dict:
+        """生成XML配置字典."""
+        return {'memory_backing': self.get_config()}

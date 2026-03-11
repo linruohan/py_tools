@@ -161,3 +161,7 @@ class TimeKeepingTab(ctk.CTkFrame):
                 'kvmclock_present': self.kvmclock_present.get(),
             },
         }
+
+    def to_xml(self) -> dict:
+        """生成XML配置字典."""
+        return {'time_keeping': self.get_config()}

@@ -342,3 +342,47 @@ class DevicesTab(ctk.CTkFrame):
             'tpm': self.get_tpm_config(),
             'audio': self.get_audio_config(),
         }
+
+    def to_xml(self) -> dict:
+        """生成XML配置字典.
+
+        Returns:
+            包含XML配置的字典，用于XML生成器
+        """
+        devices_config = self.get_devices_config()
+        devices = {
+            'emulator': '/usr/bin/qemu-system-x86_64',
+            'graphics': devices_config.get('graphics'),
+            'videos': [{
+                'model': devices_config.get('graphics', {}).get('video_model', 'qxl'),
+                'vram': devices_config.get('graphics', {}).get('vram', 64),
+            }],
+            'controllers': [],
+            'serials': [],
+            'sounds': [],
+        }
+
+        # 添加 USB 控制器
+        usb_config = devices_config.get('usb', {})
+        if usb_config.get('controller') and usb_config.get('controller') != 'none':
+            devices['controllers'].append({
+                'type': 'usb',
+                'model': usb_config['controller'],
+            })
+
+        # 添加串口
+        serial_config = devices_config.get('serial', {})
+        if serial_config.get('type') and serial_config.get('type') != 'none':
+            devices['serials'].append({
+                'type': serial_config['type'],
+                'port': serial_config.get('port', '0'),
+            })
+
+        # 添加音频
+        audio_config = devices_config.get('audio', {})
+        if audio_config and audio_config.get('model') != 'none':
+            devices['sounds'].append({
+                'model': audio_config['model'],
+            })
+
+        return {'devices': devices}

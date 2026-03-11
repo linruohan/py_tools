@@ -120,3 +120,7 @@ class MemoryTuningTab(ctk.CTkFrame):
             'swap_hard_limit': self.swap_hard_limit.get().strip(),
             'min_guarantee': self.min_guarantee.get().strip(),
         }
+
+    def to_xml(self) -> dict:
+        """生成XML配置字典."""
+        return {'memory_tuning': self.get_config()}

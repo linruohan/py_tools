@@ -104,3 +104,7 @@ class NUMANodeTuningTab(ctk.CTkFrame):
             'cpus': self.cpus.get().strip(),
             'memory': self.memory.get().strip(),
         }
+
+    def to_xml(self) -> dict:
+        """生成XML配置字典."""
+        return {'numa_node_tuning': self.get_config()}

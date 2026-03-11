@@ -15,7 +15,7 @@ from .styles import (
     CTK_FONT_SMALL,
 )
 from .tab_toggle import TabTogglePanel
-from .xml_builder import build_libvirt_xml
+from .xml_generator import LibvirtXMLGenerator
 
 
 class VmPanel(ctk.CTkFrame):
@@ -473,7 +473,8 @@ class VmPanel(ctk.CTkFrame):
         """构建 XML 预览（不抛出错误）."""
         try:
             data = self.collect_vm_data()
-            return build_libvirt_xml(data)
+            generator = LibvirtXMLGenerator()
+            return generator.generate(data)
         except Exception:
             return '<!-- 配置不完整或无效，请检查输入 -->'
 
@@ -508,26 +509,28 @@ class VmPanel(ctk.CTkFrame):
             self.update_info('已清空所有配置')
 
     def collect_vm_data(self) -> dict:
-        """收集虚拟机配置数据."""
-        # 获取 Tab 开关状态
-        tab_states = (
-            self.tab_toggle_panel.get_all_states() if hasattr(self, 'tab_toggle_panel') else {}
-        )
-
+        """收集虚拟机配置数据 - 通过各Tab的to_xml方法."""
         data = {}
 
-        # 收集基础信息 Tab 数据
-        if hasattr(self, 'basic_tab') and tab_states.get('general_metadata', True):
-            basic_config = self.basic_tab.get_basic_config()
-            data.update(basic_config)
+        for tab_key, tab_info in self.tab_instances.items():
+            if not self.tab_enabled.get(tab_key, False):
+                continue
 
-        # 收集存储 Tab 数据
-        if hasattr(self, 'storage_tab') and tab_states.get('storage', True):
-            data['disks'] = self.storage_tab.get_disks()
-
-        # 收集设备 Tab 数据
-        if hasattr(self, 'devices_tab') and tab_states.get('devices', True):
-            data['devices'] = self.devices_tab.get_devices_config()
+            widget = tab_info.get('widget')
+            if widget and hasattr(widget, 'to_xml'):
+                try:
+                    xml_config = widget.to_xml()
+                    if isinstance(xml_config, dict):
+                        for key, value in xml_config.items():
+                            if key in data:
+                                if isinstance(data[key], dict) and isinstance(value, dict):
+                                    data[key].update(value)
+                                else:
+                                    data[key] = value
+                            else:
+                                data[key] = value
+                except Exception:
+                    pass
 
         return data
 
@@ -535,7 +538,8 @@ class VmPanel(ctk.CTkFrame):
         """生成 XML 配置."""
         try:
             self.vm_data = self.collect_vm_data()
-            xml_str = build_libvirt_xml(self.vm_data)
+            generator = LibvirtXMLGenerator()
+            xml_str = generator.generate(self.vm_data)
             self.xml_textbox.delete('1.0', END)
             self.xml_textbox.insert('1.0', xml_str)
             self.update_info('XML 生成成功')

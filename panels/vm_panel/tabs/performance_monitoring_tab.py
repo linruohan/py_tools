@@ -132,3 +132,7 @@ class PerformanceMonitoringTab(ctk.CTkFrame):
             'cpu_migrations': self.cpu_migrations.get(),
             'alignment_faults': self.alignment_faults.get(),
         }
+
+    def to_xml(self) -> dict:
+        """生成XML配置字典."""
+        return {'performance_monitoring': self.get_config()}

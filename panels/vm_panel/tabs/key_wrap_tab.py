@@ -125,3 +125,7 @@ class KeyWrapTab(ctk.CTkFrame):
             'mode': self.mode.get().strip(),
             'hash': self.hash_alg.get().strip(),
         }
+
+    def to_xml(self) -> dict:
+        """生成XML配置字典."""
+        return {'key_wrap': self.get_config()}

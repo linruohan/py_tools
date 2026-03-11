@@ -126,3 +126,7 @@ class CPUTuningTab(ctk.CTkFrame):
             'scheduler': self.scheduler.get(),
             'priority': self.priority.get().strip(),
         }
+
+    def to_xml(self) -> dict:
+        """生成XML配置字典."""
+        return {'cpu_tuning': self.get_config()}

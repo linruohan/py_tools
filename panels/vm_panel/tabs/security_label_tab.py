@@ -135,3 +135,7 @@ class SecurityLabelTab(ctk.CTkFrame):
             'baselabel': self.baselabel.get(),
             'baselabel_value': self.baselabel_value.get().strip(),
         }
+
+    def to_xml(self) -> dict:
+        """生成XML配置字典."""
+        return {'security_label': self.get_config()}
