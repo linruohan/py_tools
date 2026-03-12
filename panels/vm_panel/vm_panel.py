@@ -335,22 +335,24 @@ class VmPanel(ctk.CTkFrame):
         # Devices Tab
         if 'devices' in self.tab_instances and self.tab_instances['devices'].get('widget'):
             self.devices_tab = self.tab_instances['devices']['widget']
-            self.graphics_type = self.devices_tab.graphics_type
-            self.graphics_listen = self.devices_tab.graphics_listen
-            self.graphics_port = self.devices_tab.graphics_port
-            self.video_model = self.devices_tab.video_model
-            self.vram_entry = self.devices_tab.vram_entry
-            self.usb_controller = self.devices_tab.usb_controller
-            self.usb_entry = self.devices_tab.usb_entry
-            self.usb_list = self.devices_tab.usb_list
-            self.usb_display = self.devices_tab.usb_display
-            self.disable_usb_check = self.devices_tab.disable_usb_check
-            self.disable_sound_check = self.devices_tab.disable_sound_check
-            self.serial_type = self.devices_tab.serial_type
-            self.serial_port = self.devices_tab.serial_port
-            self.tpm_model = self.devices_tab.tpm_model
-            self.tpm_version = self.devices_tab.tpm_version
-            self.audio_model = self.devices_tab.audio_model
+            # 获取图形显示子 Tab 的控件
+            graphics_tab = self.devices_tab.inner_panel.get_tab_instance('graphics')
+            if graphics_tab:
+                self.graphics_type = graphics_tab.graphics_type
+                self.graphics_listen = graphics_tab.graphics_listen
+                self.graphics_port = graphics_tab.graphics_port
+                self.video_model = graphics_tab.video_model
+                self.vram_entry = graphics_tab.vram_entry
+            # 获取其他设备子 Tab 的控件
+            others_tab = self.devices_tab.inner_panel.get_tab_instance('others')
+            if others_tab:
+                self.serial_type = others_tab.serial_type
+                self.serial_port = others_tab.serial_port
+                self.tpm_model = others_tab.tpm_model
+                self.tpm_version = others_tab.tpm_version
+                self.disable_usb_check = others_tab.disable_usb_check
+                self.disable_sound_check = others_tab.disable_sound_check
+                self.audio_model = others_tab.audio_model
 
     def _create_xml_preview(self, parent) -> None:
         """创建 XML 预览区."""
@@ -482,7 +484,9 @@ class VmPanel(ctk.CTkFrame):
     def add_usb(self) -> None:
         """添加 USB 设备."""
         if hasattr(self, 'devices_tab'):
-            self.devices_tab.add_usb()
+            usb_tab = self.devices_tab.inner_panel.get_tab_instance('usb_hostdev')
+            if usb_tab and hasattr(usb_tab, '_add_usb_device'):
+                usb_tab._add_usb_device()
 
     # ========== 核心功能方法 ==========
     def clear_all(self) -> None:
@@ -490,18 +494,24 @@ class VmPanel(ctk.CTkFrame):
         if messagebox.askyesno('确认', '确定要清空所有配置吗？'):
             # 清空 Devices Tab
             if hasattr(self, 'devices_tab'):
-                self.devices_tab.graphics_type.set('vnc')
-                self.devices_tab.graphics_listen.delete(0, END)
-                self.devices_tab.graphics_listen.insert(0, '0.0.0.0')
-                self.devices_tab.video_model.set('qxl')
-                self.devices_tab.vram_entry.delete(0, END)
-                self.devices_tab.vram_entry.insert(0, '64')
-                self.devices_tab.usb_controller.set('qemu-xhci')
-                self.devices_tab.disable_usb_check.deselect()
-                self.devices_tab.disable_sound_check.deselect()
-                self.devices_tab.usb_list.clear()
-                self.devices_tab.usb_display.configure(text='')
-                self.devices_tab.usb_entry.delete(0, END)
+                # 获取图形显示子 Tab
+                graphics_tab = self.devices_tab.inner_panel.get_tab_instance('graphics')
+                if graphics_tab:
+                    graphics_tab.graphics_type.set('vnc')
+                    graphics_tab.graphics_listen.delete(0, END)
+                    graphics_tab.graphics_listen.insert(0, '0.0.0.0')
+                    graphics_tab.video_model.set('qxl')
+                    graphics_tab.vram_entry.delete(0, END)
+                    graphics_tab.vram_entry.insert(0, '64')
+                # 获取其他设备子 Tab
+                others_tab = self.devices_tab.inner_panel.get_tab_instance('others')
+                if others_tab:
+                    others_tab.disable_usb_check.deselect()
+                    others_tab.disable_sound_check.deselect()
+                # 清空 USB 设备列表
+                usb_tab = self.devices_tab.inner_panel.get_tab_instance('usb_hostdev')
+                if usb_tab and hasattr(usb_tab, '_clear_usb_list'):
+                    usb_tab._clear_usb_list()
 
             # 清空 XML 预览
             self.xml_textbox.delete('1.0', END)

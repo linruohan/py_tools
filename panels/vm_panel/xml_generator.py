@@ -601,13 +601,101 @@ class LibvirtXMLGenerator:
                 addr_attrs['function'] = hostdev['function']
             if addr_attrs:
                 ET.SubElement(source, 'address', **addr_attrs)
+            # Boot order
+            if hostdev.get('boot_order'):
+                ET.SubElement(hostdev_elem, 'boot', order=str(hostdev['boot_order']))
+            # ROM BAR
+            if hostdev.get('rom_bar'):
+                ET.SubElement(hostdev_elem, 'rom', bar=hostdev['rom_bar'], file=hostdev.get('rom_file', ''))
 
         elif dev_type == 'usb':
             source = ET.SubElement(hostdev_elem, 'source')
-            if hostdev.get('vendor'):
-                ET.SubElement(source, 'vendor', id=hostdev['vendor'])
-            if hostdev.get('product'):
-                ET.SubElement(source, 'product', id=hostdev['product'])
+            startup_policy = hostdev.get('startup_policy', 'optional')
+            guest_reset = hostdev.get('guest_reset', False)
+            if startup_policy:
+                source.set('startupPolicy', startup_policy)
+            if guest_reset:
+                source.set('guestReset', 'on')
+            vendor_product = hostdev.get('vendor_product', '')
+            if vendor_product and ':' in vendor_product:
+                vendor, product = vendor_product.split(':')
+                ET.SubElement(source, 'vendor', id=f'0x{vendor}')
+                ET.SubElement(source, 'product', id=f'0x{product}')
+            # Boot order
+            if hostdev.get('boot_order'):
+                ET.SubElement(hostdev_elem, 'boot', order=str(hostdev['boot_order']))
+
+        elif dev_type == 'scsi':
+            source = ET.SubElement(hostdev_elem, 'source')
+            protocol = hostdev.get('protocol')
+            if protocol == 'iscsi':
+                source.set('protocol', 'iscsi')
+                source.set('name', hostdev.get('name', ''))
+                host = hostdev.get('host')
+                port = hostdev.get('port', '3260')
+                if host:
+                    ET.SubElement(source, 'host', name=host, port=str(port))
+                # Auth
+                auth = hostdev.get('auth')
+                if auth:
+                    auth_elem = ET.SubElement(source, 'auth', username=auth.get('username', ''))
+                    ET.SubElement(auth_elem, 'secret', type='iscsi', usage=auth.get('secret', ''))
+                # Initiator
+                initiator = hostdev.get('initiator')
+                if initiator:
+                    init_elem = ET.SubElement(source, 'initiator')
+                    ET.SubElement(init_elem, 'iqn', name=initiator.get('name', ''))
+            else:
+                # Local SCSI
+                adapter = hostdev.get('adapter')
+                if adapter:
+                    ET.SubElement(source, 'adapter', name=adapter)
+                addr_attrs = {
+                    'bus': hostdev.get('bus', '0'),
+                    'target': hostdev.get('target', '0'),
+                    'unit': hostdev.get('unit', '0'),
+                }
+                ET.SubElement(source, 'address', **addr_attrs)
+            # Readonly
+            if hostdev.get('readonly'):
+                ET.SubElement(hostdev_elem, 'readonly')
+            # Address
+            addr_type = hostdev.get('address_type', 'drive')
+            addr_attrs = {'type': addr_type}
+            if hostdev.get('controller'):
+                addr_attrs['controller'] = str(hostdev['controller'])
+            if hostdev.get('addr_bus'):
+                addr_attrs['bus'] = str(hostdev['addr_bus'])
+            if hostdev.get('addr_target'):
+                addr_attrs['target'] = str(hostdev['addr_target'])
+            if hostdev.get('addr_unit'):
+                addr_attrs['unit'] = str(hostdev['addr_unit'])
+            ET.SubElement(devices, 'address', **addr_attrs)
+
+        elif dev_type == 'scsi_host':
+            source = ET.SubElement(hostdev_elem, 'source')
+            source.set('protocol', hostdev.get('protocol', 'vhost'))
+            wwpn = hostdev.get('wwpn')
+            if wwpn:
+                source.set('wwpn', wwpn)
+
+        elif dev_type == 'mdev':
+            model = hostdev.get('model', 'vfio-pci')
+            hostdev_elem.set('model', model)
+            source = ET.SubElement(hostdev_elem, 'source')
+            uuid = hostdev.get('uuid')
+            if uuid:
+                ET.SubElement(source, 'address', uuid=uuid)
+            # CCW address for vfio-ccw
+            if model == 'vfio-ccw' and hostdev.get('ccw'):
+                ccw = hostdev['ccw']
+                addr_attrs = {
+                    'type': 'ccw',
+                    'cssid': ccw.get('cssid', '0xfe'),
+                    'ssid': ccw.get('ssid', '0x0'),
+                    'devno': ccw.get('devno', '0x0001'),
+                }
+                ET.SubElement(devices, 'address', **addr_attrs)
 
     def _add_memory_backing(self, config: dict) -> None:
         """添加内存后端配置."""

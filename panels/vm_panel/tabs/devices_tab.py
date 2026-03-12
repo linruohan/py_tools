@@ -1,12 +1,13 @@
-"""设备配置 Tab - 图形、USB、控制器、串口、TPM 等."""
+"""设备配置 Tab - 图形、USB/PCI/SCSI 直通、控制器、串口、TPM、磁盘设备等."""
 
 import customtkinter as ctk
 
+from ..inner_tab_panel import InnerTabPanel
 from ..styles import BG_COLOR_CONTENT, CTK_FONT_BOLD, CTK_FONT_MAIN, CTK_FONT_SMALL
 
 
-class DevicesTab(ctk.CTkFrame):
-    """设备配置 Tab."""
+class USBHostdevTab(ctk.CTkFrame):
+    """USB 设备直通配置."""
 
     def __init__(self, master, on_change_callback=None, **kwargs):
         super().__init__(master, **kwargs)
@@ -14,115 +15,27 @@ class DevicesTab(ctk.CTkFrame):
         self.on_change_callback = on_change_callback
         self.usb_list = []
 
-        # 控件引用
-        self.graphics_type = None
-        self.graphics_listen = None
-        self.graphics_port = None
-        self.video_model = None
-        self.vram_entry = None
-        self.usb_controller = None
-        self.usb_entry = None
-        self.usb_display = None
-        self.disable_usb_check = None
-        self.disable_sound_check = None
-        # 串口配置
-        self.serial_type = None
-        self.serial_port = None
-        # TPM 配置
-        self.tpm_model = None
-        self.tpm_version = None
-        # 音频配置
-        self.audio_model = None
-
-        # 初始化 UI
         self._init_ui()
 
     def _init_ui(self) -> None:
         """初始化界面."""
-        # 配置 grid 权重
         self.grid_columnconfigure(0, weight=1)
-        self.grid_rowconfigure(0, weight=0)
-        self.grid_rowconfigure(1, weight=0)
-        self.grid_rowconfigure(2, weight=0)
-        self.grid_rowconfigure(3, weight=0)
-        self.grid_rowconfigure(4, weight=1)  # 填充剩余垂直空间
+        self.grid_rowconfigure(0, weight=1)
 
-        # 图形配置
-        graphics_frame = ctk.CTkFrame(self, fg_color=BG_COLOR_CONTENT, corner_radius=8)
-        graphics_frame.grid(row=0, column=0, sticky='ew', padx=10, pady=10)
-        graphics_frame.grid_columnconfigure(1, weight=1)
+        frame = ctk.CTkFrame(self, fg_color=BG_COLOR_CONTENT, corner_radius=6)
+        frame.grid(row=0, column=0, sticky='nsew', padx=5, pady=5)
+        frame.grid_columnconfigure(1, weight=1)
 
-        ctk.CTkLabel(
-            graphics_frame, text='图形显示', font=CTK_FONT_BOLD, text_color='#ba68c8'
-        ).grid(row=0, column=0, columnspan=6, padx=10, pady=5, sticky='w')
-
-        # 图形类型
-        ctk.CTkLabel(graphics_frame, text='图形:', font=CTK_FONT_MAIN, width=70, anchor='w').grid(
-            row=1, column=0, padx=10, pady=5, sticky='w'
+        ctk.CTkLabel(frame, text='USB 设备直通', font=CTK_FONT_BOLD, text_color='#2196f3').grid(
+            row=0, column=0, columnspan=4, padx=10, pady=5, sticky='w'
         )
-        self.graphics_type = ctk.CTkOptionMenu(
-            graphics_frame, values=['vnc', 'spice', 'none'], width=90, font=CTK_FONT_SMALL
-        )
-        self.graphics_type.set('vnc')
-        self.graphics_type.grid(row=1, column=1, padx=5, pady=5, sticky='w')
-        self.graphics_type.configure(command=self._trigger_change)
-
-        # 监听地址
-        ctk.CTkLabel(graphics_frame, text='监听:', font=CTK_FONT_MAIN, width=50, anchor='w').grid(
-            row=1, column=2, padx=5, pady=5, sticky='w'
-        )
-        self.graphics_listen = ctk.CTkEntry(graphics_frame, width=100, font=CTK_FONT_SMALL)
-        self.graphics_listen.grid(row=1, column=3, padx=5, pady=5, sticky='w')
-        self.graphics_listen.insert(0, '0.0.0.0')
-        self.graphics_listen.bind('<KeyRelease>', lambda e: self._trigger_change())
-
-        # 端口
-        ctk.CTkLabel(graphics_frame, text='端口:', font=CTK_FONT_MAIN, width=40, anchor='w').grid(
-            row=1, column=4, padx=5, pady=5, sticky='w'
-        )
-        self.graphics_port = ctk.CTkEntry(graphics_frame, width=60, font=CTK_FONT_SMALL)
-        self.graphics_port.grid(row=1, column=5, padx=5, pady=5, sticky='w')
-        self.graphics_port.insert(0, '-1')
-        self.graphics_port.bind('<KeyRelease>', lambda e: self._trigger_change())
-
-        # 视频模型
-        ctk.CTkLabel(graphics_frame, text='视频:', font=CTK_FONT_MAIN, width=50, anchor='w').grid(
-            row=2, column=0, padx=10, pady=5, sticky='w'
-        )
-        self.video_model = ctk.CTkOptionMenu(
-            graphics_frame,
-            values=['qxl', 'virtio', 'vmvga', 'bochs', 'ramfb', 'virtio-vga', 'virtio-vga-gl'],
-            width=120,
-            font=CTK_FONT_SMALL,
-        )
-        self.video_model.set('qxl')
-        self.video_model.grid(row=2, column=1, padx=5, pady=5, sticky='w')
-        self.video_model.configure(command=self._trigger_change)
-
-        # VRAM 大小
-        ctk.CTkLabel(
-            graphics_frame, text='VRAM (MB):', font=CTK_FONT_MAIN, width=80, anchor='w'
-        ).grid(row=2, column=2, padx=5, pady=5, sticky='w')
-        self.vram_entry = ctk.CTkEntry(graphics_frame, width=60, font=CTK_FONT_SMALL)
-        self.vram_entry.grid(row=2, column=3, padx=5, pady=5, sticky='w')
-        self.vram_entry.insert(0, '64')
-        self.vram_entry.bind('<KeyRelease>', lambda e: self._trigger_change())
 
         # USB 控制器
-        usb_frame = ctk.CTkFrame(self, fg_color=BG_COLOR_CONTENT, corner_radius=8)
-        usb_frame.grid(row=1, column=0, sticky='ew', padx=10, pady=10)
-        usb_frame.grid_columnconfigure(1, weight=1)
-
-        ctk.CTkLabel(usb_frame, text='USB 控制器', font=CTK_FONT_BOLD, text_color='#2196f3').grid(
-            row=0, column=0, columnspan=3, padx=10, pady=5, sticky='w'
-        )
-
-        # USB 控制器模型
-        ctk.CTkLabel(usb_frame, text='控制器:', font=CTK_FONT_MAIN, width=80, anchor='w').grid(
+        ctk.CTkLabel(frame, text='控制器:', font=CTK_FONT_MAIN, width=80, anchor='w').grid(
             row=1, column=0, padx=10, pady=5, sticky='w'
         )
         self.usb_controller = ctk.CTkOptionMenu(
-            usb_frame,
+            frame,
             values=[
                 'qemu-xhci',
                 'piix3-uhci',
@@ -139,46 +52,905 @@ class DevicesTab(ctk.CTkFrame):
         self.usb_controller.grid(row=1, column=1, padx=5, pady=5, sticky='w')
         self.usb_controller.configure(command=self._trigger_change)
 
-        # USB 直通设备
-        ctk.CTkLabel(usb_frame, text='USB 设备:', font=CTK_FONT_MAIN, width=80, anchor='w').grid(
+        # 添加 USB 设备输入
+        ctk.CTkLabel(frame, text='Vendor:Product:', font=CTK_FONT_MAIN, width=100, anchor='w').grid(
             row=1, column=2, padx=10, pady=5, sticky='w'
         )
         self.usb_entry = ctk.CTkEntry(
-            usb_frame,
-            placeholder_text='Vendor:Product (如 8087:8008)',
-            width=180,
-            font=CTK_FONT_SMALL,
+            frame, placeholder_text='8087:8008', width=150, font=CTK_FONT_SMALL
         )
         self.usb_entry.grid(row=1, column=3, padx=5, pady=5, sticky='w')
         self.usb_entry.bind('<KeyRelease>', lambda e: self._trigger_change())
 
-        # 添加 USB 按钮
-        add_usb_btn = ctk.CTkButton(
-            usb_frame,
-            text='添加',
-            command=self.add_usb,
-            fg_color='#00bcd4',
-            hover_color='#0097a7',
-            width=70,
+        # 启动策略
+        ctk.CTkLabel(frame, text='启动策略:', font=CTK_FONT_MAIN, width=80, anchor='w').grid(
+            row=2, column=0, padx=10, pady=5, sticky='w'
+        )
+        self.startup_policy = ctk.CTkOptionMenu(
+            frame,
+            values=['required', 'optional'],
+            width=100,
             font=CTK_FONT_SMALL,
         )
-        add_usb_btn.grid(row=1, column=4, padx=5)
+        self.startup_policy.set('optional')
+        self.startup_policy.grid(row=2, column=1, padx=5, pady=5, sticky='w')
+        self.startup_policy.configure(command=self._trigger_change)
 
-        self.usb_display = ctk.CTkLabel(
-            usb_frame, text='', font=CTK_FONT_SMALL, text_color='#aaaaaa', anchor='w'
+        # Guest 重置
+        ctk.CTkLabel(frame, text='Guest 重置:', font=CTK_FONT_MAIN, width=100, anchor='w').grid(
+            row=2, column=2, padx=10, pady=5, sticky='w'
         )
-        self.usb_display.grid(row=2, column=0, columnspan=5, padx=10, pady=5, sticky='w')
+        self.guest_reset = ctk.CTkCheckBox(frame, text='启用', font=CTK_FONT_SMALL)
+        self.guest_reset.grid(row=2, column=3, padx=5, pady=5, sticky='w')
+        self.guest_reset.configure(command=self._trigger_change)
+
+        # 设备列表
+        self.usb_display = ctk.CTkLabel(
+            frame, text='', font=CTK_FONT_SMALL, text_color='#aaaaaa', anchor='w'
+        )
+        self.usb_display.grid(row=3, column=0, columnspan=4, padx=10, pady=10, sticky='w')
+
+        # 按钮
+        btn_frame = ctk.CTkFrame(frame, fg_color='transparent')
+        btn_frame.grid(row=4, column=0, columnspan=4, padx=10, pady=5, sticky='w')
+
+        add_btn = ctk.CTkButton(
+            btn_frame,
+            text='添加设备',
+            command=self._add_usb_device,
+            fg_color='#00bcd4',
+            hover_color='#0097a7',
+            width=100,
+            font=CTK_FONT_SMALL,
+        )
+        add_btn.grid(row=0, column=0, padx=5)
+
+        clear_btn = ctk.CTkButton(
+            btn_frame,
+            text='清空列表',
+            command=self._clear_usb_list,
+            fg_color='#f44336',
+            hover_color='#d32f2f',
+            width=100,
+            font=CTK_FONT_SMALL,
+        )
+        clear_btn.grid(row=0, column=1, padx=5)
+
+    def _add_usb_device(self):
+        """添加 USB 设备."""
+        from tkinter import messagebox
+
+        usb_id = self.usb_entry.get().strip()
+        if not usb_id:
+            messagebox.showwarning('警告', '请输入 USB 设备 ID!')
+            return
+        if ':' not in usb_id:
+            messagebox.showwarning('警告', '格式应为 Vendor:Product (如 8087:8008)!')
+            return
+        self.usb_list.append(usb_id)
+        self._update_display()
+        self.usb_entry.delete(0, 'end')
+        self._trigger_change()
+
+    def _clear_usb_list(self):
+        """清空 USB 设备列表."""
+        self.usb_list.clear()
+        self._update_display()
+        self._trigger_change()
+
+    def _update_display(self):
+        """更新显示."""
+        if self.usb_list:
+            self.usb_display.configure(text=f'已添加：{", ".join(self.usb_list)}')
+        else:
+            self.usb_display.configure(text='暂无设备')
+
+    def _trigger_change(self, *args):
+        """触发变化回调."""
+        if self.on_change_callback:
+            self.on_change_callback()
+
+    def get_config(self) -> dict:
+        """获取配置."""
+        return {
+            'type': 'usb',
+            'controller': self.usb_controller.get(),
+            'startup_policy': self.startup_policy.get(),
+            'guest_reset': self.guest_reset.get(),
+            'devices': self.usb_list.copy(),
+        }
+
+
+class PCIHostdevTab(ctk.CTkFrame):
+    """PCI 设备直通配置."""
+
+    def __init__(self, master, on_change_callback=None, **kwargs):
+        super().__init__(master, **kwargs)
+        self.configure(fg_color='transparent')
+        self.on_change_callback = on_change_callback
+        self.pci_list = []
+
+        self._init_ui()
+
+    def _init_ui(self) -> None:
+        """初始化界面."""
+        self.grid_columnconfigure(0, weight=1)
+        self.grid_rowconfigure(0, weight=1)
+
+        frame = ctk.CTkFrame(self, fg_color=BG_COLOR_CONTENT, corner_radius=6)
+        frame.grid(row=0, column=0, sticky='nsew', padx=5, pady=5)
+        frame.grid_columnconfigure(1, weight=1)
+
+        ctk.CTkLabel(frame, text='PCI 设备直通', font=CTK_FONT_BOLD, text_color='#4caf50').grid(
+            row=0, column=0, columnspan=5, padx=10, pady=5, sticky='w'
+        )
+
+        # Domain
+        ctk.CTkLabel(frame, text='Domain:', font=CTK_FONT_MAIN, width=70, anchor='w').grid(
+            row=1, column=0, padx=10, pady=5, sticky='w'
+        )
+        self.pci_domain = ctk.CTkEntry(frame, width=80, font=CTK_FONT_SMALL)
+        self.pci_domain.grid(row=1, column=1, padx=5, pady=5, sticky='w')
+        self.pci_domain.insert(0, '0x0000')
+        self.pci_domain.bind('<KeyRelease>', lambda e: self._trigger_change())
+
+        # Bus
+        ctk.CTkLabel(frame, text='Bus:', font=CTK_FONT_MAIN, width=50, anchor='w').grid(
+            row=1, column=2, padx=5, pady=5, sticky='w'
+        )
+        self.pci_bus = ctk.CTkEntry(frame, width=80, font=CTK_FONT_SMALL)
+        self.pci_bus.grid(row=1, column=3, padx=5, pady=5, sticky='w')
+        self.pci_bus.insert(0, '0x00')
+        self.pci_bus.bind('<KeyRelease>', lambda e: self._trigger_change())
+
+        # Slot
+        ctk.CTkLabel(frame, text='Slot:', font=CTK_FONT_MAIN, width=50, anchor='w').grid(
+            row=1, column=4, padx=5, pady=5, sticky='w'
+        )
+        self.pci_slot = ctk.CTkEntry(frame, width=80, font=CTK_FONT_SMALL)
+        self.pci_slot.grid(row=1, column=5, padx=5, pady=5, sticky='w')
+        self.pci_slot.insert(0, '0x00')
+        self.pci_slot.bind('<KeyRelease>', lambda e: self._trigger_change())
+
+        # Function
+        ctk.CTkLabel(frame, text='Function:', font=CTK_FONT_MAIN, width=70, anchor='w').grid(
+            row=2, column=0, padx=10, pady=5, sticky='w'
+        )
+        self.pci_function = ctk.CTkEntry(frame, width=80, font=CTK_FONT_SMALL)
+        self.pci_function.grid(row=2, column=1, padx=5, pady=5, sticky='w')
+        self.pci_function.insert(0, '0x0')
+        self.pci_function.bind('<KeyRelease>', lambda e: self._trigger_change())
+
+        # Managed
+        ctk.CTkLabel(frame, text='Managed:', font=CTK_FONT_MAIN, width=70, anchor='w').grid(
+            row=2, column=2, padx=10, pady=5, sticky='w'
+        )
+        self.pci_managed = ctk.CTkOptionMenu(
+            frame, values=['yes', 'no'], width=80, font=CTK_FONT_SMALL
+        )
+        self.pci_managed.set('yes')
+        self.pci_managed.grid(row=2, column=3, padx=5, pady=5, sticky='w')
+        self.pci_managed.configure(command=self._trigger_change)
+
+        # Boot order
+        ctk.CTkLabel(frame, text='Boot:', font=CTK_FONT_MAIN, width=50, anchor='w').grid(
+            row=2, column=4, padx=5, pady=5, sticky='w'
+        )
+        self.pci_boot_order = ctk.CTkEntry(frame, width=60, font=CTK_FONT_SMALL)
+        self.pci_boot_order.grid(row=2, column=5, padx=5, pady=5, sticky='w')
+        self.pci_boot_order.insert(0, '1')
+        self.pci_boot_order.bind('<KeyRelease>', lambda e: self._trigger_change())
+
+        # ROM BAR
+        ctk.CTkLabel(frame, text='ROM BAR:', font=CTK_FONT_MAIN, width=70, anchor='w').grid(
+            row=3, column=0, padx=10, pady=5, sticky='w'
+        )
+        self.rom_bar = ctk.CTkOptionMenu(
+            frame, values=['on', 'off'], width=80, font=CTK_FONT_SMALL
+        )
+        self.rom_bar.set('off')
+        self.rom_bar.grid(row=3, column=1, padx=5, pady=5, sticky='w')
+        self.rom_bar.configure(command=self._trigger_change)
+
+        ctk.CTkLabel(frame, text='ROM File:', font=CTK_FONT_MAIN, width=70, anchor='w').grid(
+            row=3, column=2, padx=5, pady=5, sticky='w'
+        )
+        self.rom_file = ctk.CTkEntry(frame, placeholder_text='/path/to/boot.bin', width=200)
+        self.rom_file.grid(row=3, column=3, columnspan=2, padx=5, pady=5, sticky='w')
+        self.rom_file.bind('<KeyRelease>', lambda e: self._trigger_change())
+
+        # 设备列表
+        self.pci_display = ctk.CTkLabel(
+            frame, text='', font=CTK_FONT_SMALL, text_color='#aaaaaa', anchor='w'
+        )
+        self.pci_display.grid(row=4, column=0, columnspan=6, padx=10, pady=10, sticky='w')
+
+        # 按钮
+        btn_frame = ctk.CTkFrame(frame, fg_color='transparent')
+        btn_frame.grid(row=5, column=0, columnspan=6, padx=10, pady=5, sticky='w')
+
+        add_btn = ctk.CTkButton(
+            btn_frame,
+            text='添加设备',
+            command=self._add_pci_device,
+            fg_color='#00bcd4',
+            hover_color='#0097a7',
+            width=100,
+            font=CTK_FONT_SMALL,
+        )
+        add_btn.grid(row=0, column=0, padx=5)
+
+        clear_btn = ctk.CTkButton(
+            btn_frame,
+            text='清空列表',
+            command=self._clear_pci_list,
+            fg_color='#f44336',
+            hover_color='#d32f2f',
+            width=100,
+            font=CTK_FONT_SMALL,
+        )
+        clear_btn.grid(row=0, column=1, padx=5)
+
+    def _add_pci_device(self):
+        """添加 PCI 设备."""
+        from tkinter import messagebox
+
+        device = {
+            'domain': self.pci_domain.get().strip(),
+            'bus': self.pci_bus.get().strip(),
+            'slot': self.pci_slot.get().strip(),
+            'function': self.pci_function.get().strip(),
+        }
+        if not all(device.values()):
+            messagebox.showwarning('警告', '请填写完整的 PCI 地址!')
+            return
+        self.pci_list.append(device)
+        self._update_display()
+        self._trigger_change()
+
+    def _clear_pci_list(self):
+        """清空 PCI 设备列表."""
+        self.pci_list.clear()
+        self._update_display()
+        self._trigger_change()
+
+    def _update_display(self):
+        """更新显示."""
+        if self.pci_list:
+            devs = [
+                f"{d['domain']}:{d['bus']}:{d['slot']}.{d['function']}" for d in self.pci_list
+            ]
+            self.pci_display.configure(text=f'已添加：{", ".join(devs)}')
+        else:
+            self.pci_display.configure(text='暂无设备')
+
+    def _trigger_change(self, *args):
+        """触发变化回调."""
+        if self.on_change_callback:
+            self.on_change_callback()
+
+    def get_config(self) -> dict:
+        """获取配置."""
+        return {
+            'type': 'pci',
+            'devices': self.pci_list.copy(),
+            'managed': self.pci_managed.get(),
+            'boot_order': self.pci_boot_order.get().strip() or '1',
+            'rom_bar': self.rom_bar.get(),
+            'rom_file': self.rom_file.get().strip(),
+        }
+
+
+class SCSIHostdevTab(ctk.CTkFrame):
+    """SCSI 设备直通配置."""
+
+    def __init__(self, master, on_change_callback=None, **kwargs):
+        super().__init__(master, **kwargs)
+        self.configure(fg_color='transparent')
+        self.on_change_callback = on_change_callback
+        self.scsi_list = []
+
+        self._init_ui()
+
+    def _init_ui(self) -> None:
+        """初始化界面."""
+        self.grid_columnconfigure(0, weight=1)
+        self.grid_rowconfigure(0, weight=0)
+        self.grid_rowconfigure(1, weight=1)
+
+        # SCSI 类型选择
+        type_frame = ctk.CTkFrame(self, fg_color=BG_COLOR_CONTENT, corner_radius=6)
+        type_frame.grid(row=0, column=0, sticky='ew', padx=5, pady=5)
+        type_frame.grid_columnconfigure(1, weight=1)
+
+        ctk.CTkLabel(type_frame, text='SCSI 类型:', font=CTK_FONT_MAIN, width=100, anchor='w').grid(
+            row=0, column=0, padx=10, pady=5, sticky='w'
+        )
+        self.scsi_type = ctk.CTkOptionMenu(
+            type_frame,
+            values=['scsi', 'scsi_host'],
+            width=120,
+            font=CTK_FONT_SMALL,
+        )
+        self.scsi_type.set('scsi')
+        self.scsi_type.grid(row=0, column=1, padx=5, pady=5, sticky='w')
+        self.scsi_type.configure(command=self._on_type_change)
+
+        # 内容区域（动态切换）
+        self.content_frame = ctk.CTkFrame(self, fg_color='transparent')
+        self.content_frame.grid(row=1, column=0, sticky='nsew', padx=5, pady=5)
+        self.content_frame.grid_columnconfigure(0, weight=1)
+
+        self._init_scsi_ui()
+
+    def _init_scsi_ui(self):
+        """初始化 SCSI 配置 UI."""
+        # 清空现有内容
+        for widget in self.content_frame.winfo_children():
+            widget.destroy()
+
+        scsi_type = self.scsi_type.get()
+
+        if scsi_type == 'scsi_host':
+            # VHost SCSI
+            frame = ctk.CTkFrame(
+                self.content_frame, fg_color=BG_COLOR_CONTENT, corner_radius=6
+            )
+            frame.grid(row=0, column=0, sticky='nsew')
+            frame.grid_columnconfigure(1, weight=1)
+
+            ctk.CTkLabel(
+                frame, text='VHost SCSI 配置', font=CTK_FONT_BOLD, text_color='#ff9800'
+            ).grid(row=0, column=0, columnspan=3, padx=10, pady=5, sticky='w')
+
+            ctk.CTkLabel(frame, text='协议:', font=CTK_FONT_MAIN, width=80, anchor='w').grid(
+                row=1, column=0, padx=10, pady=5, sticky='w'
+            )
+            self.vhost_protocol = ctk.CTkOptionMenu(
+                frame, values=['vhost'], width=100, font=CTK_FONT_SMALL
+            )
+            self.vhost_protocol.set('vhost')
+            self.vhost_protocol.grid(row=1, column=1, padx=5, pady=5, sticky='w')
+            self.vhost_protocol.configure(command=self._trigger_change)
+
+            ctk.CTkLabel(frame, text='WWPN:', font=CTK_FONT_MAIN, width=80, anchor='w').grid(
+                row=1, column=2, padx=10, pady=5, sticky='w'
+            )
+            self.wwpn = ctk.CTkEntry(frame, placeholder_text='naa.50014057667280d8', width=200)
+            self.wwpn.grid(row=1, column=3, padx=5, pady=5, sticky='w')
+            self.wwpn.bind('<KeyRelease>', lambda e: self._trigger_change())
+        else:
+            # 普通 SCSI 或 iSCSI
+            frame = ctk.CTkFrame(
+                self.content_frame, fg_color=BG_COLOR_CONTENT, corner_radius=6
+            )
+            frame.grid(row=0, column=0, sticky='nsew')
+            frame.grid_columnconfigure(1, weight=1)
+
+            ctk.CTkLabel(
+                frame, text='SCSI 设备配置', font=CTK_FONT_BOLD, text_color='#ff9800'
+            ).grid(row=0, column=0, columnspan=4, padx=10, pady=5, sticky='w')
+
+            # SCSI 子类型
+            self.scsi_subtype = ctk.CTkOptionMenu(
+                frame,
+                values=['local', 'iscsi'],
+                width=100,
+                font=CTK_FONT_SMALL,
+                command=self._on_subtype_change,
+            )
+            self.scsi_subtype.set('local')
+            ctk.CTkLabel(frame, text='SCSI 子类型:', font=CTK_FONT_MAIN, width=100, anchor='w').grid(
+                row=1, column=0, padx=10, pady=5, sticky='w'
+            )
+            self.scsi_subtype.grid(row=1, column=1, padx=5, pady=5, sticky='w')
+
+            self._init_local_scsi_ui(frame)
+
+        # 设备列表显示
+        self.scsi_display = ctk.CTkLabel(
+            self.content_frame, text='', font=CTK_FONT_SMALL, text_color='#aaaaaa', anchor='w'
+        )
+        self.scsi_display.grid(row=1, column=0, sticky='ew', padx=10, pady=10)
+
+        # 按钮
+        btn_frame = ctk.CTkFrame(self.content_frame, fg_color='transparent')
+        btn_frame.grid(row=2, column=0, sticky='w', padx=10, pady=5)
+
+        add_btn = ctk.CTkButton(
+            btn_frame,
+            text='添加设备',
+            command=self._add_scsi_device,
+            fg_color='#00bcd4',
+            hover_color='#0097a7',
+            width=100,
+            font=CTK_FONT_SMALL,
+        )
+        add_btn.grid(row=0, column=0, padx=5)
+
+        clear_btn = ctk.CTkButton(
+            btn_frame,
+            text='清空列表',
+            command=self._clear_scsi_list,
+            fg_color='#f44336',
+            hover_color='#d32f2f',
+            width=100,
+            font=CTK_FONT_SMALL,
+        )
+        clear_btn.grid(row=0, column=1, padx=5)
+
+    def _init_local_scsi_ui(self, frame):
+        """初始化本地 SCSI UI."""
+        # 清除 iSCSI 相关 UI
+        for widget in frame.winfo_children():
+            if widget.grid_info().get('row', 0) > 1:
+                widget.destroy()
+
+        ctk.CTkLabel(frame, text='Adapter:', font=CTK_FONT_MAIN, width=80, anchor='w').grid(
+            row=2, column=0, padx=10, pady=5, sticky='w'
+        )
+        self.adapter_name = ctk.CTkEntry(frame, placeholder_text='scsi_host0', width=150)
+        self.adapter_name.grid(row=2, column=1, padx=5, pady=5, sticky='w')
+        self.adapter_name.bind('<KeyRelease>', lambda e: self._trigger_change())
+
+        ctk.CTkLabel(frame, text='Bus:', font=CTK_FONT_MAIN, width=80, anchor='w').grid(
+            row=2, column=2, padx=10, pady=5, sticky='w'
+        )
+        self.scsi_bus = ctk.CTkEntry(frame, width=60, font=CTK_FONT_SMALL)
+        self.scsi_bus.grid(row=2, column=3, padx=5, pady=5, sticky='w')
+        self.scsi_bus.insert(0, '0')
+        self.scsi_bus.bind('<KeyRelease>', lambda e: self._trigger_change())
+
+        ctk.CTkLabel(frame, text='Target:', font=CTK_FONT_MAIN, width=60, anchor='w').grid(
+            row=3, column=0, padx=10, pady=5, sticky='w'
+        )
+        self.scsi_target = ctk.CTkEntry(frame, width=60, font=CTK_FONT_SMALL)
+        self.scsi_target.grid(row=3, column=1, padx=5, pady=5, sticky='w')
+        self.scsi_target.insert(0, '0')
+        self.scsi_target.bind('<KeyRelease>', lambda e: self._trigger_change())
+
+        ctk.CTkLabel(frame, text='Unit:', font=CTK_FONT_MAIN, width=60, anchor='w').grid(
+            row=3, column=2, padx=10, pady=5, sticky='w'
+        )
+        self.scsi_unit = ctk.CTkEntry(frame, width=60, font=CTK_FONT_SMALL)
+        self.scsi_unit.grid(row=3, column=3, padx=5, pady=5, sticky='w')
+        self.scsi_unit.insert(0, '0')
+        self.scsi_unit.bind('<KeyRelease>', lambda e: self._trigger_change())
+
+        # 只读
+        self.readonly = ctk.CTkCheckBox(frame, text='只读', font=CTK_FONT_SMALL)
+        self.readonly.grid(row=3, column=4, padx=10, pady=5, sticky='w')
+        self.readonly.configure(command=self._trigger_change)
+
+    def _init_iscsi_scsi_ui(self, frame):
+        """初始化 iSCSI SCSI UI."""
+        # 清除本地 SCSI UI
+        for widget in frame.winfo_children():
+            if widget.grid_info().get('row', 0) > 1:
+                widget.destroy()
+
+        ctk.CTkLabel(frame, text='IQN:', font=CTK_FONT_MAIN, width=80, anchor='w').grid(
+            row=2, column=0, padx=10, pady=5, sticky='w'
+        )
+        self.iscsi_iqn = ctk.CTkEntry(
+            frame, placeholder_text='iqn.2014-08.com.example:iscsi-nopool/1', width=300
+        )
+        self.iscsi_iqn.grid(row=2, column=1, columnspan=3, padx=5, pady=5, sticky='w')
+        self.iscsi_iqn.bind('<KeyRelease>', lambda e: self._trigger_change())
+
+        ctk.CTkLabel(frame, text='Host:', font=CTK_FONT_MAIN, width=80, anchor='w').grid(
+            row=3, column=0, padx=10, pady=5, sticky='w'
+        )
+        self.iscsi_host = ctk.CTkEntry(frame, placeholder_text='example.com', width=150)
+        self.iscsi_host.grid(row=3, column=1, padx=5, pady=5, sticky='w')
+        self.iscsi_host.bind('<KeyRelease>', lambda e: self._trigger_change())
+
+        ctk.CTkLabel(frame, text='Port:', font=CTK_FONT_MAIN, width=60, anchor='w').grid(
+            row=3, column=2, padx=5, pady=5, sticky='w'
+        )
+        self.iscsi_port = ctk.CTkEntry(frame, width=60, font=CTK_FONT_SMALL)
+        self.iscsi_port.grid(row=3, column=3, padx=5, pady=5, sticky='w')
+        self.iscsi_port.insert(0, '3260')
+        self.iscsi_port.bind('<KeyRelease>', lambda e: self._trigger_change())
+
+        # 认证
+        ctk.CTkLabel(frame, text='认证:', font=CTK_FONT_MAIN, width=60, anchor='w').grid(
+            row=4, column=0, padx=10, pady=5, sticky='w'
+        )
+        self.iscsi_auth = ctk.CTkCheckBox(frame, text='启用 CHAP 认证', font=CTK_FONT_SMALL)
+        self.iscsi_auth.grid(row=4, column=1, padx=5, pady=5, sticky='w')
+        self.iscsi_auth.configure(command=self._trigger_change)
+
+        ctk.CTkLabel(frame, text='用户名:', font=CTK_FONT_MAIN, width=60, anchor='w').grid(
+            row=4, column=2, padx=5, pady=5, sticky='w'
+        )
+        self.iscsi_username = ctk.CTkEntry(frame, placeholder_text='myuser', width=100)
+        self.iscsi_username.grid(row=4, column=3, padx=5, pady=5, sticky='w')
+        self.iscsi_username.bind('<KeyRelease>', lambda e: self._trigger_change())
+
+        ctk.CTkLabel(frame, text='Secret:', font=CTK_FONT_MAIN, width=60, anchor='w').grid(
+            row=4, column=4, padx=5, pady=5, sticky='w'
+        )
+        self.iscsi_secret = ctk.CTkEntry(frame, placeholder_text='libvirtiscsi', width=120)
+        self.iscsi_secret.grid(row=4, column=5, padx=5, pady=5, sticky='w')
+        self.iscsi_secret.bind('<KeyRelease>', lambda e: self._trigger_change())
+
+    def _on_type_change(self, *args):
+        """类型变化."""
+        self._init_scsi_ui()
+        self._trigger_change()
+
+    def _on_subtype_change(self, *args):
+        """子类型变化."""
+        frame = self.content_frame.winfo_children()[0]
+        if self.scsi_subtype.get() == 'iscsi':
+            self._init_iscsi_scsi_ui(frame)
+        else:
+            self._init_local_scsi_ui(frame)
+        self._trigger_change()
+
+    def _add_scsi_device(self):
+        """添加 SCSI 设备."""
+        from tkinter import messagebox
+
+        scsi_type = self.scsi_type.get()
+        if scsi_type == 'scsi_host':
+            wwpn = self.wwpn.get().strip()
+            if not wwpn:
+                messagebox.showwarning('警告', '请输入 WWPN!')
+                return
+            self.scsi_list.append({'type': 'scsi_host', 'protocol': 'vhost', 'wwpn': wwpn})
+        else:
+            if self.scsi_subtype.get() == 'iscsi':
+                iqn = self.iscsi_iqn.get().strip()
+                if not iqn:
+                    messagebox.showwarning('警告', '请输入 IQN!')
+                    return
+                device = {
+                    'type': 'scsi',
+                    'protocol': 'iscsi',
+                    'name': iqn,
+                    'host': self.iscsi_host.get().strip(),
+                    'port': self.iscsi_port.get().strip() or '3260',
+                }
+                if self.iscsi_auth.get():
+                    device['auth'] = {
+                        'username': self.iscsi_username.get().strip(),
+                        'secret': self.iscsi_secret.get().strip(),
+                    }
+                self.scsi_list.append(device)
+            else:
+                adapter = self.adapter_name.get().strip()
+                if not adapter:
+                    messagebox.showwarning('警告', '请输入 Adapter 名称!')
+                    return
+                device = {
+                    'type': 'scsi',
+                    'adapter': adapter,
+                    'bus': self.scsi_bus.get().strip() or '0',
+                    'target': self.scsi_target.get().strip() or '0',
+                    'unit': self.scsi_unit.get().strip() or '0',
+                    'readonly': self.readonly.get(),
+                }
+                self.scsi_list.append(device)
+
+        self._update_display()
+        self._trigger_change()
+
+    def _clear_scsi_list(self):
+        """清空 SCSI 设备列表."""
+        self.scsi_list.clear()
+        self._update_display()
+        self._trigger_change()
+
+    def _update_display(self):
+        """更新显示."""
+        if self.scsi_list:
+            devs = []
+            for d in self.scsi_list:
+                if d['type'] == 'scsi_host':
+                    devs.append(f"vhost:{d['wwpn']}")
+                elif d.get('protocol') == 'iscsi':
+                    devs.append(f"iscsi:{d['name']}")
+                else:
+                    devs.append(f"{d['adapter']}:{d['bus']}:{d['target']}.{d['unit']}")
+            self.scsi_display.configure(text=f'已添加：{", ".join(devs)}')
+        else:
+            self.scsi_display.configure(text='暂无设备')
+
+    def _trigger_change(self, *args):
+        """触发变化回调."""
+        if self.on_change_callback:
+            self.on_change_callback()
+
+    def get_config(self) -> dict:
+        """获取配置."""
+        return {
+            'type': self.scsi_type.get(),
+            'devices': self.scsi_list.copy(),
+        }
+
+
+class MdevHostdevTab(ctk.CTkFrame):
+    """MDEV 设备直通配置."""
+
+    def __init__(self, master, on_change_callback=None, **kwargs):
+        super().__init__(master, **kwargs)
+        self.configure(fg_color='transparent')
+        self.on_change_callback = on_change_callback
+        self.mdev_list = []
+
+        self._init_ui()
+
+    def _init_ui(self) -> None:
+        """初始化界面."""
+        self.grid_columnconfigure(0, weight=1)
+        self.grid_rowconfigure(0, weight=1)
+
+        frame = ctk.CTkFrame(self, fg_color=BG_COLOR_CONTENT, corner_radius=6)
+        frame.grid(row=0, column=0, sticky='nsew', padx=5, pady=5)
+        frame.grid_columnconfigure(1, weight=1)
+
+        ctk.CTkLabel(frame, text='MDEV 设备直通', font=CTK_FONT_BOLD, text_color='#9c27b0').grid(
+            row=0, column=0, columnspan=4, padx=10, pady=5, sticky='w'
+        )
+
+        # UUID
+        ctk.CTkLabel(frame, text='UUID:', font=CTK_FONT_MAIN, width=70, anchor='w').grid(
+            row=1, column=0, padx=10, pady=5, sticky='w'
+        )
+        self.mdev_uuid = ctk.CTkEntry(frame, placeholder_text='c2177883-f1bb-47f0-914d-32a22e3a8804', width=300)
+        self.mdev_uuid.grid(row=1, column=1, padx=5, pady=5, sticky='w')
+        self.mdev_uuid.bind('<KeyRelease>', lambda e: self._trigger_change())
+
+        # 模型
+        ctk.CTkLabel(frame, text='模型:', font=CTK_FONT_MAIN, width=70, anchor='w').grid(
+            row=1, column=2, padx=10, pady=5, sticky='w'
+        )
+        self.mdev_model = ctk.CTkOptionMenu(
+            frame,
+            values=['vfio-pci', 'vfio-ccw', 'vfio-ap'],
+            width=120,
+            font=CTK_FONT_SMALL,
+        )
+        self.mdev_model.set('vfio-pci')
+        self.mdev_model.grid(row=1, column=3, padx=5, pady=5, sticky='w')
+        self.mdev_model.configure(command=self._trigger_change)
+
+        # CCW 地址（仅 vfio-ccw）
+        self.ccw_frame = ctk.CTkFrame(frame, fg_color='transparent')
+        self.ccw_frame.grid(row=2, column=0, columnspan=4, padx=10, pady=5, sticky='w')
+
+        ctk.CTkLabel(self.ccw_frame, text='CCW:', font=CTK_FONT_MAIN, width=50, anchor='w').grid(
+            row=0, column=0, padx=5, pady=5, sticky='w'
+        )
+        self.ccw_cssid = ctk.CTkEntry(self.ccw_frame, placeholder_text='0xfe', width=60)
+        self.ccw_cssid.grid(row=0, column=1, padx=5, pady=5, sticky='w')
+        self.ccw_cssid.bind('<KeyRelease>', lambda e: self._trigger_change())
+
+        ctk.CTkLabel(self.ccw_frame, text='SSID:', font=CTK_FONT_MAIN, width=50, anchor='w').grid(
+            row=0, column=2, padx=5, pady=5, sticky='w'
+        )
+        self.ccw_ssid = ctk.CTkEntry(self.ccw_frame, placeholder_text='0x0', width=60)
+        self.ccw_ssid.grid(row=0, column=3, padx=5, pady=5, sticky='w')
+        self.ccw_ssid.bind('<KeyRelease>', lambda e: self._trigger_change())
+
+        ctk.CTkLabel(self.ccw_frame, text='DevNo:', font=CTK_FONT_MAIN, width=50, anchor='w').grid(
+            row=0, column=4, padx=5, pady=5, sticky='w'
+        )
+        self.ccw_devno = ctk.CTkEntry(self.ccw_frame, placeholder_text='0x0001', width=80)
+        self.ccw_devno.grid(row=0, column=5, padx=5, pady=5, sticky='w')
+        self.ccw_devno.bind('<KeyRelease>', lambda e: self._trigger_change())
+
+        # 设备列表
+        self.mdev_display = ctk.CTkLabel(
+            frame, text='', font=CTK_FONT_SMALL, text_color='#aaaaaa', anchor='w'
+        )
+        self.mdev_display.grid(row=3, column=0, columnspan=4, padx=10, pady=10, sticky='w')
+
+        # 按钮
+        btn_frame = ctk.CTkFrame(frame, fg_color='transparent')
+        btn_frame.grid(row=4, column=0, columnspan=4, padx=10, pady=5, sticky='w')
+
+        add_btn = ctk.CTkButton(
+            btn_frame,
+            text='添加设备',
+            command=self._add_mdev_device,
+            fg_color='#00bcd4',
+            hover_color='#0097a7',
+            width=100,
+            font=CTK_FONT_SMALL,
+        )
+        add_btn.grid(row=0, column=0, padx=5)
+
+        clear_btn = ctk.CTkButton(
+            btn_frame,
+            text='清空列表',
+            command=self._clear_mdev_list,
+            fg_color='#f44336',
+            hover_color='#d32f2f',
+            width=100,
+            font=CTK_FONT_SMALL,
+        )
+        clear_btn.grid(row=0, column=1, padx=5)
+
+    def _add_mdev_device(self):
+        """添加 MDEV 设备."""
+        from tkinter import messagebox
+
+        uuid = self.mdev_uuid.get().strip()
+        if not uuid:
+            messagebox.showwarning('警告', '请输入 UUID!')
+            return
+
+        device = {
+            'uuid': uuid,
+            'model': self.mdev_model.get(),
+        }
+        if self.mdev_model.get() == 'vfio-ccw':
+            device['ccw'] = {
+                'cssid': self.ccw_cssid.get().strip(),
+                'ssid': self.ccw_ssid.get().strip(),
+                'devno': self.ccw_devno.get().strip(),
+            }
+        self.mdev_list.append(device)
+        self._update_display()
+        self._trigger_change()
+
+    def _clear_mdev_list(self):
+        """清空 MDEV 设备列表."""
+        self.mdev_list.clear()
+        self._update_display()
+        self._trigger_change()
+
+    def _update_display(self):
+        """更新显示."""
+        if self.mdev_list:
+            devs = [f"{d['model']}:{d['uuid'][:8]}..." for d in self.mdev_list]
+            self.mdev_display.configure(text=f'已添加：{", ".join(devs)}')
+        else:
+            self.mdev_display.configure(text='暂无设备')
+
+    def _trigger_change(self, *args):
+        """触发变化回调."""
+        if self.on_change_callback:
+            self.on_change_callback()
+
+    def get_config(self) -> dict:
+        """获取配置."""
+        return {
+            'type': 'mdev',
+            'devices': self.mdev_list.copy(),
+        }
+
+
+class GraphicsTab(ctk.CTkFrame):
+    """图形显示配置 Tab."""
+
+    def __init__(self, master, on_change_callback=None, **kwargs):
+        super().__init__(master, **kwargs)
+        self.configure(fg_color='transparent')
+        self.on_change_callback = on_change_callback
+
+        self.graphics_type = None
+        self.graphics_listen = None
+        self.graphics_port = None
+        self.video_model = None
+        self.vram_entry = None
+
+        self._init_ui()
+
+    def _init_ui(self) -> None:
+        """初始化界面."""
+        self.grid_columnconfigure(0, weight=1)
+        self.grid_rowconfigure(0, weight=1)
+
+        frame = ctk.CTkFrame(self, fg_color=BG_COLOR_CONTENT, corner_radius=6)
+        frame.grid(row=0, column=0, sticky='nsew', padx=5, pady=5)
+        frame.grid_columnconfigure(1, weight=1)
+
+        ctk.CTkLabel(frame, text='图形显示', font=CTK_FONT_BOLD, text_color='#ba68c8').grid(
+            row=0, column=0, columnspan=6, padx=10, pady=5, sticky='w'
+        )
+
+        ctk.CTkLabel(frame, text='图形:', font=CTK_FONT_MAIN, width=70, anchor='w').grid(
+            row=1, column=0, padx=10, pady=5, sticky='w'
+        )
+        self.graphics_type = ctk.CTkOptionMenu(
+            frame, values=['vnc', 'spice', 'none'], width=90, font=CTK_FONT_SMALL
+        )
+        self.graphics_type.set('vnc')
+        self.graphics_type.grid(row=1, column=1, padx=5, pady=5, sticky='w')
+        self.graphics_type.configure(command=self._trigger_change)
+
+        ctk.CTkLabel(frame, text='监听:', font=CTK_FONT_MAIN, width=50, anchor='w').grid(
+            row=1, column=2, padx=5, pady=5, sticky='w'
+        )
+        self.graphics_listen = ctk.CTkEntry(frame, width=100, font=CTK_FONT_SMALL)
+        self.graphics_listen.grid(row=1, column=3, padx=5, pady=5, sticky='w')
+        self.graphics_listen.insert(0, '0.0.0.0')
+        self.graphics_listen.bind('<KeyRelease>', lambda e: self._trigger_change())
+
+        ctk.CTkLabel(frame, text='端口:', font=CTK_FONT_MAIN, width=40, anchor='w').grid(
+            row=1, column=4, padx=5, pady=5, sticky='w'
+        )
+        self.graphics_port = ctk.CTkEntry(frame, width=60, font=CTK_FONT_SMALL)
+        self.graphics_port.grid(row=1, column=5, padx=5, pady=5, sticky='w')
+        self.graphics_port.insert(0, '-1')
+        self.graphics_port.bind('<KeyRelease>', lambda e: self._trigger_change())
+
+        ctk.CTkLabel(frame, text='视频:', font=CTK_FONT_MAIN, width=50, anchor='w').grid(
+            row=2, column=0, padx=10, pady=5, sticky='w'
+        )
+        self.video_model = ctk.CTkOptionMenu(
+            frame,
+            values=['qxl', 'virtio', 'vmvga', 'bochs', 'ramfb', 'virtio-vga', 'virtio-vga-gl'],
+            width=120,
+            font=CTK_FONT_SMALL,
+        )
+        self.video_model.set('qxl')
+        self.video_model.grid(row=2, column=1, padx=5, pady=5, sticky='w')
+        self.video_model.configure(command=self._trigger_change)
+
+        ctk.CTkLabel(frame, text='VRAM (MB):', font=CTK_FONT_MAIN, width=80, anchor='w').grid(
+            row=2, column=2, padx=5, pady=5, sticky='w'
+        )
+        self.vram_entry = ctk.CTkEntry(frame, width=60, font=CTK_FONT_SMALL)
+        self.vram_entry.grid(row=2, column=3, padx=5, pady=5, sticky='w')
+        self.vram_entry.insert(0, '64')
+        self.vram_entry.bind('<KeyRelease>', lambda e: self._trigger_change())
+
+    def _trigger_change(self, *args):
+        """触发变化回调."""
+        if self.on_change_callback:
+            self.on_change_callback()
+
+    def get_config(self) -> dict:
+        """获取图形配置."""
+        return {
+            'type': self.graphics_type.get(),
+            'listen': self.graphics_listen.get().strip() or '0.0.0.0',
+            'port': self.graphics_port.get().strip() or '-1',
+            'video_model': self.video_model.get(),
+            'vram': int(self.vram_entry.get().strip() or '64'),
+        }
+
+
+class OthersTab(ctk.CTkFrame):
+    """其他设备配置 Tab - 串口、TPM、控制器."""
+
+    def __init__(self, master, on_change_callback=None, **kwargs):
+        super().__init__(master, **kwargs)
+        self.configure(fg_color='transparent')
+        self.on_change_callback = on_change_callback
+
+        self.serial_type = None
+        self.serial_port = None
+        self.tpm_model = None
+        self.tpm_version = None
+        self.disable_usb_check = None
+        self.disable_sound_check = None
+        self.audio_model = None
+
+        self._init_ui()
+
+    def _init_ui(self) -> None:
+        """初始化界面."""
+        self.grid_columnconfigure(0, weight=1)
+        self.grid_rowconfigure(0, weight=0)
+        self.grid_rowconfigure(1, weight=0)
+        self.grid_rowconfigure(2, weight=0)
+        self.grid_rowconfigure(3, weight=1)
 
         # 串口配置
-        serial_frame = ctk.CTkFrame(self, fg_color=BG_COLOR_CONTENT, corner_radius=8)
-        serial_frame.grid(row=3, column=0, sticky='ew', padx=10, pady=10)
+        serial_frame = ctk.CTkFrame(self, fg_color=BG_COLOR_CONTENT, corner_radius=6)
+        serial_frame.grid(row=0, column=0, sticky='ew', padx=5, pady=5)
         serial_frame.grid_columnconfigure(1, weight=1)
 
         ctk.CTkLabel(serial_frame, text='串口配置', font=CTK_FONT_BOLD, text_color='#ff9800').grid(
             row=0, column=0, columnspan=4, padx=10, pady=5, sticky='w'
         )
 
-        # 串口类型
         ctk.CTkLabel(serial_frame, text='类型:', font=CTK_FONT_MAIN, width=60, anchor='w').grid(
             row=1, column=0, padx=10, pady=5, sticky='w'
         )
@@ -192,7 +964,6 @@ class DevicesTab(ctk.CTkFrame):
         self.serial_type.grid(row=1, column=1, padx=5, pady=5, sticky='w')
         self.serial_type.configure(command=self._trigger_change)
 
-        # 端口号
         ctk.CTkLabel(serial_frame, text='端口:', font=CTK_FONT_MAIN, width=50, anchor='w').grid(
             row=1, column=2, padx=10, pady=5, sticky='w'
         )
@@ -202,15 +973,14 @@ class DevicesTab(ctk.CTkFrame):
         self.serial_port.bind('<KeyRelease>', lambda e: self._trigger_change())
 
         # TPM 配置
-        tpm_frame = ctk.CTkFrame(self, fg_color=BG_COLOR_CONTENT, corner_radius=8)
-        tpm_frame.grid(row=2, column=0, sticky='ew', padx=10, pady=10)
+        tpm_frame = ctk.CTkFrame(self, fg_color=BG_COLOR_CONTENT, corner_radius=6)
+        tpm_frame.grid(row=1, column=0, sticky='ew', padx=5, pady=5)
         tpm_frame.grid_columnconfigure(1, weight=1)
 
         ctk.CTkLabel(tpm_frame, text='TPM 设备', font=CTK_FONT_BOLD, text_color='#7986cb').grid(
             row=0, column=0, columnspan=4, padx=10, pady=5, sticky='w'
         )
 
-        # TPM 模型
         ctk.CTkLabel(tpm_frame, text='模型:', font=CTK_FONT_MAIN, width=60, anchor='w').grid(
             row=1, column=0, padx=10, pady=5, sticky='w'
         )
@@ -224,7 +994,6 @@ class DevicesTab(ctk.CTkFrame):
         self.tpm_model.grid(row=1, column=1, padx=5, pady=5, sticky='w')
         self.tpm_model.configure(command=self._trigger_change)
 
-        # TPM 版本
         ctk.CTkLabel(tpm_frame, text='版本:', font=CTK_FONT_MAIN, width=50, anchor='w').grid(
             row=1, column=2, padx=10, pady=5, sticky='w'
         )
@@ -236,27 +1005,24 @@ class DevicesTab(ctk.CTkFrame):
         self.tpm_version.configure(command=self._trigger_change)
 
         # 控制器配置
-        ctrl_frame = ctk.CTkFrame(self, fg_color=BG_COLOR_CONTENT, corner_radius=8)
-        ctrl_frame.grid(row=4, column=0, sticky='ew', padx=10, pady=10)
+        ctrl_frame = ctk.CTkFrame(self, fg_color=BG_COLOR_CONTENT, corner_radius=6)
+        ctrl_frame.grid(row=2, column=0, sticky='ew', padx=5, pady=5)
         ctrl_frame.grid_columnconfigure(1, weight=1)
 
         ctk.CTkLabel(ctrl_frame, text='控制器', font=CTK_FONT_BOLD, text_color='#ff7043').grid(
             row=0, column=0, columnspan=3, padx=10, pady=5, sticky='w'
         )
 
-        # 禁用 USB
         self.disable_usb_check = ctk.CTkCheckBox(
             ctrl_frame, text='禁用 USB', font=CTK_FONT_SMALL, command=self._trigger_change
         )
         self.disable_usb_check.grid(row=1, column=0, padx=10, pady=5, sticky='w')
 
-        # 禁用声卡
         self.disable_sound_check = ctk.CTkCheckBox(
             ctrl_frame, text='禁用声卡', font=CTK_FONT_SMALL, command=self._trigger_change
         )
         self.disable_sound_check.grid(row=1, column=1, padx=10, pady=5, sticky='w')
 
-        # 音频模型
         ctk.CTkLabel(ctrl_frame, text='音频:', font=CTK_FONT_MAIN, width=50, anchor='w').grid(
             row=1, column=2, padx=10, pady=5, sticky='w'
         )
@@ -274,38 +1040,6 @@ class DevicesTab(ctk.CTkFrame):
         """触发变化回调."""
         if self.on_change_callback:
             self.on_change_callback()
-
-    def add_usb(self) -> None:
-        """添加 USB 设备."""
-        from tkinter import messagebox
-
-        usb_id = self.usb_entry.get().strip()
-        if not usb_id or ':' not in usb_id:
-            messagebox.showwarning('警告', '请输入有效的 USB 设备 ID (格式：Vendor:Product)!')
-            return
-        self.usb_list.append(usb_id)
-        self.usb_display.configure(text=f'已添加 USB: {", ".join(self.usb_list)}')
-        self.usb_entry.delete(0, 'end')
-        self._trigger_change()
-
-    def get_graphics_config(self):
-        """获取图形配置."""
-        return {
-            'type': self.graphics_type.get(),
-            'listen': self.graphics_listen.get().strip() or '0.0.0.0',
-            'port': self.graphics_port.get().strip() or '-1',
-            'video_model': self.video_model.get(),
-            'vram': int(self.vram_entry.get().strip() or '64'),
-        }
-
-    def get_usb_config(self):
-        """获取 USB 配置."""
-        return {
-            'controller': self.usb_controller.get(),
-            'disabled': self.disable_usb_check.get(),
-            'sound_disabled': self.disable_sound_check.get(),
-            'devices': self.usb_list.copy(),
-        }
 
     def get_serial_config(self):
         """获取串口配置."""
@@ -329,26 +1063,171 @@ class DevicesTab(ctk.CTkFrame):
         model = self.audio_model.get()
         if model == 'none':
             return None
+        return {'model': model}
+
+    def get_controller_config(self):
+        """获取控制器配置."""
         return {
-            'model': model,
+            'disable_usb': self.disable_usb_check.get(),
+            'disable_sound': self.disable_sound_check.get(),
         }
+
+
+class DevicesTab(ctk.CTkFrame):
+    """设备配置 Tab - 包含图形、hostdev 子选项."""
+
+    SUB_TABS_CONFIG = {
+        'graphics': {
+            'name': '图形显示',
+            'class': GraphicsTab,
+            'default': True,
+        },
+        'usb_hostdev': {
+            'name': 'USB 设备',
+            'class': USBHostdevTab,
+            'default': False,
+        },
+        'pci_hostdev': {
+            'name': 'PCI 设备',
+            'class': PCIHostdevTab,
+            'default': False,
+        },
+        'scsi_hostdev': {
+            'name': 'SCSI 设备',
+            'class': SCSIHostdevTab,
+            'default': False,
+        },
+        'mdev_hostdev': {
+            'name': 'MDEV 设备',
+            'class': MdevHostdevTab,
+            'default': False,
+        },
+        'others': {
+            'name': '其他设备',
+            'class': OthersTab,
+            'default': False,
+        },
+    }
+
+    def __init__(self, master, on_change_callback=None, **kwargs):
+        super().__init__(master, **kwargs)
+        self.configure(fg_color='transparent')
+        self.on_change_callback = on_change_callback
+
+        self._init_ui()
+
+    def _init_ui(self) -> None:
+        """初始化界面."""
+        self.grid_columnconfigure(0, weight=1)
+        self.grid_rowconfigure(0, weight=1)
+
+        self.inner_panel = InnerTabPanel(
+            self,
+            tabs_config=self.SUB_TABS_CONFIG,
+            on_change_callback=self.on_change_callback,
+        )
+        self.inner_panel.grid(row=0, column=0, sticky='nsew')
+
+    def _trigger_change(self, *args):
+        """触发变化回调."""
+        if self.on_change_callback:
+            self.on_change_callback()
+
+    def get_graphics_config(self):
+        """获取图形配置."""
+        graphics_tab = self.inner_panel.get_tab_instance('graphics')
+        if graphics_tab and hasattr(graphics_tab, 'get_config'):
+            return graphics_tab.get_config()
+        return {
+            'type': 'vnc',
+            'listen': '0.0.0.0',
+            'port': '-1',
+            'video_model': 'qxl',
+            'vram': 64,
+        }
+
+    def get_serial_config(self):
+        """获取串口配置."""
+        others_tab = self.inner_panel.get_tab_instance('others')
+        if others_tab and hasattr(others_tab, 'get_serial_config'):
+            return others_tab.get_serial_config()
+        return {'type': 'pty', 'port': '0'}
+
+    def get_tpm_config(self):
+        """获取 TPM 配置."""
+        others_tab = self.inner_panel.get_tab_instance('others')
+        if others_tab and hasattr(others_tab, 'get_tpm_config'):
+            return others_tab.get_tpm_config()
+        return None
+
+    def get_audio_config(self):
+        """获取音频配置."""
+        others_tab = self.inner_panel.get_tab_instance('others')
+        if others_tab and hasattr(others_tab, 'get_audio_config'):
+            return others_tab.get_audio_config()
+        return {'model': 'ich9'}
+
+    def get_controller_config(self):
+        """获取控制器配置."""
+        others_tab = self.inner_panel.get_tab_instance('others')
+        if others_tab and hasattr(others_tab, 'get_controller_config'):
+            return others_tab.get_controller_config()
+        return {'disable_usb': False, 'disable_sound': False}
+
+    def get_hostdev_configs(self) -> dict:
+        """获取所有 hostdev 配置."""
+        hostdevs = {
+            'usb': [],
+            'pci': [],
+            'scsi': [],
+            'mdev': [],
+        }
+
+        # USB
+        usb_tab = self.inner_panel.get_tab_instance('usb_hostdev')
+        if usb_tab and hasattr(usb_tab, 'get_config'):
+            config = usb_tab.get_config()
+            hostdevs['usb'] = {
+                'controller': config.get('controller'),
+                'devices': config.get('devices', []),
+                'startup_policy': config.get('startup_policy'),
+                'guest_reset': config.get('guest_reset'),
+            }
+
+        # PCI
+        pci_tab = self.inner_panel.get_tab_instance('pci_hostdev')
+        if pci_tab and hasattr(pci_tab, 'get_config'):
+            config = pci_tab.get_config()
+            hostdevs['pci'] = config.get('devices', [])
+
+        # SCSI
+        scsi_tab = self.inner_panel.get_tab_instance('scsi_hostdev')
+        if scsi_tab and hasattr(scsi_tab, 'get_config'):
+            config = scsi_tab.get_config()
+            hostdevs['scsi'] = config.get('devices', [])
+
+        # MDEV
+        mdev_tab = self.inner_panel.get_tab_instance('mdev_hostdev')
+        if mdev_tab and hasattr(mdev_tab, 'get_config'):
+            config = mdev_tab.get_config()
+            hostdevs['mdev'] = config.get('devices', [])
+
+        return hostdevs
 
     def get_devices_config(self):
         """获取所有设备配置."""
         return {
             'graphics': self.get_graphics_config(),
-            'usb': self.get_usb_config(),
             'serial': self.get_serial_config(),
             'tpm': self.get_tpm_config(),
             'audio': self.get_audio_config(),
+            'disable_usb': self.get_controller_config().get('disable_usb', False),
+            'disable_sound': self.get_controller_config().get('disable_sound', False),
+            'hostdevs': self.get_hostdev_configs(),
         }
 
     def to_xml(self) -> dict:
-        """生成XML配置字典.
-
-        Returns:
-            包含XML配置的字典，用于XML生成器
-        """
+        """生成 XML 配置字典."""
         devices_config = self.get_devices_config()
         devices = {
             'emulator': '/usr/bin/qemu-system-x86_64',
@@ -362,10 +1241,12 @@ class DevicesTab(ctk.CTkFrame):
             'controllers': [],
             'serials': [],
             'sounds': [],
+            'hostdevs': [],
         }
 
         # 添加 USB 控制器
-        usb_config = devices_config.get('usb', {})
+        hostdevs = devices_config.get('hostdevs', {})
+        usb_config = hostdevs.get('usb', {})
         if usb_config.get('controller') and usb_config.get('controller') != 'none':
             devices['controllers'].append(
                 {
@@ -373,6 +1254,54 @@ class DevicesTab(ctk.CTkFrame):
                     'model': usb_config['controller'],
                 }
             )
+
+        # 添加 USB 设备
+        for usb_dev in usb_config.get('devices', []):
+            devices['hostdevs'].append({
+                'type': 'usb',
+                'mode': 'subsystem',
+                'source': {
+                    'vendor_product': usb_dev,
+                    'startup_policy': usb_config.get('startup_policy', 'optional'),
+                    'guest_reset': usb_config.get('guest_reset', False),
+                },
+            })
+
+        # 添加 PCI 设备
+        for pci_dev in hostdevs.get('pci', []):
+            devices['hostdevs'].append({
+                'type': 'pci',
+                'mode': 'subsystem',
+                'managed': pci_dev.get('managed', 'yes'),
+                'source': {
+                    'domain': pci_dev.get('domain', '0x0000'),
+                    'bus': pci_dev.get('bus', '0x00'),
+                    'slot': pci_dev.get('slot', '0x00'),
+                    'function': pci_dev.get('function', '0x0'),
+                },
+                'boot_order': pci_dev.get('boot_order'),
+                'rom_bar': pci_dev.get('rom_bar'),
+                'rom_file': pci_dev.get('rom_file'),
+            })
+
+        # 添加 SCSI 设备
+        for scsi_dev in hostdevs.get('scsi', []):
+            devices['hostdevs'].append({
+                'type': 'scsi',
+                'mode': 'subsystem',
+                'source': scsi_dev,
+            })
+
+        # 添加 MDEV 设备
+        for mdev_dev in hostdevs.get('mdev', []):
+            devices['hostdevs'].append({
+                'type': 'mdev',
+                'mode': 'subsystem',
+                'model': mdev_dev.get('model', 'vfio-pci'),
+                'source': {
+                    'uuid': mdev_dev.get('uuid'),
+                },
+            })
 
         # 添加串口
         serial_config = devices_config.get('serial', {})
@@ -387,10 +1316,6 @@ class DevicesTab(ctk.CTkFrame):
         # 添加音频
         audio_config = devices_config.get('audio', {})
         if audio_config and audio_config.get('model') != 'none':
-            devices['sounds'].append(
-                {
-                    'model': audio_config['model'],
-                }
-            )
+            devices['sounds'].append({'model': audio_config['model']})
 
         return {'devices': devices}
