@@ -62,7 +62,7 @@ class StorageTab(ctk.CTkFrame):
         # 默认添加一个磁盘
         self.add_disk()
 
-    def _trigger_change(self):
+    def _trigger_change(self, *args):
         """触发变化回调."""
         if self.on_change_callback:
             self.on_change_callback()

@@ -57,7 +57,7 @@ class BIOSInfoSubTab(ctk.CTkFrame):
         self.release.grid(row=4, column=1, padx=5, pady=5, sticky='w')
         self.release.bind('<KeyRelease>', lambda e: self._trigger_change())
 
-    def _trigger_change(self):
+    def _trigger_change(self, *args):
         """触发变化回调."""
         if self.on_change_callback:
             self.on_change_callback()
@@ -144,7 +144,7 @@ class SystemInfoSubTab(ctk.CTkFrame):
         self.family.grid(row=7, column=1, padx=5, pady=5, sticky='w')
         self.family.bind('<KeyRelease>', lambda e: self._trigger_change())
 
-    def _trigger_change(self):
+    def _trigger_change(self, *args):
         """触发变化回调."""
         if self.on_change_callback:
             self.on_change_callback()
@@ -227,7 +227,7 @@ class BaseBoardSubTab(ctk.CTkFrame):
         self.location.grid(row=6, column=1, padx=5, pady=5, sticky='w')
         self.location.bind('<KeyRelease>', lambda e: self._trigger_change())
 
-    def _trigger_change(self):
+    def _trigger_change(self, *args):
         """触发变化回调."""
         if self.on_change_callback:
             self.on_change_callback()
@@ -302,7 +302,7 @@ class ChassisSubTab(ctk.CTkFrame):
         self.sku.grid(row=5, column=1, padx=5, pady=5, sticky='w')
         self.sku.bind('<KeyRelease>', lambda e: self._trigger_change())
 
-    def _trigger_change(self):
+    def _trigger_change(self, *args):
         """触发变化回调."""
         if self.on_change_callback:
             self.on_change_callback()

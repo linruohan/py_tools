@@ -123,7 +123,7 @@ class CPUModelSubTab(ctk.CTkFrame):
         self.check.grid(row=3, column=1, padx=5, pady=5, sticky='w')
         self.check.configure(command=self._trigger_change)
 
-    def _trigger_change(self):
+    def _trigger_change(self, *args):
         """触发变化回调."""
         if self.on_change_callback:
             self.on_change_callback()
@@ -217,7 +217,7 @@ class CPUFeatureSubTab(ctk.CTkFrame):
             self.feature_name.delete(0, 'end')
             self._trigger_change()
 
-    def _trigger_change(self):
+    def _trigger_change(self, *args):
         """触发变化回调."""
         if self.on_change_callback:
             self.on_change_callback()
@@ -313,7 +313,7 @@ class CPUCacheSubTab(ctk.CTkFrame):
         self.physaddr_limit.grid(row=3, column=1, padx=5, pady=5, sticky='w')
         self.physaddr_limit.bind('<KeyRelease>', lambda e: self._trigger_change())
 
-    def _trigger_change(self):
+    def _trigger_change(self, *args):
         """触发变化回调."""
         if self.on_change_callback:
             self.on_change_callback()

@@ -116,7 +116,7 @@ class OSTab(ctk.CTkFrame):
         self.boot_timeout_entry.insert(0, '-1')
         self.boot_timeout_entry.bind('<KeyRelease>', lambda e: self._trigger_change())
 
-    def _trigger_change(self):
+    def _trigger_change(self, *args):
         """触发变化回调."""
         if self.on_change_callback:
             self.on_change_callback()

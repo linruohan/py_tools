@@ -60,7 +60,7 @@ class MemoryTab(ctk.CTkFrame):
             self.balloon_target_entry.configure(state='disabled')
         self._trigger_change()
 
-    def _trigger_change(self):
+    def _trigger_change(self, *args):
         """触发变化回调."""
         if self.on_change_callback:
             self.on_change_callback()

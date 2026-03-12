@@ -617,17 +617,15 @@ class LibvirtXMLGenerator:
 
         backing = ET.SubElement(self.domain, 'memoryBacking')
 
-        if backing_config.get('hugepages'):
+        hugepages_list = backing_config.get('hugepages', [])
+        if hugepages_list:
             hugepages = ET.SubElement(backing, 'hugepages')
-            page_size = backing_config.get('page_size')
-            page_unit = backing_config.get('page_unit', 'M')
-            nodeset = backing_config.get('nodeset')
-
-            if page_size:
-                attrs = {'size': page_size, 'unit': page_unit}
-                if nodeset:
-                    attrs['nodeset'] = nodeset
-                ET.SubElement(hugepages, 'page', **attrs)
+            for page in hugepages_list:
+                if page.get('size'):
+                    attrs = {'size': page['size'], 'unit': page.get('unit', 'MiB')}
+                    if page.get('nodeset'):
+                        attrs['nodeset'] = page['nodeset']
+                    ET.SubElement(hugepages, 'page', **attrs)
 
         if backing_config.get('nosharepages'):
             ET.SubElement(backing, 'nosharepages')

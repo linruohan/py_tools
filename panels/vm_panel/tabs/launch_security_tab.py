@@ -123,7 +123,7 @@ class LaunchSecurityTab(ctk.CTkFrame):
             justify='left',
         ).grid(row=1, column=0, padx=10, pady=5, sticky='w')
 
-    def _trigger_change(self):
+    def _trigger_change(self, *args):
         """触发变化回调."""
         if self.on_change_callback:
             self.on_change_callback()

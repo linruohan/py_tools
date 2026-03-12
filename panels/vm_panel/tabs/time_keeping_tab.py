@@ -141,7 +141,7 @@ class TimeKeepingTab(ctk.CTkFrame):
         self.kvmclock_present.grid(row=5, column=1, padx=5, pady=5, sticky='w')
         self.kvmclock_present.configure(command=self._trigger_change)
 
-    def _trigger_change(self):
+    def _trigger_change(self, *args):
         """触发变化回调."""
         if self.on_change_callback:
             self.on_change_callback()

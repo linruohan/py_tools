@@ -11,7 +11,9 @@
       "WebFetch(domain:www.libvirt.org)",
       "Bash(python main.py)",
       "Bash(python -m pytest panels/vm_panel/ -v 2>&1 | head -50)",
-      "Bash(python -c \"from panels.vm_panel.vm_panel import VmPanel; print\\('Import OK'\\)\")"
+      "Bash(python -c \"from panels.vm_panel.vm_panel import VmPanel; print\\('Import OK'\\)\")",
+      "Bash(cd D:/codehub/py_tools/panels/vm_panel/tabs && sed -i 's/def _trigger_change\\(self\\):/def _trigger_change\\(self, *args\\):/g' *.py)",
+      "Bash(cd D:/codehub/py_tools && python -m py_compile panels/vm_panel/tabs/memory_backing_tab.py panels/vm_panel/tabs/os_booting_tab.py panels/vm_panel/xml_generator.py)"
     ]
   }
 }

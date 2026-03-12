@@ -56,7 +56,7 @@ class HostdevTab(ctk.CTkFrame):
         )
         self.hostdev_frame.grid(row=2, column=0, sticky='nsew', padx=10, pady=5)
 
-    def _trigger_change(self):
+    def _trigger_change(self, *args):
         """触发变化回调."""
         if self.on_change_callback:
             self.on_change_callback()

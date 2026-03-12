@@ -144,7 +144,7 @@ class GuestFirmwareTab(ctk.CTkFrame):
         self.smbios_mode.grid(row=5, column=1, padx=5, pady=5, sticky='w')
         self.smbios_mode.configure(command=self._trigger_change)
 
-    def _trigger_change(self):
+    def _trigger_change(self, *args):
         """触发变化回调."""
         if self.on_change_callback:
             self.on_change_callback()
@@ -234,7 +234,7 @@ class DirectKernelTab(ctk.CTkFrame):
         self.shim_path.grid(row=2, column=1, padx=5, pady=5, sticky='ew')
         self.shim_path.bind('<KeyRelease>', lambda e: self._trigger_change())
 
-    def _trigger_change(self):
+    def _trigger_change(self, *args):
         """触发变化回调."""
         if self.on_change_callback:
             self.on_change_callback()
@@ -317,7 +317,7 @@ class ContainerBootTab(ctk.CTkFrame):
         self.init_group.grid(row=2, column=1, padx=5, pady=5, sticky='w')
         self.init_group.bind('<KeyRelease>', lambda e: self._trigger_change())
 
-    def _trigger_change(self):
+    def _trigger_change(self, *args):
         """触发变化回调."""
         if self.on_change_callback:
             self.on_change_callback()
@@ -370,7 +370,7 @@ class HostBootloaderTab(ctk.CTkFrame):
         self.bootloader_args.grid(row=2, column=1, padx=5, pady=5, sticky='ew')
         self.bootloader_args.bind('<KeyRelease>', lambda e: self._trigger_change())
 
-    def _trigger_change(self):
+    def _trigger_change(self, *args):
         """触发变化回调."""
         if self.on_change_callback:
             self.on_change_callback()

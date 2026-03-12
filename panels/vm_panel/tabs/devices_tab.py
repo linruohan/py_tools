@@ -270,7 +270,7 @@ class DevicesTab(ctk.CTkFrame):
         self.audio_model.grid(row=1, column=3, padx=5, pady=5, sticky='w')
         self.audio_model.configure(command=self._trigger_change)
 
-    def _trigger_change(self):
+    def _trigger_change(self, *args):
         """触发变化回调."""
         if self.on_change_callback:
             self.on_change_callback()
@@ -353,10 +353,12 @@ class DevicesTab(ctk.CTkFrame):
         devices = {
             'emulator': '/usr/bin/qemu-system-x86_64',
             'graphics': devices_config.get('graphics'),
-            'videos': [{
-                'model': devices_config.get('graphics', {}).get('video_model', 'qxl'),
-                'vram': devices_config.get('graphics', {}).get('vram', 64),
-            }],
+            'videos': [
+                {
+                    'model': devices_config.get('graphics', {}).get('video_model', 'qxl'),
+                    'vram': devices_config.get('graphics', {}).get('vram', 64),
+                }
+            ],
             'controllers': [],
             'serials': [],
             'sounds': [],
@@ -365,24 +367,30 @@ class DevicesTab(ctk.CTkFrame):
         # 添加 USB 控制器
         usb_config = devices_config.get('usb', {})
         if usb_config.get('controller') and usb_config.get('controller') != 'none':
-            devices['controllers'].append({
-                'type': 'usb',
-                'model': usb_config['controller'],
-            })
+            devices['controllers'].append(
+                {
+                    'type': 'usb',
+                    'model': usb_config['controller'],
+                }
+            )
 
         # 添加串口
         serial_config = devices_config.get('serial', {})
         if serial_config.get('type') and serial_config.get('type') != 'none':
-            devices['serials'].append({
-                'type': serial_config['type'],
-                'port': serial_config.get('port', '0'),
-            })
+            devices['serials'].append(
+                {
+                    'type': serial_config['type'],
+                    'port': serial_config.get('port', '0'),
+                }
+            )
 
         # 添加音频
         audio_config = devices_config.get('audio', {})
         if audio_config and audio_config.get('model') != 'none':
-            devices['sounds'].append({
-                'model': audio_config['model'],
-            })
+            devices['sounds'].append(
+                {
+                    'model': audio_config['model'],
+                }
+            )
 
         return {'devices': devices}

@@ -152,7 +152,7 @@ class CPUAllocationTab(ctk.CTkFrame):
         self.vcpu_order.grid(row=4, column=1, padx=5, pady=5, sticky='w')
         self.vcpu_order.bind('<KeyRelease>', lambda e: self._trigger_change())
 
-    def _trigger_change(self):
+    def _trigger_change(self, *args):
         """触发变化回调."""
         if self.on_change_callback:
             self.on_change_callback()

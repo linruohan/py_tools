@@ -110,7 +110,7 @@ class PerformanceMonitoringTab(ctk.CTkFrame):
         )
         self.alignment_faults.grid(row=7, column=0, padx=10, pady=3, sticky='w')
 
-    def _trigger_change(self):
+    def _trigger_change(self, *args):
         """触发变化回调."""
         if self.on_change_callback:
             self.on_change_callback()

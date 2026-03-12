@@ -290,7 +290,7 @@ class BasicTab(ctk.CTkFrame):
             except ValueError:
                 return 2048
 
-    def _trigger_change(self):
+    def _trigger_change(self, *args):
         """触发变化回调."""
         if self.on_change_callback:
             self.on_change_callback()

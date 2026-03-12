@@ -113,7 +113,7 @@ class HypervFeaturesSubTab(ctk.CTkFrame):
         self.hyperv_mode.grid(row=7, column=1, padx=5, pady=5, sticky='w')
         self.hyperv_mode.configure(command=self._trigger_change)
 
-    def _trigger_change(self):
+    def _trigger_change(self, *args):
         """触发变化回调."""
         if self.on_change_callback:
             self.on_change_callback()
@@ -199,7 +199,7 @@ class KVMFeaturesSubTab(ctk.CTkFrame):
         self.dirty_ring_size.grid(row=1, column=2, padx=5, pady=5, sticky='w')
         self.dirty_ring_size.bind('<KeyRelease>', lambda e: self._trigger_change())
 
-    def _trigger_change(self):
+    def _trigger_change(self, *args):
         """触发变化回调."""
         if self.on_change_callback:
             self.on_change_callback()
@@ -307,7 +307,7 @@ class GeneralFeaturesSubTab(ctk.CTkFrame):
         )
         self.ras.grid(row=6, column=0, padx=10, pady=3, sticky='w')
 
-    def _trigger_change(self):
+    def _trigger_change(self, *args):
         """触发变化回调."""
         if self.on_change_callback:
             self.on_change_callback()

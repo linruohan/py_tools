@@ -94,7 +94,7 @@ class BlockIOTuningTab(ctk.CTkFrame):
         self.write_iops_sec.grid(row=5, column=1, padx=5, pady=5, sticky='w')
         self.write_iops_sec.bind('<KeyRelease>', lambda e: self._trigger_change())
 
-    def _trigger_change(self):
+    def _trigger_change(self, *args):
         """触发变化回调."""
         if self.on_change_callback:
             self.on_change_callback()

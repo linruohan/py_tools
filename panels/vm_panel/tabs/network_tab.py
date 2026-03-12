@@ -51,7 +51,7 @@ class NetworkTab(ctk.CTkFrame):
         # 默认添加一个网卡
         self.add_network()
 
-    def _trigger_change(self):
+    def _trigger_change(self, *args):
         """触发变化回调."""
         if self.on_change_callback:
             self.on_change_callback()
