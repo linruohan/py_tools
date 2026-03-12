@@ -1102,7 +1102,6 @@ class DiskConfigDialog:
             widget.destroy()
 
         disk_type = self.type_menu.get()
-        device_type = self.device_menu.get()
 
         row = 0
 

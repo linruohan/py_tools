@@ -399,6 +399,11 @@ class LibvirtXMLGenerator:
         if emulator:
             ET.SubElement(devices, 'emulator').text = emulator
 
+        # 处理 disk_devices（来自 devices_tab 的磁盘设备）
+        disk_devices = config.get('disk_devices', [])
+        for disk in disk_devices:
+            self._add_disk_device(devices, disk)
+
         disks = devices_config.get('disks', [])
         for disk in disks:
             self._add_disk(devices, disk)
@@ -438,6 +443,119 @@ class LibvirtXMLGenerator:
         hostdevs = devices_config.get('hostdevs', [])
         for hostdev in hostdevs:
             self._add_hostdev(devices, hostdev)
+
+    def _add_disk_device(self, devices: ET.Element, disk: dict) -> None:
+        """添加磁盘设备（支持 file, block, network, volume, dir, nvme, vhostuser, vhostvdpa, ctl 类型）."""
+        disk_type = disk.get('type', 'file')
+        device_type = disk.get('device', 'disk')
+
+        type_map = {
+            'file': 'file',
+            'block': 'block',
+            'network': 'network',
+            'volume': 'volume',
+            'dir': 'dir',
+            'nvme': 'nvme',
+            'vhostuser': 'vhostuser',
+            'vhostvdpa': 'vhostvdpa',
+            'ctl': 'ctl',
+        }
+
+        disk_attrs = {'type': type_map.get(disk_type, 'file'), 'device': device_type}
+        disk_elem = ET.SubElement(devices, 'disk', **disk_attrs)
+
+        # 驱动（仅 file 和 block 类型需要）
+        if disk_type in ('file', 'block'):
+            driver = disk.get('driver', 'qcow2')
+            driver_attrs = {'name': 'qemu', 'type': driver}
+            ET.SubElement(disk_elem, 'driver', **driver_attrs)
+
+        # Source - 根据类型不同而不同
+        if disk_type == 'file':
+            source = disk.get('source', '')
+            if source:
+                ET.SubElement(disk_elem, 'source', file=source)
+        elif disk_type == 'block':
+            source = disk.get('source', '')
+            if source:
+                ET.SubElement(disk_elem, 'source', dev=source)
+        elif disk_type == 'network':
+            protocol = disk.get('protocol', 'rbd')
+            source_name = disk.get('source', '')
+            source_attrs = {'protocol': protocol, 'name': source_name}
+            source_elem = ET.SubElement(disk_elem, 'source', **source_attrs)
+
+            # 主机
+            host = disk.get('host', '')
+            port = disk.get('port', '')
+            if host:
+                host_attrs = {'name': host}
+                if port:
+                    host_attrs['port'] = port
+                ET.SubElement(source_elem, 'host', **host_attrs)
+
+            # 认证
+            if disk.get('auth') and disk.get('username') and disk.get('secret'):
+                auth_elem = ET.SubElement(source_elem, 'auth', username=disk['username'])
+                ET.SubElement(auth_elem, 'secret', type='ceph', usage=disk['secret'])
+        elif disk_type == 'volume':
+            pool = disk.get('pool', '')
+            volume = disk.get('volume', '')
+            if pool and volume:
+                ET.SubElement(disk_elem, 'source', pool=pool, volume=volume)
+        elif disk_type == 'dir':
+            source = disk.get('source', '')
+            if source:
+                ET.SubElement(disk_elem, 'source', dir=source)
+        elif disk_type == 'nvme':
+            namespace = disk.get('namespace', '1')
+            pci = disk.get('pci', '')
+            if pci:
+                # 解析 PCI 地址
+                pci_parts = pci.replace(':', '.').split('.')
+                addr_attrs = {
+                    'domain': f'0x{pci_parts[0]}',
+                    'bus': f'0x{pci_parts[1]}',
+                    'slot': f'0x{pci_parts[2]}',
+                    'function': f'0x{pci_parts[3] if len(pci_parts) > 3 else "0"}',
+                }
+                source_elem = ET.SubElement(
+                    disk_elem, 'source', type='pci', managed='yes', namespace=namespace
+                )
+                ET.SubElement(source_elem, 'address', **addr_attrs)
+        elif disk_type == 'vhostuser':
+            source = disk.get('source', '')
+            if source:
+                ET.SubElement(disk_elem, 'source', type='unix', path=source)
+        elif disk_type == 'vhostvdpa':
+            source = disk.get('source', '')
+            if source:
+                ET.SubElement(disk_elem, 'source', dev=source)
+        elif disk_type == 'ctl':
+            source = disk.get('source', '')
+            if source:
+                ET.SubElement(disk_elem, 'source', dev=source)
+
+        # Target
+        target_dev = disk.get('target_dev', 'vda')
+        bus = disk.get('bus', 'virtio')
+        ET.SubElement(disk_elem, 'target', dev=target_dev, bus=bus)
+
+        # 只读
+        if disk.get('readonly'):
+            ET.SubElement(disk_elem, 'readonly')
+
+        # 启动顺序
+        boot_order = disk.get('boot_order')
+        if boot_order:
+            ET.SubElement(disk_elem, 'boot', order=boot_order)
+
+        # 启动策略
+        startup_policy = disk.get('startup_policy')
+        if startup_policy:
+            source_elem = disk_elem.find('source')
+            if source_elem is not None:
+                source_elem.set('startupPolicy', startup_policy)
 
     def _add_disk(self, devices: ET.Element, disk: dict) -> None:
         """添加磁盘设备."""
