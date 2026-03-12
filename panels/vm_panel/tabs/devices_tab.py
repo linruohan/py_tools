@@ -245,9 +245,7 @@ class PCIHostdevTab(ctk.CTkFrame):
         ctk.CTkLabel(frame, text='ROM BAR:', font=CTK_FONT_MAIN, width=70, anchor='w').grid(
             row=3, column=0, padx=10, pady=5, sticky='w'
         )
-        self.rom_bar = ctk.CTkOptionMenu(
-            frame, values=['on', 'off'], width=80, font=CTK_FONT_SMALL
-        )
+        self.rom_bar = ctk.CTkOptionMenu(frame, values=['on', 'off'], width=80, font=CTK_FONT_SMALL)
         self.rom_bar.set('off')
         self.rom_bar.grid(row=3, column=1, padx=5, pady=5, sticky='w')
         self.rom_bar.configure(command=self._trigger_change)
@@ -317,9 +315,7 @@ class PCIHostdevTab(ctk.CTkFrame):
     def _update_display(self):
         """更新显示."""
         if self.pci_list:
-            devs = [
-                f"{d['domain']}:{d['bus']}:{d['slot']}.{d['function']}" for d in self.pci_list
-            ]
+            devs = [f'{d["domain"]}:{d["bus"]}:{d["slot"]}.{d["function"]}' for d in self.pci_list]
             self.pci_display.configure(text=f'已添加：{", ".join(devs)}')
         else:
             self.pci_display.configure(text='暂无设备')
@@ -393,9 +389,7 @@ class SCSIHostdevTab(ctk.CTkFrame):
 
         if scsi_type == 'scsi_host':
             # VHost SCSI
-            frame = ctk.CTkFrame(
-                self.content_frame, fg_color=BG_COLOR_CONTENT, corner_radius=6
-            )
+            frame = ctk.CTkFrame(self.content_frame, fg_color=BG_COLOR_CONTENT, corner_radius=6)
             frame.grid(row=0, column=0, sticky='nsew')
             frame.grid_columnconfigure(1, weight=1)
 
@@ -421,9 +415,7 @@ class SCSIHostdevTab(ctk.CTkFrame):
             self.wwpn.bind('<KeyRelease>', lambda e: self._trigger_change())
         else:
             # 普通 SCSI 或 iSCSI
-            frame = ctk.CTkFrame(
-                self.content_frame, fg_color=BG_COLOR_CONTENT, corner_radius=6
-            )
+            frame = ctk.CTkFrame(self.content_frame, fg_color=BG_COLOR_CONTENT, corner_radius=6)
             frame.grid(row=0, column=0, sticky='nsew')
             frame.grid_columnconfigure(1, weight=1)
 
@@ -440,9 +432,9 @@ class SCSIHostdevTab(ctk.CTkFrame):
                 command=self._on_subtype_change,
             )
             self.scsi_subtype.set('local')
-            ctk.CTkLabel(frame, text='SCSI 子类型:', font=CTK_FONT_MAIN, width=100, anchor='w').grid(
-                row=1, column=0, padx=10, pady=5, sticky='w'
-            )
+            ctk.CTkLabel(
+                frame, text='SCSI 子类型:', font=CTK_FONT_MAIN, width=100, anchor='w'
+            ).grid(row=1, column=0, padx=10, pady=5, sticky='w')
             self.scsi_subtype.grid(row=1, column=1, padx=5, pady=5, sticky='w')
 
             self._init_local_scsi_ui(frame)
@@ -649,11 +641,11 @@ class SCSIHostdevTab(ctk.CTkFrame):
             devs = []
             for d in self.scsi_list:
                 if d['type'] == 'scsi_host':
-                    devs.append(f"vhost:{d['wwpn']}")
+                    devs.append(f'vhost:{d["wwpn"]}')
                 elif d.get('protocol') == 'iscsi':
-                    devs.append(f"iscsi:{d['name']}")
+                    devs.append(f'iscsi:{d["name"]}')
                 else:
-                    devs.append(f"{d['adapter']}:{d['bus']}:{d['target']}.{d['unit']}")
+                    devs.append(f'{d["adapter"]}:{d["bus"]}:{d["target"]}.{d["unit"]}')
             self.scsi_display.configure(text=f'已添加：{", ".join(devs)}')
         else:
             self.scsi_display.configure(text='暂无设备')
@@ -699,7 +691,9 @@ class MdevHostdevTab(ctk.CTkFrame):
         ctk.CTkLabel(frame, text='UUID:', font=CTK_FONT_MAIN, width=70, anchor='w').grid(
             row=1, column=0, padx=10, pady=5, sticky='w'
         )
-        self.mdev_uuid = ctk.CTkEntry(frame, placeholder_text='c2177883-f1bb-47f0-914d-32a22e3a8804', width=300)
+        self.mdev_uuid = ctk.CTkEntry(
+            frame, placeholder_text='c2177883-f1bb-47f0-914d-32a22e3a8804', width=300
+        )
         self.mdev_uuid.grid(row=1, column=1, padx=5, pady=5, sticky='w')
         self.mdev_uuid.bind('<KeyRelease>', lambda e: self._trigger_change())
 
@@ -806,7 +800,7 @@ class MdevHostdevTab(ctk.CTkFrame):
     def _update_display(self):
         """更新显示."""
         if self.mdev_list:
-            devs = [f"{d['model']}:{d['uuid'][:8]}..." for d in self.mdev_list]
+            devs = [f'{d["model"]}:{d["uuid"][:8]}...' for d in self.mdev_list]
             self.mdev_display.configure(text=f'已添加：{", ".join(devs)}')
         else:
             self.mdev_display.configure(text='暂无设备')
@@ -822,6 +816,545 @@ class MdevHostdevTab(ctk.CTkFrame):
             'type': 'mdev',
             'devices': self.mdev_list.copy(),
         }
+
+
+class DiskDevicesTab(ctk.CTkFrame):
+    """磁盘设备配置 Tab - 支持 file, block, network, volume, dir, nvme, vhostuser, vhostvdpa, ctl 类型."""
+
+    def __init__(self, master, on_change_callback=None, **kwargs):
+        super().__init__(master, **kwargs)
+        self.configure(fg_color='transparent')
+        self.on_change_callback = on_change_callback
+        self.disk_list = []
+
+        self._init_ui()
+
+    def _init_ui(self) -> None:
+        """初始化界面."""
+        self.grid_columnconfigure(0, weight=1)
+        self.grid_rowconfigure(0, weight=0)
+        self.grid_rowconfigure(1, weight=1)
+
+        # 工具栏
+        toolbar = ctk.CTkFrame(self, fg_color='transparent')
+        toolbar.grid(row=0, column=0, sticky='ew', padx=5, pady=5)
+
+        add_btn = ctk.CTkButton(
+            toolbar,
+            text='添加磁盘设备',
+            command=self._add_disk,
+            fg_color='#4caf50',
+            hover_color='#388e3c',
+            width=120,
+        )
+        add_btn.pack(side='left', padx=5)
+
+        clear_btn = ctk.CTkButton(
+            toolbar,
+            text='清空列表',
+            command=self._clear_list,
+            fg_color='#f44336',
+            hover_color='#d32f2f',
+            width=100,
+        )
+        clear_btn.pack(side='left', padx=5)
+
+        # 内容区域
+        self.content_frame = ctk.CTkScrollableFrame(
+            self, fg_color=BG_COLOR_CONTENT, corner_radius=6
+        )
+        self.content_frame.grid(row=1, column=0, sticky='nsew', padx=5, pady=5)
+
+        # 设备列表显示
+        self.disk_display = ctk.CTkLabel(
+            self.content_frame,
+            text='暂无设备',
+            font=CTK_FONT_SMALL,
+            text_color='#aaaaaa',
+            anchor='w',
+        )
+        self.disk_display.grid(row=0, column=0, sticky='w', padx=10, pady=10)
+
+    def _add_disk(self):
+        """添加磁盘设备配置对话框."""
+        dialog = ctk.CTkToplevel(self)
+        dialog.title('添加磁盘设备')
+        dialog.geometry('700x600')
+        dialog.transient(self)
+        dialog.grab_set()
+
+        DiskConfigDialog(dialog, self._on_disk_added)
+
+    def _on_disk_added(self, disk_config):
+        """磁盘设备添加完成回调."""
+        self.disk_list.append(disk_config)
+        self._update_display()
+        self._trigger_change()
+
+    def _clear_list(self):
+        """清空磁盘设备列表."""
+        self.disk_list.clear()
+        self._update_display()
+        self._trigger_change()
+
+    def _update_display(self):
+        """更新显示."""
+        # 清除旧的显示
+        for widget in self.content_frame.winfo_children():
+            widget.destroy()
+
+        if not self.disk_list:
+            label = ctk.CTkLabel(
+                self.content_frame,
+                text='暂无设备',
+                font=CTK_FONT_SMALL,
+                text_color='#aaaaaa',
+                anchor='w',
+            )
+            label.grid(row=0, column=0, sticky='w', padx=10, pady=10)
+            return
+
+        # 显示所有磁盘设备
+        for i, disk in enumerate(self.disk_list):
+            disk_frame = ctk.CTkFrame(self.content_frame, fg_color='transparent')
+            disk_frame.grid(row=i, column=0, sticky='ew', padx=10, pady=5)
+
+            # 设备类型标签
+            type_label = f'[{disk.get("type", "file")}] {disk.get("device", "disk")}'
+            source_label = disk.get('source', '')
+            if disk.get('protocol'):
+                source_label = f'{disk["protocol"]}:{source_label}'
+
+            label = ctk.CTkLabel(
+                disk_frame,
+                text=f'{type_label}: {source_label} -> {disk.get("target_dev", "N/A")} ({disk.get("bus", "N/A")})',
+                font=CTK_FONT_MAIN,
+                anchor='w',
+            )
+            label.grid(row=0, column=0, sticky='w')
+
+            # 删除按钮
+            del_btn = ctk.CTkButton(
+                disk_frame,
+                text='删除',
+                width=60,
+                fg_color='#f44336',
+                hover_color='#d32f2f',
+                font=CTK_FONT_SMALL,
+                command=lambda idx=i: self._remove_disk(idx),
+            )
+            del_btn.grid(row=0, column=1, padx=10)
+
+    def _remove_disk(self, index):
+        """删除指定索引的磁盘设备."""
+        self.disk_list.pop(index)
+        self._update_display()
+        self._trigger_change()
+
+    def _trigger_change(self, *args):
+        """触发变化回调."""
+        if self.on_change_callback:
+            self.on_change_callback()
+
+    def get_config(self) -> dict:
+        """获取配置."""
+        return {
+            'type': 'disk_devices',
+            'devices': self.disk_list.copy(),
+        }
+
+
+class DiskConfigDialog:
+    """磁盘设备配置对话框."""
+
+    def __init__(self, dialog, on_confirm_callback):
+        self.dialog = dialog
+        self.on_confirm_callback = on_confirm_callback
+        self.config = {}
+        self._init_ui()
+
+    def _init_ui(self):
+        """初始化 UI."""
+        # 基本信息
+        info_frame = ctk.CTkFrame(self.dialog, fg_color='transparent')
+        info_frame.grid(row=0, column=0, sticky='ew', padx=20, pady=10)
+        info_frame.grid_columnconfigure(1, weight=1)
+
+        # 磁盘类型
+        ctk.CTkLabel(info_frame, text='类型:', font=CTK_FONT_MAIN, width=80, anchor='w').grid(
+            row=0, column=0, padx=5, pady=5, sticky='w'
+        )
+        self.type_menu = ctk.CTkOptionMenu(
+            info_frame,
+            values=[
+                'file',
+                'block',
+                'network',
+                'volume',
+                'dir',
+                'nvme',
+                'vhostuser',
+                'vhostvdpa',
+                'ctl',
+            ],
+            width=120,
+            font=CTK_FONT_SMALL,
+            command=self._on_type_changed,
+        )
+        self.type_menu.set('file')
+        self.type_menu.grid(row=0, column=1, padx=5, pady=5, sticky='w')
+
+        # 设备类型
+        ctk.CTkLabel(info_frame, text='设备类型:', font=CTK_FONT_MAIN, width=80, anchor='w').grid(
+            row=0, column=2, padx=5, pady=5, sticky='w'
+        )
+        self.device_menu = ctk.CTkOptionMenu(
+            info_frame,
+            values=['disk', 'cdrom', 'lun', 'floppy'],
+            width=100,
+            font=CTK_FONT_SMALL,
+        )
+        self.device_menu.set('disk')
+        self.device_menu.grid(row=0, column=3, padx=5, pady=5, sticky='w')
+
+        # 目标设备
+        ctk.CTkLabel(info_frame, text='目标设备:', font=CTK_FONT_MAIN, width=80, anchor='w').grid(
+            row=1, column=0, padx=5, pady=5, sticky='w'
+        )
+        self.target_entry = ctk.CTkEntry(
+            info_frame, placeholder_text='vda', width=100, font=CTK_FONT_SMALL
+        )
+        self.target_entry.grid(row=1, column=1, padx=5, pady=5, sticky='w')
+
+        # 总线类型
+        ctk.CTkLabel(info_frame, text='总线:', font=CTK_FONT_MAIN, width=80, anchor='w').grid(
+            row=1, column=2, padx=5, pady=5, sticky='w'
+        )
+        self.bus_menu = ctk.CTkOptionMenu(
+            info_frame,
+            values=['virtio', 'sata', 'ide', 'scsi', 'usb', 'nvme'],
+            width=80,
+            font=CTK_FONT_SMALL,
+        )
+        self.bus_menu.set('virtio')
+        self.bus_menu.grid(row=1, column=3, padx=5, pady=5, sticky='w')
+
+        # 动态内容区域
+        self.dynamic_frame = ctk.CTkFrame(self.dialog, fg_color='transparent')
+        self.dynamic_frame.grid(row=1, column=0, sticky='nsew', padx=20, pady=10)
+        self.dynamic_frame.grid_columnconfigure(1, weight=1)
+
+        self._init_dynamic_ui()
+
+        # 其他选项
+        options_frame = ctk.CTkFrame(self.dialog, fg_color='transparent')
+        options_frame.grid(row=2, column=0, sticky='ew', padx=20, pady=10)
+        options_frame.grid_columnconfigure(1, weight=1)
+
+        # 只读
+        self.readonly_check = ctk.CTkCheckBox(options_frame, text='只读', font=CTK_FONT_SMALL)
+        self.readonly_check.grid(row=0, column=0, padx=5, pady=5, sticky='w')
+
+        # 启动顺序
+        ctk.CTkLabel(
+            options_frame, text='启动顺序:', font=CTK_FONT_MAIN, width=80, anchor='w'
+        ).grid(row=0, column=1, padx=5, pady=5, sticky='w')
+        self.boot_order_entry = ctk.CTkEntry(options_frame, width=60, font=CTK_FONT_SMALL)
+        self.boot_order_entry.grid(row=0, column=2, padx=5, pady=5, sticky='w')
+        self.boot_order_entry.insert(0, '')
+
+        # 启动策略
+        ctk.CTkLabel(
+            options_frame, text='启动策略:', font=CTK_FONT_MAIN, width=80, anchor='w'
+        ).grid(row=0, column=3, padx=5, pady=5, sticky='w')
+        self.startup_menu = ctk.CTkOptionMenu(
+            options_frame, values=['required', 'optional'], width=100, font=CTK_FONT_SMALL
+        )
+        self.startup_menu.set('optional')
+        self.startup_menu.grid(row=0, column=4, padx=5, pady=5, sticky='w')
+
+        # 按钮
+        btn_frame = ctk.CTkFrame(self.dialog, fg_color='transparent')
+        btn_frame.grid(row=3, column=0, sticky='e', padx=20, pady=10)
+
+        ctk.CTkButton(
+            btn_frame,
+            text='取消',
+            command=self.dialog.destroy,
+            width=80,
+            fg_color='#9e9e9e',
+            hover_color='#757575',
+        ).pack(side='right', padx=5)
+
+        ctk.CTkButton(
+            btn_frame,
+            text='确定',
+            command=self._confirm,
+            width=80,
+            fg_color='#4caf50',
+            hover_color='#388e3c',
+        ).pack(side='right', padx=5)
+
+    def _init_dynamic_ui(self):
+        """初始化动态内容 UI."""
+        # 清除现有内容
+        for widget in self.dynamic_frame.winfo_children():
+            widget.destroy()
+
+        disk_type = self.type_menu.get()
+        device_type = self.device_menu.get()
+
+        row = 0
+
+        # file 类型
+        if disk_type == 'file':
+            ctk.CTkLabel(
+                self.dynamic_frame, text='文件路径:', font=CTK_FONT_MAIN, width=80, anchor='w'
+            ).grid(row=row, column=0, padx=5, pady=5, sticky='w')
+            self.source_entry = ctk.CTkEntry(
+                self.dynamic_frame,
+                placeholder_text='/var/lib/libvirt/images/disk.qcow2',
+                width=400,
+                font=CTK_FONT_SMALL,
+            )
+            self.source_entry.grid(row=row, column=1, padx=5, pady=5, sticky='ew')
+
+            ctk.CTkLabel(
+                self.dynamic_frame, text='驱动格式:', font=CTK_FONT_MAIN, width=80, anchor='w'
+            ).grid(row=row + 1, column=0, padx=5, pady=5, sticky='w')
+            self.driver_menu = ctk.CTkOptionMenu(
+                self.dynamic_frame,
+                values=['qcow2', 'raw', 'vmdk', 'vdi', 'vpc', 'parallels'],
+                width=100,
+                font=CTK_FONT_SMALL,
+            )
+            self.driver_menu.set('qcow2')
+            self.driver_menu.grid(row=row + 1, column=1, padx=5, pady=5, sticky='w')
+
+        # block 类型
+        elif disk_type == 'block':
+            ctk.CTkLabel(
+                self.dynamic_frame, text='块设备:', font=CTK_FONT_MAIN, width=80, anchor='w'
+            ).grid(row=row, column=0, padx=5, pady=5, sticky='w')
+            self.source_entry = ctk.CTkEntry(
+                self.dynamic_frame, placeholder_text='/dev/sda', width=300, font=CTK_FONT_SMALL
+            )
+            self.source_entry.grid(row=row, column=1, padx=5, pady=5, sticky='w')
+
+        # network 类型
+        elif disk_type == 'network':
+            ctk.CTkLabel(
+                self.dynamic_frame, text='协议:', font=CTK_FONT_MAIN, width=80, anchor='w'
+            ).grid(row=row, column=0, padx=5, pady=5, sticky='w')
+            self.protocol_menu = ctk.CTkOptionMenu(
+                self.dynamic_frame,
+                values=['sheepdog', 'rbd', 'iscsi', 'nfs', 'http', 'https', 'ftp', 'ftps', 'tftp'],
+                width=100,
+                font=CTK_FONT_SMALL,
+                command=self._on_protocol_changed,
+            )
+            self.protocol_menu.set('rbd')
+            self.protocol_menu.grid(row=row, column=1, padx=5, pady=5, sticky='w')
+
+            ctk.CTkLabel(
+                self.dynamic_frame, text='镜像名称:', font=CTK_FONT_MAIN, width=80, anchor='w'
+            ).grid(row=row + 1, column=0, padx=5, pady=5, sticky='w')
+            self.source_entry = ctk.CTkEntry(
+                self.dynamic_frame, placeholder_text='pool/image', width=300, font=CTK_FONT_SMALL
+            )
+            self.source_entry.grid(row=row + 1, column=1, padx=5, pady=5, sticky='ew')
+
+            ctk.CTkLabel(
+                self.dynamic_frame, text='主机:', font=CTK_FONT_MAIN, width=80, anchor='w'
+            ).grid(row=row + 2, column=0, padx=5, pady=5, sticky='w')
+            self.host_entry = ctk.CTkEntry(
+                self.dynamic_frame, placeholder_text='hostname', width=150, font=CTK_FONT_SMALL
+            )
+            self.host_entry.grid(row=row + 2, column=1, padx=5, pady=5, sticky='w')
+
+            ctk.CTkLabel(
+                self.dynamic_frame, text='端口:', font=CTK_FONT_MAIN, width=50, anchor='w'
+            ).grid(row=row + 2, column=2, padx=5, pady=5, sticky='w')
+            self.port_entry = ctk.CTkEntry(
+                self.dynamic_frame, placeholder_text='7000', width=60, font=CTK_FONT_SMALL
+            )
+            self.port_entry.grid(row=row + 2, column=3, padx=5, pady=5, sticky='w')
+
+            # 认证
+            self.auth_check = ctk.CTkCheckBox(
+                self.dynamic_frame, text='启用认证', font=CTK_FONT_SMALL
+            )
+            self.auth_check.grid(row=row + 3, column=0, padx=5, pady=5, sticky='w')
+
+            ctk.CTkLabel(
+                self.dynamic_frame, text='用户名:', font=CTK_FONT_MAIN, width=80, anchor='w'
+            ).grid(row=row + 3, column=1, padx=5, pady=5, sticky='w')
+            self.username_entry = ctk.CTkEntry(
+                self.dynamic_frame, placeholder_text='myuser', width=100, font=CTK_FONT_SMALL
+            )
+            self.username_entry.grid(row=row + 3, column=2, padx=5, pady=5, sticky='w')
+
+            ctk.CTkLabel(
+                self.dynamic_frame, text='Secret:', font=CTK_FONT_MAIN, width=60, anchor='w'
+            ).grid(row=row + 3, column=3, padx=5, pady=5, sticky='w')
+            self.secret_entry = ctk.CTkEntry(
+                self.dynamic_frame, placeholder_text='libvirtiscsi', width=120, font=CTK_FONT_SMALL
+            )
+            self.secret_entry.grid(row=row + 3, column=4, padx=5, pady=5, sticky='w')
+
+        # volume 类型
+        elif disk_type == 'volume':
+            ctk.CTkLabel(
+                self.dynamic_frame, text='存储池:', font=CTK_FONT_MAIN, width=80, anchor='w'
+            ).grid(row=row, column=0, padx=5, pady=5, sticky='w')
+            self.pool_entry = ctk.CTkEntry(
+                self.dynamic_frame, placeholder_text='blk-pool0', width=200, font=CTK_FONT_SMALL
+            )
+            self.pool_entry.grid(row=row, column=1, padx=5, pady=5, sticky='w')
+
+            ctk.CTkLabel(
+                self.dynamic_frame, text='卷:', font=CTK_FONT_MAIN, width=80, anchor='w'
+            ).grid(row=row + 1, column=0, padx=5, pady=5, sticky='w')
+            self.volume_entry = ctk.CTkEntry(
+                self.dynamic_frame, placeholder_text='vol0', width=200, font=CTK_FONT_SMALL
+            )
+            self.volume_entry.grid(row=row + 1, column=1, padx=5, pady=5, sticky='w')
+
+        # dir 类型
+        elif disk_type == 'dir':
+            ctk.CTkLabel(
+                self.dynamic_frame, text='目录:', font=CTK_FONT_MAIN, width=80, anchor='w'
+            ).grid(row=row, column=0, padx=5, pady=5, sticky='w')
+            self.source_entry = ctk.CTkEntry(
+                self.dynamic_frame,
+                placeholder_text='/var/somefiles',
+                width=300,
+                font=CTK_FONT_SMALL,
+            )
+            self.source_entry.grid(row=row, column=1, padx=5, pady=5, sticky='ew')
+
+        # nvme 类型
+        elif disk_type == 'nvme':
+            ctk.CTkLabel(
+                self.dynamic_frame, text='Namespace:', font=CTK_FONT_MAIN, width=80, anchor='w'
+            ).grid(row=row, column=0, padx=5, pady=5, sticky='w')
+            self.ns_entry = ctk.CTkEntry(
+                self.dynamic_frame, placeholder_text='1', width=60, font=CTK_FONT_SMALL
+            )
+            self.ns_entry.grid(row=row, column=1, padx=5, pady=5, sticky='w')
+
+            ctk.CTkLabel(
+                self.dynamic_frame, text='PCI 地址:', font=CTK_FONT_MAIN, width=80, anchor='w'
+            ).grid(row=row + 1, column=0, padx=5, pady=5, sticky='w')
+            self.pci_entry = ctk.CTkEntry(
+                self.dynamic_frame, placeholder_text='0000:01:00.0', width=150, font=CTK_FONT_SMALL
+            )
+            self.pci_entry.grid(row=row + 1, column=1, padx=5, pady=5, sticky='w')
+
+        # vhostuser 类型
+        elif disk_type == 'vhostuser':
+            ctk.CTkLabel(
+                self.dynamic_frame, text='Socket:', font=CTK_FONT_MAIN, width=80, anchor='w'
+            ).grid(row=row, column=0, padx=5, pady=5, sticky='w')
+            self.source_entry = ctk.CTkEntry(
+                self.dynamic_frame,
+                placeholder_text='/tmp/vhost-blk.sock',
+                width=300,
+                font=CTK_FONT_SMALL,
+            )
+            self.source_entry.grid(row=row, column=1, padx=5, pady=5, sticky='ew')
+
+        # vhostvdpa 类型
+        elif disk_type == 'vhostvdpa':
+            ctk.CTkLabel(
+                self.dynamic_frame, text='设备:', font=CTK_FONT_MAIN, width=80, anchor='w'
+            ).grid(row=row, column=0, padx=5, pady=5, sticky='w')
+            self.source_entry = ctk.CTkEntry(
+                self.dynamic_frame,
+                placeholder_text='/dev/vhost-vdpa-0',
+                width=200,
+                font=CTK_FONT_SMALL,
+            )
+            self.source_entry.grid(row=row, column=1, padx=5, pady=5, sticky='w')
+
+        # ctl 类型
+        elif disk_type == 'ctl':
+            ctk.CTkLabel(
+                self.dynamic_frame, text='设备:', font=CTK_FONT_MAIN, width=80, anchor='w'
+            ).grid(row=row, column=0, padx=5, pady=5, sticky='w')
+            self.source_entry = ctk.CTkEntry(
+                self.dynamic_frame, placeholder_text='/dev/cam/ctl', width=200, font=CTK_FONT_SMALL
+            )
+            self.source_entry.grid(row=row, column=1, padx=5, pady=5, sticky='w')
+
+    def _on_type_changed(self, new_type):
+        """类型改变."""
+        self._init_dynamic_ui()
+
+    def _on_protocol_changed(self, new_protocol):
+        """协议改变."""
+        # 根据协议设置默认端口
+        default_ports = {
+            'sheepdog': '7000',
+            'rbd': '6789',
+            'iscsi': '3260',
+            'nfs': '2049',
+            'http': '80',
+            'https': '443',
+            'ftp': '21',
+            'ftps': '990',
+            'tftp': '69',
+        }
+        if hasattr(self, 'port_entry'):
+            self.port_entry.delete(0, 'end')
+            self.port_entry.insert(0, default_ports.get(new_protocol, ''))
+
+    def _confirm(self):
+        """确认添加."""
+        disk_type = self.type_menu.get()
+        device_type = self.device_menu.get()
+
+        config = {
+            'type': disk_type,
+            'device': device_type,
+            'target_dev': self.target_entry.get().strip(),
+            'bus': self.bus_menu.get(),
+            'readonly': self.readonly_check.get(),
+            'boot_order': self.boot_order_entry.get().strip() or None,
+            'startup_policy': self.startup_menu.get(),
+        }
+
+        # 收集不同类型的配置
+        if disk_type == 'file':
+            config['source'] = self.source_entry.get().strip()
+            config['driver'] = self.driver_menu.get()
+        elif disk_type == 'block':
+            config['source'] = self.source_entry.get().strip()
+        elif disk_type == 'network':
+            config['protocol'] = self.protocol_menu.get()
+            config['source'] = self.source_entry.get().strip()
+            config['host'] = self.host_entry.get().strip()
+            config['port'] = self.port_entry.get().strip()
+            if self.auth_check.get():
+                config['username'] = self.username_entry.get().strip()
+                config['secret'] = self.secret_entry.get().strip()
+        elif disk_type == 'volume':
+            config['pool'] = self.pool_entry.get().strip()
+            config['volume'] = self.volume_entry.get().strip()
+        elif disk_type == 'dir':
+            config['source'] = self.source_entry.get().strip()
+        elif disk_type == 'nvme':
+            config['namespace'] = self.ns_entry.get().strip() or '1'
+            config['pci'] = self.pci_entry.get().strip()
+        elif disk_type == 'vhostuser':
+            config['source'] = self.source_entry.get().strip()
+        elif disk_type == 'vhostvdpa':
+            config['source'] = self.source_entry.get().strip()
+        elif disk_type == 'ctl':
+            config['source'] = self.source_entry.get().strip()
+
+        self.on_confirm_callback(config)
+        self.dialog.destroy()
 
 
 class GraphicsTab(ctk.CTkFrame):
@@ -1082,6 +1615,11 @@ class DevicesTab(ctk.CTkFrame):
             'class': GraphicsTab,
             'default': True,
         },
+        'disk_devices': {
+            'name': '磁盘设备',
+            'class': DiskDevicesTab,
+            'default': False,
+        },
         'usb_hostdev': {
             'name': 'USB 设备',
             'class': USBHostdevTab,
@@ -1174,6 +1712,14 @@ class DevicesTab(ctk.CTkFrame):
             return others_tab.get_controller_config()
         return {'disable_usb': False, 'disable_sound': False}
 
+    def get_disk_devices_config(self) -> list:
+        """获取磁盘设备配置."""
+        disk_tab = self.inner_panel.get_tab_instance('disk_devices')
+        if disk_tab and hasattr(disk_tab, 'get_config'):
+            config = disk_tab.get_config()
+            return config.get('devices', [])
+        return []
+
     def get_hostdev_configs(self) -> dict:
         """获取所有 hostdev 配置."""
         hostdevs = {
@@ -1224,6 +1770,7 @@ class DevicesTab(ctk.CTkFrame):
             'disable_usb': self.get_controller_config().get('disable_usb', False),
             'disable_sound': self.get_controller_config().get('disable_sound', False),
             'hostdevs': self.get_hostdev_configs(),
+            'disk_devices': self.get_disk_devices_config(),
         }
 
     def to_xml(self) -> dict:
@@ -1242,7 +1789,13 @@ class DevicesTab(ctk.CTkFrame):
             'serials': [],
             'sounds': [],
             'hostdevs': [],
+            'disks': [],
         }
+
+        # 添加磁盘设备
+        for disk in devices_config.get('disk_devices', []):
+            disk_xml = self._build_disk_xml(disk)
+            devices['disks'].append(disk_xml)
 
         # 添加 USB 控制器
         hostdevs = devices_config.get('hostdevs', {})
@@ -1257,51 +1810,59 @@ class DevicesTab(ctk.CTkFrame):
 
         # 添加 USB 设备
         for usb_dev in usb_config.get('devices', []):
-            devices['hostdevs'].append({
-                'type': 'usb',
-                'mode': 'subsystem',
-                'source': {
-                    'vendor_product': usb_dev,
-                    'startup_policy': usb_config.get('startup_policy', 'optional'),
-                    'guest_reset': usb_config.get('guest_reset', False),
-                },
-            })
+            devices['hostdevs'].append(
+                {
+                    'type': 'usb',
+                    'mode': 'subsystem',
+                    'source': {
+                        'vendor_product': usb_dev,
+                        'startup_policy': usb_config.get('startup_policy', 'optional'),
+                        'guest_reset': usb_config.get('guest_reset', False),
+                    },
+                }
+            )
 
         # 添加 PCI 设备
         for pci_dev in hostdevs.get('pci', []):
-            devices['hostdevs'].append({
-                'type': 'pci',
-                'mode': 'subsystem',
-                'managed': pci_dev.get('managed', 'yes'),
-                'source': {
-                    'domain': pci_dev.get('domain', '0x0000'),
-                    'bus': pci_dev.get('bus', '0x00'),
-                    'slot': pci_dev.get('slot', '0x00'),
-                    'function': pci_dev.get('function', '0x0'),
-                },
-                'boot_order': pci_dev.get('boot_order'),
-                'rom_bar': pci_dev.get('rom_bar'),
-                'rom_file': pci_dev.get('rom_file'),
-            })
+            devices['hostdevs'].append(
+                {
+                    'type': 'pci',
+                    'mode': 'subsystem',
+                    'managed': pci_dev.get('managed', 'yes'),
+                    'source': {
+                        'domain': pci_dev.get('domain', '0x0000'),
+                        'bus': pci_dev.get('bus', '0x00'),
+                        'slot': pci_dev.get('slot', '0x00'),
+                        'function': pci_dev.get('function', '0x0'),
+                    },
+                    'boot_order': pci_dev.get('boot_order'),
+                    'rom_bar': pci_dev.get('rom_bar'),
+                    'rom_file': pci_dev.get('rom_file'),
+                }
+            )
 
         # 添加 SCSI 设备
         for scsi_dev in hostdevs.get('scsi', []):
-            devices['hostdevs'].append({
-                'type': 'scsi',
-                'mode': 'subsystem',
-                'source': scsi_dev,
-            })
+            devices['hostdevs'].append(
+                {
+                    'type': 'scsi',
+                    'mode': 'subsystem',
+                    'source': scsi_dev,
+                }
+            )
 
         # 添加 MDEV 设备
         for mdev_dev in hostdevs.get('mdev', []):
-            devices['hostdevs'].append({
-                'type': 'mdev',
-                'mode': 'subsystem',
-                'model': mdev_dev.get('model', 'vfio-pci'),
-                'source': {
-                    'uuid': mdev_dev.get('uuid'),
-                },
-            })
+            devices['hostdevs'].append(
+                {
+                    'type': 'mdev',
+                    'mode': 'subsystem',
+                    'model': mdev_dev.get('model', 'vfio-pci'),
+                    'source': {
+                        'uuid': mdev_dev.get('uuid'),
+                    },
+                }
+            )
 
         # 添加串口
         serial_config = devices_config.get('serial', {})
@@ -1319,3 +1880,53 @@ class DevicesTab(ctk.CTkFrame):
             devices['sounds'].append({'model': audio_config['model']})
 
         return {'devices': devices}
+
+    def _build_disk_xml(self, disk: dict) -> dict:
+        """构建磁盘设备 XML 字典."""
+        disk_type = disk.get('type', 'file')
+        device_type = disk.get('device', 'disk')
+
+        disk_xml = {
+            'type': disk_type,
+            'device': device_type,
+            'target': {
+                'dev': disk.get('target_dev', 'vda'),
+                'bus': disk.get('bus', 'virtio'),
+            },
+            'readonly': disk.get('readonly', False),
+            'boot_order': disk.get('boot_order'),
+            'startup_policy': disk.get('startup_policy'),
+        }
+
+        # 根据类型设置 source
+        if disk_type == 'file':
+            disk_xml['source'] = disk.get('source', '')
+            disk_xml['driver'] = disk.get('driver', 'qcow2')
+        elif disk_type == 'block':
+            disk_xml['source'] = disk.get('source', '')
+        elif disk_type == 'network':
+            disk_xml['protocol'] = disk.get('protocol', 'rbd')
+            disk_xml['source'] = disk.get('source', '')
+            disk_xml['host'] = disk.get('host', '')
+            disk_xml['port'] = disk.get('port', '')
+            if disk.get('username') and disk.get('secret'):
+                disk_xml['auth'] = {
+                    'username': disk['username'],
+                    'secret': disk['secret'],
+                }
+        elif disk_type == 'volume':
+            disk_xml['pool'] = disk.get('pool', '')
+            disk_xml['volume'] = disk.get('volume', '')
+        elif disk_type == 'dir':
+            disk_xml['source'] = disk.get('source', '')
+        elif disk_type == 'nvme':
+            disk_xml['namespace'] = disk.get('namespace', '1')
+            disk_xml['pci'] = disk.get('pci', '')
+        elif disk_type == 'vhostuser':
+            disk_xml['source'] = disk.get('source', '')
+        elif disk_type == 'vhostvdpa':
+            disk_xml['source'] = disk.get('source', '')
+        elif disk_type == 'ctl':
+            disk_xml['source'] = disk.get('source', '')
+
+        return disk_xml

@@ -606,7 +606,9 @@ class LibvirtXMLGenerator:
                 ET.SubElement(hostdev_elem, 'boot', order=str(hostdev['boot_order']))
             # ROM BAR
             if hostdev.get('rom_bar'):
-                ET.SubElement(hostdev_elem, 'rom', bar=hostdev['rom_bar'], file=hostdev.get('rom_file', ''))
+                ET.SubElement(
+                    hostdev_elem, 'rom', bar=hostdev['rom_bar'], file=hostdev.get('rom_file', '')
+                )
 
         elif dev_type == 'usb':
             source = ET.SubElement(hostdev_elem, 'source')
