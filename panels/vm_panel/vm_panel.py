@@ -16,7 +16,7 @@ from .styles import (
 )
 from .tab_toggle import TabTogglePanel
 from .xml_generator import LibvirtXMLGenerator
-from .model.vm_config import VMConfig
+from model.vm_model.vm_config import VMConfig
 
 
 class VmPanel(ctk.CTkFrame):
