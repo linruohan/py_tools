@@ -130,9 +130,13 @@ class VmPanel(ctk.CTkFrame):
 
     def init_ui(self) -> None:
         """初始化界面."""
-        # 主框架
+        # 主框架 - 填满整个 VmPanel
         main_frame = ctk.CTkFrame(self, fg_color=BG_COLOR_MAIN, corner_radius=8)
         main_frame.grid(row=0, column=0, padx=10, pady=10, sticky='nsew')
+
+        # 配置 VmPanel 的网格权重
+        self.grid_rowconfigure(0, weight=1)
+        self.grid_columnconfigure(0, weight=1)
 
         # 配置内部网格
         main_frame.grid_rowconfigure(0, weight=0)  # 工具栏

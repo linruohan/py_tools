@@ -85,6 +85,7 @@ class TabTogglePanel(ctk.CTkFrame):
     def __init__(self, master, on_tab_toggle_callback=None, **kwargs):
         super().__init__(master, **kwargs)
         self.configure(fg_color='transparent')
+        self.configure(height=120)  # 设置固定高度
 
         self.on_tab_toggle_callback = on_tab_toggle_callback
         self.toggle_switches = {}
@@ -94,8 +95,10 @@ class TabTogglePanel(ctk.CTkFrame):
 
     def _create_switches(self) -> None:
         """创建所有 Tab 的开关."""
-        # 创建可滚动框架
-        scrollable_frame = ctk.CTkScrollableFrame(self, fg_color='transparent')
+        # 创建可滚动框架，设置固定高度
+        scrollable_frame = ctk.CTkScrollableFrame(
+            self, fg_color='transparent', height=100
+        )
         scrollable_frame.grid(row=0, column=0, sticky='nsew')
         self.grid_columnconfigure(0, weight=1)
         self.grid_rowconfigure(0, weight=1)
@@ -106,11 +109,11 @@ class TabTogglePanel(ctk.CTkFrame):
             text='Tab 显示:',
             font=CTK_FONT_BOLD,
             text_color='#64b5f6',
-        ).pack(anchor='w', padx=5, pady=5)
+        ).pack(anchor='w', padx=5, pady=2)
 
         # 创建开关框架 - 用于网格布局
         switch_frame = ctk.CTkFrame(scrollable_frame, fg_color='transparent')
-        switch_frame.pack(fill='x', pady=5)
+        switch_frame.pack(fill='x', pady=2)
 
         # 创建开关网格 - 5 列 x 5 行
         row, col = 0, 0
@@ -124,7 +127,7 @@ class TabTogglePanel(ctk.CTkFrame):
                 on_change_callback=self._on_toggle,
                 default_on=config.get('default_on', True),
             )
-            switch.grid(row=row, column=col, padx=5, pady=2, sticky='w')
+            switch.grid(row=row, column=col, padx=3, pady=1, sticky='w')
             self.toggle_switches[tab_key] = switch
 
             col += 1
