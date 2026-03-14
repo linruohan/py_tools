@@ -3,7 +3,7 @@
 from .disk import DiskConfigDialog, DiskDevicesTab
 from .graphics import GraphicsTab
 from .hostdev import MdevHostdevTab, PCIHostdevTab, SCSIHostdevTab, USBHostdevTab
-from .main import DevicesTab
+from .devices import DevicesTab
 from .others import OthersTab
 
 __all__ = [

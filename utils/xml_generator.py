@@ -104,6 +104,20 @@ class LibvirtXMLGenerator:
 
         vcpu = ET.SubElement(self.domain, 'vcpu', **vcpu_attrs)
         vcpu.text = str(vcpu_count)
+        
+        # 添加 vcpus 元素
+        vcpu_instances = cpu_alloc.get('vcpu_instances', [])
+        if vcpu_instances:
+            vcpus_elem = ET.SubElement(self.domain, 'vcpus')
+            for instance in vcpu_instances:
+                vcpu_attrs = {
+                    'id': str(instance.get('id', 0)),
+                    'enabled': 'yes' if instance.get('enabled', True) else 'no',
+                    'hotpluggable': 'yes' if instance.get('hotpluggable', False) else 'no'
+                }
+                if 'order' in instance:
+                    vcpu_attrs['order'] = str(instance['order'])
+                ET.SubElement(vcpus_elem, 'vcpu', **vcpu_attrs)
 
         topology = cpu_alloc.get('topology', {})
         if topology:

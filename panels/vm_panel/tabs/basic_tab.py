@@ -3,8 +3,7 @@
 import customtkinter as ctk
 
 from components.base_tab import BaseConfigTab
-from utils.parsers import parse_memory_to_mib
-from utils.styles import BG_COLOR_CONTENT, CTK_FONT_BOLD, CTK_FONT_MAIN, CTK_FONT_SMALL
+from utils.styles import BG_COLOR_CONTENT, CTK_FONT_BOLD, CTK_FONT_MAIN
 
 
 class BasicTab(BaseConfigTab):
@@ -16,53 +15,53 @@ class BasicTab(BaseConfigTab):
 
         # 控件引用
         self.vm_name_entry = None
-        self.vm_desc_entry = None
-        self.uuid_entry = None
-        self.machine_type = None
-        self.virt_type = None
-        self.chipset_type = None
-        self.vcpu_entry = None
-        self.cpu_mode = None
-        self.memory_combo = None
-        self.current_memory_combo = None
-        self.max_memory_combo = None
-        self.swap_entry = None
-        # CPU Topology
-        self.cpu_sockets_entry = None
-        self.cpu_cores_entry = None
-        self.cpu_threads_entry = None
+        # CPU 分配控件
+        self.max_vcpu = None
+        self.current_vcpu = None
+        self.placement = None
+        self.cpuset = None
+        self.sockets = None
+        self.dies = None
+        self.clusters = None
+        self.cores = None
+        self.threads = None
+        # vCPU 实例列表
+        self.vcpu_instances = []
+        # 内存分配控件
+        self.memory = None
+        self.current_memory = None
+        self.max_memory = None
+        self.memory_slots = None
+        self.memory_unit = None
+        self.dump_core = None
 
         super().__init__(master, on_change_callback, **kwargs)
 
     def _init_ui(self) -> None:
         """初始化界面."""
-        # 配置 grid 权重 - 3 列布局
+        # 配置 grid 权重 - 2 列布局
         self.grid_columnconfigure(0, weight=1)
         self.grid_columnconfigure(1, weight=1)
-        self.grid_columnconfigure(2, weight=1)
-        self.grid_rowconfigure(0, weight=1)
+        self.grid_rowconfigure(0, weight=0)
+        self.grid_rowconfigure(1, weight=0)
 
-        # 内存配置选项
-        memory_options = ['1G', '2G', '4G', '8G', '16G', '32G', '64G', '128G']
-
-        # ===== 第 1 列: 系统配置 =====
+        # ===== 第 1 行: 系统配置 =====
         sys_frame = ctk.CTkFrame(self, fg_color=BG_COLOR_CONTENT, corner_radius=8)
-        sys_frame.grid(row=0, column=0, sticky='nsew', padx=5, pady=10)
-        sys_frame.grid_columnconfigure(1, weight=1)
-        # 配置所有行的权重
-        for i in range(8):
-            sys_frame.grid_rowconfigure(i, weight=0)
+        sys_frame.grid(row=0, column=0, columnspan=2, sticky='ew', padx=5, pady=5)
+        sys_frame.grid_columnconfigure(1, weight=0)
+        sys_frame.grid_columnconfigure(2, weight=0)
+        sys_frame.grid_columnconfigure(3, weight=1)
 
-        ctk.CTkLabel(sys_frame, text='系统配置', font=CTK_FONT_BOLD, text_color='#64b5f6').grid(
-            row=0, column=0, columnspan=2, padx=10, pady=5, sticky='w'
-        )
+        ctk.CTkLabel(
+            sys_frame, text='System Configuration', font=CTK_FONT_BOLD, text_color='#64b5f6'
+        ).grid(row=0, column=0, columnspan=4, padx=8, pady=3, sticky='w')
 
         # 架构选择器
-        ctk.CTkLabel(sys_frame, text='架构:', font=CTK_FONT_MAIN, width=90, anchor='w').grid(
-            row=1, column=0, padx=10, pady=5, sticky='w'
-        )
+        ctk.CTkLabel(
+            sys_frame, text='Architecture:', font=CTK_FONT_MAIN, width=80, anchor='w'
+        ).grid(row=1, column=0, padx=8, pady=3, sticky='w')
         arch_frame = ctk.CTkFrame(sys_frame, fg_color='transparent')
-        arch_frame.grid(row=1, column=1, padx=5, pady=5, sticky='ew')
+        arch_frame.grid(row=1, column=1, padx=2, pady=3, sticky='w')
         arch_frame.grid_columnconfigure(0, weight=1)
         arch_frame.grid_columnconfigure(1, weight=1)
 
@@ -74,7 +73,7 @@ class BasicTab(BaseConfigTab):
             command=self._on_arch_change,
             font=CTK_FONT_MAIN,
         )
-        self.arch_x86_radio.grid(row=0, column=0, padx=5, sticky='w')
+        self.arch_x86_radio.grid(row=0, column=0, padx=2, sticky='w')
 
         self.arch_arm_radio = ctk.CTkRadioButton(
             arch_frame,
@@ -84,195 +83,250 @@ class BasicTab(BaseConfigTab):
             command=self._on_arch_change,
             font=CTK_FONT_MAIN,
         )
-        self.arch_arm_radio.grid(row=0, column=1, padx=5, sticky='w')
+        self.arch_arm_radio.grid(row=0, column=1, padx=2, sticky='w')
 
         # 虚拟机名称
-        ctk.CTkLabel(sys_frame, text='虚拟机名称:', font=CTK_FONT_MAIN, width=90, anchor='w').grid(
-            row=2, column=0, padx=10, pady=5, sticky='w'
+        ctk.CTkLabel(sys_frame, text='VM Name:', font=CTK_FONT_MAIN, width=60, anchor='w').grid(
+            row=1, column=2, padx=8, pady=3, sticky='w'
         )
-        self.vm_name_entry = ctk.CTkEntry(sys_frame, placeholder_text='vm-name', width=180)
-        self.vm_name_entry.grid(row=2, column=1, padx=5, pady=5, sticky='ew')
+        self.vm_name_entry = ctk.CTkEntry(sys_frame, placeholder_text='vm-name', width=150)
+        self.vm_name_entry.grid(row=1, column=3, padx=2, pady=3, sticky='ew')
         self.vm_name_entry.insert(0, 'vm0')
         self.vm_name_entry.bind('<KeyRelease>', lambda e: self._trigger_change())
 
-        # 描述
-        ctk.CTkLabel(sys_frame, text='描述:', font=CTK_FONT_MAIN, width=90, anchor='w').grid(
-            row=3, column=0, padx=10, pady=5, sticky='w'
-        )
-        self.vm_desc_entry = ctk.CTkEntry(sys_frame, placeholder_text='虚拟机描述', width=180)
-        self.vm_desc_entry.grid(row=3, column=1, padx=5, pady=5, sticky='ew')
-        self.vm_desc_entry.bind('<KeyRelease>', lambda e: self._trigger_change())
+        # ===== 第 2 行: CPU 分配配置 =====
+        from components.base_tab import create_three_column_layout
 
-        # UUID
-        ctk.CTkLabel(sys_frame, text='UUID:', font=CTK_FONT_MAIN, width=90, anchor='w').grid(
-            row=4, column=0, padx=10, pady=5, sticky='w'
-        )
-        self.uuid_entry = ctk.CTkEntry(sys_frame, placeholder_text='自动生成', width=180)
-        self.uuid_entry.grid(row=4, column=1, padx=5, pady=5, sticky='ew')
-        self.uuid_entry.bind('<KeyRelease>', lambda e: self._trigger_change())
-
-        # 机型
-        ctk.CTkLabel(sys_frame, text='机型:', font=CTK_FONT_MAIN, width=90, anchor='w').grid(
-            row=5, column=0, padx=10, pady=5, sticky='w'
-        )
-        self.machine_type = ctk.CTkOptionMenu(
-            sys_frame,
-            values=['q35', 'pc', 'pc-i440fx', 'virt', 'arm-virt'],
-            width=180,
-            font=CTK_FONT_SMALL,
-        )
-        self.machine_type.set('virt')
-        self.machine_type.grid(row=5, column=1, padx=5, pady=5, sticky='ew')
-        self.machine_type.configure(command=self._trigger_change)
-
-        # 虚拟化类型
-        ctk.CTkLabel(sys_frame, text='虚拟化:', font=CTK_FONT_MAIN, width=90, anchor='w').grid(
-            row=6, column=0, padx=10, pady=5, sticky='w'
-        )
-        self.virt_type = ctk.CTkOptionMenu(
-            sys_frame, values=['hvm', 'pv', 'exe'], width=180, font=CTK_FONT_SMALL
-        )
-        self.virt_type.set('hvm')
-        self.virt_type.grid(row=6, column=1, padx=5, pady=5, sticky='ew')
-        self.virt_type.configure(command=self._trigger_change)
-
-        # 芯片组
-        ctk.CTkLabel(sys_frame, text='芯片组:', font=CTK_FONT_MAIN, width=90, anchor='w').grid(
-            row=7, column=0, padx=10, pady=5, sticky='w'
-        )
-        self.chipset_type = ctk.CTkOptionMenu(
-            sys_frame, values=['PIIX3', 'PIIX4', 'Q35', 'virtio'], width=180, font=CTK_FONT_SMALL
-        )
-        self.chipset_type.set('virtio')
-        self.chipset_type.grid(row=7, column=1, padx=5, pady=5, sticky='ew')
-        self.chipset_type.configure(command=self._trigger_change)
-
-        # ===== 第 2 列: CPU 配置 =====
-        cpu_frame = ctk.CTkFrame(self, fg_color=BG_COLOR_CONTENT, corner_radius=8)
-        cpu_frame.grid(row=0, column=1, sticky='nsew', padx=5, pady=10)
+        cpu_frame = ctk.CTkFrame(self, fg_color='transparent')
+        cpu_frame.grid(row=1, column=0, sticky='nsew', padx=5, pady=5)
+        cpu_frame.grid_columnconfigure(0, weight=1)
         cpu_frame.grid_columnconfigure(1, weight=1)
-        # 配置所有行的权重
-        for i in range(6):
-            cpu_frame.grid_rowconfigure(i, weight=0)
+        cpu_frame.grid_columnconfigure(2, weight=1)
+        cpu_frame.grid_rowconfigure(0, weight=1)
 
-        ctk.CTkLabel(cpu_frame, text='CPU 配置', font=CTK_FONT_BOLD, text_color='#4caf50').grid(
-            row=0, column=0, columnspan=2, padx=10, pady=5, sticky='w'
-        )
-
-        # vCPU 数量
-        ctk.CTkLabel(cpu_frame, text='vCPU:', font=CTK_FONT_MAIN, width=90, anchor='w').grid(
-            row=1, column=0, padx=10, pady=5, sticky='w'
-        )
-        self.vcpu_entry = ctk.CTkEntry(cpu_frame, placeholder_text='2', width=180)
-        self.vcpu_entry.grid(row=1, column=1, padx=5, pady=5, sticky='ew')
-        self.vcpu_entry.insert(0, '2')
-        self.vcpu_entry.bind('<KeyRelease>', lambda e: self._trigger_change())
-
-        # CPU 模式
-        ctk.CTkLabel(cpu_frame, text='CPU 模式:', font=CTK_FONT_MAIN, width=90, anchor='w').grid(
-            row=2, column=0, padx=10, pady=5, sticky='w'
-        )
-        self.cpu_mode = ctk.CTkOptionMenu(
+        left_frame, mid_frame, right_frame = create_three_column_layout(
             cpu_frame,
-            values=['host-passthrough', 'host-model', 'custom', 'host-model-required'],
-            width=180,
-            font=CTK_FONT_SMALL,
+            left_title='vCPU 配置',
+            mid_title='CPU 拓扑',
+            right_title='vCPU 状态',
+            left_color='#64b5f6',
+            mid_color='#4caf50',
+            right_color='#ff9800',
         )
-        self.cpu_mode.set('host-model')
-        self.cpu_mode.grid(row=2, column=1, padx=5, pady=5, sticky='ew')
-        self.cpu_mode.configure(command=self._trigger_change)
 
-        # CPU Topology - Sockets
-        ctk.CTkLabel(cpu_frame, text='Sockets:', font=CTK_FONT_MAIN, width=90, anchor='w').grid(
-            row=3, column=0, padx=10, pady=5, sticky='w'
+        # 左侧面板 - vCPU 配置
+        self.max_vcpu = self._create_label_entry(
+            left_frame, '最大 vCPU:', placeholder='2', default_value='2', width=100, row=1
         )
-        self.cpu_sockets_entry = ctk.CTkEntry(cpu_frame, width=180, font=CTK_FONT_SMALL)
-        self.cpu_sockets_entry.grid(row=3, column=1, padx=5, pady=5, sticky='ew')
-        self.cpu_sockets_entry.insert(0, '1')
-        self.cpu_sockets_entry.bind('<KeyRelease>', lambda e: self._trigger_change())
-
-        # CPU Topology - Cores
-        ctk.CTkLabel(cpu_frame, text='Cores:', font=CTK_FONT_MAIN, width=90, anchor='w').grid(
-            row=4, column=0, padx=10, pady=5, sticky='w'
+        self.current_vcpu = self._create_label_entry(
+            left_frame, '当前 vCPU:', placeholder='2', default_value='2', width=100, row=2
         )
-        self.cpu_cores_entry = ctk.CTkEntry(cpu_frame, width=180, font=CTK_FONT_SMALL)
-        self.cpu_cores_entry.grid(row=4, column=1, padx=5, pady=5, sticky='ew')
-        self.cpu_cores_entry.insert(0, '2')
-        self.cpu_cores_entry.bind('<KeyRelease>', lambda e: self._trigger_change())
-
-        # CPU Topology - Threads
-        ctk.CTkLabel(cpu_frame, text='Threads:', font=CTK_FONT_MAIN, width=90, anchor='w').grid(
-            row=5, column=0, padx=10, pady=5, sticky='w'
+        self.placement = self._create_label_option(
+            left_frame, '放置模式:', ['static', 'auto'], 'static', width=100, row=3
         )
-        self.cpu_threads_entry = ctk.CTkEntry(cpu_frame, width=180, font=CTK_FONT_SMALL)
-        self.cpu_threads_entry.grid(row=5, column=1, padx=5, pady=5, sticky='ew')
-        self.cpu_threads_entry.insert(0, '1')
-        self.cpu_threads_entry.bind('<KeyRelease>', lambda e: self._trigger_change())
+        self.cpuset = self._create_label_entry(
+            left_frame, 'CPU 亲和性:', placeholder='1-4,^3', width=150, row=4
+        )
 
-        # ===== 第 3 列: 内存配置 =====
-        mem_frame = ctk.CTkFrame(self, fg_color=BG_COLOR_CONTENT, corner_radius=8)
-        mem_frame.grid(row=0, column=2, sticky='nsew', padx=5, pady=10)
+        # 中间面板 - CPU 拓扑
+        self.sockets = self._create_label_entry(
+            mid_frame,
+            'Sockets:',
+            placeholder='1',
+            default_value='1',
+            width=80,
+            row=1,
+            label_width=80,
+        )
+        self.dies = self._create_label_entry(
+            mid_frame, 'Dies:', placeholder='1', default_value='1', width=80, row=2, label_width=80
+        )
+        self.clusters = self._create_label_entry(
+            mid_frame,
+            'Clusters:',
+            placeholder='1',
+            default_value='1',
+            width=80,
+            row=3,
+            label_width=80,
+        )
+        self.cores = self._create_label_entry(
+            mid_frame, 'Cores:', placeholder='2', default_value='2', width=80, row=4, label_width=80
+        )
+        self.threads = self._create_label_entry(
+            mid_frame,
+            'Threads:',
+            placeholder='1',
+            default_value='1',
+            width=80,
+            row=5,
+            label_width=80,
+        )
+
+        # 右侧面板 - vCPU 状态
+        # 添加/删除 vCPU 实例按钮
+        btn_frame = ctk.CTkFrame(right_frame, fg_color='transparent')
+        btn_frame.grid(row=1, column=0, columnspan=2, sticky='ew', pady=5)
+        btn_frame.grid_columnconfigure(0, weight=1)
+        btn_frame.grid_columnconfigure(1, weight=1)
+
+        add_btn = ctk.CTkButton(
+            btn_frame,
+            text='添加 vCPU',
+            font=CTK_FONT_MAIN,
+            command=lambda: self._add_vcpu_instance(right_frame),
+        )
+        add_btn.grid(row=0, column=0, padx=2, pady=2, sticky='ew')
+
+        remove_btn = ctk.CTkButton(
+            btn_frame,
+            text='删除 vCPU',
+            font=CTK_FONT_MAIN,
+            command=lambda: self._remove_vcpu_instance(right_frame),
+        )
+        remove_btn.grid(row=0, column=1, padx=2, pady=2, sticky='ew')
+
+        # vCPU 实例列表容器
+        self.vcpu_list_frame = ctk.CTkFrame(right_frame, fg_color='transparent')
+        self.vcpu_list_frame.grid(row=2, column=0, columnspan=2, sticky='nsew')
+        self.vcpu_list_frame.grid_columnconfigure(0, weight=1)
+
+        # 添加默认 vCPU 实例
+        self._add_vcpu_instance(right_frame)
+
+        # ===== 第 2 行: 内存分配配置 =====
+        from components.base_tab import create_two_column_layout
+        from utils.parsers import MEMORY_OPTIONS
+
+        mem_frame = ctk.CTkFrame(self, fg_color='transparent')
+        mem_frame.grid(row=1, column=1, sticky='nsew', padx=5, pady=5)
+        mem_frame.grid_columnconfigure(0, weight=1)
         mem_frame.grid_columnconfigure(1, weight=1)
-        # 配置所有行的权重
-        for i in range(5):
-            mem_frame.grid_rowconfigure(i, weight=0)
+        mem_frame.grid_rowconfigure(0, weight=1)
 
-        ctk.CTkLabel(mem_frame, text='内存配置', font=CTK_FONT_BOLD, text_color='#81c784').grid(
-            row=0, column=0, columnspan=2, padx=10, pady=5, sticky='w'
+        left_frame, right_frame = create_two_column_layout(
+            mem_frame,
+            left_title='内存配置',
+            right_title='单位设置',
+            left_color='#64b5f6',
+            right_color='#4caf50',
         )
 
-        # 内存大小
-        ctk.CTkLabel(mem_frame, text='内存:', font=CTK_FONT_MAIN, width=90, anchor='w').grid(
-            row=1, column=0, padx=10, pady=5, sticky='w'
+        # 左侧面板 - 内存配置
+        self.memory = self._create_label_option(left_frame, '内存:', MEMORY_OPTIONS, '2G', row=1)
+        self.current_memory = self._create_label_option(
+            left_frame, '当前内存:', MEMORY_OPTIONS, '2G', row=2
         )
-        self.memory_combo = ctk.CTkOptionMenu(
-            mem_frame, values=memory_options, width=180, font=CTK_FONT_SMALL
+        self.max_memory = self._create_label_option(
+            left_frame, '最大内存:', MEMORY_OPTIONS, '4G', row=3
         )
-        self.memory_combo.set('2G')
-        self.memory_combo.grid(row=1, column=1, padx=5, pady=5, sticky='ew')
-        self.memory_combo.configure(command=self._trigger_change)
+        self.memory_slots = self._create_label_entry(
+            left_frame, '内存槽位:', placeholder='16', default_value='16', width=80, row=4
+        )
 
-        # 当前内存
-        ctk.CTkLabel(mem_frame, text='当前内存:', font=CTK_FONT_MAIN, width=90, anchor='w').grid(
-            row=2, column=0, padx=10, pady=5, sticky='w'
+        # 右侧面板 - 单位设置
+        self.memory_unit = self._create_label_option(
+            right_frame,
+            '单位:',
+            ['KiB', 'MiB', 'GiB', 'TiB', 'KB', 'MB', 'GB', 'TB', 'b', 'bytes'],
+            'KiB',
+            width=80,
+            row=1,
         )
-        self.current_memory_combo = ctk.CTkOptionMenu(
-            mem_frame, values=memory_options, width=180, font=CTK_FONT_SMALL
+        self.dump_core = self._create_label_option(
+            right_frame, 'Dump Core:', ['on', 'off'], 'on', width=80, row=2
         )
-        self.current_memory_combo.set('2G')
-        self.current_memory_combo.grid(row=2, column=1, padx=5, pady=5, sticky='ew')
-        self.current_memory_combo.configure(command=self._trigger_change)
 
-        # 最大内存
-        ctk.CTkLabel(mem_frame, text='最大内存:', font=CTK_FONT_MAIN, width=90, anchor='w').grid(
-            row=3, column=0, padx=10, pady=5, sticky='w'
+        # 说明信息
+        self._create_section_title(right_frame, '说明', text_color='#ff9800', row=3)
+        info_text = (
+            '内存 (memory):\n'
+            '启动时分配的最大内存.\n\n'
+            '当前内存 (currentMemory):\n'
+            '实际分配的内存,可以小于\n'
+            '最大值以支持内存气球.\n\n'
+            '最大内存 (maxMemory):\n'
+            '运行时可通过热插拔增加\n'
+            '到的最大内存限制.'
         )
-        self.max_memory_combo = ctk.CTkOptionMenu(
-            mem_frame, values=memory_options, width=180, font=CTK_FONT_SMALL
-        )
-        self.max_memory_combo.set('4G')
-        self.max_memory_combo.grid(row=3, column=1, padx=5, pady=5, sticky='ew')
-        self.max_memory_combo.configure(command=self._trigger_change)
-
-        # 交换内存
-        ctk.CTkLabel(
-            mem_frame, text='交换内存 (MB):', font=CTK_FONT_MAIN, width=90, anchor='w'
-        ).grid(row=4, column=0, padx=10, pady=5, sticky='w')
-        self.swap_entry = ctk.CTkEntry(
-            mem_frame, placeholder_text='0', width=180, font=CTK_FONT_SMALL
-        )
-        self.swap_entry.grid(row=4, column=1, padx=5, pady=5, sticky='ew')
-        self.swap_entry.insert(0, '0')
-        self.swap_entry.bind('<KeyRelease>', lambda e: self._trigger_change())
+        self._create_info_label(right_frame, info_text, row=4)
 
     def _on_arch_change(self):
-        """架构切换时更新机型."""
-        arch = self.arch_type.get()
-        if arch == 'x86':
-            self.machine_type.set('virt')
-        elif arch == 'arm':
-            self.machine_type.set('arm-virt')
+        """架构切换时的处理."""
         self._trigger_change()
+
+    def _add_vcpu_instance(self, parent):
+        """添加 vCPU 实例.
+
+        Args:
+            parent: 父容器
+        """
+        # 计算新 vCPU ID
+        new_id = len(self.vcpu_instances)
+
+        # 创建 vCPU 实例框架
+        instance_frame = ctk.CTkFrame(self.vcpu_list_frame, fg_color='#f0f0f0', corner_radius=4)
+        instance_frame.grid(row=len(self.vcpu_instances), column=0, sticky='ew', pady=2, padx=2)
+        instance_frame.grid_columnconfigure(0, weight=1)
+        instance_frame.grid_columnconfigure(1, weight=1)
+        instance_frame.grid_columnconfigure(2, weight=1)
+        instance_frame.grid_columnconfigure(3, weight=1)
+
+        # vCPU ID
+        id_entry = ctk.CTkEntry(instance_frame, placeholder_text=str(new_id), width=60)
+        id_entry.grid(row=0, column=0, padx=2, pady=2, sticky='ew')
+        id_entry.insert(0, str(new_id))
+        id_entry.bind('<KeyRelease>', lambda e: self._trigger_change())
+
+        # 启用状态
+        enabled_var = ctk.BooleanVar(value=True if new_id == 0 else False)
+        enabled_checkbox = ctk.CTkCheckBox(instance_frame, text='启用', variable=enabled_var)
+        enabled_checkbox.grid(row=0, column=1, padx=2, pady=2, sticky='w')
+        enabled_var.trace('w', lambda *args: self._trigger_change())
+
+        # 热插拔
+        hotpluggable_var = ctk.BooleanVar(value=False if new_id == 0 else True)
+        hotpluggable_checkbox = ctk.CTkCheckBox(
+            instance_frame, text='热插拔', variable=hotpluggable_var
+        )
+        hotpluggable_checkbox.grid(row=0, column=2, padx=2, pady=2, sticky='w')
+        hotpluggable_var.trace('w', lambda *args: self._trigger_change())
+
+        # 顺序
+        order_entry = ctk.CTkEntry(instance_frame, placeholder_text=str(new_id + 1), width=60)
+        order_entry.grid(row=0, column=3, padx=2, pady=2, sticky='ew')
+        order_entry.insert(0, str(new_id + 1))
+        order_entry.bind('<KeyRelease>', lambda e: self._trigger_change())
+
+        # 保存实例信息
+        self.vcpu_instances.append(
+            {
+                'frame': instance_frame,
+                'id': id_entry,
+                'enabled': enabled_var,
+                'hotpluggable': hotpluggable_var,
+                'order': order_entry,
+            }
+        )
+
+        # 触发配置变更
+        self._trigger_change()
+
+    def _remove_vcpu_instance(self, parent):
+        """删除 vCPU 实例.
+
+        Args:
+            parent: 父容器
+        """
+        if len(self.vcpu_instances) > 1:
+            # 获取最后一个实例
+            instance = self.vcpu_instances[-1]
+            # 销毁框架
+            instance['frame'].destroy()
+            # 从列表中移除
+            self.vcpu_instances.pop()
+            # 触发配置变更
+            self._trigger_change()
 
     def get_basic_config(self) -> dict:
         """获取基础配置.
@@ -280,25 +334,41 @@ class BasicTab(BaseConfigTab):
         Returns:
             包含基础配置数据的字典
         """
+        from utils.parsers import parse_integer_value, parse_memory_to_kib
+
         return {
             'arch': self.arch_type.get(),
             'name': self.vm_name_entry.get().strip() or 'vm0',
-            'description': self.vm_desc_entry.get().strip(),
-            'uuid': self.uuid_entry.get().strip(),
-            'machine': self.machine_type.get(),
-            'virt_type': self.virt_type.get(),
-            'chipset': self.chipset_type.get(),
-            'vcpu': int(self.vcpu_entry.get().strip() or '2'),
-            'cpu_mode': self.cpu_mode.get(),
-            'cpu_topology': {
-                'sockets': int(self.cpu_sockets_entry.get().strip() or '1'),
-                'cores': int(self.cpu_cores_entry.get().strip() or '2'),
-                'threads': int(self.cpu_threads_entry.get().strip() or '1'),
+            'cpu_allocation': {
+                'max_vcpu': parse_integer_value(self.max_vcpu.get(), default=2),
+                'current_vcpu': parse_integer_value(self.current_vcpu.get(), default=2),
+                'placement': self.placement.get(),
+                'cpuset': self.cpuset.get().strip(),
+                'topology': {
+                    'sockets': parse_integer_value(self.sockets.get(), default=1),
+                    'dies': parse_integer_value(self.dies.get(), default=1),
+                    'clusters': parse_integer_value(self.clusters.get(), default=1),
+                    'cores': parse_integer_value(self.cores.get(), default=2),
+                    'threads': parse_integer_value(self.threads.get(), default=1),
+                },
+                'vcpu_instances': [
+                    {
+                        'id': parse_integer_value(instance['id'].get(), default=i),
+                        'enabled': instance['enabled'].get(),
+                        'hotpluggable': instance['hotpluggable'].get(),
+                        'order': parse_integer_value(instance['order'].get(), default=i + 1),
+                    }
+                    for i, instance in enumerate(self.vcpu_instances)
+                ],
             },
-            'memory': parse_memory_to_mib(self.memory_combo.get()),
-            'current_memory': parse_memory_to_mib(self.current_memory_combo.get()),
-            'max_memory': parse_memory_to_mib(self.max_memory_combo.get()),
-            'swap': int(self.swap_entry.get().strip() or '0'),
+            'memory_allocation': {
+                'memory': parse_memory_to_kib(self.memory.get()),
+                'current_memory': parse_memory_to_kib(self.current_memory.get()),
+                'max_memory': parse_memory_to_kib(self.max_memory.get()),
+                'memory_slots': parse_integer_value(self.memory_slots.get(), default=16),
+                'unit': self.memory_unit.get(),
+                'dump_core': self.dump_core.get(),
+            },
         }
 
     def get_config(self) -> dict:
@@ -314,31 +384,14 @@ class BasicTab(BaseConfigTab):
         config = self.get_basic_config()
         return {
             'name': config['name'],
-            'title': config.get('description', ''),
-            'description': config.get('description', ''),
-            'uuid': config.get('uuid', ''),
-            'memory_allocation': {
-                'memory': config['memory'] * 1024,
-                'current_memory': config['current_memory'] * 1024,
-                'max_memory': config['max_memory'] * 1024,
-                'unit': 'KiB',
-            },
-            'cpu_allocation': {
-                'max_vcpu': config['vcpu'],
-                'current_vcpu': config['vcpu'],
-                'placement': 'static',
-                'topology': config.get('cpu_topology', {}),
-            },
-            'cpu_model_topology': {
-                'model': {
-                    'mode': config.get('cpu_mode', 'host-model'),
-                },
-            },
+            'title': '',
+            'description': '',
+            'memory_allocation': config.get('memory_allocation', {}),
+            'cpu_allocation': config.get('cpu_allocation', {}),
             'os_booting': {
                 'type': 'guest_firmware',
                 'os_type': 'hvm',
                 'arch': config.get('arch', 'x86_64'),
-                'machine': config.get('machine', 'q35'),
             },
         }
 
@@ -352,66 +405,194 @@ class BasicTab(BaseConfigTab):
         if 'name' in config:
             self.vm_name_entry.delete(0, ctk.END)
             self.vm_name_entry.insert(0, config['name'])
-        if 'description' in config:
-            self.vm_desc_entry.delete(0, ctk.END)
-            self.vm_desc_entry.insert(0, config['description'])
-        if 'uuid' in config:
-            self.uuid_entry.delete(0, ctk.END)
-            self.uuid_entry.insert(0, config['uuid'])
-        if 'machine' in config:
-            self.machine_type.set(config['machine'])
-        if 'virt_type' in config:
-            self.virt_type.set(config['virt_type'])
-        if 'chipset' in config:
-            self.chipset_type.set(config['chipset'])
         if 'arch' in config:
             self.arch_type.set(config['arch'])
             self._on_arch_change()
 
-        # CPU 配置
-        if 'vcpu' in config:
-            self.vcpu_entry.delete(0, ctk.END)
-            self.vcpu_entry.insert(0, str(config['vcpu']))
-        if 'cpu_mode' in config:
-            self.cpu_mode.set(config['cpu_mode'])
-        if 'cpu_topology' in config:
-            topology = config['cpu_topology']
-            if 'sockets' in topology:
-                self.cpu_sockets_entry.delete(0, ctk.END)
-                self.cpu_sockets_entry.insert(0, str(topology['sockets']))
-            if 'cores' in topology:
-                self.cpu_cores_entry.delete(0, ctk.END)
-                self.cpu_cores_entry.insert(0, str(topology['cores']))
-            if 'threads' in topology:
-                self.cpu_threads_entry.delete(0, ctk.END)
-                self.cpu_threads_entry.insert(0, str(topology['threads']))
+        # CPU 分配配置
+        if 'cpu_allocation' in config:
+            cpu_alloc = config['cpu_allocation']
+            if 'max_vcpu' in cpu_alloc:
+                self.max_vcpu.delete(0, ctk.END)
+                self.max_vcpu.insert(0, str(cpu_alloc['max_vcpu']))
+            if 'current_vcpu' in cpu_alloc:
+                self.current_vcpu.delete(0, ctk.END)
+                self.current_vcpu.insert(0, str(cpu_alloc['current_vcpu']))
+            if 'placement' in cpu_alloc:
+                self.placement.set(cpu_alloc['placement'])
+            if 'cpuset' in cpu_alloc:
+                self.cpuset.delete(0, ctk.END)
+                self.cpuset.insert(0, cpu_alloc['cpuset'])
+            if 'topology' in cpu_alloc:
+                topology = cpu_alloc['topology']
+                if 'sockets' in topology:
+                    self.sockets.delete(0, ctk.END)
+                    self.sockets.insert(0, str(topology['sockets']))
+                if 'dies' in topology:
+                    self.dies.delete(0, ctk.END)
+                    self.dies.insert(0, str(topology['dies']))
+                if 'clusters' in topology:
+                    self.clusters.delete(0, ctk.END)
+                    self.clusters.insert(0, str(topology['clusters']))
+                if 'cores' in topology:
+                    self.cores.delete(0, ctk.END)
+                    self.cores.insert(0, str(topology['cores']))
+                if 'threads' in topology:
+                    self.threads.delete(0, ctk.END)
+                    self.threads.insert(0, str(topology['threads']))
+            if 'vcpu_instances' in cpu_alloc:
+                # 清空现有实例
+                for instance in self.vcpu_instances:
+                    instance['frame'].destroy()
+                self.vcpu_instances = []
 
-        # 内存配置
-        if 'memory' in config:
-            memory = config['memory']
-            if isinstance(memory, int):
+                # 加载 vCPU 实例
+                for vcpu_instance in cpu_alloc['vcpu_instances']:
+                    # 创建实例
+                    new_id = len(self.vcpu_instances)
+                    instance_frame = ctk.CTkFrame(
+                        self.vcpu_list_frame, fg_color='#f0f0f0', corner_radius=4
+                    )
+                    instance_frame.grid(row=new_id, column=0, sticky='ew', pady=2, padx=2)
+                    instance_frame.grid_columnconfigure(0, weight=1)
+                    instance_frame.grid_columnconfigure(1, weight=1)
+                    instance_frame.grid_columnconfigure(2, weight=1)
+                    instance_frame.grid_columnconfigure(3, weight=1)
+
+                    # vCPU ID
+                    id_entry = ctk.CTkEntry(instance_frame, placeholder_text=str(new_id), width=60)
+                    id_entry.grid(row=0, column=0, padx=2, pady=2, sticky='ew')
+                    id_entry.insert(0, str(vcpu_instance.get('id', new_id)))
+                    id_entry.bind('<KeyRelease>', lambda e: self._trigger_change())
+
+                    # 启用状态
+                    enabled_var = ctk.BooleanVar(
+                        value=vcpu_instance.get('enabled', True if new_id == 0 else False)
+                    )
+                    enabled_checkbox = ctk.CTkCheckBox(
+                        instance_frame, text='启用', variable=enabled_var
+                    )
+                    enabled_checkbox.grid(row=0, column=1, padx=2, pady=2, sticky='w')
+                    enabled_var.trace('w', lambda *args: self._trigger_change())
+
+                    # 热插拔
+                    hotpluggable_var = ctk.BooleanVar(
+                        value=vcpu_instance.get('hotpluggable', False if new_id == 0 else True)
+                    )
+                    hotpluggable_checkbox = ctk.CTkCheckBox(
+                        instance_frame, text='热插拔', variable=hotpluggable_var
+                    )
+                    hotpluggable_checkbox.grid(row=0, column=2, padx=2, pady=2, sticky='w')
+                    hotpluggable_var.trace('w', lambda *args: self._trigger_change())
+
+                    # 顺序
+                    order_entry = ctk.CTkEntry(
+                        instance_frame, placeholder_text=str(new_id + 1), width=60
+                    )
+                    order_entry.grid(row=0, column=3, padx=2, pady=2, sticky='ew')
+                    order_entry.insert(0, str(vcpu_instance.get('order', new_id + 1)))
+                    order_entry.bind('<KeyRelease>', lambda e: self._trigger_change())
+
+                    # 保存实例信息
+                    self.vcpu_instances.append(
+                        {
+                            'frame': instance_frame,
+                            'id': id_entry,
+                            'enabled': enabled_var,
+                            'hotpluggable': hotpluggable_var,
+                            'order': order_entry,
+                        }
+                    )
+            elif 'vcpu_state' in cpu_alloc:
+                # 兼容旧格式
+                vcpu_state = cpu_alloc['vcpu_state']
+                # 清空现有实例
+                for instance in self.vcpu_instances:
+                    instance['frame'].destroy()
+                self.vcpu_instances = []
+
+                # 创建单个实例
+                instance_frame = ctk.CTkFrame(
+                    self.vcpu_list_frame, fg_color='#f0f0f0', corner_radius=4
+                )
+                instance_frame.grid(row=0, column=0, sticky='ew', pady=2, padx=2)
+                instance_frame.grid_columnconfigure(0, weight=1)
+                instance_frame.grid_columnconfigure(1, weight=1)
+                instance_frame.grid_columnconfigure(2, weight=1)
+                instance_frame.grid_columnconfigure(3, weight=1)
+
+                # vCPU ID
+                id_entry = ctk.CTkEntry(instance_frame, placeholder_text='0', width=60)
+                id_entry.grid(row=0, column=0, padx=2, pady=2, sticky='ew')
+                id_entry.insert(0, str(vcpu_state.get('id', 0)))
+                id_entry.bind('<KeyRelease>', lambda e: self._trigger_change())
+
+                # 启用状态
+                enabled_var = ctk.BooleanVar(value=vcpu_state.get('enabled', True))
+                enabled_checkbox = ctk.CTkCheckBox(
+                    instance_frame, text='启用', variable=enabled_var
+                )
+                enabled_checkbox.grid(row=0, column=1, padx=2, pady=2, sticky='w')
+                enabled_var.trace('w', lambda *args: self._trigger_change())
+
+                # 热插拔
+                hotpluggable_var = ctk.BooleanVar(value=vcpu_state.get('hotpluggable', False))
+                hotpluggable_checkbox = ctk.CTkCheckBox(
+                    instance_frame, text='热插拔', variable=hotpluggable_var
+                )
+                hotpluggable_checkbox.grid(row=0, column=2, padx=2, pady=2, sticky='w')
+                hotpluggable_var.trace('w', lambda *args: self._trigger_change())
+
+                # 顺序
+                order_entry = ctk.CTkEntry(instance_frame, placeholder_text='1', width=60)
+                order_entry.grid(row=0, column=3, padx=2, pady=2, sticky='ew')
+                order_entry.insert(0, str(vcpu_state.get('order', 1)))
+                order_entry.bind('<KeyRelease>', lambda e: self._trigger_change())
+
+                # 保存实例信息
+                self.vcpu_instances.append(
+                    {
+                        'frame': instance_frame,
+                        'id': id_entry,
+                        'enabled': enabled_var,
+                        'hotpluggable': hotpluggable_var,
+                        'order': order_entry,
+                    }
+                )
+
+        # 内存分配配置
+        if 'memory_allocation' in config:
+            mem_alloc = config['memory_allocation']
+            if 'memory' in mem_alloc:
+                memory = mem_alloc['memory']
                 # 转换为 GB 显示
-                memory_gb = memory // 1024
-                if memory_gb > 0:
-                    self.memory_combo.set(f'{memory_gb}G')
-                else:
-                    self.memory_combo.set('1G')
-        if 'current_memory' in config:
-            current_memory = config['current_memory']
-            if isinstance(current_memory, int):
-                current_memory_gb = current_memory // 1024
-                if current_memory_gb > 0:
-                    self.current_memory_combo.set(f'{current_memory_gb}G')
-                else:
-                    self.current_memory_combo.set('1G')
-        if 'max_memory' in config:
-            max_memory = config['max_memory']
-            if isinstance(max_memory, int):
-                max_memory_gb = max_memory // 1024
-                if max_memory_gb > 0:
-                    self.max_memory_combo.set(f'{max_memory_gb}G')
-                else:
-                    self.max_memory_combo.set('2G')
-        if 'swap' in config:
-            self.swap_entry.delete(0, ctk.END)
-            self.swap_entry.insert(0, str(config['swap']))
+                if isinstance(memory, int):
+                    # 从 KiB 转换为 GB
+                    memory_gb = memory // (1024 * 1024)
+                    if memory_gb > 0:
+                        self.memory.set(f'{memory_gb}G')
+                    else:
+                        self.memory.set('1G')
+            if 'current_memory' in mem_alloc:
+                current_memory = mem_alloc['current_memory']
+                if isinstance(current_memory, int):
+                    current_memory_gb = current_memory // (1024 * 1024)
+                    if current_memory_gb > 0:
+                        self.current_memory.set(f'{current_memory_gb}G')
+                    else:
+                        self.current_memory.set('1G')
+            if 'max_memory' in mem_alloc:
+                max_memory = mem_alloc['max_memory']
+                if isinstance(max_memory, int):
+                    max_memory_gb = max_memory // (1024 * 1024)
+                    if max_memory_gb > 0:
+                        self.max_memory.set(f'{max_memory_gb}G')
+                    else:
+                        self.max_memory.set('4G')
+            if 'memory_slots' in mem_alloc:
+                self.memory_slots.delete(0, ctk.END)
+                self.memory_slots.insert(0, str(mem_alloc['memory_slots']))
+            if 'unit' in mem_alloc:
+                self.memory_unit.set(mem_alloc['unit'])
+            if 'dump_core' in mem_alloc:
+                self.dump_core.set(mem_alloc['dump_core'])

@@ -82,7 +82,7 @@ class HomePanel(ctk.CTkFrame):
         # 在主窗口右侧打开对话框
         dialog_x = x + width + 20
         dialog_y = y + height
-        dialog = ctk.CTkInputDialog(text='请输入:', title='旁边对话框')
+        dialog = ctk.CTkInputDialog(text='Please input:', title='Side Dialog')
 
         # 多次尝试确保位置设置成功
         def set_pos():

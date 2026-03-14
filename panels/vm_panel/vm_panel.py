@@ -214,7 +214,7 @@ class VmPanel(ctk.CTkFrame):
         # 标题
         title_label = ctk.CTkLabel(
             toolbar,
-            text='虚拟机 XML 配置生成器',
+            text='VM XML Configuration Generator',
             font=CTK_FONT_BOLD,
             text_color='#64b5f6',
         )
@@ -310,7 +310,7 @@ class VmPanel(ctk.CTkFrame):
         # 预览区标题
         preview_label = ctk.CTkLabel(
             preview_frame,
-            text='XML 预览',
+            text='XML Preview',
             font=CTK_FONT_BOLD,
             text_color='#ffb74d',
         )

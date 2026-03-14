@@ -97,7 +97,7 @@ class JsonPanel(ctk.CTkFrame):
         # 标题
         title_label = ctk.CTkLabel(
             top_frame,
-            text='JSON 数据输入',
+            text='JSON Data Input',
             font=CTK_FONT_BOLD,
             text_color='#64b5f6',  # 浅蓝色标题
         )
@@ -106,7 +106,7 @@ class JsonPanel(ctk.CTkFrame):
         # 解析按钮(第一行右侧)
         self.parse_btn = ctk.CTkButton(
             top_frame,
-            text='解析 JSON',
+            text='Parse JSON',
             command=self.parse_json,
             font=CTK_FONT_MAIN,
             fg_color='#2196f3',
@@ -146,7 +146,7 @@ class JsonPanel(ctk.CTkFrame):
         # 标题(左侧)
         self.key_label = ctk.CTkLabel(
             row1_frame,
-            text='JSON 主Key列表',
+            text='JSON Main Key List',
             font=CTK_FONT_BOLD,
             text_color='#81c784',  # 浅绿色标题
         )
@@ -159,7 +159,7 @@ class JsonPanel(ctk.CTkFrame):
         # 返回主Key按钮
         self.back_btn = ctk.CTkButton(
             btn_group_frame,
-            text='返回主Key',
+            text='Back to Main Keys',
             command=self.back_to_main_keys,
             font=CTK_FONT_SMALL,
             fg_color='#ff9800',
@@ -174,7 +174,7 @@ class JsonPanel(ctk.CTkFrame):
         # 升序按钮
         sort_asc_btn = ctk.CTkButton(
             btn_group_frame,
-            text='升序',
+            text='Asc',
             command=lambda: self.sort_keys('asc'),
             font=CTK_FONT_SMALL,
             fg_color='#4caf50',
@@ -188,7 +188,7 @@ class JsonPanel(ctk.CTkFrame):
         # 降序按钮
         sort_desc_btn = ctk.CTkButton(
             btn_group_frame,
-            text='降序',
+            text='Desc',
             command=lambda: self.sort_keys('desc'),
             font=CTK_FONT_SMALL,
             fg_color='#f44336',
@@ -285,7 +285,7 @@ class JsonPanel(ctk.CTkFrame):
                 self.key_listbox.insert(END, f'{key}{value_type}')
 
             # 更新UI状态
-            self.key_label.configure(text='JSON 主Key列表(拖动排序)')
+            self.key_label.configure(text='JSON Main Key List (Drag to Sort)')
             self.back_btn.configure(state='disabled')
 
             messagebox.showinfo('成功', 'JSON解析成功!')
@@ -332,7 +332,7 @@ class JsonPanel(ctk.CTkFrame):
                     self.key_listbox.selection_set(0, END)
 
                     # 更新UI
-                    self.key_label.configure(text=f'{pure_key} 内部Key')
+                    self.key_label.configure(text=f'{pure_key} Inner Keys')
                     self.back_btn.configure(state='normal')
                     self.update_info(f'已选择列表:{pure_key}', True)
 
