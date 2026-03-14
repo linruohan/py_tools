@@ -2,7 +2,6 @@
 
 import customtkinter as ctk
 
-from components.inner_tab_panel import InnerTabPanel
 from components.styles import BG_COLOR_CONTENT, CTK_FONT_BOLD, CTK_FONT_MAIN, CTK_FONT_SMALL
 
 
@@ -141,7 +140,7 @@ class USBHostdevTab(ctk.CTkFrame):
     def _update_display(self):
         """更新显示."""
         if self.usb_list:
-            self.usb_display.configure(text=f'已添加：{", ".join(self.usb_list)}')
+            self.usb_display.configure(text=f'已添加:{", ".join(self.usb_list)}')
         else:
             self.usb_display.configure(text='暂无设备')
 
@@ -316,7 +315,7 @@ class PCIHostdevTab(ctk.CTkFrame):
         """更新显示."""
         if self.pci_list:
             devs = [f'{d["domain"]}:{d["bus"]}:{d["slot"]}.{d["function"]}' for d in self.pci_list]
-            self.pci_display.configure(text=f'已添加：{", ".join(devs)}')
+            self.pci_display.configure(text=f'已添加:{", ".join(devs)}')
         else:
             self.pci_display.configure(text='暂无设备')
 
@@ -372,7 +371,7 @@ class SCSIHostdevTab(ctk.CTkFrame):
         self.scsi_type.grid(row=0, column=1, padx=5, pady=5, sticky='w')
         self.scsi_type.configure(command=self._on_type_change)
 
-        # 内容区域（动态切换）
+        # 内容区域(动态切换)
         self.content_frame = ctk.CTkFrame(self, fg_color='transparent')
         self.content_frame.grid(row=1, column=0, sticky='nsew', padx=5, pady=5)
         self.content_frame.grid_columnconfigure(0, weight=1)
@@ -648,7 +647,7 @@ class SCSIHostdevTab(ctk.CTkFrame):
                     devs.append(f'iscsi:{d["name"]}')
                 else:
                     devs.append(f'{d["adapter"]}:{d["bus"]}:{d["target"]}.{d["unit"]}')
-            self.scsi_display.configure(text=f'已添加：{", ".join(devs)}')
+            self.scsi_display.configure(text=f'已添加:{", ".join(devs)}')
         else:
             self.scsi_display.configure(text='暂无设备')
 
@@ -803,7 +802,7 @@ class MdevHostdevTab(ctk.CTkFrame):
         """更新显示."""
         if self.mdev_list:
             devs = [f'{d["model"]}:{d["uuid"][:8]}...' for d in self.mdev_list]
-            self.mdev_display.configure(text=f'已添加：{", ".join(devs)}')
+            self.mdev_display.configure(text=f'已添加:{", ".join(devs)}')
         else:
             self.mdev_display.configure(text='暂无设备')
 

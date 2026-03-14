@@ -1,34 +1,36 @@
 """Controller 设备配置 - 整合策略模式."""
 
-from dataclasses import dataclass, field
-from typing import Optional, Dict, Any, List
+from dataclasses import dataclass
+from typing import Any
 
 
 @dataclass
 class Controller:
     """Controller 设备配置"""
 
-    type: str = 'ide'  # ide, fdc, scsi, virtio-serial, usb, pci, xenbus, nvme, ccid, sata, virtio-mmio
+    type: str = (
+        'ide'  # ide, fdc, scsi, virtio-serial, usb, pci, xenbus, nvme, ccid, sata, virtio-mmio
+    )
     index: int = 0
-    model: Optional[str] = None  # 控制器型号
-    ports: Optional[int] = None  # 端口数
-    vectors: Optional[int] = None  # MSI-X 向量数
-    max_grant_frames: Optional[int] = None  # xenbus 最大授权帧
-    max_event_channels: Optional[int] = None  # xenbus 最大事件通道
-    ioeventfd: Optional[bool] = None  # ioeventfd 支持
-    cmd_per_lun: Optional[int] = None  # 每 LUN 命令数
-    max_sectors: Optional[int] = None  # 最大扇区数
-    iothread: Optional[int] = None  # IO 线程 ID
-    iothreads: Optional[int] = None  # IO 线程数
-    queues: Optional[int] = None  # 队列数
-    pci_slot: Optional[int] = None  # PCI 插槽号
-    chassis: Optional[int] = None  # 机箱号
-    function: Optional[int] = None  # 功能号
-    address: Optional[Dict[str, str]] = None  # 设备地址
-    target: Optional[int] = None  # 目标 ID
+    model: str | None = None  # 控制器型号
+    ports: int | None = None  # 端口数
+    vectors: int | None = None  # MSI-X 向量数
+    max_grant_frames: int | None = None  # xenbus 最大授权帧
+    max_event_channels: int | None = None  # xenbus 最大事件通道
+    ioeventfd: bool | None = None  # ioeventfd 支持
+    cmd_per_lun: int | None = None  # 每 LUN 命令数
+    max_sectors: int | None = None  # 最大扇区数
+    iothread: int | None = None  # IO 线程 ID
+    iothreads: int | None = None  # IO 线程数
+    queues: int | None = None  # 队列数
+    pci_slot: int | None = None  # PCI 插槽号
+    chassis: int | None = None  # 机箱号
+    function: int | None = None  # 功能号
+    address: dict[str, str] | None = None  # 设备地址
+    target: int | None = None  # 目标 ID
 
     @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> 'Controller':
+    def from_dict(cls, data: dict[str, Any]) -> 'Controller':
         """从字典创建"""
         return cls(
             type=data.get('type', 'ide'),
@@ -51,7 +53,7 @@ class Controller:
             target=data.get('target'),
         )
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """转换为字典"""
         return {
             'type': self.type,

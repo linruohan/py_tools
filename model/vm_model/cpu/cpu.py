@@ -1,5 +1,4 @@
 from dataclasses import dataclass, field
-from typing import Optional, List
 
 
 @dataclass
@@ -7,8 +6,8 @@ class CPUFeature:
     """CPU 特性"""
 
     name: str
-    policy: Optional[str] = None  # require, optional, disable
-    present: Optional[bool] = None
+    policy: str | None = None  # require, optional, disable
+    present: bool | None = None
 
 
 @dataclass
@@ -16,8 +15,8 @@ class CPUModel:
     """CPU 模型"""
 
     name: str
-    fallback: Optional[str] = None  # allow, forbid, require
-    check: Optional[bool] = None
+    fallback: str | None = None  # allow, forbid, require
+    check: bool | None = None
 
 
 @dataclass
@@ -33,10 +32,10 @@ class CPUTopology:
 class CPU:
     """CPU 配置"""
 
-    model: Optional[CPUModel] = None
-    topology: Optional[CPUTopology] = None
-    features: List[CPUFeature] = field(default_factory=list)
-    mode: Optional[str] = None  # custom, host-model, host-passthrough, maximum
-    match: Optional[str] = None  # exact, minimum, strict
-    vendor_id: Optional[str] = None
-    placeholder: Optional[bool] = None
+    model: CPUModel | None = None
+    topology: CPUTopology | None = None
+    features: list[CPUFeature] = field(default_factory=list)
+    mode: str | None = None  # custom, host-model, host-passthrough, maximum
+    match: str | None = None  # exact, minimum, strict
+    vendor_id: str | None = None
+    placeholder: bool | None = None

@@ -1,7 +1,7 @@
 """Watchdog 设备配置 - 整合策略模式."""
 
-from dataclasses import dataclass, field
-from typing import Optional, Dict, Any, List
+from dataclasses import dataclass
+from typing import Any
 
 
 @dataclass
@@ -10,10 +10,10 @@ class Watchdog:
 
     model: str = 'i6300esb'  # i6300esb, ib700, diag288, itco
     action: str = 'reset'  # reset, shutdown, poweroff, pause, none, dump, inject-nmi
-    address: Optional[Dict[str, str]] = None  # 设备地址
+    address: dict[str, str] | None = None  # 设备地址
 
     @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> 'Watchdog':
+    def from_dict(cls, data: dict[str, Any]) -> 'Watchdog':
         """从字典创建"""
         return cls(
             model=data.get('model', 'i6300esb'),
@@ -21,7 +21,7 @@ class Watchdog:
             address=data.get('address'),
         )
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """转换为字典"""
         return {
             'model': self.model,

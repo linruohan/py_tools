@@ -1,32 +1,32 @@
 """Driver 设备配置 - 整合策略模式."""
 
-from dataclasses import dataclass, field
-from typing import Optional, Dict, Any, List
+from dataclasses import dataclass
+from typing import Any
 
 
 @dataclass
 class Driver:
     """Driver (驱动) 配置"""
 
-    name: Optional[str] = None  # 驱动名称
-    type: Optional[str] = None  # 驱动类型
-    queues: Optional[int] = None  # 队列数
-    iothread: Optional[int] = None  # IO 线程 ID
-    ioeventfd: Optional[bool] = None  # IO 事件 fd
-    event_idx: Optional[bool] = None  # 事件索引
-    packed: Optional[str] = None  # packed ring (on/off/auto)
-    driver_iommu: Optional[str] = None  # IOMMU 支持 (on/off)
-    ats: Optional[str] = None  # ATS 支持 (on/off)
-    cmd_per_lun: Optional[int] = None  # 每 LUN 命令数
-    max_sectors: Optional[int] = None  # 最大扇区数
-    x_data_plane: Optional[bool] = None  # 数据平面
-    io: Optional[str] = None  # IO 模式 (threads, native)
-    cache: Optional[str] = None  # 缓存模式
-    discard: Optional[str] = None  # 丢弃模式
-    detect_zeroes: Optional[str] = None  # 零检测
+    name: str | None = None  # 驱动名称
+    type: str | None = None  # 驱动类型
+    queues: int | None = None  # 队列数
+    iothread: int | None = None  # IO 线程 ID
+    ioeventfd: bool | None = None  # IO 事件 fd
+    event_idx: bool | None = None  # 事件索引
+    packed: str | None = None  # packed ring (on/off/auto)
+    driver_iommu: str | None = None  # IOMMU 支持 (on/off)
+    ats: str | None = None  # ATS 支持 (on/off)
+    cmd_per_lun: int | None = None  # 每 LUN 命令数
+    max_sectors: int | None = None  # 最大扇区数
+    x_data_plane: bool | None = None  # 数据平面
+    io: str | None = None  # IO 模式 (threads, native)
+    cache: str | None = None  # 缓存模式
+    discard: str | None = None  # 丢弃模式
+    detect_zeroes: str | None = None  # 零检测
 
     @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> 'Driver':
+    def from_dict(cls, data: dict[str, Any]) -> 'Driver':
         """从字典创建"""
         return cls(
             name=data.get('name'),
@@ -47,7 +47,7 @@ class Driver:
             detect_zeroes=data.get('detect_zeroes'),
         )
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """转换为字典"""
         return {
             'name': self.name,

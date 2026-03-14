@@ -2,7 +2,7 @@
 
 import customtkinter as ctk
 
-from .styles import CTK_FONT_BOLD, CTK_FONT_MAIN
+from .styles import CTK_FONT_BOLD
 
 
 class AccordionFrame(ctk.CTkFrame):
@@ -11,13 +11,13 @@ class AccordionFrame(ctk.CTkFrame):
     def __init__(
         self,
         master,
-        title: str = "",
+        title: str = '',
         default_expanded: bool = True,
         on_toggle_callback=None,
         **kwargs,
     ):
         super().__init__(master, **kwargs)
-        self.configure(fg_color="transparent")
+        self.configure(fg_color='transparent')
 
         self.title = title
         self.default_expanded = default_expanded
@@ -30,37 +30,37 @@ class AccordionFrame(ctk.CTkFrame):
         self.grid_rowconfigure(1, weight=1)  # 内容区
 
         # 标题栏
-        self.header_frame = ctk.CTkFrame(self, fg_color="transparent")
-        self.header_frame.grid(row=0, column=0, sticky="ew")
+        self.header_frame = ctk.CTkFrame(self, fg_color='transparent')
+        self.header_frame.grid(row=0, column=0, sticky='ew')
         self.header_frame.grid_columnconfigure(1, weight=1)
 
         # 展开/收起图标
         self.toggle_icon = ctk.CTkLabel(
             self.header_frame,
-            text="▼",
+            text='▼',
             width=20,
             font=ctk.CTkFont(size=12),
         )
-        self.toggle_icon.grid(row=0, column=0, padx=(0, 5), sticky="w")
+        self.toggle_icon.grid(row=0, column=0, padx=(0, 5), sticky='w')
 
         # 标题
         self.title_label = ctk.CTkLabel(
             self.header_frame,
             text=title,
             font=CTK_FONT_BOLD,
-            text_color="#64b5f6",
+            text_color='#64b5f6',
         )
-        self.title_label.grid(row=0, column=1, sticky="w")
+        self.title_label.grid(row=0, column=1, sticky='w')
 
         # 绑定点击事件
-        self.header_frame.bind("<Button-1>", self._on_toggle)
-        self.toggle_icon.bind("<Button-1>", self._on_toggle)
-        self.title_label.bind("<Button-1>", self._on_toggle)
+        self.header_frame.bind('<Button-1>', self._on_toggle)
+        self.toggle_icon.bind('<Button-1>', self._on_toggle)
+        self.title_label.bind('<Button-1>', self._on_toggle)
 
         # 内容区
-        self.content_frame = ctk.CTkFrame(self, fg_color="transparent")
+        self.content_frame = ctk.CTkFrame(self, fg_color='transparent')
         if self.expanded:
-            self.content_frame.grid(row=1, column=0, sticky="nsew", pady=(5, 0))
+            self.content_frame.grid(row=1, column=0, sticky='nsew', pady=(5, 0))
         else:
             self.content_frame.grid_remove()
 
@@ -73,10 +73,10 @@ class AccordionFrame(ctk.CTkFrame):
         self.expanded = not self.expanded
         if self.expanded:
             self.content_frame.grid()
-            self.toggle_icon.configure(text="▼")
+            self.toggle_icon.configure(text='▼')
         else:
             self.content_frame.grid_remove()
-            self.toggle_icon.configure(text="▶")
+            self.toggle_icon.configure(text='▶')
 
         if self.on_toggle_callback:
             self.on_toggle_callback(self.expanded)
@@ -92,7 +92,7 @@ class AccordionFrame(ctk.CTkFrame):
             self._on_toggle()
 
     def get_content_frame(self):
-        """获取内容区 Frame，用于添加子控件."""
+        """获取内容区 Frame, 用于添加子控件."""
         return self.content_frame
 
 
@@ -101,7 +101,7 @@ class AccordionPanel(ctk.CTkScrollableFrame):
 
     def __init__(self, master, **kwargs):
         super().__init__(master, **kwargs)
-        self.configure(fg_color="transparent")
+        self.configure(fg_color='transparent')
         self.grid_columnconfigure(0, weight=1)
         self._row_counter = 0
 
@@ -121,7 +121,7 @@ class AccordionPanel(ctk.CTkScrollableFrame):
             default_expanded=default_expanded,
             on_toggle_callback=on_toggle_callback,
         )
-        accordion.grid(row=self._row_counter, column=0, sticky="nsew", pady=(5, 0))
+        accordion.grid(row=self._row_counter, column=0, sticky='nsew', pady=(5, 0))
         self._row_counter += 1
 
         self.accordions[key] = accordion

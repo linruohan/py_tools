@@ -1,41 +1,9 @@
 """Domain 与 Config 转换器 - 连接两层配置系统."""
 
-from typing import Dict, Any, Optional, List
+from typing import Any
+
 from .domain import (
     Domain,
-    VirtType,
-    OSType,
-    MachineType,
-    CpuMode,
-    CPU,
-    CPUModel,
-    CPUTopology,
-    CPUFeature,
-    VCPU,
-    Memory,
-    MaxMemory,
-    CurrentMemory,
-    OS,
-    Loader,
-    Nvram,
-    Boot,
-    Bootmenu,
-    Devices,
-    Disk,
-    Graphics,
-    Video,
-    NetworkInterface,
-    Features,
-    Clock,
-)
-from config.strategies.option_strategies import (
-    DiskBusType,
-    DiskType,
-    CacheMode,
-    GraphicsType,
-    VideoModel,
-    FirmwareType,
-    MemoryUnit,
 )
 
 
@@ -43,7 +11,7 @@ class DomainConfigConverter:
     """Domain 与 Config 配置字典之间的转换器."""
 
     @staticmethod
-    def to_config(domain: Domain) -> Dict[str, Any]:
+    def to_config(domain: Domain) -> dict[str, Any]:
         """将 Domain 转换为 Config 配置字典.
 
         Args:
@@ -191,7 +159,7 @@ class DomainConfigConverter:
         return config
 
     @staticmethod
-    def from_config(config: Dict[str, Any]) -> Domain:
+    def from_config(config: dict[str, Any]) -> Domain:
         """从 Config 配置字典创建 Domain.
 
         Args:
@@ -215,7 +183,7 @@ class DomainConfigConverter:
         return domain.to_xml()
 
     @staticmethod
-    def convert_vmconfig_to_domain(vmconfig_dict: Dict[str, Any]) -> Domain:
+    def convert_vmconfig_to_domain(vmconfig_dict: dict[str, Any]) -> Domain:
         """从 VMConfig 的 to_dict() 输出转换为 Domain.
 
         Args:
@@ -227,7 +195,7 @@ class DomainConfigConverter:
         return Domain.from_config(vmconfig_dict)
 
     @staticmethod
-    def convert_domain_to_vmconfig(domain: Domain) -> Dict[str, Any]:
+    def convert_domain_to_vmconfig(domain: Domain) -> dict[str, Any]:
         """将 Domain 转换为 VMConfig 兼容的字典格式.
 
         Args:

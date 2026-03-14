@@ -19,12 +19,12 @@ class InnerTabPanel(ctk.CTkFrame):
 
         Args:
             master: 父容器
-            tabs_config: Tab 配置字典，格式为:
+            tabs_config: Tab 配置字典,格式为:
                 {
                     'tab_key': {
                         'name': '显示名称',
-                        'class': TabClass,  # 可选，如果没有则为空
-                        'default': False,   # 是否默认显示
+                        'class': TabClass,  # 可选,如果没有则为空
+                        'default': False,  # 是否默认显示
                     }
                 }
             on_change_callback: 变化回调函数

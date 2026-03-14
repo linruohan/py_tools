@@ -1,7 +1,7 @@
 """Features 配置 - 整合策略模式."""
 
 from dataclasses import dataclass, field
-from typing import Optional, List, Dict, Any
+from typing import Any
 
 
 @dataclass
@@ -9,11 +9,11 @@ class Feature:
     """特性配置"""
 
     name: str
-    policy: Optional[str] = None  # require, optional, disable
-    present: Optional[bool] = None
-    state: Optional[str] = None  # on, off
-    value: Optional[str] = None
-    retries: Optional[int] = None
+    policy: str | None = None  # require, optional, disable
+    present: bool | None = None
+    state: str | None = None  # on, off
+    value: str | None = None
+    retries: int | None = None
 
 
 @dataclass
@@ -22,10 +22,10 @@ class HypervFeature:
 
     name: str  # relaxed, vapic, spinlocks, vpindex, runtime, synic, stimer, reset, vendor_id, frequencies, reenlightenment, tlbflush, ipi, evmcs, avic, emsr_bitmap, xmm_input
     state: str = 'on'  # on, off
-    retries: Optional[int] = None
-    direct: Optional[bool] = None  # 用于 stimer, tlbflush
-    extended: Optional[bool] = None  # 用于 tlbflush
-    value: Optional[str] = None  # 用于 vendor_id
+    retries: int | None = None
+    direct: bool | None = None  # 用于 stimer, tlbflush
+    extended: bool | None = None  # 用于 tlbflush
+    value: str | None = None  # 用于 vendor_id
 
 
 @dataclass
@@ -34,7 +34,7 @@ class KVMFeature:
 
     name: str  # hidden, hint-dedicated, poll-control, pv-ipi, dirty-ring
     state: str = 'on'  # on, off
-    size: Optional[int] = None  # 用于 dirty-ring
+    size: int | None = None  # 用于 dirty-ring
 
 
 @dataclass
@@ -43,7 +43,7 @@ class XenFeature:
 
     name: str  # e820_host, passthrough
     state: str = 'on'  # on, off
-    mode: Optional[str] = None  # 用于 passthrough (sync_pt, share_pt)
+    mode: str | None = None  # 用于 passthrough (sync_pt, share_pt)
 
 
 @dataclass
@@ -59,7 +59,7 @@ class HPT:
     """HPT (Hash Page Table) 配置"""
 
     resizing: str = 'enabled'  # enabled, disabled, required
-    maxpagesize: Optional[Dict[str, Any]] = None
+    maxpagesize: dict[str, Any] | None = None
 
 
 @dataclass
@@ -67,7 +67,7 @@ class ACPI:
     """ACPI 配置"""
 
     state: str = 'on'  # on, off
-    tables: List[Dict[str, str]] = field(default_factory=list)  # ACPI 表列表
+    tables: list[dict[str, str]] = field(default_factory=list)  # ACPI 表列表
 
 
 @dataclass
@@ -75,7 +75,7 @@ class APIC:
     """APIC 配置"""
 
     state: str = 'on'  # on, off
-    eoi: Optional[str] = None  # on, off
+    eoi: str | None = None  # on, off
 
 
 @dataclass
@@ -96,7 +96,7 @@ class VMPort:
 class GIC:
     """GIC (General Interrupt Controller) 配置"""
 
-    version: Optional[str] = None  # 2, 3, host
+    version: str | None = None  # 2, 3, host
 
 
 @dataclass
@@ -104,7 +104,7 @@ class SMM:
     """SMM (System Management Mode) 配置"""
 
     state: str = 'on'  # on, off
-    tseg: Optional[TSeg] = None
+    tseg: TSeg | None = None
 
 
 @dataclass
@@ -119,55 +119,55 @@ class Features:
     """特性集合配置"""
 
     # 基础特性
-    pae: Optional[str] = None  # on, off
-    acpi: Optional[ACPI] = None
-    apic: Optional[APIC] = None
-    hap: Optional[str] = None  # on, off
+    pae: str | None = None  # on, off
+    acpi: ACPI | None = None
+    apic: APIC | None = None
+    hap: str | None = None  # on, off
 
     # Xen 相关
-    viridian: Optional[str] = None  # on, off
-    privnet: Optional[str] = None  # on, off
+    viridian: str | None = None  # on, off
+    privnet: str | None = None  # on, off
 
     # Hyper-V 相关
-    hyperv: List[HypervFeature] = field(default_factory=list)
-    hyperv_mode: Optional[str] = None  # custom, passthrough, host-model
+    hyperv: list[HypervFeature] = field(default_factory=list)
+    hyperv_mode: str | None = None  # custom, passthrough, host-model
 
     # KVM 相关
-    kvm: List[KVMFeature] = field(default_factory=list)
-    pvspinlock: Optional[str] = None  # on, off
+    kvm: list[KVMFeature] = field(default_factory=list)
+    pvspinlock: str | None = None  # on, off
 
     # Xen 相关
-    xen: List[XenFeature] = field(default_factory=list)
+    xen: list[XenFeature] = field(default_factory=list)
 
     # 平台相关
-    pmu: Optional[PMU] = None
-    vmport: Optional[VMPort] = None
-    gic: Optional[GIC] = None
-    smm: Optional[SMM] = None
-    ioapic: Optional[IOAPIC] = None
+    pmu: PMU | None = None
+    vmport: VMPort | None = None
+    gic: GIC | None = None
+    smm: SMM | None = None
+    ioapic: IOAPIC | None = None
 
     # pSeries 相关
-    hpt: Optional[HPT] = None
-    vmcoreinfo: Optional[str] = None  # on, off
-    htm: Optional[str] = None  # on, off
-    nested_hv: Optional[str] = None  # on, off
-    ccf_assist: Optional[str] = None  # on, off
+    hpt: HPT | None = None
+    vmcoreinfo: str | None = None  # on, off
+    htm: str | None = None  # on, off
+    nested_hv: str | None = None  # on, off
+    ccf_assist: str | None = None  # on, off
 
     # bhyve 相关
-    msrs: Optional[Dict[str, str]] = None  # unknown: ignore/fault
+    msrs: dict[str, str] | None = None  # unknown: ignore/fault
 
     # TCG 相关
-    tcg: Optional[Dict[str, Any]] = None
+    tcg: dict[str, Any] | None = None
 
     # 其他
-    async_teardown: Optional[str] = None  # on, off
-    ras: Optional[str] = None  # on, off
-    ps2: Optional[str] = None  # on, off
-    aia: Optional[Dict[str, Any]] = None
-    virtualization: Optional[Dict[str, Any]] = None
+    async_teardown: str | None = None  # on, off
+    ras: str | None = None  # on, off
+    ps2: str | None = None  # on, off
+    aia: dict[str, Any] | None = None
+    virtualization: dict[str, Any] | None = None
 
     @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> 'Features':
+    def from_dict(cls, data: dict[str, Any]) -> 'Features':
         """从字典创建"""
         # ACPI
         acpi_data = data.get('acpi')
@@ -279,7 +279,7 @@ class Features:
             virtualization=data.get('virtualization'),
         )
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """转换为字典"""
         result = {}
 

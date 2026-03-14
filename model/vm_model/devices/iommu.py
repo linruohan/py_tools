@@ -1,7 +1,7 @@
 """IOMMU 设备配置 - 整合策略模式."""
 
-from dataclasses import dataclass, field
-from typing import Optional, Dict, Any, List
+from dataclasses import dataclass
+from typing import Any
 
 
 @dataclass
@@ -9,18 +9,18 @@ class IOMMU:
     """IOMMU 设备配置"""
 
     model: str = 'intel'  # intel, virtio, amd
-    caching_mode: Optional[str] = None  # on/off
-    aw_bits: Optional[int] = None  # 地址宽度位数 (39, 48, 57, 64)
-    intsremap: Optional[str] = None  # on/off (Intel IOMMU)
-    eisr: Optional[str] = None  # on/off (Intel IOMMU)
-    iotlb: Optional[str] = None  # on/off (Intel IOMMU)
-    translation: Optional[str] = None  # MA/PA (virtio IOMMU)
-    bus: Optional[int] = None  # PCI 总线号 (virtio IOMMU)
-    address: Optional[Dict[str, str]] = None  # 设备地址
-    driver: Optional[Dict[str, str]] = None  # 驱动配置
+    caching_mode: str | None = None  # on/off
+    aw_bits: int | None = None  # 地址宽度位数 (39, 48, 57, 64)
+    intsremap: str | None = None  # on/off (Intel IOMMU)
+    eisr: str | None = None  # on/off (Intel IOMMU)
+    iotlb: str | None = None  # on/off (Intel IOMMU)
+    translation: str | None = None  # MA/PA (virtio IOMMU)
+    bus: int | None = None  # PCI 总线号 (virtio IOMMU)
+    address: dict[str, str] | None = None  # 设备地址
+    driver: dict[str, str] | None = None  # 驱动配置
 
     @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> 'IOMMU':
+    def from_dict(cls, data: dict[str, Any]) -> 'IOMMU':
         """从字典创建"""
         return cls(
             model=data.get('model', 'intel'),
@@ -35,7 +35,7 @@ class IOMMU:
             driver=data.get('driver'),
         )
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """转换为字典"""
         return {
             'model': self.model,

@@ -6,8 +6,6 @@ from tkinter import END, filedialog, messagebox
 
 import customtkinter as ctk
 
-from model.vm_model.core.vm_config import VMConfig
-
 from components.styles import (
     BG_COLOR_CONTENT,
     BG_COLOR_MAIN,
@@ -16,6 +14,7 @@ from components.styles import (
     CTK_FONT_SMALL,
 )
 from components.tab_toggle import TabTogglePanel
+from model.vm_model.core.vm_config import VMConfig
 from utils.xml_generator import LibvirtXMLGenerator
 
 # 24 个 Tab 配置
@@ -104,6 +103,69 @@ TABS_CONFIG = {
     },
 }
 
+# Tab 类映射 - 延迟导入
+_TAB_CLASSES = None
+
+
+def _get_tab_classes():
+    """获取 Tab 类映射(延迟导入)."""
+    global _TAB_CLASSES
+    if _TAB_CLASSES is None:
+        from .tabs import (
+            BasicTab,
+            BlockIOTuningTab,
+            CPUAllocationTab,
+            CPUModelTopologyTab,
+            CPUTuningTab,
+            DevicesTab,
+            DiskThrottleGroupTab,
+            EventsConfigurationTab,
+            FibreChannelVMIDTab,
+            HypervisorFeaturesTab,
+            IOThreadsAllocationTab,
+            KeyWrapTab,
+            LaunchSecurityTab,
+            MemoryAllocationTab,
+            MemoryBackingTab,
+            MemoryTuningTab,
+            NUMANodeTuningTab,
+            OSTab,
+            PerformanceMonitoringTab,
+            PowerManagementTab,
+            ResourcePartitioningTab,
+            SecurityLabelTab,
+            SMBIOSSystemTab,
+            TimeKeepingTab,
+        )
+
+        _TAB_CLASSES = {
+            'BasicTab': BasicTab,
+            'BlockIOTuningTab': BlockIOTuningTab,
+            'CPUAllocationTab': CPUAllocationTab,
+            'CPUModelTopologyTab': CPUModelTopologyTab,
+            'CPUTuningTab': CPUTuningTab,
+            'DevicesTab': DevicesTab,
+            'DiskThrottleGroupTab': DiskThrottleGroupTab,
+            'EventsConfigurationTab': EventsConfigurationTab,
+            'FibreChannelVMIDTab': FibreChannelVMIDTab,
+            'HypervisorFeaturesTab': HypervisorFeaturesTab,
+            'IOThreadsAllocationTab': IOThreadsAllocationTab,
+            'KeyWrapTab': KeyWrapTab,
+            'LaunchSecurityTab': LaunchSecurityTab,
+            'MemoryAllocationTab': MemoryAllocationTab,
+            'MemoryBackingTab': MemoryBackingTab,
+            'MemoryTuningTab': MemoryTuningTab,
+            'NUMANodeTuningTab': NUMANodeTuningTab,
+            'OSTab': OSTab,
+            'PerformanceMonitoringTab': PerformanceMonitoringTab,
+            'PowerManagementTab': PowerManagementTab,
+            'ResourcePartitioningTab': ResourcePartitioningTab,
+            'SecurityLabelTab': SecurityLabelTab,
+            'SMBIOSSystemTab': SMBIOSSystemTab,
+            'TimeKeepingTab': TimeKeepingTab,
+        }
+    return _TAB_CLASSES
+
 
 class VmPanel(ctk.CTkFrame):
     """虚拟机 XML 配置生成面板 - 24 Tab 版本."""
@@ -114,7 +176,7 @@ class VmPanel(ctk.CTkFrame):
         self.corner_radius = 10
         self.fg_color = 'transparent'
 
-        # 主布局：1 行 1 列
+        # 主布局:1 行 1 列
         self.grid_columnconfigure(0, weight=1)
         self.grid_rowconfigure(0, weight=1)
 
@@ -140,9 +202,9 @@ class VmPanel(ctk.CTkFrame):
 
         # 配置内部网格
         main_frame.grid_rowconfigure(0, weight=0)  # 工具栏
-        main_frame.grid_rowconfigure(1, weight=0)  # Tab 开关面板（紧凑）
+        main_frame.grid_rowconfigure(1, weight=0)  # Tab 开关面板(紧凑)
         main_frame.grid_rowconfigure(2, weight=0)  # Tab 配置区
-        main_frame.grid_rowconfigure(3, weight=1)  # XML 预览区（动态高度）
+        main_frame.grid_rowconfigure(3, weight=1)  # XML 预览区(动态高度)
         main_frame.grid_rowconfigure(4, weight=0)  # 信息栏
         main_frame.grid_columnconfigure(0, weight=1)
 
@@ -191,66 +253,13 @@ class VmPanel(ctk.CTkFrame):
         tab_name = tab_config['name']
 
         if enabled:
-            # 开关打开：添加 Tab
+            # 开关打开: 添加 Tab
             tab = self.tabview.add(tab_name)
             tab.grid_columnconfigure(0, weight=1)
             tab.grid_rowconfigure(0, weight=1)
 
-            # 导入 Tab 类
-            from .tabs import (
-                BasicTab,
-                BlockIOTuningTab,
-                CPUAllocationTab,
-                CPUModelTopologyTab,
-                CPUTuningTab,
-                DevicesTab,
-                DiskThrottleGroupTab,
-                EventsConfigurationTab,
-                FibreChannelVMIDTab,
-                HypervisorFeaturesTab,
-                IOThreadsAllocationTab,
-                KeyWrapTab,
-                LaunchSecurityTab,
-                MemoryAllocationTab,
-                MemoryBackingTab,
-                MemoryTuningTab,
-                NUMANodeTuningTab,
-                OSTab,
-                PerformanceMonitoringTab,
-                PowerManagementTab,
-                ResourcePartitioningTab,
-                SecurityLabelTab,
-                SMBIOSSystemTab,
-                TimeKeepingTab,
-            )
-
-            # Tab 类映射
-            tab_classes = {
-                'BasicTab': BasicTab,
-                'BlockIOTuningTab': BlockIOTuningTab,
-                'CPUAllocationTab': CPUAllocationTab,
-                'CPUModelTopologyTab': CPUModelTopologyTab,
-                'CPUTuningTab': CPUTuningTab,
-                'DevicesTab': DevicesTab,
-                'DiskThrottleGroupTab': DiskThrottleGroupTab,
-                'EventsConfigurationTab': EventsConfigurationTab,
-                'FibreChannelVMIDTab': FibreChannelVMIDTab,
-                'HypervisorFeaturesTab': HypervisorFeaturesTab,
-                'IOThreadsAllocationTab': IOThreadsAllocationTab,
-                'KeyWrapTab': KeyWrapTab,
-                'LaunchSecurityTab': LaunchSecurityTab,
-                'MemoryAllocationTab': MemoryAllocationTab,
-                'MemoryBackingTab': MemoryBackingTab,
-                'MemoryTuningTab': MemoryTuningTab,
-                'NUMANodeTuningTab': NUMANodeTuningTab,
-                'OSTab': OSTab,
-                'PerformanceMonitoringTab': PerformanceMonitoringTab,
-                'PowerManagementTab': PowerManagementTab,
-                'ResourcePartitioningTab': ResourcePartitioningTab,
-                'SecurityLabelTab': SecurityLabelTab,
-                'SMBIOSSystemTab': SMBIOSSystemTab,
-                'TimeKeepingTab': TimeKeepingTab,
-            }
+            # 获取 Tab 类映射
+            tab_classes = _get_tab_classes()
 
             # 创建 Tab 实例
             tab_class = tab_classes.get(tab_config['class'])
@@ -267,7 +276,7 @@ class VmPanel(ctk.CTkFrame):
                 self.tabview.set(tab_name)
                 self.update_info(f'已启用 Tab: {tab_name}')
         else:
-            # 开关关闭：从 TabView 中移除 Tab
+            # 开关关闭: 从 TabView 中移除 Tab
             if tab_key in self.tab_instances:
                 try:
                     self.tabview.delete(tab_name)
@@ -351,61 +360,8 @@ class VmPanel(ctk.CTkFrame):
 
     def _init_tabs(self) -> None:
         """初始化所有启用的 Tab."""
-        # 导入所有 Tab 类
-        from .tabs import (
-            BasicTab,
-            BlockIOTuningTab,
-            CPUAllocationTab,
-            CPUModelTopologyTab,
-            CPUTuningTab,
-            DevicesTab,
-            DiskThrottleGroupTab,
-            EventsConfigurationTab,
-            FibreChannelVMIDTab,
-            HypervisorFeaturesTab,
-            IOThreadsAllocationTab,
-            KeyWrapTab,
-            LaunchSecurityTab,
-            MemoryAllocationTab,
-            MemoryBackingTab,
-            MemoryTuningTab,
-            NUMANodeTuningTab,
-            OSTab,
-            PerformanceMonitoringTab,
-            PowerManagementTab,
-            ResourcePartitioningTab,
-            SecurityLabelTab,
-            SMBIOSSystemTab,
-            TimeKeepingTab,
-        )
-
-        # Tab 类映射
-        tab_classes = {
-            'BasicTab': BasicTab,
-            'BlockIOTuningTab': BlockIOTuningTab,
-            'CPUAllocationTab': CPUAllocationTab,
-            'CPUModelTopologyTab': CPUModelTopologyTab,
-            'CPUTuningTab': CPUTuningTab,
-            'DevicesTab': DevicesTab,
-            'DiskThrottleGroupTab': DiskThrottleGroupTab,
-            'EventsConfigurationTab': EventsConfigurationTab,
-            'FibreChannelVMIDTab': FibreChannelVMIDTab,
-            'HypervisorFeaturesTab': HypervisorFeaturesTab,
-            'IOThreadsAllocationTab': IOThreadsAllocationTab,
-            'KeyWrapTab': KeyWrapTab,
-            'LaunchSecurityTab': LaunchSecurityTab,
-            'MemoryAllocationTab': MemoryAllocationTab,
-            'MemoryBackingTab': MemoryBackingTab,
-            'MemoryTuningTab': MemoryTuningTab,
-            'NUMANodeTuningTab': NUMANodeTuningTab,
-            'OSTab': OSTab,
-            'PerformanceMonitoringTab': PerformanceMonitoringTab,
-            'PowerManagementTab': PowerManagementTab,
-            'ResourcePartitioningTab': ResourcePartitioningTab,
-            'SecurityLabelTab': SecurityLabelTab,
-            'SMBIOSSystemTab': SMBIOSSystemTab,
-            'TimeKeepingTab': TimeKeepingTab,
-        }
+        # 获取 Tab 类映射
+        tab_classes = _get_tab_classes()
 
         first_tab = None
         for tab_key, config in TABS_CONFIG.items():
@@ -483,7 +439,7 @@ class VmPanel(ctk.CTkFrame):
         self.info_label.configure(text=text, text_color=color)
 
     def _update_xml_preview(self) -> None:
-        """更新 XML 预览（不显示错误消息）."""
+        """更新 XML 预览(不显示错误消息)."""
         if self._updating_xml:
             return
         self._updating_xml = True
@@ -498,18 +454,18 @@ class VmPanel(ctk.CTkFrame):
             self._updating_xml = False
 
     def _build_xml_preview(self) -> str:
-        """构建 XML 预览（不抛出错误）."""
+        """构建 XML 预览(不抛出错误)."""
         try:
             data = self.collect_vm_data()
             generator = LibvirtXMLGenerator()
             return generator.generate(data)
         except Exception:
-            return '<!-- 配置不完整或无效，请检查输入 -->'
+            return '<!-- 配置不完整或无效,请检查输入 -->'
 
     # ========== 核心功能方法 ==========
     def clear_all(self) -> None:
         """清空所有配置."""
-        if messagebox.askyesno('确认', '确定要清空所有配置吗？'):
+        if messagebox.askyesno('确认', '确定要清空所有配置吗?'):
             # 重置配置
             self.vm_config.reset()
 
@@ -557,8 +513,8 @@ class VmPanel(ctk.CTkFrame):
             messagebox.showerror('错误', str(e))
             self.update_info(str(e), False)
         except Exception as e:
-            messagebox.showerror('错误', f'生成失败：{e!s}')
-            self.update_info(f'生成失败：{e!s}', False)
+            messagebox.showerror('错误', f'生成失败:{e!s}')
+            self.update_info(f'生成失败:{e!s}', False)
 
     def save_xml(self) -> None:
         """保存 XML 到文件."""
@@ -583,10 +539,10 @@ class VmPanel(ctk.CTkFrame):
             with open(file_path, 'w', encoding='utf-8') as f:
                 f.write(xml_content)
             messagebox.showinfo('成功', f'XML 已保存到:\n{file_path}')
-            self.update_info(f'保存成功：{file_path}')
+            self.update_info(f'保存成功:{file_path}')
         except Exception as e:
-            messagebox.showerror('错误', f'保存失败：{e!s}')
-            self.update_info(f'保存失败：{e!s}', False)
+            messagebox.showerror('错误', f'保存失败:{e!s}')
+            self.update_info(f'保存失败:{e!s}', False)
 
     def create_vm(self) -> None:
         """通过 virsh 创建虚拟机."""
@@ -610,13 +566,13 @@ class VmPanel(ctk.CTkFrame):
                 vm_name = self.vm_config.basic.get('name', 'vm')
                 messagebox.showinfo(
                     '成功',
-                    f'虚拟机 {vm_name} 定义成功！\n\n请运行以下命令启动:\n  virsh start {vm_name}',
+                    f'虚拟机 {vm_name} 定义成功!\n\n请运行以下命令启动:\n  virsh start {vm_name}',
                 )
                 self.update_info(f'虚拟机 {vm_name} 定义成功')
             else:
                 error_msg = result.stderr.strip()
                 messagebox.showerror('错误', f'定义虚拟机失败:\n{error_msg}')
-                self.update_info(f'定义失败：{error_msg}', False)
+                self.update_info(f'定义失败:{error_msg}', False)
 
         except FileNotFoundError:
             messagebox.showerror(
@@ -625,5 +581,5 @@ class VmPanel(ctk.CTkFrame):
             )
             self.update_info('未找到 virsh 命令', False)
         except Exception as e:
-            messagebox.showerror('错误', f'创建失败：{e!s}')
-            self.update_info(f'创建失败：{e!s}', False)
+            messagebox.showerror('错误', f'创建失败:{e!s}')
+            self.update_info(f'创建失败:{e!s}', False)

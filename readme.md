@@ -1,6 +1,6 @@
 # PyTools
 
-基于 `customtkinter` 的桌面应用工具箱，提供现代化 UI 界面。
+基于 `customtkinter` 的桌面应用工具箱,提供现代化 UI 界面。
 
 ## 功能特性
 
@@ -81,7 +81,7 @@ py_tools/
 
 ## VM 虚拟机配置
 
-参考文档：https://www.libvirt.org/formatdomain.html
+参考文档:https://www.libvirt.org/formatdomain.html
 
 ### 🔧 基础配置（默认启用）
 

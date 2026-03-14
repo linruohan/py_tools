@@ -1,4 +1,4 @@
-from .cpu import CPU, CPUTopology, CPUModel, CPUFeature
+from .cpu import CPU, CPUFeature, CPUModel, CPUTopology
 from .numa import NUMA, NumaNode
 
-__all__ = ['CPU', 'CPUTopology', 'CPUModel', 'CPUFeature', 'NUMA', 'NumaNode']
+__all__ = ['CPU', 'NUMA', 'CPUFeature', 'CPUModel', 'CPUTopology', 'NumaNode']

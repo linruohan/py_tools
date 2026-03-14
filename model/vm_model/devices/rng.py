@@ -1,7 +1,7 @@
 """Rng 设备配置 - 整合策略模式."""
 
-from dataclasses import dataclass, field
-from typing import Optional, Dict, Any, List
+from dataclasses import dataclass
+from typing import Any
 
 
 @dataclass
@@ -10,18 +10,18 @@ class Rng:
 
     model: str = 'virtio'  # virtio, virtio-transitional, virtio-non-transitional
     backend_model: str = 'random'  # random, egd, builtin
-    backend_type: Optional[str] = None  # udp, tcp, unix (用于 egd)
-    backend_source_mode: Optional[str] = None  # bind, connect (用于 egd)
-    backend_source_host: Optional[str] = None  # 主机地址 (用于 egd)
-    backend_source_service: Optional[str] = None  # 服务端口 (用于 egd)
-    backend_source_path: Optional[str] = None  # 设备路径 (用于 random)
-    rate_bytes: Optional[int] = None  # 速率限制字节数
-    rate_period: Optional[int] = None  # 速率限制周期 (毫秒)
-    address: Optional[Dict[str, str]] = None  # 设备地址
-    driver: Optional[Dict[str, str]] = None  # 驱动配置
+    backend_type: str | None = None  # udp, tcp, unix (用于 egd)
+    backend_source_mode: str | None = None  # bind, connect (用于 egd)
+    backend_source_host: str | None = None  # 主机地址 (用于 egd)
+    backend_source_service: str | None = None  # 服务端口 (用于 egd)
+    backend_source_path: str | None = None  # 设备路径 (用于 random)
+    rate_bytes: int | None = None  # 速率限制字节数
+    rate_period: int | None = None  # 速率限制周期 (毫秒)
+    address: dict[str, str] | None = None  # 设备地址
+    driver: dict[str, str] | None = None  # 驱动配置
 
     @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> 'Rng':
+    def from_dict(cls, data: dict[str, Any]) -> 'Rng':
         """从字典创建"""
         return cls(
             model=data.get('model', 'virtio'),
@@ -37,7 +37,7 @@ class Rng:
             driver=data.get('driver'),
         )
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """转换为字典"""
         return {
             'model': self.model,

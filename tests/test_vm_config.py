@@ -45,7 +45,7 @@ def test_domain_config():
     xml_element = domain.to_xml_element()
     print("XML 元素创建成功")
     
-    print("域配置测试通过！\n")
+    print("域配置测试通过!\n")
 
 
 def test_os_config():
@@ -72,7 +72,7 @@ def test_os_config():
     )
     
     print("OS 配置创建成功")
-    print("操作系统配置测试通过！\n")
+    print("操作系统配置测试通过!\n")
 
 
 def test_features_config():
@@ -101,7 +101,7 @@ def test_features_config():
     new_features = Features.from_dict(features_dict)
     print("从字典创建特性配置成功")
     
-    print("特性配置测试通过！\n")
+    print("特性配置测试通过!\n")
 
 
 def test_numa_config():
@@ -127,7 +127,7 @@ def test_numa_config():
     )
     
     print("NUMA 配置创建成功")
-    print("NUMA 配置测试通过！\n")
+    print("NUMA 配置测试通过!\n")
 
 
 def test_memory_backing_config():
@@ -145,7 +145,7 @@ def test_memory_backing_config():
     )
     
     print("内存后端配置创建成功")
-    print("内存后端配置测试通过！\n")
+    print("内存后端配置测试通过!\n")
 
 
 def test_cputune_config():
@@ -164,7 +164,7 @@ def test_cputune_config():
     )
     
     print("CPU 调优配置创建成功")
-    print("CPU 调优配置测试通过！\n")
+    print("CPU 调优配置测试通过!\n")
 
 
 def test_throttlegroups_config():
@@ -184,7 +184,7 @@ def test_throttlegroups_config():
     )
     
     print("节流组配置创建成功")
-    print("节流组配置测试通过！\n")
+    print("节流组配置测试通过!\n")
 
 
 def test_resource_config():
@@ -198,7 +198,7 @@ def test_resource_config():
     )
     
     print("资源配置创建成功")
-    print("资源配置测试通过！\n")
+    print("资源配置测试通过!\n")
 
 
 def test_sysinfo_config():
@@ -216,7 +216,7 @@ def test_sysinfo_config():
     )
     
     print("系统信息配置创建成功")
-    print("系统信息配置测试通过！\n")
+    print("系统信息配置测试通过!\n")
 
 
 if __name__ == "__main__":
@@ -232,4 +232,4 @@ if __name__ == "__main__":
     test_resource_config()
     test_sysinfo_config()
     
-    print("所有测试通过！")
+    print("所有测试通过!")

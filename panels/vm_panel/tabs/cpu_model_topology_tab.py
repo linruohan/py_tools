@@ -1,5 +1,7 @@
 """CPU 模型与拓扑配置 Tab - CPU 模型、特性、缓存配置."""
 
+from typing import ClassVar
+
 import customtkinter as ctk
 
 from components.inner_tab_panel import InnerTabPanel
@@ -336,7 +338,7 @@ class CPUCacheSubTab(ctk.CTkFrame):
 class CPUModelTopologyTab(ctk.CTkFrame):
     """CPU 模型与拓扑配置 Tab."""
 
-    SUB_TABS_CONFIG = {
+    SUB_TABS_CONFIG: ClassVar[dict] = {
         'model': {
             'name': 'CPU 模型',
             'class': CPUModelSubTab,

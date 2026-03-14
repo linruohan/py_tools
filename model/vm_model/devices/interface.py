@@ -1,7 +1,7 @@
 """Interface 设备配置 - 整合策略模式."""
 
-from dataclasses import dataclass, field
-from typing import Optional, Dict, Any
+from dataclasses import dataclass
+from typing import Any
 
 
 @dataclass
@@ -9,23 +9,23 @@ class Interface:
     """网络设备配置"""
 
     type: str = 'network'  # network, bridge, user, internal, direct
-    source: Optional[str] = None
-    target: Optional[str] = None
-    mac: Optional[str] = None
+    source: str | None = None
+    target: str | None = None
+    mac: str | None = None
     model: str = 'virtio'
-    driver: Optional[Dict[str, str]] = None
-    address: Optional[Dict[str, str]] = None
-    mtu: Optional[int] = None
-    virtualport_type: Optional[str] = None
-    virtualport_params: Optional[Dict[str, str]] = None
-    port: Optional[str] = None
-    portgroup: Optional[str] = None
-    inbound: Optional[Dict[str, str]] = None
-    outbound: Optional[Dict[str, str]] = None
+    driver: dict[str, str] | None = None
+    address: dict[str, str] | None = None
+    mtu: int | None = None
+    virtualport_type: str | None = None
+    virtualport_params: dict[str, str] | None = None
+    port: str | None = None
+    portgroup: str | None = None
+    inbound: dict[str, str] | None = None
+    outbound: dict[str, str] | None = None
     link_state: str = 'up'
 
     @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> 'Interface':
+    def from_dict(cls, data: dict[str, Any]) -> 'Interface':
         """从字典创建"""
         return cls(
             type=data.get('type', 'network'),
@@ -45,7 +45,7 @@ class Interface:
             link_state=data.get('link_state', 'up'),
         )
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """转换为字典"""
         return {
             'type': self.type,

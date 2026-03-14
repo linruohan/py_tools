@@ -1,7 +1,7 @@
 """Shmem 设备配置 - 整合策略模式."""
 
-from dataclasses import dataclass, field
-from typing import Optional, Dict, Any, List
+from dataclasses import dataclass
+from typing import Any
 
 
 @dataclass
@@ -11,10 +11,10 @@ class Shmem:
     name: str = ''  # 共享内存名称
     size: int = 0  # 共享内存大小
     unit: str = 'MiB'  # 单位
-    address: Optional[Dict[str, str]] = None  # 设备地址
+    address: dict[str, str] | None = None  # 设备地址
 
     @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> 'Shmem':
+    def from_dict(cls, data: dict[str, Any]) -> 'Shmem':
         """从字典创建"""
         return cls(
             name=data.get('name', ''),
@@ -23,7 +23,7 @@ class Shmem:
             address=data.get('address'),
         )
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """转换为字典"""
         return {
             'name': self.name,

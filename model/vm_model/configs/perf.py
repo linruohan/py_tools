@@ -1,5 +1,4 @@
 from dataclasses import dataclass, field
-from typing import Optional, List
 
 
 @dataclass
@@ -8,15 +7,15 @@ class PerfEvent:
 
     name: str
     enabled: bool
-    period: Optional[int] = None
-    freq: Optional[int] = None
-    config: Optional[str] = None
-    config1: Optional[str] = None
-    config2: Optional[str] = None
+    period: int | None = None
+    freq: int | None = None
+    config: str | None = None
+    config1: str | None = None
+    config2: str | None = None
 
 
 @dataclass
 class Perf:
     """性能配置"""
 
-    events: List[PerfEvent] = field(default_factory=list)
+    events: list[PerfEvent] = field(default_factory=list)

@@ -1,10 +1,10 @@
 """Disk 设备配置 - 整合策略模式."""
 
-from dataclasses import dataclass, field
-from typing import Optional, Dict, Any
+from dataclasses import dataclass
+from typing import Any
 
 # 从 config 模块导入枚举类型
-from config.strategies.option_strategies import DiskBusType, DiskType, CacheMode
+from config.strategies.option_strategies import CacheMode, DiskBusType, DiskType
 
 
 @dataclass
@@ -15,24 +15,24 @@ class Disk:
     device: str = 'disk'  # disk, cdrom, floppy, lun
     bus: DiskBusType = DiskBusType.VIRTIO
     target: str = 'vda'
-    driver: Optional[str] = None
+    driver: str | None = None
     cache: CacheMode = CacheMode.NONE
-    io: Optional[str] = None
-    discard: Optional[str] = None
-    detect_zeroes: Optional[bool] = None
-    source_file: Optional[str] = None
-    source_protocol: Optional[str] = None
-    source_dev: Optional[str] = None
-    snapshot: Optional[str] = None  # on, off
+    io: str | None = None
+    discard: str | None = None
+    detect_zeroes: bool | None = None
+    source_file: str | None = None
+    source_protocol: str | None = None
+    source_dev: str | None = None
+    snapshot: str | None = None  # on, off
     readonly: bool = False
     shareable: bool = False
     transient: bool = False
-    capacity: Optional[int] = None
-    allocation: Optional[int] = None
-    physical: Optional[int] = None
+    capacity: int | None = None
+    allocation: int | None = None
+    physical: int | None = None
 
     @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> 'Disk':
+    def from_dict(cls, data: dict[str, Any]) -> 'Disk':
         """从字典创建"""
         disk_type = data.get('type', 'qcow2')
         if isinstance(disk_type, str):
@@ -68,7 +68,7 @@ class Disk:
             physical=data.get('physical'),
         )
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """转换为字典"""
         return {
             'type': self.type.value,

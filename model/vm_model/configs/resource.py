@@ -1,5 +1,4 @@
 from dataclasses import dataclass, field
-from typing import Optional, List
 
 
 @dataclass
@@ -8,7 +7,7 @@ class Resource:
 
     name: str
     value: int
-    unit: Optional[str] = None
+    unit: str | None = None
 
 
 @dataclass
@@ -22,6 +21,6 @@ class FibreChannel:
 class Resources:
     """资源集合配置"""
 
-    resources: List[Resource] = field(default_factory=list)
-    partition: Optional[str] = None
-    fibrechannel: Optional[FibreChannel] = None
+    resources: list[Resource] = field(default_factory=list)
+    partition: str | None = None
+    fibrechannel: FibreChannel | None = None

@@ -198,7 +198,7 @@ class MemoryBackingTab(ctk.CTkFrame):
 
     def _update_delete_buttons(self):
         """更新删除按钮的可见性."""
-        for i, entry in enumerate(self.hugepage_entries):
+        for entry in self.hugepage_entries:
             for widget in entry['frame'].winfo_children():
                 if isinstance(widget, ctk.CTkButton):
                     if len(self.hugepage_entries) == 1:

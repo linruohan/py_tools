@@ -131,7 +131,7 @@ class MemoryAllocationTab(ctk.CTkFrame):
             '内存 (memory):\n'
             '启动时分配的最大内存。\n\n'
             '当前内存 (currentMemory):\n'
-            '实际分配的内存，可以小于\n'
+            '实际分配的内存,可以小于\n'
             '最大值以支持内存气球。\n\n'
             '最大内存 (maxMemory):\n'
             '运行时可通过热插拔增加\n'

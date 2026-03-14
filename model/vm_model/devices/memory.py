@@ -1,7 +1,7 @@
 """Memory 设备配置 - 整合策略模式."""
 
 from dataclasses import dataclass, field
-from typing import Optional, Dict, Any, List
+from typing import Any
 
 # 从 config 模块导入枚举类型
 from config.strategies.option_strategies import MemoryUnit
@@ -13,18 +13,18 @@ class Memory:
 
     size: int = 0
     unit: MemoryUnit = MemoryUnit.MIB
-    nodemask: Optional[str] = None
-    access: Optional[str] = None
-    align: Optional[str] = None
-    labels: Optional[List[str]] = field(default_factory=list)
-    slots: Optional[int] = None
-    use: Optional[str] = None
-    replace: Optional[str] = None
-    alias: Optional[str] = None
-    address: Optional[Dict[str, str]] = None
+    nodemask: str | None = None
+    access: str | None = None
+    align: str | None = None
+    labels: list[str] | None = field(default_factory=list)
+    slots: int | None = None
+    use: str | None = None
+    replace: str | None = None
+    alias: str | None = None
+    address: dict[str, str] | None = None
 
     @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> 'Memory':
+    def from_dict(cls, data: dict[str, Any]) -> 'Memory':
         """从字典创建"""
         unit = data.get('unit', 'MiB')
         if isinstance(unit, str):
@@ -44,7 +44,7 @@ class Memory:
             address=data.get('address'),
         )
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """转换为字典"""
         return {
             'size': self.size,

@@ -1,5 +1,4 @@
 from dataclasses import dataclass, field
-from typing import Optional, List
 
 
 @dataclass
@@ -33,7 +32,7 @@ class Cache:
     level: int
     type: str  # code, data, both
     size: int
-    unit: Optional[str] = None  # KiB, MiB, GiB, TiB
+    unit: str | None = None  # KiB, MiB, GiB, TiB
 
 
 @dataclass
@@ -49,9 +48,9 @@ class CacheTune:
     """缓存调优配置"""
 
     vcpus: str
-    caches: List[Cache] = field(default_factory=list)
-    monitors: List[CacheMonitor] = field(default_factory=list)
-    id: Optional[int] = None
+    caches: list[Cache] = field(default_factory=list)
+    monitors: list[CacheMonitor] = field(default_factory=list)
+    id: int | None = None
 
 
 @dataclass
@@ -67,7 +66,7 @@ class MemoryTune:
     """内存调优配置"""
 
     vcpus: str
-    nodes: List[MemoryNode] = field(default_factory=list)
+    nodes: list[MemoryNode] = field(default_factory=list)
 
 
 @dataclass
@@ -75,8 +74,8 @@ class VCpuSched:
     """VCPU 调度配置"""
 
     scheduler: str  # batch, idle, fifo, rr
-    vcpus: Optional[str] = None
-    priority: Optional[int] = None
+    vcpus: str | None = None
+    priority: int | None = None
 
 
 @dataclass
@@ -84,8 +83,8 @@ class IOThreadSched:
     """IOThread 调度配置"""
 
     scheduler: str  # batch, idle, fifo, rr
-    iothreads: Optional[str] = None
-    priority: Optional[int] = None
+    iothreads: str | None = None
+    priority: int | None = None
 
 
 @dataclass
@@ -93,27 +92,27 @@ class EmulatorSched:
     """模拟器调度配置"""
 
     scheduler: str  # batch, idle, fifo, rr
-    priority: Optional[int] = None
+    priority: int | None = None
 
 
 @dataclass
 class CpuTune:
     """CPU 调优配置"""
 
-    vcpu_pins: List[VCPUPin] = field(default_factory=list)
-    emulator_pin: Optional[EmulatorPin] = None
-    iothread_pins: List[IOThreadPin] = field(default_factory=list)
-    shares: Optional[int] = None
-    period: Optional[int] = None
-    quota: Optional[int] = None
-    global_period: Optional[int] = None
-    global_quota: Optional[int] = None
-    emulator_period: Optional[int] = None
-    emulator_quota: Optional[int] = None
-    iothread_period: Optional[int] = None
-    iothread_quota: Optional[int] = None
-    vcpu_sched: Optional[VCpuSched] = None
-    iothread_sched: Optional[IOThreadSched] = None
-    emulator_sched: Optional[EmulatorSched] = None
-    cache_tunes: List[CacheTune] = field(default_factory=list)
-    memory_tunes: List[MemoryTune] = field(default_factory=list)
+    vcpu_pins: list[VCPUPin] = field(default_factory=list)
+    emulator_pin: EmulatorPin | None = None
+    iothread_pins: list[IOThreadPin] = field(default_factory=list)
+    shares: int | None = None
+    period: int | None = None
+    quota: int | None = None
+    global_period: int | None = None
+    global_quota: int | None = None
+    emulator_period: int | None = None
+    emulator_quota: int | None = None
+    iothread_period: int | None = None
+    iothread_quota: int | None = None
+    vcpu_sched: VCpuSched | None = None
+    iothread_sched: IOThreadSched | None = None
+    emulator_sched: EmulatorSched | None = None
+    cache_tunes: list[CacheTune] = field(default_factory=list)
+    memory_tunes: list[MemoryTune] = field(default_factory=list)

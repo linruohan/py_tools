@@ -1,7 +1,7 @@
 """Channel 设备配置 - 整合策略模式."""
 
-from dataclasses import dataclass, field
-from typing import Optional, Dict, Any, List
+from dataclasses import dataclass
+from typing import Any
 
 
 @dataclass
@@ -9,18 +9,18 @@ class Channel:
     """Channel (Virtio 串行通道) 设备配置"""
 
     type: str = 'unix'  # unix, tcp, udp, dev, file, pipe, nmdm, spicevmc, spiceport
-    name: Optional[str] = None  # 通道名称 (如 com.redhat.rhevm.vdsm)
-    source_path: Optional[str] = None  # 源路径
-    source_mode: Optional[str] = None  # 源模式 (bind, connect)
-    source_host: Optional[str] = None  # 源主机
-    source_service: Optional[str] = None  # 源服务
-    target_type: Optional[str] = None  # 目标类型
-    target_name: Optional[str] = None  # 目标名称
-    target_state: Optional[str] = None  # 目标状态 (connected, disconnected)
-    address: Optional[Dict[str, str]] = None  # 设备地址
+    name: str | None = None  # 通道名称 (如 com.redhat.rhevm.vdsm)
+    source_path: str | None = None  # 源路径
+    source_mode: str | None = None  # 源模式 (bind, connect)
+    source_host: str | None = None  # 源主机
+    source_service: str | None = None  # 源服务
+    target_type: str | None = None  # 目标类型
+    target_name: str | None = None  # 目标名称
+    target_state: str | None = None  # 目标状态 (connected, disconnected)
+    address: dict[str, str] | None = None  # 设备地址
 
     @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> 'Channel':
+    def from_dict(cls, data: dict[str, Any]) -> 'Channel':
         """从字典创建"""
         return cls(
             type=data.get('type', 'unix'),
@@ -35,7 +35,7 @@ class Channel:
             address=data.get('address'),
         )
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """转换为字典"""
         return {
             'type': self.type,

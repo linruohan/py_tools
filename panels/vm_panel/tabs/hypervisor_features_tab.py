@@ -1,5 +1,7 @@
 """虚拟化特性配置 Tab - Hypervisor features."""
 
+from typing import ClassVar
+
 import customtkinter as ctk
 
 from components.inner_tab_panel import InnerTabPanel
@@ -333,7 +335,7 @@ class GeneralFeaturesSubTab(ctk.CTkFrame):
 class HypervisorFeaturesTab(ctk.CTkFrame):
     """虚拟化特性配置 Tab."""
 
-    SUB_TABS_CONFIG = {
+    SUB_TABS_CONFIG: ClassVar[dict] = {
         'general': {
             'name': '通用特性',
             'class': GeneralFeaturesSubTab,

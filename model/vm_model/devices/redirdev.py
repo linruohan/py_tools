@@ -1,7 +1,7 @@
 """Redirdev 设备配置 - 整合策略模式."""
 
-from dataclasses import dataclass, field
-from typing import Optional, Dict, Any, List
+from dataclasses import dataclass
+from typing import Any
 
 
 @dataclass
@@ -10,17 +10,17 @@ class Redirdev:
 
     type: str = 'spicevmc'  # spicevmc, tcp, usb
     bus: str = 'usb'  # usb
-    vendor_id: Optional[str] = None  # 厂商 ID
-    product_id: Optional[str] = None  # 产品 ID
-    port: Optional[str] = None  # USB 端口
-    source_host: Optional[str] = None  # 源主机 (用于 tcp 模式)
-    source_service: Optional[str] = None  # 源服务 (用于 tcp 模式)
-    source_path: Optional[str] = None  # 源路径 (用于 unix 模式)
-    boot_order: Optional[int] = None  # 启动顺序
-    address: Optional[Dict[str, str]] = None  # 设备地址
+    vendor_id: str | None = None  # 厂商 ID
+    product_id: str | None = None  # 产品 ID
+    port: str | None = None  # USB 端口
+    source_host: str | None = None  # 源主机 (用于 tcp 模式)
+    source_service: str | None = None  # 源服务 (用于 tcp 模式)
+    source_path: str | None = None  # 源路径 (用于 unix 模式)
+    boot_order: int | None = None  # 启动顺序
+    address: dict[str, str] | None = None  # 设备地址
 
     @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> 'Redirdev':
+    def from_dict(cls, data: dict[str, Any]) -> 'Redirdev':
         """从字典创建"""
         return cls(
             type=data.get('type', 'spicevmc'),
@@ -35,7 +35,7 @@ class Redirdev:
             address=data.get('address'),
         )
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """转换为字典"""
         return {
             'type': self.type,

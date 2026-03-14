@@ -1,5 +1,4 @@
 from dataclasses import dataclass, field
-from typing import List, Optional, Union
 
 
 @dataclass
@@ -14,35 +13,35 @@ class FirmwareFeature:
 class Loader:
     """引导加载器配置"""
 
-    path: Optional[str] = None
-    readonly: Optional[bool] = None
-    secure: Optional[bool] = None
-    type: Optional[str] = None  # rom or pflash
-    stateless: Optional[bool] = None
-    format: Optional[str] = None
+    path: str | None = None
+    readonly: bool | None = None
+    secure: bool | None = None
+    type: str | None = None  # rom or pflash
+    stateless: bool | None = None
+    format: str | None = None
 
 
 @dataclass
 class NvramSource:
     """NVRAM 源配置"""
 
-    file: Optional[str] = None
-    protocol: Optional[str] = None
-    name: Optional[str] = None
-    hosts: List[dict] = field(default_factory=list)
-    auth: Optional[dict] = None
+    file: str | None = None
+    protocol: str | None = None
+    name: str | None = None
+    hosts: list[dict] = field(default_factory=list)
+    auth: dict | None = None
 
 
 @dataclass
 class Nvram:
     """NVRAM 配置"""
 
-    path: Optional[str] = None
-    template: Optional[str] = None
-    templateFormat: Optional[str] = None
-    type: Optional[str] = None  # file, block, network
-    source: Optional[NvramSource] = None
-    format: Optional[str] = None
+    path: str | None = None
+    template: str | None = None
+    templateFormat: str | None = None
+    type: str | None = None  # file, block, network
+    source: NvramSource | None = None
+    format: str | None = None
 
 
 @dataclass
@@ -50,7 +49,7 @@ class Varstore:
     """变量存储配置"""
 
     path: str
-    template: Optional[str] = None
+    template: str | None = None
 
 
 @dataclass
@@ -72,15 +71,15 @@ class Bootmenu:
     """启动菜单配置"""
 
     enable: bool
-    timeout: Optional[int] = None
+    timeout: int | None = None
 
 
 @dataclass
 class Bios:
     """BIOS 配置"""
 
-    useserial: Optional[bool] = None
-    rebootTimeout: Optional[int] = None
+    useserial: bool | None = None
+    rebootTimeout: int | None = None
 
 
 @dataclass
@@ -95,7 +94,7 @@ class AcpiTable:
 class Acpi:
     """ACPI 配置"""
 
-    tables: List[AcpiTable] = field(default_factory=list)
+    tables: list[AcpiTable] = field(default_factory=list)
 
 
 @dataclass
@@ -120,29 +119,29 @@ class OS:
     """操作系统配置"""
 
     type: str
-    arch: Optional[str] = None
-    machine: Optional[str] = None
-    firmware: Optional[str] = None  # bios, efi
-    firmware_features: List[FirmwareFeature] = field(default_factory=list)
-    loader: Optional[Loader] = None
-    nvram: Optional[Nvram] = None
-    varstore: Optional[Varstore] = None
-    boot: List[Boot] = field(default_factory=list)
-    smbios: Optional[Smbios] = None
-    bootmenu: Optional[Bootmenu] = None
-    bios: Optional[Bios] = None
-    bootloader: Optional[str] = None
-    bootloader_args: Optional[str] = None
-    kernel: Optional[str] = None
-    initrd: Optional[str] = None
-    cmdline: Optional[str] = None
-    shim: Optional[str] = None
-    dtb: Optional[str] = None
-    init: Optional[str] = None
-    initargs: List[str] = field(default_factory=list)
-    initenv: List[dict] = field(default_factory=list)
-    initdir: Optional[str] = None
-    inituser: Optional[str] = None
-    initgroup: Optional[str] = None
-    idmap: Optional[Idmap] = None
-    acpi: Optional[Acpi] = None
+    arch: str | None = None
+    machine: str | None = None
+    firmware: str | None = None  # bios, efi
+    firmware_features: list[FirmwareFeature] = field(default_factory=list)
+    loader: Loader | None = None
+    nvram: Nvram | None = None
+    varstore: Varstore | None = None
+    boot: list[Boot] = field(default_factory=list)
+    smbios: Smbios | None = None
+    bootmenu: Bootmenu | None = None
+    bios: Bios | None = None
+    bootloader: str | None = None
+    bootloader_args: str | None = None
+    kernel: str | None = None
+    initrd: str | None = None
+    cmdline: str | None = None
+    shim: str | None = None
+    dtb: str | None = None
+    init: str | None = None
+    initargs: list[str] = field(default_factory=list)
+    initenv: list[dict] = field(default_factory=list)
+    initdir: str | None = None
+    inituser: str | None = None
+    initgroup: str | None = None
+    idmap: Idmap | None = None
+    acpi: Acpi | None = None

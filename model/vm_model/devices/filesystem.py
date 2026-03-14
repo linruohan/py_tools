@@ -1,5 +1,5 @@
-from dataclasses import dataclass, field
-from typing import Optional, List, Dict, Any
+from dataclasses import dataclass
+from typing import Any
 
 
 @dataclass
@@ -13,12 +13,12 @@ class AccessMode:
 class Source:
     """文件系统源配置"""
 
-    dir: Optional[str] = None  # 本地目录
-    name: Optional[str] = None  # 共享名称
-    protocol: Optional[str] = None  # 协议
-    host: Optional[str] = None  # 主机
-    port: Optional[int] = None  # 端口
-    socket: Optional[str] = None  # 套接字
+    dir: str | None = None  # 本地目录
+    name: str | None = None  # 共享名称
+    protocol: str | None = None  # 协议
+    host: str | None = None  # 主机
+    port: int | None = None  # 端口
+    socket: str | None = None  # 套接字
 
 
 @dataclass
@@ -26,24 +26,24 @@ class Filesystem:
     """Filesystem 设备配置"""
 
     type: str = 'mount'  # mount, template, trans
-    access_mode: Optional[AccessMode] = None
-    source: Optional[Source] = None
+    access_mode: AccessMode | None = None
+    source: Source | None = None
     target: str = 'mount_tag'  # 挂载标签
-    readonly: Optional[bool] = None  # 只读
-    driver: Optional[Dict[str, Any]] = None  # 驱动配置
-    qemu_security_model: Optional[str] = None  # QEMU 安全模型
-    selinux_relabel: Optional[bool] = None  # SELinux 重标签
-    mdev: Optional[str] = None  # 设备名称
-    pool: Optional[str] = None  # 存储池
-    volume: Optional[str] = None  # 卷
-    format: Optional[str] = None  # 格式
-    snapshots: Optional[bool] = None  # 快照
-    shared: Optional[bool] = None  # 共享
-    copy_on_read: Optional[bool] = None  # 读时复制
-    address: Optional[Dict[str, Any]] = None  # 设备地址
+    readonly: bool | None = None  # 只读
+    driver: dict[str, Any] | None = None  # 驱动配置
+    qemu_security_model: str | None = None  # QEMU 安全模型
+    selinux_relabel: bool | None = None  # SELinux 重标签
+    mdev: str | None = None  # 设备名称
+    pool: str | None = None  # 存储池
+    volume: str | None = None  # 卷
+    format: str | None = None  # 格式
+    snapshots: bool | None = None  # 快照
+    shared: bool | None = None  # 共享
+    copy_on_read: bool | None = None  # 读时复制
+    address: dict[str, Any] | None = None  # 设备地址
 
     @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> 'Filesystem':
+    def from_dict(cls, data: dict[str, Any]) -> 'Filesystem':
         """从字典创建"""
         access_mode = data.get('access_mode')
         if access_mode and isinstance(access_mode, dict):
@@ -72,7 +72,7 @@ class Filesystem:
             address=data.get('address'),
         )
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """转换为字典"""
         return {
             'type': self.type,
@@ -92,4 +92,3 @@ class Filesystem:
             'copy_on_read': self.copy_on_read,
             'address': self.address,
         }
-

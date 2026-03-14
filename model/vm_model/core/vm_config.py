@@ -2,9 +2,9 @@
 
 from ..configs.basic_config import BasicConfig
 from ..configs.cpu_allocation_config import CPUAllocationConfig as CPUConfig
+from ..configs.devices_config import DevicesConfig
 from ..configs.memory_allocation_config import MemoryAllocationConfig as MemoryConfig
 from ..configs.os_booting_config import OSBootingConfig as OSConfig
-from ..configs.devices_config import DevicesConfig
 
 
 class VMConfig:
@@ -24,12 +24,12 @@ class VMConfig:
         self.resource_partitioning = {'partition': ''}
         self.fibre_channel_vmid = {'appid': ''}
 
-        # 简化版本，移除策略管理器
+        # 简化版本,移除策略管理器
         self._sync_context()
 
     def _sync_context(self) -> None:
         """同步配置上下文."""
-        # 简化版本，移除策略管理器
+        # 简化版本,移除策略管理器
         pass
 
     def update_from_tab(self, tab_key: str, tab_data: dict) -> None:
@@ -43,7 +43,12 @@ class VMConfig:
             return
 
         # 基础配置
-        if tab_key == 'general_metadata' or tab_key == 'basic_info' or 'basic' in tab_data or 'name' in tab_data:
+        if (
+            tab_key == 'general_metadata'
+            or tab_key == 'basic_info'
+            or 'basic' in tab_data
+            or 'name' in tab_data
+        ):
             self.basic.update(tab_data)
             self._sync_context()
 
@@ -118,7 +123,7 @@ class VMConfig:
         """验证配置的有效性.
 
         Returns:
-            (是否有效，错误信息)
+            (是否有效,错误信息)
         """
         errors = []
 
@@ -167,7 +172,9 @@ class VMConfig:
         return {
             'name': self.basic.name,
             'description': self.basic.description or '',
-            'memory': f'{self.memory.memory // 1024}MB' if hasattr(self.memory, 'memory') else '0MB',
+            'memory': f'{self.memory.memory // 1024}MB'
+            if hasattr(self.memory, 'memory')
+            else '0MB',
             'vcpu': self.cpu.vcpu if hasattr(self.cpu, 'vcpu') else 0,
             'os_type': self.os.os_type if hasattr(self.os, 'os_type') else 'hvm',
             'arch': self.os.arch if hasattr(self.os, 'arch') else 'x86_64',

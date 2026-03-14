@@ -2,7 +2,6 @@
 
 import customtkinter as ctk
 
-from components.inner_tab_panel import InnerTabPanel
 from components.styles import BG_COLOR_CONTENT, CTK_FONT_BOLD, CTK_FONT_MAIN, CTK_FONT_SMALL
 
 

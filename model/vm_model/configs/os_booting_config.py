@@ -6,12 +6,14 @@ from dataclasses import dataclass
 @dataclass
 class BootDevice:
     """启动设备配置."""
+
     dev: str  # fd, hd, cdrom, network
 
 
 @dataclass
 class Bootmenu:
     """启动菜单配置."""
+
     enable: bool = False
     timeout: int = -1  # -1 表示禁用
 
@@ -19,6 +21,7 @@ class Bootmenu:
 @dataclass
 class Bios:
     """BIOS 配置."""
+
     useserial: bool = False
     rebootTimeout: int = -1
 
@@ -26,12 +29,14 @@ class Bios:
 @dataclass
 class Smbios:
     """SMBIOS 配置."""
+
     mode: str = 'emulate'  # emulate, host, sysinfo
 
 
 @dataclass
 class Loader:
     """引导加载器配置."""
+
     path: str = ''
     readonly: bool = True
     secure: bool = False
@@ -43,6 +48,7 @@ class Loader:
 @dataclass
 class Nvram:
     """NVRAM 配置."""
+
     path: str = ''
     template: str = ''
     templateFormat: str = ''
@@ -53,6 +59,7 @@ class Nvram:
 @dataclass
 class FirmwareFeature:
     """固件特性."""
+
     name: str
     enabled: bool
 
@@ -60,6 +67,7 @@ class FirmwareFeature:
 @dataclass
 class AcpiTable:
     """ACPI 表配置."""
+
     type: str  # raw, rawset, slic, msdm
     path: str
 
@@ -174,8 +182,7 @@ class OSBootingConfig:
             self.idmap_gid_count = data['idmap_gid_count']
         if 'acpi_tables' in data:
             self.acpi_tables = [
-                AcpiTable(**t) if isinstance(t, dict) else t
-                for t in data['acpi_tables']
+                AcpiTable(**t) if isinstance(t, dict) else t for t in data['acpi_tables']
             ]
 
         # Loader 配置
@@ -199,8 +206,7 @@ class OSBootingConfig:
             devices = data['boot_devices']
             if isinstance(devices, list):
                 self.boot_devices = [
-                    BootDevice(**d) if isinstance(d, dict) else BootDevice(dev=d)
-                    for d in devices
+                    BootDevice(**d) if isinstance(d, dict) else BootDevice(dev=d) for d in devices
                 ]
             else:
                 self.boot_devices = []
@@ -285,9 +291,7 @@ class OSBootingConfig:
             'idmap_gid_start': self.idmap_gid_start,
             'idmap_gid_target': self.idmap_gid_target,
             'idmap_gid_count': self.idmap_gid_count,
-            'acpi_tables': [
-                {'type': t.type, 'path': t.path} for t in self.acpi_tables
-            ],
+            'acpi_tables': [{'type': t.type, 'path': t.path} for t in self.acpi_tables],
             'firmware_features': [
                 {'name': f.name, 'enabled': f.enabled} for f in self.firmware_features
             ],

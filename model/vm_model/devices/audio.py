@@ -1,7 +1,7 @@
 """Audio 设备配置 - 整合策略模式."""
 
-from dataclasses import dataclass, field
-from typing import Optional, Dict, Any, List
+from dataclasses import dataclass
+from typing import Any
 
 
 @dataclass
@@ -13,7 +13,7 @@ class AudioSettings:
     format: str = 's16'  # s8, u8, s16, u16, s32, u32, f32
 
     @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> 'AudioSettings':
+    def from_dict(cls, data: dict[str, Any]) -> 'AudioSettings':
         """从字典创建"""
         return cls(
             frequency=data.get('frequency', 44100),
@@ -21,7 +21,7 @@ class AudioSettings:
             format=data.get('format', 's16'),
         )
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """转换为字典"""
         return {
             'frequency': self.frequency,
@@ -38,16 +38,16 @@ class AudioIO:
     fixed_settings: bool = False
     voices: int = 1
     buffer_length: int = 100
-    dev: Optional[str] = None  # ALSA/OSS 设备路径
-    server_name: Optional[str] = None  # Jack 服务器名称
-    client_name: Optional[str] = None  # Jack 客户端名称
-    connect_ports: Optional[str] = None  # Jack 端口正则表达式
+    dev: str | None = None  # ALSA/OSS 设备路径
+    server_name: str | None = None  # Jack 服务器名称
+    client_name: str | None = None  # Jack 客户端名称
+    connect_ports: str | None = None  # Jack 端口正则表达式
     exact_name: bool = False  # Jack 精确名称
-    buffer_count: Optional[int] = None  # 缓冲区数量
-    settings: Optional[AudioSettings] = None
+    buffer_count: int | None = None  # 缓冲区数量
+    settings: AudioSettings | None = None
 
     @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> 'AudioIO':
+    def from_dict(cls, data: dict[str, Any]) -> 'AudioIO':
         """从字典创建"""
         settings_data = data.get('settings')
         settings = AudioSettings.from_dict(settings_data) if settings_data else None
@@ -66,7 +66,7 @@ class AudioIO:
             settings=settings,
         )
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """转换为字典"""
         result = {
             'mixing_engine': self.mixing_engine,
@@ -92,11 +92,11 @@ class Audio:
     id: int = 1
     type: str = 'pulseaudio'  # none, alsa, coreaudio, dbus, jack, oss, pipewire, pulseaudio, sdl, spice, file
     timer_period: int = 40  # 微秒
-    input: Optional[AudioIO] = None
-    output: Optional[AudioIO] = None
+    input: AudioIO | None = None
+    output: AudioIO | None = None
 
     @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> 'Audio':
+    def from_dict(cls, data: dict[str, Any]) -> 'Audio':
         """从字典创建"""
         input_data = data.get('input')
         output_data = data.get('output')
@@ -109,7 +109,7 @@ class Audio:
             output=AudioIO.from_dict(output_data) if output_data else None,
         )
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """转换为字典"""
         result = {
             'id': self.id,

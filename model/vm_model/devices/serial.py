@@ -1,7 +1,7 @@
 """Serial 设备配置 - 整合策略模式."""
 
-from dataclasses import dataclass, field
-from typing import Optional, Dict, Any, List
+from dataclasses import dataclass
+from typing import Any
 
 
 @dataclass
@@ -9,21 +9,21 @@ class Serial:
     """Serial (串口) 设备配置"""
 
     type: str = 'pty'  # pty, file, dev, null, udp, tcp, unix, pipe, nmdm, spicevmc
-    source_path: Optional[str] = None  # 源路径
-    source_mode: Optional[str] = None  # 源模式 (bind, connect)
-    source_host: Optional[str] = None  # 源主机
-    source_service: Optional[str] = None  # 源服务
-    source_tty: Optional[str] = None  # TTY 设备
-    target_type: Optional[str] = None  # 目标类型
-    target_port: Optional[str] = None  # 目标端口
-    target_path: Optional[str] = None  # 目标路径
-    log_file: Optional[str] = None  # 日志文件
-    protocol: Optional[str] = None  # 协议 (raw, telnet)
-    telnet_interface: Optional[str] = None  # Telnet 接口
-    address: Optional[Dict[str, str]] = None  # 设备地址
+    source_path: str | None = None  # 源路径
+    source_mode: str | None = None  # 源模式 (bind, connect)
+    source_host: str | None = None  # 源主机
+    source_service: str | None = None  # 源服务
+    source_tty: str | None = None  # TTY 设备
+    target_type: str | None = None  # 目标类型
+    target_port: str | None = None  # 目标端口
+    target_path: str | None = None  # 目标路径
+    log_file: str | None = None  # 日志文件
+    protocol: str | None = None  # 协议 (raw, telnet)
+    telnet_interface: str | None = None  # Telnet 接口
+    address: dict[str, str] | None = None  # 设备地址
 
     @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> 'Serial':
+    def from_dict(cls, data: dict[str, Any]) -> 'Serial':
         """从字典创建"""
         return cls(
             type=data.get('type', 'pty'),
@@ -41,7 +41,7 @@ class Serial:
             address=data.get('address'),
         )
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """转换为字典"""
         return {
             'type': self.type,

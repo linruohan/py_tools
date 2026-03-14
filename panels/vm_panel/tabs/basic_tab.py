@@ -48,7 +48,7 @@ class BasicTab(ctk.CTkFrame):
         # 内存配置选项
         memory_options = ['1G', '2G', '4G', '8G', '16G', '32G', '64G', '128G']
 
-        # ===== 第 1 列：系统配置 =====
+        # ===== 第 1 列: 系统配置 =====
         sys_frame = ctk.CTkFrame(self, fg_color=BG_COLOR_CONTENT, corner_radius=8)
         sys_frame.grid(row=0, column=0, sticky='nsew', padx=5, pady=10)
         sys_frame.grid_columnconfigure(1, weight=1)
@@ -150,7 +150,7 @@ class BasicTab(ctk.CTkFrame):
         self.chipset_type.grid(row=7, column=1, padx=5, pady=5, sticky='ew')
         self.chipset_type.configure(command=self._trigger_change)
 
-        # ===== 第 2 列：CPU 配置 =====
+        # ===== 第 2 列: CPU 配置 =====
         cpu_frame = ctk.CTkFrame(self, fg_color=BG_COLOR_CONTENT, corner_radius=8)
         cpu_frame.grid(row=0, column=1, sticky='nsew', padx=5, pady=10)
         cpu_frame.grid_columnconfigure(1, weight=1)
@@ -212,7 +212,7 @@ class BasicTab(ctk.CTkFrame):
         self.cpu_threads_entry.insert(0, '1')
         self.cpu_threads_entry.bind('<KeyRelease>', lambda e: self._trigger_change())
 
-        # ===== 第 3 列：内存配置 =====
+        # ===== 第 3 列: 内存配置 =====
         mem_frame = ctk.CTkFrame(self, fg_color=BG_COLOR_CONTENT, corner_radius=8)
         mem_frame.grid(row=0, column=2, sticky='nsew', padx=5, pady=10)
         mem_frame.grid_columnconfigure(1, weight=1)
@@ -272,10 +272,10 @@ class BasicTab(ctk.CTkFrame):
         """解析内存值字符串为 MB 整数.
 
         Args:
-            value: 内存值字符串，如 '4G' 或 '512M'
+            value: 内存值字符串,如 '4G' 或 '512M'
 
         Returns:
-            内存值（MB）
+            内存值(MB)
         """
         if not value:
             return 2048
@@ -332,14 +332,14 @@ class BasicTab(ctk.CTkFrame):
         }
 
     def get_config(self) -> dict:
-        """获取配置数据（兼容新接口）."""
+        """获取配置数据(兼容新接口)."""
         return self.get_basic_config()
 
     def to_xml(self) -> dict:
         """生成XML配置字典.
 
         Returns:
-            包含XML配置的字典，用于XML生成器
+            包含XML配置的字典,用于XML生成器
         """
         config = self.get_basic_config()
         return {

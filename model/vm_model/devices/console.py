@@ -1,28 +1,28 @@
 """Console 设备配置 - 整合策略模式."""
 
-from dataclasses import dataclass, field
-from typing import Optional, Dict, Any, List
+from dataclasses import dataclass
+from typing import Any
 
 
 @dataclass
 class Console:
     """Console 设备配置"""
 
-    target_type: Optional[str] = None  # 目标类型
-    target_port: Optional[str] = None  # 目标端口
-    source_path: Optional[str] = None  # 源路径
-    source_mode: Optional[str] = None  # 源模式
-    source_host: Optional[str] = None  # 源主机
-    source_service: Optional[str] = None  # 源服务
+    target_type: str | None = None  # 目标类型
+    target_port: str | None = None  # 目标端口
+    source_path: str | None = None  # 源路径
+    source_mode: str | None = None  # 源模式
+    source_host: str | None = None  # 源主机
+    source_service: str | None = None  # 源服务
     type: str = 'pty'  # pty, file, dev, null, udp, tcp, unix, spicevmc, nmdm
-    log_file: Optional[str] = None  # 日志文件
-    protocol: Optional[str] = None  # 协议类型
-    tty: Optional[str] = None  # TTY 设备
-    prefix: Optional[str] = None  # 前缀
-    address: Optional[Dict[str, str]] = None  # 设备地址
+    log_file: str | None = None  # 日志文件
+    protocol: str | None = None  # 协议类型
+    tty: str | None = None  # TTY 设备
+    prefix: str | None = None  # 前缀
+    address: dict[str, str] | None = None  # 设备地址
 
     @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> 'Console':
+    def from_dict(cls, data: dict[str, Any]) -> 'Console':
         """从字典创建"""
         return cls(
             target_type=data.get('target_type'),
@@ -39,7 +39,7 @@ class Console:
             address=data.get('address'),
         )
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """转换为字典"""
         return {
             'target_type': self.target_type,

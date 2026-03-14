@@ -1,81 +1,76 @@
 """Devices 子模块 - 包含所有设备类型定义."""
 
-from .disk import Disk
-from .interface import Interface
-from .graphics import Graphics
-from .video import Video
 from .audio import Audio
-from .sound import Sound
-from .controller import Controller
-from .hostdev import Hostdev
-from .watchdog import Watchdog
-from .memballoon import Memballoon
-from .iommu import IOMMU
-from .tpm import TPM
-from .rng import Rng
-from .console import Console
+from .backenddomain import BackendDomain
 from .channel import Channel
-from .serial import Serial
-from .parallel import Parallel
-from .smartcard import Smartcard
-from .shmem import Shmem
-from .vsock import Vsock
+from .console import Console
+from .controller import Controller
 from .crypto import Crypto
-from .pstore import Pstore
-from .panic import Panic
+from .disk import Disk
 from .driver import Driver
+from .filesystem import Filesystem
+from .graphics import Graphics
+from .hostdev import Hostdev
 from .hub import Hub
+from .input import Input
+from .interface import Interface
+from .iommu import IOMMU
+from .memballoon import Memballoon
+from .memory import Memory
+from .nvram import Nvram
+from .panic import Panic
+from .parallel import Parallel
+from .pstore import Pstore
 from .redirdev import Redirdev
 from .redirfilter import Redirfilter, UsbFilterRule
-from .backenddomain import BackendDomain
-from .filesystem import Filesystem
-from .input import Input
-from .nvram import Nvram
-from .memory import Memory
+from .rng import Rng
+from .serial import Serial
+from .shmem import Shmem
+from .smartcard import Smartcard
+from .sound import Sound
+from .tpm import TPM
+from .video import Video
+from .vsock import Vsock
+from .watchdog import Watchdog
 
 __all__ = [
-    # 基础设备
-    'Disk',
-    'Interface',
-    'Graphics',
-    'Video',
-    'Audio',
-    'Sound',
-    'Controller',
-    'Input',
-
-    # 主机设备
-    'Hostdev',
-    'BackendDomain',
-
-    # 监控和安全设备
-    'Watchdog',
-    'Memballoon',
     'IOMMU',
     'TPM',
-    'Rng',
-    'Crypto',
-    'Pstore',
-
+    # 基础设备
+    'Audio',
+    # 主机设备
+    'BackendDomain',
     # 控制台和串行设备
-    'Console',
     'Channel',
-    'Serial',
-    'Parallel',
-
-    # USB 设备
-    'Hub',
-    'Redirdev',
-    'Redirfilter',
-    'UsbFilterRule',
-
+    'Console',
+    'Controller',
+    # 监控和安全设备
+    'Crypto',
+    'Disk',
     # 其他设备
-    'Smartcard',
-    'Shmem',
-    'Vsock',
-    'Panic',
     'Driver',
     'Filesystem',
-    'Nvram',
+    'Graphics',
+    'Hostdev',
+    # USB 设备
+    'Hub',
+    'Input',
+    'Interface',
+    'Memballoon',
     'Memory',
+    'Nvram',
+    'Panic',
+    'Parallel',
+    'Pstore',
+    'Redirdev',
+    'Redirfilter',
+    'Rng',
+    'Serial',
+    'Shmem',
+    'Smartcard',
+    'Sound',
+    'UsbFilterRule',
+    'Video',
+    'Vsock',
+    'Watchdog',
 ]

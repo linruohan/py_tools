@@ -1,20 +1,21 @@
 """设备配置主模块 - 组合所有设备子模块."""
 
+from typing import ClassVar
+
 import customtkinter as ctk
 
 from components.inner_tab_panel import InnerTabPanel
-from components.styles import BG_COLOR_CONTENT, CTK_FONT_BOLD, CTK_FONT_MAIN, CTK_FONT_SMALL
 
-from .hostdev import USBHostdevTab, PCIHostdevTab, SCSIHostdevTab, MdevHostdevTab
 from .disk import DiskDevicesTab
 from .graphics import GraphicsTab
+from .hostdev import MdevHostdevTab, PCIHostdevTab, SCSIHostdevTab, USBHostdevTab
 from .others import OthersTab
 
 
 class DevicesTab(ctk.CTkFrame):
     """设备配置 Tab - 包含图形、hostdev 子选项."""
 
-    SUB_TABS_CONFIG = {
+    SUB_TABS_CONFIG: ClassVar[dict] = {
         'graphics': {
             'name': 'Graphics',
             'class': GraphicsTab,

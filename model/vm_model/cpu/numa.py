@@ -1,5 +1,4 @@
 from dataclasses import dataclass, field
-from typing import Optional, List
 
 
 @dataclass
@@ -15,13 +14,13 @@ class NumaNode:
     """NUMA 节点"""
 
     id: int
-    memory: Optional[int] = None
-    unit: Optional[str] = None
-    cpus: Optional[str] = None
-    memAccess: Optional[str] = None  # shared, private
-    discard: Optional[bool] = None
-    distances: List[SiblingDistance] = field(default_factory=list)
-    cache: List[dict] = field(default_factory=list)
+    memory: int | None = None
+    unit: str | None = None
+    cpus: str | None = None
+    memAccess: str | None = None  # shared, private
+    discard: bool | None = None
+    distances: list[SiblingDistance] = field(default_factory=list)
+    cache: list[dict] = field(default_factory=list)
 
 
 @dataclass
@@ -32,7 +31,7 @@ class Latency:
     target: int
     type: str  # access, read, write
     value: int
-    cache: Optional[int] = None
+    cache: int | None = None
 
 
 @dataclass
@@ -43,15 +42,15 @@ class Bandwidth:
     target: int
     type: str  # access, read, write
     value: int
-    unit: Optional[str] = None
+    unit: str | None = None
 
 
 @dataclass
 class NUMA:
     """NUMA 配置"""
 
-    nodes: List[NumaNode] = field(default_factory=list)
-    memAccess: Optional[str] = None  # shared, private
-    interconnects: List[dict] = field(default_factory=list)
-    latencies: List[Latency] = field(default_factory=list)
-    bandwidths: List[Bandwidth] = field(default_factory=list)
+    nodes: list[NumaNode] = field(default_factory=list)
+    memAccess: str | None = None  # shared, private
+    interconnects: list[dict] = field(default_factory=list)
+    latencies: list[Latency] = field(default_factory=list)
+    bandwidths: list[Bandwidth] = field(default_factory=list)

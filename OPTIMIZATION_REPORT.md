@@ -9,14 +9,14 @@
 
 ### 1. 资源文件整合
 - 将 `test_images/` 目录中的所有图片复制到 `resources/images/`
-- 更新 `main.py` 中的图片路径引用：`'test_images'` → `'resources/images'`
+- 更新 `main.py` 中的图片路径引用:`'test_images'` → `'resources/images'`
 - 删除 `test_images/` 目录
 
 ### 2. model/vm_model 目录结构简化
 
-**优化前**：31 个 Python 文件全部在根目录，结构混乱
+**优化前**:31 个 Python 文件全部在根目录,结构混乱
 
-**优化后**：按功能分组为 4 个子目录
+**优化后**:按功能分组为 4 个子目录
 ```
 model/vm_model/
 ├── __init__.py          # 统一导出接口
@@ -63,9 +63,9 @@ model/vm_model/
 
 ### 1. devices_tab.py 大文件拆分
 
-**优化前**：`panels/vm_panel/tabs/devices_tab.py` - 1933 行，75KB
+**优化前**:`panels/vm_panel/tabs/devices_tab.py` - 1933 行,75KB
 
-**优化后**：拆分为 6 个模块
+**优化后**:拆分为 6 个模块
 ```
 panels/vm_panel/tabs/devices/
 ├── __init__.py         (19 行)   - 模块导出
@@ -76,11 +76,11 @@ panels/vm_panel/tabs/devices/
 └── others.py           (163 行)  - 串口/TPM/控制器等其他设备
 ```
 
-原始 `devices_tab.py` 保留作为兼容层，从新模块导入所有类。
+原始 `devices_tab.py` 保留作为兼容层,从新模块导入所有类。
 
 ### 2. 导入路径修复
 
-修复了以下导入路径问题：
+修复了以下导入路径问题:
 - `model/vm_model/configs/devices_config.py`: `.devices.*` → `..devices.*`
 - `model/vm_model/core/converter.py`: `model.vm_model.domain` → `.domain`
 - `model/vm_model/core/domain.py`: `.cpu.numa` → `..cpu.numa`
@@ -92,7 +92,7 @@ panels/vm_panel/tabs/devices/
 
 - 所有核心模块导入测试通过
 - 应用可正常启动运行
-- Ruff 检查剩余警告均为代码风格建议，不影响功能
+- Ruff 检查剩余警告均为代码风格建议,不影响功能
 
 ---
 
@@ -158,4 +158,58 @@ python -m scripts.build test
 python -m scripts.build build
 ```
 
-## 优化后的完整项目结构
+## 第四次优化（本次会话完成）
+
+### 1. 清理空目录和未使用文件
+
+**删除空目录**:
+- `core/` - 空目录,仅有 `__init__.py`
+- `services/` - 空目录,仅有 `__init__.py`
+
+**删除未使用文件**:
+- `utils/xml_builder.py` (18KB) - 与 `xml_generator.py` 功能重复,且未被任何模块引用
+
+**清理缓存**:
+- 删除所有 `__pycache__/` 目录
+
+### 2. 重构 vm_panel.py 中的重复代码
+
+**优化前**:`_on_tab_toggle()` 和 `_init_tabs()` 方法中各有 24 行导入代码和 24 行字典定义
+
+**优化后**:提取为模块级 `_get_tab_classes()` 函数,使用延迟导入模式
+
+```python
+# Tab 类映射 - 延迟导入
+_TAB_CLASSES = None
+
+
+def _get_tab_classes():
+    """获取 Tab 类映射（延迟导入）."""
+    global _TAB_CLASSES
+    if _TAB_CLASSES is None:
+        from .tabs import (...)  # 导入所有 Tab 类
+        _TAB_CLASSES = {...}  # 构建映射字典
+    return _TAB_CLASSES
+```
+
+**效果**:
+- 减少约 100 行重复代码
+- 使用延迟导入,避免循环导入问题
+- 代码更易维护
+
+### 3. 更新文档
+
+- `CLAUDE.md` - 更新项目结构说明,移除已删除的目录
+- `OPTIMIZATION_REPORT.md` - 添加本次优化记录
+
+## 优化效果汇总
+
+| 指标 | 优化前 | 优化后 | 改善 |
+|------|--------|--------|------|
+| 目录数量 | 41 | 39 | -2 (空目录) |
+| Python 文件数 | 134 | 133 | -1 (重复文件) |
+| vm_panel.py 行数 | ~630 | ~530 | -100 行 |
+| utils/ 文件数 | 2 | 1 | 删除重复 |
+| __pycache__ | 15 个 | 0 个 | 100% 清理 |
+
+## 最终项目结构

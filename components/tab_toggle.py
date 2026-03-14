@@ -1,5 +1,7 @@
 """Tab 切换开关 - 管理 24 个 Tab 的显示/隐藏."""
 
+from typing import ClassVar
+
 import customtkinter as ctk
 
 from .styles import CTK_FONT_BOLD, CTK_FONT_SMALL
@@ -55,7 +57,7 @@ class TabTogglePanel(ctk.CTkFrame):
     """Tab 切换开关面板 - 管理 24 个 Tab 的开关."""
 
     # Tab 配置 - 与 vm_panel.py 中的 TABS_CONFIG 保持一致
-    TABS_CONFIG = {
+    TABS_CONFIG: ClassVar[dict] = {
         # 基础 Tab (默认启用)
         'general_metadata': {'name': 'General Metadata', 'default_on': True},
         'os_booting': {'name': 'Os Booting', 'default_on': True},
@@ -116,7 +118,7 @@ class TabTogglePanel(ctk.CTkFrame):
         switch_frame = ctk.CTkFrame(content_frame, fg_color='transparent')
         switch_frame.pack(side='left', fill='x', expand=True)
 
-        # 创建开关网格 - 12 列 x 多行，紧凑布局
+        # 创建开关网格 - 12 列 x 多行, 紧凑布局
         row, col = 0, 0
         max_cols = 12
 

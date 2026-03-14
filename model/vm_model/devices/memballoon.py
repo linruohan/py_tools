@@ -1,7 +1,7 @@
 """Memballoon 设备配置 - 整合策略模式."""
 
-from dataclasses import dataclass, field
-from typing import Optional, Dict, Any, List
+from dataclasses import dataclass
+from typing import Any
 
 
 @dataclass
@@ -9,17 +9,17 @@ class Memballoon:
     """Memballoon 设备配置"""
 
     model: str = 'virtio'  # virtio, xen, virtio-transitional, virtio-non-transitional, none
-    autodeflate: Optional[str] = None  # on/off
-    free_page_reporting: Optional[str] = None  # on/off
-    period: Optional[int] = None  # 统计周期
-    iommu: Optional[str] = None  # on/off
-    ats: Optional[str] = None  # on/off
-    address: Optional[Dict[str, str]] = None  # 设备地址
-    stats: Optional[Dict[str, Any]] = None  # 统计配置
-    driver: Optional[Dict[str, str]] = None  # 驱动配置
+    autodeflate: str | None = None  # on/off
+    free_page_reporting: str | None = None  # on/off
+    period: int | None = None  # 统计周期
+    iommu: str | None = None  # on/off
+    ats: str | None = None  # on/off
+    address: dict[str, str] | None = None  # 设备地址
+    stats: dict[str, Any] | None = None  # 统计配置
+    driver: dict[str, str] | None = None  # 驱动配置
 
     @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> 'Memballoon':
+    def from_dict(cls, data: dict[str, Any]) -> 'Memballoon':
         """从字典创建"""
         return cls(
             model=data.get('model', 'virtio'),
@@ -33,7 +33,7 @@ class Memballoon:
             driver=data.get('driver'),
         )
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """转换为字典"""
         return {
             'model': self.model,

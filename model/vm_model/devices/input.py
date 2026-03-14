@@ -1,5 +1,5 @@
-from dataclasses import dataclass, field
-from typing import Optional, Dict, Any
+from dataclasses import dataclass
+from typing import Any
 
 
 @dataclass
@@ -8,22 +8,22 @@ class Input:
 
     type: str = 'keyboard'  # keyboard, mouse, tablet, joystick
     bus: str = 'ps2'  # ps2, usb, virtio
-    device: Optional[str] = None  # 设备类型
-    mode: Optional[str] = None  # 模式
-    passwd: Optional[str] = None  # 密码
-    replay: Optional[bool] = None  # 重放
-    grab: Optional[str] = None  # 抓取模式
-    repeat: Optional[bool] = None  # 重复
-    wheel_emulation: Optional[bool] = None  # 滚轮模拟
-    wheel_emulation_button: Optional[int] = None  # 滚轮模拟按钮
-    wheel_emulation_x_mult: Optional[int] = None  # X 轴滚轮倍数
-    wheel_emulation_y_mult: Optional[int] = None  # Y 轴滚轮倍数
-    vendor_id: Optional[str] = None  # 厂商 ID
-    product_id: Optional[str] = None  # 产品 ID
-    address: Optional[Dict[str, str]] = None  # 设备地址
+    device: str | None = None  # 设备类型
+    mode: str | None = None  # 模式
+    passwd: str | None = None  # 密码
+    replay: bool | None = None  # 重放
+    grab: str | None = None  # 抓取模式
+    repeat: bool | None = None  # 重复
+    wheel_emulation: bool | None = None  # 滚轮模拟
+    wheel_emulation_button: int | None = None  # 滚轮模拟按钮
+    wheel_emulation_x_mult: int | None = None  # X 轴滚轮倍数
+    wheel_emulation_y_mult: int | None = None  # Y 轴滚轮倍数
+    vendor_id: str | None = None  # 厂商 ID
+    product_id: str | None = None  # 产品 ID
+    address: dict[str, str] | None = None  # 设备地址
 
     @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> 'Input':
+    def from_dict(cls, data: dict[str, Any]) -> 'Input':
         """从字典创建"""
         return cls(
             type=data.get('type', 'keyboard'),
@@ -43,7 +43,7 @@ class Input:
             address=data.get('address'),
         )
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """转换为字典"""
         return {
             'type': self.type,

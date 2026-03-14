@@ -1,7 +1,7 @@
 """Video 设备配置 - 整合策略模式."""
 
-from dataclasses import dataclass, field
-from typing import Optional, Dict, Any
+from dataclasses import dataclass
+from typing import Any
 
 # 从 config 模块导入枚举类型
 from config.strategies.option_strategies import VideoModel
@@ -14,13 +14,13 @@ class Video:
     model: VideoModel = VideoModel.QXL
     vram: int = 64  # MiB
     heads: int = 1
-    primary: Optional[bool] = None
-    accel: Optional[str] = None
-    rom_file: Optional[str] = None
-    resolution: Optional[Dict[str, int]] = None
+    primary: bool | None = None
+    accel: str | None = None
+    rom_file: str | None = None
+    resolution: dict[str, int] | None = None
 
     @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> 'Video':
+    def from_dict(cls, data: dict[str, Any]) -> 'Video':
         """从字典创建"""
         model = data.get('model', 'qxl')
         if isinstance(model, str):
@@ -36,7 +36,7 @@ class Video:
             resolution=data.get('resolution'),
         )
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """转换为字典"""
         return {
             'model': self.model.value,

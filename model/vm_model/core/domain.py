@@ -1,30 +1,29 @@
 """Domain 模型 - 整合 Config 策略模式的 libvirt domain 配置."""
 
 from dataclasses import dataclass, field
-from typing import Optional, List, Dict, Any, TypeVar, Generic
-from enum import Enum
+from enum import StrEnum
+from typing import Any, TypeVar
 
 # 引入策略模式
 from config.strategies.option_strategies import (
+    CacheMode,
     DiskBusType,
     DiskType,
-    GraphicsType,
-    VideoModel,
     FirmwareType,
-    CacheMode,
+    GraphicsType,
     MemoryUnit,
+    VideoModel,
 )
 
 # 引入 NUMA 配置
 from ..cpu.numa import NUMA
-
 
 # ========== 类型定义 ==========
 
 T = TypeVar('T')
 
 
-class VirtType(str, Enum):
+class VirtType(StrEnum):
     """虚拟化类型"""
 
     KVM = 'kvm'
@@ -37,7 +36,7 @@ class VirtType(str, Enum):
     VZ = 'vz'
 
 
-class OSType(str, Enum):
+class OSType(StrEnum):
     """OS 类型"""
 
     HVM = 'hvm'
@@ -48,7 +47,7 @@ class OSType(str, Enum):
     PVM = 'pvm'
 
 
-class MachineType(str, Enum):
+class MachineType(StrEnum):
     """机型类型"""
 
     Q35 = 'q35'
@@ -58,7 +57,7 @@ class MachineType(str, Enum):
     ARM_VIRT = 'arm-virt'
 
 
-class CpuMode(str, Enum):
+class CpuMode(StrEnum):
     """CPU 模式"""
 
     CUSTOM = 'custom'
@@ -82,7 +81,7 @@ class CPUTopology:
     clusters: int = 1
 
     @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> 'CPUTopology':
+    def from_dict(cls, data: dict[str, Any]) -> 'CPUTopology':
         """从字典创建"""
         return cls(
             sockets=data.get('sockets', 1),
@@ -92,7 +91,7 @@ class CPUTopology:
             clusters=data.get('clusters', 1),
         )
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """转换为字典"""
         return {
             'sockets': self.sockets,
@@ -108,11 +107,11 @@ class CPUFeature:
     """CPU 特性"""
 
     name: str
-    policy: Optional[str] = None  # require, optional, disable
-    present: Optional[bool] = None
+    policy: str | None = None  # require, optional, disable
+    present: bool | None = None
 
     @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> 'CPUFeature':
+    def from_dict(cls, data: dict[str, Any]) -> 'CPUFeature':
         """从字典创建"""
         return cls(
             name=data.get('name', ''),
@@ -120,7 +119,7 @@ class CPUFeature:
             present=data.get('present'),
         )
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """转换为字典"""
         return {
             'name': self.name,
@@ -134,11 +133,11 @@ class CPUModel:
     """CPU 模型"""
 
     name: str
-    fallback: Optional[str] = None  # allow, forbid, require
-    check: Optional[bool] = None
+    fallback: str | None = None  # allow, forbid, require
+    check: bool | None = None
 
     @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> 'CPUModel':
+    def from_dict(cls, data: dict[str, Any]) -> 'CPUModel':
         """从字典创建"""
         return cls(
             name=data.get('name', ''),
@@ -146,7 +145,7 @@ class CPUModel:
             check=data.get('check'),
         )
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """转换为字典"""
         return {
             'name': self.name,
@@ -160,18 +159,18 @@ class CPU:
     """CPU 配置"""
 
     mode: CpuMode = CpuMode.HOST_MODEL
-    model: Optional[CPUModel] = None
-    topology: Optional[CPUTopology] = None
-    features: List[CPUFeature] = field(default_factory=list)
-    match: Optional[str] = None
-    vendor_id: Optional[str] = None
-    placeholder: Optional[bool] = None
-    numa: Optional[NUMA] = None
-    cache: Optional[Dict[str, Any]] = None
-    maxphysaddr: Optional[Dict[str, Any]] = None
+    model: CPUModel | None = None
+    topology: CPUTopology | None = None
+    features: list[CPUFeature] = field(default_factory=list)
+    match: str | None = None
+    vendor_id: str | None = None
+    placeholder: bool | None = None
+    numa: NUMA | None = None
+    cache: dict[str, Any] | None = None
+    maxphysaddr: dict[str, Any] | None = None
 
     @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> 'CPU':
+    def from_dict(cls, data: dict[str, Any]) -> 'CPU':
         """从字典创建"""
         features = data.get('features', [])
         if features and isinstance(features[0], dict):
@@ -203,7 +202,7 @@ class CPU:
             maxphysaddr=data.get('maxphysaddr'),
         )
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """转换为字典"""
         return {
             'mode': self.mode.value if isinstance(self.mode, CpuMode) else str(self.mode),
@@ -225,11 +224,11 @@ class VCPU:
 
     count: int = 2
     placement: str = 'static'
-    cpuset: Optional[str] = None
-    current: Optional[int] = None
+    cpuset: str | None = None
+    current: int | None = None
 
     @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> 'VCPU':
+    def from_dict(cls, data: dict[str, Any]) -> 'VCPU':
         """从字典创建"""
         return cls(
             count=data.get('count', 2),
@@ -238,7 +237,7 @@ class VCPU:
             current=data.get('current'),
         )
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """转换为字典"""
         return {
             'count': self.count,
@@ -254,10 +253,10 @@ class Memory:
 
     size: int = 2097152  # KiB
     unit: MemoryUnit = MemoryUnit.KIB
-    dump_core: Optional[bool] = None
+    dump_core: bool | None = None
 
     @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> 'Memory':
+    def from_dict(cls, data: dict[str, Any]) -> 'Memory':
         """从字典创建"""
         unit = data.get('unit', 'KiB')
         if isinstance(unit, str):
@@ -269,7 +268,7 @@ class Memory:
             dump_core=data.get('dump_core'),
         )
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """转换为字典"""
         return {
             'size': self.size,
@@ -284,10 +283,10 @@ class MaxMemory:
 
     size: int = 4194304  # KiB
     unit: MemoryUnit = MemoryUnit.KIB
-    slots: Optional[int] = None
+    slots: int | None = None
 
     @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> 'MaxMemory':
+    def from_dict(cls, data: dict[str, Any]) -> 'MaxMemory':
         """从字典创建"""
         unit = data.get('unit', 'KiB')
         if isinstance(unit, str):
@@ -299,7 +298,7 @@ class MaxMemory:
             slots=data.get('slots'),
         )
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """转换为字典"""
         return {
             'size': self.size,
@@ -316,7 +315,7 @@ class CurrentMemory:
     unit: MemoryUnit = MemoryUnit.KIB
 
     @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> 'CurrentMemory':
+    def from_dict(cls, data: dict[str, Any]) -> 'CurrentMemory':
         """从字典创建"""
         unit = data.get('unit', 'KiB')
         if isinstance(unit, str):
@@ -327,7 +326,7 @@ class CurrentMemory:
             unit=unit,
         )
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """转换为字典"""
         return {
             'size': self.size,
@@ -342,11 +341,11 @@ class Boot:
     dev: str  # fd, hd, cdrom, network
 
     @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> 'Boot':
+    def from_dict(cls, data: dict[str, Any]) -> 'Boot':
         """从字典创建"""
         return cls(dev=data.get('dev', 'hd'))
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """转换为字典"""
         return {'dev': self.dev}
 
@@ -356,17 +355,17 @@ class Bootmenu:
     """引导菜单配置"""
 
     enable: bool = False
-    timeout: Optional[int] = None
+    timeout: int | None = None
 
     @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> 'Bootmenu':
+    def from_dict(cls, data: dict[str, Any]) -> 'Bootmenu':
         """从字典创建"""
         return cls(
             enable=data.get('enable', False),
             timeout=data.get('timeout'),
         )
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """转换为字典"""
         return {
             'enable': self.enable,
@@ -378,15 +377,15 @@ class Bootmenu:
 class Loader:
     """引导加载器配置"""
 
-    path: Optional[str] = None
-    readonly: Optional[bool] = None
-    secure: Optional[bool] = None
-    type: Optional[str] = None  # rom or pflash
-    stateless: Optional[bool] = None
-    format: Optional[str] = None
+    path: str | None = None
+    readonly: bool | None = None
+    secure: bool | None = None
+    type: str | None = None  # rom or pflash
+    stateless: bool | None = None
+    format: str | None = None
 
     @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> 'Loader':
+    def from_dict(cls, data: dict[str, Any]) -> 'Loader':
         """从字典创建"""
         return cls(
             path=data.get('path'),
@@ -397,7 +396,7 @@ class Loader:
             format=data.get('format'),
         )
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """转换为字典"""
         return {
             'path': self.path,
@@ -413,15 +412,15 @@ class Loader:
 class Nvram:
     """NVRAM 配置"""
 
-    path: Optional[str] = None
-    template: Optional[str] = None
-    template_format: Optional[str] = None
-    type: Optional[str] = None
-    source: Optional[Dict[str, Any]] = None
-    format: Optional[str] = None
+    path: str | None = None
+    template: str | None = None
+    template_format: str | None = None
+    type: str | None = None
+    source: dict[str, Any] | None = None
+    format: str | None = None
 
     @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> 'Nvram':
+    def from_dict(cls, data: dict[str, Any]) -> 'Nvram':
         """从字典创建"""
         return cls(
             path=data.get('path'),
@@ -432,7 +431,7 @@ class Nvram:
             format=data.get('format'),
         )
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """转换为字典"""
         return {
             'path': self.path,
@@ -452,32 +451,32 @@ class OS:
     arch: str = 'x86_64'
     machine: MachineType = MachineType.Q35
     firmware: FirmwareType = FirmwareType.BIOS
-    firmware_features: List[Dict[str, Any]] = field(default_factory=list)
-    loader: Optional[Loader] = None
-    nvram: Optional[Nvram] = None
-    varstore: Optional[Dict[str, Any]] = None
-    boot: List[Boot] = field(default_factory=list)
-    bootmenu: Optional[Bootmenu] = None
-    smbios: Optional[Dict[str, Any]] = None
-    bios: Optional[Dict[str, Any]] = None
-    kernel: Optional[str] = None
-    initrd: Optional[str] = None
-    cmdline: Optional[str] = None
-    shim: Optional[str] = None
-    dtb: Optional[str] = None
-    init: Optional[str] = None
-    initargs: List[str] = field(default_factory=list)
-    initenv: List[Dict[str, Any]] = field(default_factory=list)
-    initdir: Optional[str] = None
-    inituser: Optional[str] = None
-    initgroup: Optional[str] = None
-    idmap: Optional[Dict[str, Any]] = None
-    acpi: Optional[Dict[str, Any]] = None
-    bootloader: Optional[str] = None
-    bootloader_args: Optional[str] = None
+    firmware_features: list[dict[str, Any]] = field(default_factory=list)
+    loader: Loader | None = None
+    nvram: Nvram | None = None
+    varstore: dict[str, Any] | None = None
+    boot: list[Boot] = field(default_factory=list)
+    bootmenu: Bootmenu | None = None
+    smbios: dict[str, Any] | None = None
+    bios: dict[str, Any] | None = None
+    kernel: str | None = None
+    initrd: str | None = None
+    cmdline: str | None = None
+    shim: str | None = None
+    dtb: str | None = None
+    init: str | None = None
+    initargs: list[str] = field(default_factory=list)
+    initenv: list[dict[str, Any]] = field(default_factory=list)
+    initdir: str | None = None
+    inituser: str | None = None
+    initgroup: str | None = None
+    idmap: dict[str, Any] | None = None
+    acpi: dict[str, Any] | None = None
+    bootloader: str | None = None
+    bootloader_args: str | None = None
 
     @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> 'OS':
+    def from_dict(cls, data: dict[str, Any]) -> 'OS':
         """从字典创建"""
         boot = data.get('boot', [])
         if boot and isinstance(boot[0], dict):
@@ -537,7 +536,7 @@ class OS:
             bootloader_args=data.get('bootloader_args'),
         )
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """转换为字典"""
         return {
             'type': self.type.value,
@@ -578,24 +577,24 @@ class Disk:
     device: str = 'disk'  # disk, cdrom, floppy, lun
     bus: DiskBusType = DiskBusType.VIRTIO
     target: str = 'vda'
-    driver: Optional[str] = None
+    driver: str | None = None
     cache: CacheMode = CacheMode.NONE
-    io: Optional[str] = None
-    discard: Optional[str] = None
-    detect_zeroes: Optional[bool] = None
-    source_file: Optional[str] = None
-    source_protocol: Optional[str] = None
-    source_dev: Optional[str] = None
-    snapshot: Optional[str] = None  # on, off
+    io: str | None = None
+    discard: str | None = None
+    detect_zeroes: bool | None = None
+    source_file: str | None = None
+    source_protocol: str | None = None
+    source_dev: str | None = None
+    snapshot: str | None = None  # on, off
     readonly: bool = False
     shareable: bool = False
     transient: bool = False
-    capacity: Optional[int] = None
-    allocation: Optional[int] = None
-    physical: Optional[int] = None
+    capacity: int | None = None
+    allocation: int | None = None
+    physical: int | None = None
 
     @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> 'Disk':
+    def from_dict(cls, data: dict[str, Any]) -> 'Disk':
         """从字典创建"""
         disk_type = data.get('type', 'qcow2')
         if isinstance(disk_type, str):
@@ -631,7 +630,7 @@ class Disk:
             physical=data.get('physical'),
         )
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """转换为字典"""
         return {
             'type': self.type.value,
@@ -662,20 +661,20 @@ class Graphics:
 
     type: GraphicsType = GraphicsType.VNC
     port: str = '-1'
-    tls_port: Optional[str] = None
+    tls_port: str | None = None
     listen: str = '0.0.0.0'
-    passwd: Optional[str] = None
-    connected: Optional[str] = None
-    keymap: Optional[str] = None
-    default_mode: Optional[str] = None
-    image_compression: Optional[str] = None
-    jpeg_compression: Optional[str] = None
-    zlib_compression: Optional[str] = None
-    opengl: Optional[bool] = None
-    listen_addresses: List[str] = field(default_factory=list)
+    passwd: str | None = None
+    connected: str | None = None
+    keymap: str | None = None
+    default_mode: str | None = None
+    image_compression: str | None = None
+    jpeg_compression: str | None = None
+    zlib_compression: str | None = None
+    opengl: bool | None = None
+    listen_addresses: list[str] = field(default_factory=list)
 
     @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> 'Graphics':
+    def from_dict(cls, data: dict[str, Any]) -> 'Graphics':
         """从字典创建"""
         gfx_type = data.get('type', 'vnc')
         if isinstance(gfx_type, str):
@@ -697,7 +696,7 @@ class Graphics:
             listen_addresses=data.get('listen_addresses', []),
         )
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """转换为字典"""
         return {
             'type': self.type.value,
@@ -723,13 +722,13 @@ class Video:
     model: VideoModel = VideoModel.QXL
     vram: int = 64  # MiB
     heads: int = 1
-    primary: Optional[bool] = None
-    accel: Optional[str] = None
-    rom_file: Optional[str] = None
-    resolution: Optional[Dict[str, int]] = None
+    primary: bool | None = None
+    accel: str | None = None
+    rom_file: str | None = None
+    resolution: dict[str, int] | None = None
 
     @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> 'Video':
+    def from_dict(cls, data: dict[str, Any]) -> 'Video':
         """从字典创建"""
         model = data.get('model', 'qxl')
         if isinstance(model, str):
@@ -745,7 +744,7 @@ class Video:
             resolution=data.get('resolution'),
         )
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """转换为字典"""
         return {
             'model': self.model.value,
@@ -763,23 +762,23 @@ class NetworkInterface:
     """网络设备配置"""
 
     type: str = 'network'  # network, bridge, user, internal, direct
-    source: Optional[str] = None
-    target: Optional[str] = None
-    mac: Optional[str] = None
+    source: str | None = None
+    target: str | None = None
+    mac: str | None = None
     model: str = 'virtio'
-    driver: Optional[Dict[str, str]] = None
-    address: Optional[Dict[str, str]] = None
-    mtu: Optional[int] = None
-    virtualport_type: Optional[str] = None
-    virtualport_params: Optional[Dict[str, str]] = None
-    port: Optional[str] = None
-    portgroup: Optional[str] = None
-    inbound: Optional[Dict[str, str]] = None
-    outbound: Optional[Dict[str, str]] = None
+    driver: dict[str, str] | None = None
+    address: dict[str, str] | None = None
+    mtu: int | None = None
+    virtualport_type: str | None = None
+    virtualport_params: dict[str, str] | None = None
+    port: str | None = None
+    portgroup: str | None = None
+    inbound: dict[str, str] | None = None
+    outbound: dict[str, str] | None = None
     link_state: str = 'up'
 
     @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> 'NetworkInterface':
+    def from_dict(cls, data: dict[str, Any]) -> 'NetworkInterface':
         """从字典创建"""
         return cls(
             type=data.get('type', 'network'),
@@ -799,7 +798,7 @@ class NetworkInterface:
             link_state=data.get('link_state', 'up'),
         )
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """转换为字典"""
         return {
             'type': self.type,
@@ -824,37 +823,37 @@ class NetworkInterface:
 class Devices:
     """设备集合"""
 
-    emulator: Optional[str] = None
-    disks: List[Disk] = field(default_factory=list)
-    graphics: List[Graphics] = field(default_factory=list)
-    videos: List[Video] = field(default_factory=list)
-    interfaces: List[NetworkInterface] = field(default_factory=list)
-    serials: List[Dict[str, Any]] = field(default_factory=list)
-    consoles: List[Dict[str, Any]] = field(default_factory=list)
-    channels: List[Dict[str, Any]] = field(default_factory=list)
-    inputs: List[Dict[str, Any]] = field(default_factory=list)
-    audio: List[Dict[str, Any]] = field(default_factory=list)
-    sounds: List[Dict[str, Any]] = field(default_factory=list)
-    hostdevs: List[Dict[str, Any]] = field(default_factory=list)
-    controllers: List[Dict[str, Any]] = field(default_factory=list)
-    tpms: List[Dict[str, Any]] = field(default_factory=list)
-    rngs: List[Dict[str, Any]] = field(default_factory=list)
-    watchdogs: List[Dict[str, Any]] = field(default_factory=list)
-    balloons: List[Dict[str, Any]] = field(default_factory=list)
-    filesystems: List[Dict[str, Any]] = field(default_factory=list)
-    parallel: List[Dict[str, Any]] = field(default_factory=list)
-    smartcard: List[Dict[str, Any]] = field(default_factory=list)
-    shmem: List[Dict[str, Any]] = field(default_factory=list)
-    vsock: List[Dict[str, Any]] = field(default_factory=list)
-    crypto: List[Dict[str, Any]] = field(default_factory=list)
-    iommu: List[Dict[str, Any]] = field(default_factory=list)
-    panic: List[Dict[str, Any]] = field(default_factory=list)
-    pstore: List[Dict[str, Any]] = field(default_factory=list)
-    memory: List[Dict[str, Any]] = field(default_factory=list)
-    nvram: List[Dict[str, Any]] = field(default_factory=list)
+    emulator: str | None = None
+    disks: list[Disk] = field(default_factory=list)
+    graphics: list[Graphics] = field(default_factory=list)
+    videos: list[Video] = field(default_factory=list)
+    interfaces: list[NetworkInterface] = field(default_factory=list)
+    serials: list[dict[str, Any]] = field(default_factory=list)
+    consoles: list[dict[str, Any]] = field(default_factory=list)
+    channels: list[dict[str, Any]] = field(default_factory=list)
+    inputs: list[dict[str, Any]] = field(default_factory=list)
+    audio: list[dict[str, Any]] = field(default_factory=list)
+    sounds: list[dict[str, Any]] = field(default_factory=list)
+    hostdevs: list[dict[str, Any]] = field(default_factory=list)
+    controllers: list[dict[str, Any]] = field(default_factory=list)
+    tpms: list[dict[str, Any]] = field(default_factory=list)
+    rngs: list[dict[str, Any]] = field(default_factory=list)
+    watchdogs: list[dict[str, Any]] = field(default_factory=list)
+    balloons: list[dict[str, Any]] = field(default_factory=list)
+    filesystems: list[dict[str, Any]] = field(default_factory=list)
+    parallel: list[dict[str, Any]] = field(default_factory=list)
+    smartcard: list[dict[str, Any]] = field(default_factory=list)
+    shmem: list[dict[str, Any]] = field(default_factory=list)
+    vsock: list[dict[str, Any]] = field(default_factory=list)
+    crypto: list[dict[str, Any]] = field(default_factory=list)
+    iommu: list[dict[str, Any]] = field(default_factory=list)
+    panic: list[dict[str, Any]] = field(default_factory=list)
+    pstore: list[dict[str, Any]] = field(default_factory=list)
+    memory: list[dict[str, Any]] = field(default_factory=list)
+    nvram: list[dict[str, Any]] = field(default_factory=list)
 
     @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> 'Devices':
+    def from_dict(cls, data: dict[str, Any]) -> 'Devices':
         """从字典创建"""
         disks = data.get('disks', [])
         if disks and isinstance(disks[0], dict):
@@ -903,7 +902,7 @@ class Devices:
             nvram=data.get('nvram', []),
         )
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """转换为字典"""
         return {
             'emulator': self.emulator,
@@ -943,29 +942,29 @@ class Features:
 
     acpi: bool = True
     apic: bool = True
-    pae: Optional[bool] = None
-    hap: Optional[bool] = None
-    viridian: Optional[bool] = None
-    privnet: Optional[bool] = None
-    pvspinlock: Optional[bool] = None
-    pmu: Optional[bool] = None
-    vmport: Optional[bool] = None
-    smm: Optional[Dict[str, Any]] = None
-    hyperv: Optional[Dict[str, Any]] = None
-    kvm: Optional[Dict[str, Any]] = None
-    xen: Optional[Dict[str, Any]] = None
-    gic: Optional[Dict[str, Any]] = None
-    ioapic: Optional[Dict[str, Any]] = None
-    hpt: Optional[Dict[str, Any]] = None
-    tcg: Optional[Dict[str, Any]] = None
-    vmcoreinfo: Optional[bool] = None
-    ras: Optional[bool] = None
-    async_teardown: Optional[bool] = None
-    ps2: Optional[bool] = None
-    aia: Optional[str] = None
+    pae: bool | None = None
+    hap: bool | None = None
+    viridian: bool | None = None
+    privnet: bool | None = None
+    pvspinlock: bool | None = None
+    pmu: bool | None = None
+    vmport: bool | None = None
+    smm: dict[str, Any] | None = None
+    hyperv: dict[str, Any] | None = None
+    kvm: dict[str, Any] | None = None
+    xen: dict[str, Any] | None = None
+    gic: dict[str, Any] | None = None
+    ioapic: dict[str, Any] | None = None
+    hpt: dict[str, Any] | None = None
+    tcg: dict[str, Any] | None = None
+    vmcoreinfo: bool | None = None
+    ras: bool | None = None
+    async_teardown: bool | None = None
+    ps2: bool | None = None
+    aia: str | None = None
 
     @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> 'Features':
+    def from_dict(cls, data: dict[str, Any]) -> 'Features':
         """从字典创建"""
         general = data.get('general', data)
         hyperv = data.get('hyperv')
@@ -1001,7 +1000,7 @@ class Features:
             aia=general.get('aia'),
         )
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """转换为字典"""
         return {
             'general': {
@@ -1036,14 +1035,14 @@ class Clock:
     """时钟配置"""
 
     offset: str = 'utc'
-    timezone: Optional[str] = None
-    adjustment: Optional[str] = None
-    basis: Optional[str] = None
-    start: Optional[str] = None
-    timers: Dict[str, Any] = field(default_factory=dict)
+    timezone: str | None = None
+    adjustment: str | None = None
+    basis: str | None = None
+    start: str | None = None
+    timers: dict[str, Any] = field(default_factory=dict)
 
     @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> 'Clock':
+    def from_dict(cls, data: dict[str, Any]) -> 'Clock':
         """从字典创建"""
         return cls(
             offset=data.get('offset', 'utc'),
@@ -1054,7 +1053,7 @@ class Clock:
             timers=data.get('timers', {}),
         )
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """转换为字典"""
         return {
             'offset': self.offset,
@@ -1072,41 +1071,41 @@ class Domain:
 
     type: VirtType = VirtType.KVM
     name: str = 'vm0'
-    uuid: Optional[str] = None
-    hwuuid: Optional[str] = None
-    genid: Optional[str] = None
-    title: Optional[str] = None
-    description: Optional[str] = None
-    vcpu: Optional[VCPU] = None
-    cpu: Optional[CPU] = None
-    memory: Optional[Memory] = None
-    current_memory: Optional[CurrentMemory] = None
-    max_memory: Optional[MaxMemory] = None
-    os: Optional[OS] = None
-    devices: Optional[Devices] = None
-    features: Optional[Features] = None
-    clock: Optional[Clock] = None
+    uuid: str | None = None
+    hwuuid: str | None = None
+    genid: str | None = None
+    title: str | None = None
+    description: str | None = None
+    vcpu: VCPU | None = None
+    cpu: CPU | None = None
+    memory: Memory | None = None
+    current_memory: CurrentMemory | None = None
+    max_memory: MaxMemory | None = None
+    os: OS | None = None
+    devices: Devices | None = None
+    features: Features | None = None
+    clock: Clock | None = None
     on_poweroff: str = 'destroy'
     on_reboot: str = 'restart'
     on_crash: str = 'destroy'
-    on_lockfailure: Optional[str] = None
-    metadata: Optional[Dict[str, Any]] = None
-    seclabel: Optional[Dict[str, Any]] = None
-    numatune: Optional[Dict[str, Any]] = None
-    memtune: Optional[Dict[str, Any]] = None
-    blkiotune: Optional[Dict[str, Any]] = None
-    cputune: Optional[Dict[str, Any]] = None
-    iothreads: Optional[Dict[str, Any]] = None
-    launch_security: Optional[Dict[str, Any]] = None
-    sysinfo: Optional[Dict[str, Any]] = None
-    memory_backing: Optional[Dict[str, Any]] = None
-    perf: Optional[Dict[str, Any]] = None
-    throttlegroups: Optional[Dict[str, Any]] = None
-    keywrap: Optional[Dict[str, Any]] = None
-    resource: Optional[Dict[str, Any]] = None
+    on_lockfailure: str | None = None
+    metadata: dict[str, Any] | None = None
+    seclabel: dict[str, Any] | None = None
+    numatune: dict[str, Any] | None = None
+    memtune: dict[str, Any] | None = None
+    blkiotune: dict[str, Any] | None = None
+    cputune: dict[str, Any] | None = None
+    iothreads: dict[str, Any] | None = None
+    launch_security: dict[str, Any] | None = None
+    sysinfo: dict[str, Any] | None = None
+    memory_backing: dict[str, Any] | None = None
+    perf: dict[str, Any] | None = None
+    throttlegroups: dict[str, Any] | None = None
+    keywrap: dict[str, Any] | None = None
+    resource: dict[str, Any] | None = None
 
     @classmethod
-    def from_config(cls, config: Dict[str, Any]) -> 'Domain':
+    def from_config(cls, config: dict[str, Any]) -> 'Domain':
         """从 Config 配置字典创建 Domain.
 
         Args:
@@ -1225,7 +1224,7 @@ class Domain:
             resource=resource,
         )
 
-    def to_config(self) -> Dict[str, Any]:
+    def to_config(self) -> dict[str, Any]:
         """转换为 Config 配置字典.
 
         Returns:
@@ -1320,7 +1319,7 @@ class Domain:
         return config
 
     def to_xml_element(self) -> Any:
-        """转换为 XML Element（用于生成 libvirt XML）.
+        """转换为 XML Element(用于生成 libvirt XML).
 
         Returns:
             XML Element
@@ -1603,7 +1602,7 @@ class Domain:
             if self.features.acpi:
                 ET.SubElement(features_elem, 'acpi')
             if self.features.apic:
-                apic_elem = ET.SubElement(features_elem, 'apic')
+                ET.SubElement(features_elem, 'apic')
                 # 可以添加 eoi 属性
             if self.features.pae:
                 ET.SubElement(features_elem, 'pae')
@@ -1898,6 +1897,7 @@ class Domain:
             XML 字符串
         """
         import xml.etree.ElementTree as ET
+
         from xml.dom import minidom
 
         root = self.to_xml_element()

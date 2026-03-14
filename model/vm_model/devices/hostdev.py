@@ -1,7 +1,7 @@
 """Hostdev 设备配置 - 整合策略模式."""
 
-from dataclasses import dataclass, field
-from typing import Optional, Dict, Any, List
+from dataclasses import dataclass
+from typing import Any
 
 
 @dataclass
@@ -11,45 +11,45 @@ class Hostdev:
     mode: str = 'subsystem'  # subsystem, capabilities
     type: str = 'pci'  # pci, usb, scsi, scsi_host, mdev
     managed: bool = True  # 是否由 libvirt 管理
-    model: Optional[str] = None  # 设备型号 (vfio-pci, vfio-ccw 等)
-    rawio: Optional[bool] = None  # 原始 IO 访问
+    model: str | None = None  # 设备型号 (vfio-pci, vfio-ccw 等)
+    rawio: bool | None = None  # 原始 IO 访问
 
     # USB 设备属性
-    vendor_id: Optional[str] = None  # 厂商 ID
-    product_id: Optional[str] = None  # 产品 ID
+    vendor_id: str | None = None  # 厂商 ID
+    product_id: str | None = None  # 产品 ID
 
     # SCSI 设备属性
-    host: Optional[int] = None  # SCSI 主机号
-    bus: Optional[int] = None  # SCSI 总线号
-    target: Optional[int] = None  # SCSI 目标 ID
-    unit: Optional[int] = None  # SCSI LUN
+    host: int | None = None  # SCSI 主机号
+    bus: int | None = None  # SCSI 总线号
+    target: int | None = None  # SCSI 目标 ID
+    unit: int | None = None  # SCSI LUN
 
     # PCI 设备属性
-    domain: Optional[str] = None  # PCI 域
-    pci_bus: Optional[str] = None  # PCI 总线
-    slot: Optional[str] = None  # PCI 插槽
-    function: Optional[str] = None  # PCI 功能
+    domain: str | None = None  # PCI 域
+    pci_bus: str | None = None  # PCI 总线
+    slot: str | None = None  # PCI 插槽
+    function: str | None = None  # PCI 功能
 
     # 启动配置
-    boot_order: Optional[int] = None  # 启动顺序
-    boot: Optional[Dict[str, str]] = None  # 启动配置
+    boot_order: int | None = None  # 启动顺序
+    boot: dict[str, str] | None = None  # 启动配置
 
     # ROM 配置
-    rom_bar: Optional[str] = None  # ROM BAR
-    rom_file: Optional[str] = None  # ROM 文件
+    rom_bar: str | None = None  # ROM BAR
+    rom_file: str | None = None  # ROM 文件
 
     # 驱动配置
-    driver: Optional[Dict[str, str]] = None  # 驱动配置
+    driver: dict[str, str] | None = None  # 驱动配置
 
     # 地址配置
-    address: Optional[Dict[str, str]] = None  # 设备地址
+    address: dict[str, str] | None = None  # 设备地址
 
     # 共享配置
     readonly: bool = False  # 只读
     shareable: bool = False  # 可共享
 
     @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> 'Hostdev':
+    def from_dict(cls, data: dict[str, Any]) -> 'Hostdev':
         """从字典创建"""
         return cls(
             mode=data.get('mode', 'subsystem'),
@@ -77,7 +77,7 @@ class Hostdev:
             shareable=data.get('shareable', False),
         )
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """转换为字典"""
         return {
             'mode': self.mode,

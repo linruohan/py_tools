@@ -1,19 +1,19 @@
 """设备配置模块 - 包含图形、磁盘、hostdev 等子模块."""
 
-from .main import DevicesTab
-from .hostdev import USBHostdevTab, PCIHostdevTab, SCSIHostdevTab, MdevHostdevTab
-from .disk import DiskDevicesTab, DiskConfigDialog
+from .disk import DiskConfigDialog, DiskDevicesTab
 from .graphics import GraphicsTab
+from .hostdev import MdevHostdevTab, PCIHostdevTab, SCSIHostdevTab, USBHostdevTab
+from .main import DevicesTab
 from .others import OthersTab
 
 __all__ = [
     'DevicesTab',
-    'USBHostdevTab',
+    'DiskConfigDialog',
+    'DiskDevicesTab',
+    'GraphicsTab',
+    'MdevHostdevTab',
+    'OthersTab',
     'PCIHostdevTab',
     'SCSIHostdevTab',
-    'MdevHostdevTab',
-    'DiskDevicesTab',
-    'DiskConfigDialog',
-    'GraphicsTab',
-    'OthersTab',
+    'USBHostdevTab',
 ]

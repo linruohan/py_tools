@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## 项目概述
 
-基于 `customtkinter` 的桌面应用工具箱，提供现代化 UI 界面。
+基于 `customtkinter` 的桌面应用工具箱,提供现代化 UI 界面。
 
 ## 开发命令
 
@@ -41,12 +41,13 @@ python -m scripts.build build
 ## 代码架构
 
 ### 核心结构
-- `main.py` - 应用入口，使用 `CTk` 创建主窗口，含左侧导航栏和多面板切换逻辑
+- `main.py` - 应用入口,使用 `CTk` 创建主窗口,含左侧导航栏和多面板切换逻辑
 - `panels/` - 功能面板模块
-  - `home_panel.py` - 主页面板，包含多 Tab 展示各种 CTk 组件
+  - `home_panel.py` - 主页面板,包含多 Tab 展示各种 CTk 组件
   - `json_panel.py` - JSON 解析与 Excel 导出工具
   - `vm_panel/` - KVM/QEMU 虚拟机 XML 配置生成模块（24 个可配置 Tab）
     - `tabs/` - 24 个 Tab 定义
+    - `tabs/devices/` - 设备配置子模块（disk.py、graphics.py、hostdev.py 等）
     - `frames/` - 可复用帧组件（disk_frame.py、network_frame.py、hostdev_frame.py）
     - `tab_toggle.py` - Tab 切换管理
     - `xml_generator.py` - XML 生成器
@@ -55,24 +56,24 @@ python -m scripts.build build
   - `configs/` - 配置类（basic_config.py、cpu_allocation_config.py 等）
   - `cpu/` - CPU 相关模型（cpu.py、numa.py）
   - `devices/` - 设备模型（disk.py、interface.py、graphics.py 等）
-- `core/` - 核心应用模块
-- `services/` - 业务逻辑层
-- `utils/` - 工具函数
+- `utils/` - 工具函数（xml_generator.py - Libvirt XML 生成器）
 - `tests/` - 测试代码
 - `example/` - customtkinter 示例代码
 - `resources/` - 资源文件（图片、图标）
 - `scripts/` - 构建脚本
+- `config/` - 配置模块（策略模式实现）
+- `components/` - 可复用 UI 组件（accordion.py、tab_toggle.py、styles.py 等）
 
 ### VmPanel 虚拟机配置（24 个 Tab）
 
-**默认启用的基础 Tab**：
+**默认启用的基础 Tab**:
 - 基础信息 (`general_metadata`) - 名称、描述、UUID、机型、虚拟化类型、vCPU、内存
 - 系统引导 (`os_booting`) - 固件 (BIOS/UEFI)、引导设备、超时设置
 - CPU 分配 (`cpu_allocation`) - vCPU、拓扑结构
 - 内存分配 (`memory_allocation`) - 内存大小、交换内存
 - 设备 (`devices`) - 图形显示 (vnc/spice)、视频模型、USB、串口、TPM
 
-**可选高级 Tab**：
+**可选高级 Tab**:
 - SMBIOS 系统信息、IO 线程分配、CPU 优化、内存后端、内存优化
 - NUMA 节点优化、块 IO 优化、资源分区、光纤通道 VMID、CPU 模型与拓扑
 - 事件配置、电源管理、磁盘节流组、虚拟化特性、时间同步
@@ -80,7 +81,7 @@ python -m scripts.build build
 
 ### model/vm_model 数据模型层
 
-采用组合模式管理配置，目录结构：
+采用组合模式管理配置,目录结构:
 ```
 model/vm_model/
 ├── core/              # 核心模块
@@ -97,11 +98,20 @@ model/vm_model/
 └── devices/           - 设备模型（disk.py、interface.py、graphics.py 等）
 ```
 
-### xml_generator.py XML 生成器
+### utils/ 工具模块
 
-- `LibvirtXMLGenerator` 类生成标准 libvirt domain XML
-- 支持动态 XML 预览，配置变更时自动更新
-- 支持保存 XML 文件或通过 `virsh define` 创建虚拟机
+- `xml_generator.py` - Libvirt XML 生成器
+  - `LibvirtXMLGenerator` 类生成标准 libvirt domain XML
+  - 支持动态 XML 预览,配置变更时自动更新
+  - 支持保存 XML 文件或通过 `virsh define` 创建虚拟机
+
+### 优化记录
+
+**2026-03-14 优化**:
+- 删除空目录 `core/`、`services/`
+- 删除未使用的 `utils/xml_builder.py`（与 `xml_generator.py` 功能重复）
+- 清理所有 `__pycache__/` 目录
+- 重构 `vm_panel.py`,将重复的 Tab 导入代码提取为 `_get_tab_classes()` 函数
 
 ### 技术栈
 - `customtkinter` - 现代化 Tkinter UI 框架
@@ -115,6 +125,53 @@ model/vm_model/
 - 使用 `CTkTabview` 实现多 Tab 切换
 - `TabTogglePanel` 管理 24 个 Tab 的显示/隐藏
 - 深色/浅色主题通过 `set_appearance_mode()` 控制
+
+## 项目结构
+
+```
+py_tools/
+├── CLAUDE.md               # Claude 配置说明
+├── README.md               # 项目文档
+├── pyproject.toml          # 项目配置
+├── requirements.txt        # 依赖列表
+├── ruff.toml               # Ruff 配置
+├── main.py                 # 应用入口
+├── main.spec               # PyInstaller 配置
+│
+├── components/             # 可复用 UI 组件
+│   ├── accordion.py        # 手风琴组件
+│   ├── inner_tab_panel.py  # 内部 Tab 面板
+│   ├── styles.py           # 样式定义
+│   └── tab_toggle.py       # Tab 切换组件
+│
+├── config/                 # 配置模块
+│   └── strategies/         # 策略模式实现
+│
+├── panels/                 # UI 面板层
+│   ├── home_panel.py       # 主页面板
+│   ├── json_panel.py       # JSON 解析面板
+│   └── vm_panel/           # 虚拟机配置面板
+│       ├── tabs/           # 24 个 Tab
+│       │   └── devices/    # 设备配置子模块
+│       └── frames/         # 可复用组件
+│
+├── model/                  # 数据模型层
+│   └── vm_model/
+│       ├── core/           # 核心模块
+│       ├── configs/        # 配置类
+│       ├── cpu/            # CPU 模型
+│       └── devices/        # 设备模型
+│
+├── utils/                  # 工具函数
+│   └── xml_generator.py    # Libvirt XML 生成器
+│
+├── tests/                  # 测试代码
+├── example/                # 示例代码
+├── resources/              # 资源文件
+│   ├── icons/
+│   └── images/
+└── scripts/                # 构建脚本
+```
 
 ## libvirt 文档参考
 https://www.libvirt.org/formatdomain.html

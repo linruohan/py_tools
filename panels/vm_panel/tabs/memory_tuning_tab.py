@@ -95,9 +95,9 @@ class MemoryTuningTab(ctk.CTkFrame):
         )
 
         warning_text = (
-            '对于QEMU/KVM，建议不要设置硬限制，因为如果猜测过低，\n'
+            '对于QEMU/KVM,建议不要设置硬限制,因为如果猜测过低,\n'
             '域可能会被内核杀死。确定进程运行所需的内存是一个不可判定的问题。\n'
-            '如果启用了内存锁定，则需要根据部署情况计算合适的硬限制值。'
+            '如果启用了内存锁定,则需要根据部署情况计算合适的硬限制值。'
         )
         ctk.CTkLabel(
             warning_frame,

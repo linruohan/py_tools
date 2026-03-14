@@ -1,10 +1,11 @@
 """选项策略枚举类型定义"""
 
-from enum import Enum
+from enum import StrEnum
 
 
-class DiskBusType(str, Enum):
+class DiskBusType(StrEnum):
     """磁盘总线类型"""
+
     IDE = 'ide'
     SCSI = 'scsi'
     VIRTIO = 'virtio'
@@ -15,8 +16,9 @@ class DiskBusType(str, Enum):
     NVME = 'nvme'
 
 
-class DiskType(str, Enum):
+class DiskType(StrEnum):
     """磁盘类型"""
+
     RAW = 'raw'
     QCOW2 = 'qcow2'
     VMDK = 'vmdk'
@@ -26,8 +28,9 @@ class DiskType(str, Enum):
     LVM = 'lvm'
 
 
-class CacheMode(str, Enum):
+class CacheMode(StrEnum):
     """缓存模式"""
+
     NONE = 'none'
     WRITEBACK = 'writeback'
     WRITETHROUGH = 'writethrough'
@@ -36,8 +39,9 @@ class CacheMode(str, Enum):
     WRITEBACK_PARENT = 'writeback-parent'
 
 
-class GraphicsType(str, Enum):
+class GraphicsType(StrEnum):
     """图形类型"""
+
     VNC = 'vnc'
     SPICE = 'spice'
     SDL = 'sdl'
@@ -46,8 +50,9 @@ class GraphicsType(str, Enum):
     CURSES = 'curses'
 
 
-class VideoModel(str, Enum):
+class VideoModel(StrEnum):
     """视频模型"""
+
     QXL = 'qxl'
     VGA = 'vga'
     CIRRUS = 'cirrus'
@@ -57,14 +62,16 @@ class VideoModel(str, Enum):
     RAMFB = 'ramfb'
 
 
-class FirmwareType(str, Enum):
+class FirmwareType(StrEnum):
     """固件类型"""
+
     BIOS = 'bios'
     EFI = 'efi'
 
 
-class MemoryUnit(str, Enum):
+class MemoryUnit(StrEnum):
     """内存单位"""
+
     B = 'b'
     BYTES = 'bytes'
     KB = 'KB'

@@ -3,49 +3,48 @@
 
 import subprocess
 import sys
-from pathlib import Path
 
 
 def run_command(cmd: list[str], description: str) -> bool:
     """Run a command and return success status."""
-    print(f"\n{'='*50}")
-    print(f"Running: {description}")
-    print(f"Command: {' '.join(cmd)}")
-    print(f"{'='*50}")
+    print(f'\n{"=" * 50}')
+    print(f'Running: {description}')
+    print(f'Command: {" ".join(cmd)}')
+    print(f'{"=" * 50}')
 
     try:
         result = subprocess.run(cmd, check=True, capture_output=True, text=True)
         print(result.stdout)
         return True
     except subprocess.CalledProcessError as e:
-        print(f"Error: {e}")
-        print(f"stderr: {e.stderr}")
+        print(f'Error: {e}')
+        print(f'stderr: {e.stderr}')
         return False
 
 
 def check() -> bool:
     """Run ruff check."""
-    return run_command(["ruff", "check", "."], "Ruff Check")
+    return run_command(['ruff', 'check', '.'], 'Ruff Check')
 
 
 def fix() -> bool:
     """Run ruff check and fix."""
-    return run_command(["ruff", "check", "--fix", "."], "Ruff Check + Fix")
+    return run_command(['ruff', 'check', '--fix', '.'], 'Ruff Check + Fix')
 
 
 def format_code() -> bool:
     """Run ruff format."""
-    return run_command(["ruff", "format", "."], "Ruff Format")
+    return run_command(['ruff', 'format', '.'], 'Ruff Format')
 
 
 def test() -> bool:
     """Run pytest."""
-    return run_command(["pytest", "tests/", "-v"], "Pytest")
+    return run_command(['pytest', 'tests/', '-v'], 'Pytest')
 
 
 def build() -> bool:
     """Build package with pyinstaller."""
-    return run_command(["pyinstaller", "main.spec"], "PyInstaller Build")
+    return run_command(['pyinstaller', 'main.spec'], 'PyInstaller Build')
 
 
 def lint() -> bool:
@@ -57,15 +56,15 @@ def lint() -> bool:
 def main():
     """Main entry point."""
     if len(sys.argv) < 2:
-        print("Usage: python -m scripts.build [check|fix|format|test|build|lint|all]")
-        print("\nCommands:")
-        print("  check   - Run ruff check")
-        print("  fix     - Run ruff check and fix")
-        print("  format  - Run ruff format")
-        print("  test    - Run pytest")
-        print("  build   - Build with pyinstaller")
-        print("  lint    - Run all lint checks")
-        print("  all     - Run check, fix, format, test")
+        print('Usage: python -m scripts.build [check|fix|format|test|build|lint|all]')
+        print('\nCommands:')
+        print('  check   - Run ruff check')
+        print('  fix     - Run ruff check and fix')
+        print('  format  - Run ruff format')
+        print('  test    - Run pytest')
+        print('  build   - Build with pyinstaller')
+        print('  lint    - Run all lint checks')
+        print('  all     - Run check, fix, format, test')
         sys.exit(1)
 
     command = sys.argv[1]
@@ -81,7 +80,7 @@ def main():
     }
 
     if command not in commands:
-        print(f"Unknown command: {command}")
+        print(f'Unknown command: {command}')
         sys.exit(1)
 
     success = commands[command]()

@@ -167,7 +167,12 @@ class LibvirtXMLGenerator:
         # Firmware features
         firmware_features = os_booting.get('firmware_features', [])
         for feat in firmware_features:
-            ET.SubElement(os_elem, 'firmware', name=feat.get('name', ''), enabled=str(feat.get('enabled', '')).lower())
+            ET.SubElement(
+                os_elem,
+                'firmware',
+                name=feat.get('name', ''),
+                enabled=str(feat.get('enabled', '')).lower(),
+            )
 
         # Loader configuration
         loader = os_booting.get('loader', {})
@@ -297,7 +302,9 @@ class LibvirtXMLGenerator:
         initenv = os_booting.get('initenv', [])
         if initenv:
             for env in initenv:
-                ET.SubElement(os_elem, 'initenv', name=env.get('name', '')).text = env.get('value', '')
+                ET.SubElement(os_elem, 'initenv', name=env.get('name', '')).text = env.get(
+                    'value', ''
+                )
         initdir = os_booting.get('initdir')
         if initdir:
             ET.SubElement(os_elem, 'initdir').text = initdir
@@ -314,10 +321,20 @@ class LibvirtXMLGenerator:
             idmap_elem = ET.SubElement(os_elem, 'idmap')
             uid = idmap['uid']
             gid = idmap['gid']
-            ET.SubElement(idmap_elem, 'uid', start=str(uid.get('start', 0)),
-                          target=str(uid.get('target', 0)), count=str(uid.get('count', 0)))
-            ET.SubElement(idmap_elem, 'gid', start=str(gid.get('start', 0)),
-                          target=str(gid.get('target', 0)), count=str(gid.get('count', 0)))
+            ET.SubElement(
+                idmap_elem,
+                'uid',
+                start=str(uid.get('start', 0)),
+                target=str(uid.get('target', 0)),
+                count=str(uid.get('count', 0)),
+            )
+            ET.SubElement(
+                idmap_elem,
+                'gid',
+                start=str(gid.get('start', 0)),
+                target=str(gid.get('target', 0)),
+                count=str(gid.get('count', 0)),
+            )
 
         # ACPI tables
         acpi = os_booting.get('acpi', {})
@@ -325,7 +342,9 @@ class LibvirtXMLGenerator:
             acpi_elem = ET.SubElement(os_elem, 'acpi')
             for table in acpi['tables']:
                 if isinstance(table, dict):
-                    ET.SubElement(acpi_elem, 'table', type=table.get('type', 'raw')).text = table.get('path', '')
+                    ET.SubElement(
+                        acpi_elem, 'table', type=table.get('type', 'raw')
+                    ).text = table.get('path', '')
 
     def _add_features(self, config: dict) -> None:
         """添加虚拟化特性."""
@@ -507,7 +526,7 @@ class LibvirtXMLGenerator:
         for iface in interfaces:
             self._add_interface(devices, iface)
 
-        # graphics 可能是单个对象或列表（支持 graphics 和 graphic 两种字段名）
+        # graphics 可能是单个对象或列表(支持 graphics 和 graphic 两种字段名)
         graphics = devices_config.get('graphics', devices_config.get('graphic', None))
         if graphics:
             if isinstance(graphics, list):
@@ -516,7 +535,7 @@ class LibvirtXMLGenerator:
             else:
                 self._add_graphics(devices, graphics)
 
-        # videos 可能是单个对象或列表（支持 videos 和 video 两种字段名）
+        # videos 可能是单个对象或列表(支持 videos 和 video 两种字段名)
         videos = devices_config.get('videos', devices_config.get('video', []))
         if isinstance(videos, list):
             for video in videos:

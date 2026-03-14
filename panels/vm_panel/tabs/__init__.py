@@ -47,7 +47,7 @@ __all__ = [
     'PerformanceMonitoringTab',
     'PowerManagementTab',
     'ResourcePartitioningTab',
-    'SecurityLabelTab',
     'SMBIOSSystemTab',
+    'SecurityLabelTab',
     'TimeKeepingTab',
 ]

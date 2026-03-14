@@ -1,14 +1,13 @@
 from dataclasses import dataclass, field
-from typing import Optional
 
 
 @dataclass
 class PollConfig:
     """轮询配置"""
 
-    max: Optional[int] = None
-    grow: Optional[int] = None
-    shrink: Optional[int] = None
+    max: int | None = None
+    grow: int | None = None
+    shrink: int | None = None
 
 
 @dataclass
@@ -16,9 +15,9 @@ class IOThread:
     """IOThread 配置"""
 
     id: int
-    thread_pool_min: Optional[int] = None
-    thread_pool_max: Optional[int] = None
-    poll: Optional[PollConfig] = None
+    thread_pool_min: int | None = None
+    thread_pool_max: int | None = None
+    poll: PollConfig | None = None
 
 
 @dataclass
@@ -39,5 +38,5 @@ class IOThreadIDs:
 class DefaultIOThread:
     """默认 IOThread 配置"""
 
-    thread_pool_min: Optional[int] = None
-    thread_pool_max: Optional[int] = None
+    thread_pool_min: int | None = None
+    thread_pool_max: int | None = None

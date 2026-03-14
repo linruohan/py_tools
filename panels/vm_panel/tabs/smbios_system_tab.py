@@ -1,9 +1,11 @@
 """SMBIOS 系统信息配置 Tab - BIOS、系统、主板、机箱信息."""
 
+from typing import ClassVar
+
 import customtkinter as ctk
 
 from components.inner_tab_panel import InnerTabPanel
-from components.styles import BG_COLOR_CONTENT, CTK_FONT_BOLD, CTK_FONT_MAIN, CTK_FONT_SMALL
+from components.styles import BG_COLOR_CONTENT, CTK_FONT_BOLD, CTK_FONT_MAIN
 
 
 class BIOSInfoSubTab(ctk.CTkFrame):
@@ -321,7 +323,7 @@ class ChassisSubTab(ctk.CTkFrame):
 class SMBIOSSystemTab(ctk.CTkFrame):
     """SMBIOS 系统信息配置 Tab."""
 
-    SUB_TABS_CONFIG = {
+    SUB_TABS_CONFIG: ClassVar[dict] = {
         'bios': {
             'name': 'BIOS',
             'class': BIOSInfoSubTab,

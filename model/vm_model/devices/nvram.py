@@ -1,7 +1,7 @@
 """Nvram 设备配置 - 整合策略模式."""
 
-from dataclasses import dataclass, field
-from typing import Optional, Dict, Any, List
+from dataclasses import dataclass
+from typing import Any
 
 
 @dataclass
@@ -9,16 +9,16 @@ class Nvram:
     """NVRAM 设备配置"""
 
     type: str = 'file'
-    path: Optional[str] = None
-    template: Optional[str] = None
-    template_format: Optional[str] = None
-    source: Optional[Dict[str, Any]] = None
-    format: Optional[str] = None
-    address: Optional[Dict[str, str]] = None
-    target: Optional[Dict[str, str]] = None
+    path: str | None = None
+    template: str | None = None
+    template_format: str | None = None
+    source: dict[str, Any] | None = None
+    format: str | None = None
+    address: dict[str, str] | None = None
+    target: dict[str, str] | None = None
 
     @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> 'Nvram':
+    def from_dict(cls, data: dict[str, Any]) -> 'Nvram':
         """从字典创建"""
         return cls(
             type=data.get('type', 'file'),
@@ -31,7 +31,7 @@ class Nvram:
             target=data.get('target'),
         )
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """转换为字典"""
         return {
             'type': self.type,

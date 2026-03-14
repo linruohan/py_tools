@@ -1,7 +1,7 @@
 """Graphics 设备配置 - 整合策略模式."""
 
 from dataclasses import dataclass, field
-from typing import Optional, List, Dict, Any
+from typing import Any
 
 # 从 config 模块导入枚举类型
 from config.strategies.option_strategies import GraphicsType
@@ -13,20 +13,20 @@ class Graphics:
 
     type: GraphicsType = GraphicsType.VNC
     port: str = '-1'
-    tls_port: Optional[str] = None
+    tls_port: str | None = None
     listen: str = '0.0.0.0'
-    passwd: Optional[str] = None
-    connected: Optional[str] = None
-    keymap: Optional[str] = None
-    default_mode: Optional[str] = None
-    image_compression: Optional[str] = None
-    jpeg_compression: Optional[str] = None
-    zlib_compression: Optional[str] = None
-    opengl: Optional[bool] = None
-    listen_addresses: List[str] = field(default_factory=list)
+    passwd: str | None = None
+    connected: str | None = None
+    keymap: str | None = None
+    default_mode: str | None = None
+    image_compression: str | None = None
+    jpeg_compression: str | None = None
+    zlib_compression: str | None = None
+    opengl: bool | None = None
+    listen_addresses: list[str] = field(default_factory=list)
 
     @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> 'Graphics':
+    def from_dict(cls, data: dict[str, Any]) -> 'Graphics':
         """从字典创建"""
         gfx_type = data.get('type', 'vnc')
         if isinstance(gfx_type, str):
@@ -48,7 +48,7 @@ class Graphics:
             listen_addresses=data.get('listen_addresses', []),
         )
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """转换为字典"""
         return {
             'type': self.type.value,

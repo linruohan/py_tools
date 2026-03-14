@@ -1,5 +1,4 @@
 from dataclasses import dataclass, field
-from typing import Optional
 
 
 @dataclass
@@ -7,9 +6,9 @@ class VCPU:
     """虚拟 CPU 配置"""
 
     count: int
-    placement: Optional[str] = None  # static or auto
-    cpuset: Optional[str] = None
-    current: Optional[int] = None
+    placement: str | None = None  # static or auto
+    cpuset: str | None = None
+    current: int | None = None
 
 
 @dataclass
@@ -19,7 +18,7 @@ class VCPUInstance:
     id: int
     enabled: bool
     hotpluggable: bool
-    order: Optional[int] = None
+    order: int | None = None
 
 
 @dataclass

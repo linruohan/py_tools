@@ -227,7 +227,7 @@ class DevicesConfig:
             self.monitor = data['monitor']
 
     def _convert_disk_dict(self, d: Any) -> Disk:
-        """转换磁盘配置字典，将模块格式转换为 Disk 格式."""
+        """转换磁盘配置字典,将模块格式转换为 Disk 格式."""
         if not isinstance(d, dict):
             return d
         # 将模块格式转换为 Disk.from_dict 期望的格式

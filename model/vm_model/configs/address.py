@@ -1,5 +1,4 @@
 from dataclasses import dataclass
-from typing import Optional
 
 
 @dataclass
@@ -7,15 +6,15 @@ class Address:
     """设备地址配置"""
 
     type: str  # pci, pcie, ide, virtio-serial, usb, ccid, isa, s390
-    domain: Optional[str] = None  # 域
-    bus: Optional[str] = None  # 总线
-    slot: Optional[str] = None  # 插槽
-    function: Optional[str] = None  # 功能
-    multi: Optional[bool] = None  # 多功能
-    base: Optional[str] = None  # 基地址
-    size: Optional[str] = None  # 大小
-    offset: Optional[str] = None  # 偏移
-    vector: Optional[str] = None  # 向量
+    domain: str | None = None  # 域
+    bus: str | None = None  # 总线
+    slot: str | None = None  # 插槽
+    function: str | None = None  # 功能
+    multi: bool | None = None  # 多功能
+    base: str | None = None  # 基地址
+    size: str | None = None  # 大小
+    offset: str | None = None  # 偏移
+    vector: str | None = None  # 向量
 
     @classmethod
     def from_dict(cls, data: dict) -> 'Address':
