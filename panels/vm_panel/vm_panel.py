@@ -16,6 +16,7 @@ from .styles import (
 )
 from .tab_toggle import TabTogglePanel
 from .xml_generator import LibvirtXMLGenerator
+from .model.vm_config import VMConfig
 
 
 class VmPanel(ctk.CTkFrame):
@@ -30,7 +31,7 @@ class VmPanel(ctk.CTkFrame):
         # 主布局：1 行 1 列
         self.grid_columnconfigure(0, weight=1)
 
-        self.vm_data = {}
+        self.vm_config = VMConfig()  # VM配置管理实例
         self._updating_xml = False  # 防止递归更新
 
         # Tab 管理
@@ -492,6 +493,9 @@ class VmPanel(ctk.CTkFrame):
     def clear_all(self) -> None:
         """清空所有配置."""
         if messagebox.askyesno('确认', '确定要清空所有配置吗？'):
+            # 重置配置
+            self.vm_config.reset()
+
             # 清空 Devices Tab
             if hasattr(self, 'devices_tab'):
                 # 获取图形显示子 Tab
@@ -520,7 +524,8 @@ class VmPanel(ctk.CTkFrame):
 
     def collect_vm_data(self) -> dict:
         """收集虚拟机配置数据 - 通过各Tab的to_xml方法."""
-        data = {}
+        # 重置配置
+        self.vm_config.reset()
 
         for tab_key, tab_info in self.tab_instances.items():
             if not self.tab_enabled.get(tab_key, False):
@@ -531,25 +536,18 @@ class VmPanel(ctk.CTkFrame):
                 try:
                     xml_config = widget.to_xml()
                     if isinstance(xml_config, dict):
-                        for key, value in xml_config.items():
-                            if key in data:
-                                if isinstance(data[key], dict) and isinstance(value, dict):
-                                    data[key].update(value)
-                                else:
-                                    data[key] = value
-                            else:
-                                data[key] = value
+                        self.vm_config.update_from_tab(tab_key, xml_config)
                 except Exception:
                     pass
 
-        return data
+        return self.vm_config.to_dict()
 
     def generate_xml(self) -> None:
         """生成 XML 配置."""
         try:
-            self.vm_data = self.collect_vm_data()
+            vm_data = self.collect_vm_data()
             generator = LibvirtXMLGenerator()
-            xml_str = generator.generate(self.vm_data)
+            xml_str = generator.generate(vm_data)
             self.xml_textbox.delete('1.0', END)
             self.xml_textbox.insert('1.0', xml_str)
             self.update_info('XML 生成成功')
@@ -572,7 +570,7 @@ class VmPanel(ctk.CTkFrame):
             defaultextension='.xml',
             filetypes=[('XML 文件', '*.xml'), ('所有文件', '*.*')],
             title='保存 XML 文件',
-            initialfile=f'{self.vm_data.get("name", "vm")}.xml',
+            initialfile=f'{self.vm_config.basic.get("name", "vm")}.xml',
         )
 
         if not file_path:
@@ -607,7 +605,7 @@ class VmPanel(ctk.CTkFrame):
             )
 
             if result.returncode == 0:
-                vm_name = self.vm_data.get('name', 'vm')
+                vm_name = self.vm_config.basic.get('name', 'vm')
                 messagebox.showinfo(
                     '成功',
                     f'虚拟机 {vm_name} 定义成功!\n\n请运行以下命令启动:\n  virsh start {vm_name}',

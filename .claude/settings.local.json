@@ -16,7 +16,13 @@
       "Bash(cd D:/codehub/py_tools && python -m py_compile panels/vm_panel/tabs/memory_backing_tab.py panels/vm_panel/tabs/os_booting_tab.py panels/vm_panel/xml_generator.py)",
       "Bash(cd D:/codehub/py_tools && python -m py_compile panels/vm_panel/tabs/devices_tab.py)",
       "Bash(ruff check:*)",
-      "Bash(ruff format:*)"
+      "Bash(ruff format:*)",
+      "Bash(cd \"D:/codehub/py_tools\" && python -c \"from config import ConfigFactory, BasicConfig, CPUConfig; print\\('Config module import OK'\\)\")",
+      "Bash(cd \"D:/codehub/py_tools\" && python -c \"from config import ConfigFactory, BasicConfig, CPUConfig, MemoryConfig; print\\('Config module import OK'\\)\")",
+      "Bash(python -c \"from panels.vm_panel.model.vm_config import VMConfig; vm = VMConfig\\(\\); print\\('VMConfig import OK'\\); print\\('Basic name:', vm.basic.vm_name\\); print\\('Summary:', vm.get_summary\\(\\)\\)\")",
+      "Bash(python -c \"from panels.vm_panel.vm_panel import VmPanel; print\\('VmPanel import OK'\\)\")",
+      "Bash(python -m pytest test_config.py -v 2>&1 | head -80)",
+      "Bash(python test_config.py 2>&1)"
     ]
   }
 }
