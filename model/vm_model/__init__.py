@@ -1,58 +1,9 @@
 """VM Model - KVM/QEMU 虚拟机配置模型."""
 
-from .blkiotune import BlkioTune, DeviceBytesLimit, DeviceIopsLimit, WeightDevice
-from .clock import Clock, Timer
-from .cpu import NUMA, NumaNode
-from .cpu.cpu import CPU, CPUFeature
-from .cputune import CacheTune, CpuTune, EmulatorPin, IOThreadPin, MemoryTune, VCPUPin
-from .devices import (
-    IOMMU,
-    TPM,
-    Audio,
-    BackendDomain,
-    Channel,
-    # 控制台和串行设备
-    Console,
-    Controller,
-    Crypto,
-    # 基础设备
-    Disk,
-    Driver,
-    Filesystem,
-    Graphics,
-    # 主机设备
-    Hostdev,
-    # USB 设备
-    Hub,
-    Input,
-    Interface,
-    Memballoon,
-    Nvram,
-    Panic,
-    Parallel,
-    Pstore,
-    Redirdev,
-    Redirfilter,
-    Rng,
-    Serial,
-    Shmem,
-    # 其他设备
-    Smartcard,
-    Sound,
-    UsbFilterRule,
-    Video,
-    Vsock,
-    # 监控和安全设备
-    Watchdog,
-)
-from .devices import (
-    Memory as MemoryDevice,
-)
-
-# 设备相关
-from .devices_config import DevicesConfig
-from .domain import CpuMode, CPUTopology, Domain, MachineType, OSType, VirtType
-from .features import (
+from .configs.blkiotune import BlkioTune, DeviceBytesLimit, DeviceIopsLimit, WeightDevice
+from .configs.clock import Clock, Timer
+from .configs.cputune import CacheTune, CpuTune, EmulatorPin, IOThreadPin, MemoryTune, VCPUPin
+from .configs.features import (
     ACPI,
     APIC,
     GIC,
@@ -65,22 +16,74 @@ from .features import (
     VMPort,
     XenFeature,
 )
-from .iothreads import IOThread, IOThreadIDs, IOThreads
-from .keywrap import KeyWrap
-from .launchSecurity import LaunchSecurity
-from .memory import Memory as DomainMemory
-from .memoryBacking import HugePage, MemoryBacking
-from .memtune import MemTune
-from .metadata import Metadata
-from .numatune import MemNode, NumaTune
-from .os import OS, Bios, Boot, Bootmenu, Smbios
-from .os_booting_config import OSBootingConfig as OSConfig
-from .perf import Perf
-from .pm import PM
-from .seclabel import SecLabel, SecLabels
-from .sysinfo import SMBIOSBIOS, SMBIOSBaseBoard, SMBIOSChassis, SMBIOSSystem, SysInfo
-from .throttlegroups import ThrottleGroup, ThrottleGroups
-from .vcpu import VCPU
+from .configs.iothreads import IOThread, IOThreadIDs, IOThreads
+from .configs.keywrap import KeyWrap
+from .configs.launchSecurity import LaunchSecurity
+from .configs.memory import Memory as DomainMemory
+from .configs.memoryBacking import HugePage, MemoryBacking
+from .configs.memtune import MemTune
+from .configs.metadata import Metadata
+from .configs.numatune import MemNode, NumaTune
+from .configs.os import OS, Bios, Boot, Bootmenu, Smbios
+from .configs.perf import Perf
+from .configs.pm import PM
+from .configs.seclabel import SecLabel, SecLabels
+from .configs.sysinfo import SMBIOSBIOS, SMBIOSBaseBoard, SMBIOSChassis, SMBIOSSystem, SysInfo
+from .configs.throttlegroups import ThrottleGroup, ThrottleGroups
+from .configs.vcpu import VCPU
+
+# 配置类
+from .configs.basic_config import BasicConfig
+from .configs.cpu_allocation_config import CPUAllocationConfig
+from .configs.devices_config import DevicesConfig
+from .configs.memory_allocation_config import MemoryAllocationConfig
+from .configs.os_booting_config import OSBootingConfig as OSConfig
+
+# 核心类
+from .core.converter import DomainConfigConverter
+from .core.domain import CpuMode, CPUTopology, Domain, MachineType, OSType, VirtType
+from .core.vm_config import VMConfig
+
+# CPU 相关
+from .cpu import NUMA, NumaNode
+from .cpu.cpu import CPU, CPUFeature
+
+# 设备相关
+from .devices import (
+    IOMMU,
+    TPM,
+    Audio,
+    BackendDomain,
+    Channel,
+    Console,
+    Controller,
+    Crypto,
+    Disk,
+    Driver,
+    Filesystem,
+    Graphics,
+    Hostdev,
+    Hub,
+    Input,
+    Interface,
+    Memballoon,
+    Memory as MemoryDevice,
+    Nvram,
+    Panic,
+    Parallel,
+    Pstore,
+    Redirdev,
+    Redirfilter,
+    Rng,
+    Serial,
+    Shmem,
+    Smartcard,
+    Sound,
+    UsbFilterRule,
+    Video,
+    Vsock,
+    Watchdog,
+)
 
 __all__ = [
     # 核心配置
@@ -91,6 +94,8 @@ __all__ = [
     'MachineType',
     'CpuMode',
     'VirtType',
+    'VMConfig',
+    'DomainConfigConverter',
     # OS 配置
     'OSConfig',
     'OS',
@@ -102,6 +107,7 @@ __all__ = [
     'CPU',
     'CPUFeature',
     'VCPU',
+    'CPUAllocationConfig',
     # NUMA 配置
     'NUMA',
     'NumaNode',
@@ -111,6 +117,7 @@ __all__ = [
     'MemTune',
     'NumaTune',
     'MemNode',
+    'MemoryAllocationConfig',
     # IO 配置
     'BlkioTune',
     'WeightDevice',
@@ -159,6 +166,7 @@ __all__ = [
     'ThrottleGroup',
     # 设备配置
     'DevicesConfig',
+    'BasicConfig',
     # 设备类型
     'Disk',
     'Interface',

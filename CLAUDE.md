@@ -13,13 +13,20 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ruff check           # 检查语法错误
 ruff check --fix     # 检查并自动修复
 ruff format          # 格式化代码
+
+# 或使用构建脚本
+python -m scripts.build check
+python -m scripts.build fix
+python -m scripts.build format
+python -m scripts.build lint       # 运行所有检查
+python -m scripts.build test       # 运行测试
 ```
 
 ### 运行应用
 ```bash
-python main.py       # 运行主应用
-python drag.py       # 运行拖拽示例
-python example/simple_example.py  # 运行简单示例
+python main.py                     # 运行主应用
+python example/simple_example.py   # 运行简单示例
+python example/drag_example.py     # 运行拖拽示例
 ```
 
 ### 打包
@@ -27,12 +34,8 @@ python example/simple_example.py  # 运行简单示例
 # PyInstaller 方式
 pyinstaller main.spec
 
-# Nuitka 方式
-python -m nuitka --follow-imports --enable-plugin=tk-inter --include-package=customtkinter \
-  --include-data-dir=test_images=test_images --include-data-files=readme.md=readme.md \
-  --warn-unusual-code --warn-implicit-exceptions --nofollow-import-to=tkinter.test \
-  --nofollow-import-to=PIL.ImageQt --remove-output --output-dir=dist --output-file=PyTools \
-  --standalone --windows-console-mode=disable --windows-icon-from-ico=mytool.ico main.py
+# 或使用构建脚本
+python -m scripts.build build
 ```
 
 ## 代码架构
@@ -43,9 +46,22 @@ python -m nuitka --follow-imports --enable-plugin=tk-inter --include-package=cus
   - `home_panel.py` - 主页面板，包含多 Tab 展示各种 CTk 组件
   - `json_panel.py` - JSON 解析与 Excel 导出工具
   - `vm_panel/` - KVM/QEMU 虚拟机 XML 配置生成模块（24 个可配置 Tab）
+    - `tabs/` - 24 个 Tab 定义
+    - `frames/` - 可复用帧组件（disk_frame.py、network_frame.py、hostdev_frame.py）
+    - `tab_toggle.py` - Tab 切换管理
+    - `xml_generator.py` - XML 生成器
 - `model/vm_model/` - 虚拟机配置数据模型层
-- `drag.py` - 拖拽排序功能示例
+  - `core/` - 核心模块（vm_config.py、domain.py、converter.py）
+  - `configs/` - 配置类（basic_config.py、cpu_allocation_config.py 等）
+  - `cpu/` - CPU 相关模型（cpu.py、numa.py）
+  - `devices/` - 设备模型（disk.py、interface.py、graphics.py 等）
+- `core/` - 核心应用模块
+- `services/` - 业务逻辑层
+- `utils/` - 工具函数
+- `tests/` - 测试代码
 - `example/` - customtkinter 示例代码
+- `resources/` - 资源文件（图片、图标）
+- `scripts/` - 构建脚本
 
 ### VmPanel 虚拟机配置（24 个 Tab）
 
@@ -64,17 +80,22 @@ python -m nuitka --follow-imports --enable-plugin=tk-inter --include-package=cus
 
 ### model/vm_model 数据模型层
 
-采用组合模式管理配置：
-- `vm_config.py` - VMConfig 统一配置管理类
-- `basic_config.py` - 基础配置（名称、UUID、机型等）
-- `cpu_allocation_config.py` - CPU 分配配置
-- `memory_allocation_config.py` - 内存分配配置
-- `os_booting_config.py` - OS 引导配置
-- `devices_config.py` - 设备配置
-- `domain.py` - Domain 数据模型（含枚举类型、数据类）
-- `cpu/` - CPU 相关模型（cpu.py、numa.py）
-- `devices/` - 设备模型（disk.py、interface.py、graphics.py、video.py 等）
-- `converter.py` - 配置转换工具
+采用组合模式管理配置，目录结构：
+```
+model/vm_model/
+├── core/              # 核心模块
+│   ├── vm_config.py   - VMConfig 统一配置管理类
+│   ├── domain.py      - Domain 数据模型（含枚举类型、数据类）
+│   └── converter.py   - 配置转换工具
+├── configs/           # 配置类
+│   ├── basic_config.py           - 基础配置
+│   ├── cpu_allocation_config.py  - CPU 分配配置
+│   ├── memory_allocation_config.py - 内存分配配置
+│   ├── os_booting_config.py      - OS 引导配置
+│   └── devices_config.py         - 设备配置
+├── cpu/               - CPU 相关模型（cpu.py、numa.py）
+└── devices/           - 设备模型（disk.py、interface.py、graphics.py 等）
+```
 
 ### xml_generator.py XML 生成器
 

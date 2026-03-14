@@ -6,7 +6,7 @@ from tkinter import END
 
 import customtkinter as ctk
 
-from ..styles import CTK_FONT_SMALL
+from components.styles import CTK_FONT_SMALL
 
 
 class ScrollableNetworkFrame(ctk.CTkScrollableFrame):

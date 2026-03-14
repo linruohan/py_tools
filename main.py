@@ -27,7 +27,7 @@ class App(ctk.CTk):
         self.grid_rowconfigure(0, weight=1)
         self.grid_columnconfigure(1, weight=1)
 
-        image_path = Path(__file__).resolve().parent / 'test_images'
+        image_path = Path(__file__).resolve().parent / 'resources' / 'images'
         self.logo_image = ctk.CTkImage(
             Image.open(image_path / 'ctk_logo_single.png'), size=(15, 15)
         )
@@ -90,7 +90,7 @@ class App(ctk.CTk):
         self, dark_image_name: str, light_image_name: str, size: tuple[int, int] = (20, 20)
     ) -> ctk.CTkImage:
         """Create a CTkImage with dark and light images."""
-        image_path = Path(__file__).resolve().parent / 'test_images'
+        image_path = Path(__file__).resolve().parent / 'resources' / 'images'
         return ctk.CTkImage(
             light_image=Image.open(image_path / f'{dark_image_name}.png'),
             dark_image=Image.open(image_path / f'{light_image_name}.png'),

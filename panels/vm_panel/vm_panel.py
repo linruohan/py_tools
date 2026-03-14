@@ -6,17 +6,17 @@ from tkinter import END, filedialog, messagebox
 
 import customtkinter as ctk
 
-from model.vm_model.vm_config import VMConfig
+from model.vm_model.core.vm_config import VMConfig
 
-from .styles import (
+from components.styles import (
     BG_COLOR_CONTENT,
     BG_COLOR_MAIN,
     CTK_FONT_BOLD,
     CTK_FONT_MONO,
     CTK_FONT_SMALL,
 )
-from .tab_toggle import TabTogglePanel
-from .xml_generator import LibvirtXMLGenerator
+from components.tab_toggle import TabTogglePanel
+from utils.xml_generator import LibvirtXMLGenerator
 
 # 24 个 Tab 配置
 TABS_CONFIG = {

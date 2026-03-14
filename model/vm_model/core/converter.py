@@ -1,7 +1,7 @@
 """Domain 与 Config 转换器 - 连接两层配置系统."""
 
 from typing import Dict, Any, Optional, List
-from model.vm_model.domain import (
+from .domain import (
     Domain,
     VirtType,
     OSType,

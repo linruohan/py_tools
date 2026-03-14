@@ -3,7 +3,7 @@
 import customtkinter as ctk
 
 from ..frames import ScrollableNetworkFrame
-from ..styles import BG_COLOR_CONTENT
+from components.styles import BG_COLOR_CONTENT
 
 
 class NetworkTab(ctk.CTkFrame):

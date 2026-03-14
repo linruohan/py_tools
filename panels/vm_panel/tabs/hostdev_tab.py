@@ -3,7 +3,7 @@
 import customtkinter as ctk
 
 from ..frames import ScrollableHostdevFrame
-from ..styles import BG_COLOR_CONTENT, CTK_FONT_BOLD
+from components.styles import BG_COLOR_CONTENT, CTK_FONT_BOLD
 
 
 class HostdevTab(ctk.CTkFrame):

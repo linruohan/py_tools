@@ -1,10 +1,10 @@
 """VM 配置管理类 - 基于组合模式和工厂模式."""
 
-from .basic_config import BasicConfig
-from .cpu_allocation_config import CPUAllocationConfig as CPUConfig
-from .memory_allocation_config import MemoryAllocationConfig as MemoryConfig
-from .os_booting_config import OSBootingConfig as OSConfig
-from .devices_config import DevicesConfig
+from ..configs.basic_config import BasicConfig
+from ..configs.cpu_allocation_config import CPUAllocationConfig as CPUConfig
+from ..configs.memory_allocation_config import MemoryAllocationConfig as MemoryConfig
+from ..configs.os_booting_config import OSBootingConfig as OSConfig
+from ..configs.devices_config import DevicesConfig
 
 
 class VMConfig:

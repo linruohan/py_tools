@@ -3,7 +3,7 @@
 import customtkinter as ctk
 
 from ..frames import ScrollableDiskFrame
-from ..styles import BG_COLOR_CONTENT
+from components.styles import BG_COLOR_CONTENT
 
 
 class StorageTab(ctk.CTkFrame):

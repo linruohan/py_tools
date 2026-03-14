@@ -16,7 +16,7 @@ from config.strategies.option_strategies import (
 )
 
 # 引入 NUMA 配置
-from .cpu.numa import NUMA
+from ..cpu.numa import NUMA
 
 
 # ========== 类型定义 ==========
