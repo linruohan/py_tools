@@ -2,7 +2,7 @@
 
 import customtkinter as ctk
 
-from components.styles import BG_COLOR_CONTENT, CTK_FONT_BOLD, CTK_FONT_MAIN, CTK_FONT_SMALL
+from utils.styles import BG_COLOR_CONTENT, CTK_FONT_BOLD, CTK_FONT_MAIN, CTK_FONT_SMALL
 
 
 class BasicTab(ctk.CTkFrame):

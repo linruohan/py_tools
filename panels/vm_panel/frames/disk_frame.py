@@ -2,7 +2,7 @@
 
 import customtkinter as ctk
 
-from components.styles import CTK_FONT_SMALL
+from utils.styles import CTK_FONT_SMALL
 
 
 class ScrollableDiskFrame(ctk.CTkScrollableFrame):

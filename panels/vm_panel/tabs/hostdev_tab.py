@@ -2,7 +2,7 @@
 
 import customtkinter as ctk
 
-from components.styles import BG_COLOR_CONTENT, CTK_FONT_BOLD
+from utils.styles import BG_COLOR_CONTENT, CTK_FONT_BOLD
 
 from ..frames import ScrollableHostdevFrame
 

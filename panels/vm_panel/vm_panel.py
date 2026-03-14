@@ -6,7 +6,7 @@ from tkinter import END, filedialog, messagebox
 
 import customtkinter as ctk
 
-from components.styles import (
+from utils.styles import (
     BG_COLOR_CONTENT,
     BG_COLOR_MAIN,
     CTK_FONT_BOLD,
