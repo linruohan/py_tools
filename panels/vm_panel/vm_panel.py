@@ -13,95 +13,9 @@ from components.styles import (
     CTK_FONT_MONO,
     CTK_FONT_SMALL,
 )
-from components.tab_toggle import TabTogglePanel
+from components.tab_toggle import TabTogglePanel, TABS_CONFIG
 from model.vm_model.core.vm_config import VMConfig
 from utils.xml_generator import LibvirtXMLGenerator
-
-# 24 个 Tab 配置
-TABS_CONFIG = {
-    # 基础 Tab (默认启用)
-    'general_metadata': {'name': 'General Metadata', 'class': 'BasicTab', 'default_on': True},
-    'os_booting': {'name': 'Os Booting', 'class': 'OSTab', 'default_on': True},
-    'devices': {'name': 'Devices', 'class': 'DevicesTab', 'default_on': True},
-    'cpu_allocation': {'name': 'CPU Allocation', 'class': 'CPUAllocationTab', 'default_on': True},
-    'memory_allocation': {
-        'name': 'Memory Allocation',
-        'class': 'MemoryAllocationTab',
-        'default_on': True,
-    },
-    # 高级调优 Tab (默认禁用)
-    'smbios_system': {
-        'name': 'SMBIOS System Information',
-        'class': 'SMBIOSSystemTab',
-        'default_on': False,
-    },
-    'iothreads_allocation': {
-        'name': 'IOThreads Allocation',
-        'class': 'IOThreadsAllocationTab',
-        'default_on': False,
-    },
-    'cpu_tuning': {'name': 'CPU Tuning', 'class': 'CPUTuningTab', 'default_on': False},
-    'memory_backing': {'name': 'Memory Backing', 'class': 'MemoryBackingTab', 'default_on': False},
-    'memory_tuning': {'name': 'Memory Tuning', 'class': 'MemoryTuningTab', 'default_on': False},
-    'numa_node_tuning': {
-        'name': 'NUMA Node Tuning',
-        'class': 'NUMANodeTuningTab',
-        'default_on': False,
-    },
-    'block_io_tuning': {
-        'name': 'Block I/O Tuning',
-        'class': 'BlockIOTuningTab',
-        'default_on': False,
-    },
-    'resource_partitioning': {
-        'name': 'Resource Partitioning',
-        'class': 'ResourcePartitioningTab',
-        'default_on': False,
-    },
-    'fibre_channel_vmid': {
-        'name': 'Fibre Channel VMID',
-        'class': 'FibreChannelVMIDTab',
-        'default_on': False,
-    },
-    'cpu_model_topology': {
-        'name': 'CPU Model and Topology',
-        'class': 'CPUModelTopologyTab',
-        'default_on': False,
-    },
-    'events_configuration': {
-        'name': 'Events Configuration',
-        'class': 'EventsConfigurationTab',
-        'default_on': False,
-    },
-    'power_management': {
-        'name': 'Power Management',
-        'class': 'PowerManagementTab',
-        'default_on': False,
-    },
-    'disk_throttle_group': {
-        'name': 'Disk Throttle Group',
-        'class': 'DiskThrottleGroupTab',
-        'default_on': False,
-    },
-    'hypervisor_features': {
-        'name': 'Hypervisor Features',
-        'class': 'HypervisorFeaturesTab',
-        'default_on': False,
-    },
-    'time_keeping': {'name': 'Time Keeping', 'class': 'TimeKeepingTab', 'default_on': False},
-    'performance_monitoring': {
-        'name': 'Performance Monitoring',
-        'class': 'PerformanceMonitoringTab',
-        'default_on': False,
-    },
-    'security_label': {'name': 'Security Label', 'class': 'SecurityLabelTab', 'default_on': False},
-    'key_wrap': {'name': 'Key Wrap', 'class': 'KeyWrapTab', 'default_on': False},
-    'launch_security': {
-        'name': 'Launch Security',
-        'class': 'LaunchSecurityTab',
-        'default_on': False,
-    },
-}
 
 # Tab 类映射 - 延迟导入
 _TAB_CLASSES = None

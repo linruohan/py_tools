@@ -2,7 +2,7 @@
 
 import customtkinter as ctk
 
-from .styles import CTK_FONT_BOLD
+from utils.styles import CTK_FONT_BOLD
 
 
 class AccordionFrame(ctk.CTkFrame):
