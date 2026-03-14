@@ -140,9 +140,9 @@ class VmPanel(ctk.CTkFrame):
 
         # 配置内部网格
         main_frame.grid_rowconfigure(0, weight=0)  # 工具栏
-        main_frame.grid_rowconfigure(1, weight=0)  # Tab 开关面板
-        main_frame.grid_rowconfigure(2, weight=1)  # Tab 配置区
-        main_frame.grid_rowconfigure(3, weight=0)  # XML 预览区
+        main_frame.grid_rowconfigure(1, weight=0)  # Tab 开关面板（紧凑）
+        main_frame.grid_rowconfigure(2, weight=0)  # Tab 配置区
+        main_frame.grid_rowconfigure(3, weight=1)  # XML 预览区（动态高度）
         main_frame.grid_rowconfigure(4, weight=0)  # 信息栏
         main_frame.grid_columnconfigure(0, weight=1)
 
@@ -164,6 +164,7 @@ class VmPanel(ctk.CTkFrame):
             text_color=('gray10', '#DCE4EE'),
         )
         self.tabview.grid(row=2, column=0, padx=15, pady=(5, 10), sticky='nsew')
+        main_frame.grid_rowconfigure(2, weight=0)  # Tab 配置区 - 紧凑高度
 
         # 初始化 Tab 状态
         for tab_key, config in TABS_CONFIG.items():
@@ -260,6 +261,7 @@ class VmPanel(ctk.CTkFrame):
                 )
                 tab_instance.grid(row=0, column=0, sticky='nsew')
                 self.tab_instances[tab_key] = {'tab': tab, 'widget': tab_instance}
+                self.tab_enabled[tab_key] = True
 
                 # 切换到该 Tab
                 self.tabview.set(tab_name)
@@ -433,7 +435,7 @@ class VmPanel(ctk.CTkFrame):
     def _create_xml_preview(self, parent) -> None:
         """创建 XML 预览区."""
         preview_frame = ctk.CTkFrame(parent, fg_color=BG_COLOR_CONTENT, corner_radius=8)
-        preview_frame.grid(row=2, column=0, padx=15, pady=(0, 10), sticky='nsew')
+        preview_frame.grid(row=3, column=0, padx=15, pady=(0, 10), sticky='nsew')
 
         # 预览区标题
         preview_label = ctk.CTkLabel(
@@ -453,7 +455,6 @@ class VmPanel(ctk.CTkFrame):
             border_color='#333333',
             border_width=1,
             corner_radius=6,
-            height=200,
         )
         self.xml_textbox.grid(row=1, column=0, padx=10, pady=(0, 10), sticky='nsew')
         preview_frame.grid_rowconfigure(1, weight=1)
@@ -464,7 +465,7 @@ class VmPanel(ctk.CTkFrame):
         self.info_frame = ctk.CTkFrame(
             parent, fg_color=BG_COLOR_CONTENT, corner_radius=0, height=30
         )
-        self.info_frame.grid(row=3, column=0, sticky='ew')
+        self.info_frame.grid(row=4, column=0, sticky='ew')
         self.info_frame.grid_propagate(False)
 
         self.info_label = ctk.CTkLabel(

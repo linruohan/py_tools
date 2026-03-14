@@ -37,7 +37,12 @@
       "Bash(python test_vm_config.py)",
       "Bash(python -c \"\nfrom model.vm_model.vm_config import VMConfig\n\ndevices_xml = {\n    'devices': {\n        'graphics': {\n            'type': 'vnc',\n            'listen': '0.0.0.0',\n            'port': '5900',\n            'password': 'secret',\n        },\n    }\n}\n\nfrom model.vm_model.devices_config import DevicesConfig\n\ndc = DevicesConfig\\(\\)\ndc.update\\(devices_xml['devices']\\)\n\nprint\\('graphic field:'\\)\nprint\\(dc.graphic\\)\nprint\\(\\)\nprint\\('to_dict\\(\\)[\\\\\"graphic\\\\\"]:'\\)\nprint\\(dc.to_dict\\(\\)['graphic']\\)\n\")",
       "Bash(python -c \"\nimport customtkinter as ctk\ntabview = ctk.CTkTabview\\(\\)\nprint\\([m for m in dir\\(tabview\\) if not m.startswith\\('_'\\)]\\)\n\" 2>&1)",
-      "Bash(python -c \"\nimport customtkinter as ctk\nroot = ctk.CTk\\(\\)\ntabview = ctk.CTkTabview\\(root\\)\nmethods = [m for m in dir\\(tabview\\) if not m.startswith\\('_'\\)]\nprint\\('CTkTabview 公开方法:'\\)\nfor m in methods:\n    print\\(f'  - {m}'\\)\nroot.destroy\\(\\)\n\" 2>&1)"
+      "Bash(python -c \"\nimport customtkinter as ctk\nroot = ctk.CTk\\(\\)\ntabview = ctk.CTkTabview\\(root\\)\nmethods = [m for m in dir\\(tabview\\) if not m.startswith\\('_'\\)]\nprint\\('CTkTabview 公开方法:'\\)\nfor m in methods:\n    print\\(f'  - {m}'\\)\nroot.destroy\\(\\)\n\" 2>&1)",
+      "Bash(cd D:/codehub/py_tools && python -c \"\nfrom panels.vm_panel.tabs import *\nprint\\('All tabs imported successfully'\\)\nprint\\('Available tabs:'\\)\nimport panels.vm_panel.tabs as tabs\nfor name in tabs.__all__:\n    print\\(f'  - {name}'\\)\n\")",
+      "Bash(cd D:/codehub/py_tools && python test_vm_panel.py 2>&1 | head -50)",
+      "Bash(cd D:/codehub/py_tools && python test_vm_panel.py 2>&1)",
+      "Bash(cd D:/codehub/py_tools && python -c \"\nimport customtkinter as ctk\nfrom panels.vm_panel.vm_panel import VmPanel, TABS_CONFIG\n\nroot = ctk.CTk\\(\\)\nroot.title\\('Test'\\)\nroot.geometry\\('1000x800'\\)\n\nvm_panel = VmPanel\\(root\\)\nvm_panel.pack\\(fill='both', expand=True\\)\n\nprint\\('TABS_CONFIG:'\\)\nfor key, config in TABS_CONFIG.items\\(\\):\n    default = 'ON' if config.get\\('default_on', False\\) else 'OFF'\n    print\\(f'  {key}: {config[\\\\\"name\\\\\"]} \\(default: {default}\\)'\\)\n\nprint\\(f'\\\\nTab instances created: {len\\(vm_panel.tab_instances\\)}'\\)\nfor key, info in vm_panel.tab_instances.items\\(\\):\n    print\\(f'  {key}: {info[\\\\\"widget\\\\\"].__class__.__name__}'\\)\n\nprint\\(f'\\\\nTabView tabs: {vm_panel.tabview.tabs\\(\\)}'\\)\n\" 2>&1)",
+      "Bash(python test_vm_panel.py)"
     ]
   }
 }

@@ -32,8 +32,10 @@ class TabToggleSwitch(ctk.CTkFrame):
             variable=self.toggle_var,
             command=self._on_toggle,
             font=CTK_FONT_SMALL,
+            checkbox_width=14,
+            checkbox_height=14,
         )
-        self.toggle_switch.pack(side='left', padx=5, pady=2)
+        self.toggle_switch.pack(side='left', padx=2, pady=0)
 
     def _on_toggle(self) -> None:
         """开关状态改变时的回调."""
@@ -85,7 +87,6 @@ class TabTogglePanel(ctk.CTkFrame):
     def __init__(self, master, on_tab_toggle_callback=None, **kwargs):
         super().__init__(master, **kwargs)
         self.configure(fg_color='transparent')
-        self.configure(height=120)  # 设置固定高度
 
         self.on_tab_toggle_callback = on_tab_toggle_callback
         self.toggle_switches = {}
@@ -95,29 +96,29 @@ class TabTogglePanel(ctk.CTkFrame):
 
     def _create_switches(self) -> None:
         """创建所有 Tab 的开关."""
-        # 创建可滚动框架，设置固定高度
-        scrollable_frame = ctk.CTkScrollableFrame(
-            self, fg_color='transparent', height=100
-        )
-        scrollable_frame.grid(row=0, column=0, sticky='nsew')
+        # 主面板配置 - 紧凑布局
         self.grid_columnconfigure(0, weight=1)
         self.grid_rowconfigure(0, weight=1)
 
+        # 内容框架
+        content_frame = ctk.CTkFrame(self, fg_color='transparent')
+        content_frame.grid(row=0, column=0, sticky='ew', pady=5)
+
         # 标签
         ctk.CTkLabel(
-            scrollable_frame,
+            content_frame,
             text='Tab 显示:',
             font=CTK_FONT_BOLD,
             text_color='#64b5f6',
-        ).pack(anchor='w', padx=5, pady=2)
+        ).pack(side='left', padx=(3, 5), pady=0)
 
         # 创建开关框架 - 用于网格布局
-        switch_frame = ctk.CTkFrame(scrollable_frame, fg_color='transparent')
-        switch_frame.pack(fill='x', pady=2)
+        switch_frame = ctk.CTkFrame(content_frame, fg_color='transparent')
+        switch_frame.pack(side='left', fill='x', expand=True)
 
-        # 创建开关网格 - 5 列 x 5 行
+        # 创建开关网格 - 12 列 x 多行，紧凑布局
         row, col = 0, 0
-        max_cols = 5
+        max_cols = 12
 
         for tab_key, config in self.TABS_CONFIG.items():
             switch = TabToggleSwitch(
@@ -127,7 +128,7 @@ class TabTogglePanel(ctk.CTkFrame):
                 on_change_callback=self._on_toggle,
                 default_on=config.get('default_on', True),
             )
-            switch.grid(row=row, column=col, padx=3, pady=1, sticky='w')
+            switch.grid(row=row, column=col, padx=1, pady=0, sticky='w')
             self.toggle_switches[tab_key] = switch
 
             col += 1
