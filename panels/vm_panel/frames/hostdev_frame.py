@@ -1,18 +1,19 @@
-"""PCI 直通设备配置框架."""
+"""PCI 直通设备配置框架 - 使用通用可滚动配置框架基类."""
 
 import customtkinter as ctk
 
 from utils.styles import CTK_FONT_SMALL
 
+from .disk_frame import ScrollableConfigFrame
 
-class ScrollableHostdevFrame(ctk.CTkScrollableFrame):
+
+class ScrollableHostdevFrame(ScrollableConfigFrame):
     """可滚动 PCI 直通设备配置框架."""
 
     def __init__(self, master, on_change_callback=None, **kwargs):
-        super().__init__(master, **kwargs)
+        super().__init__(master, on_change_callback, **kwargs)
         self.hostdev_entries = []
         self.hostdev_count = 0
-        self.on_change_callback = on_change_callback
 
     def add_hostdev(self):
         """添加 PCI 直通设备配置行."""
@@ -60,22 +61,10 @@ class ScrollableHostdevFrame(ctk.CTkScrollableFrame):
         )
         self.hostdev_count += 1
 
-    def _trigger_change(self):
-        """触发变化回调."""
-        if self.on_change_callback:
-            self.on_change_callback()
-
     def remove_hostdev(self, frame):
         """删除 PCI 直通设备配置行."""
-        for i, entry in enumerate(self.hostdev_entries):
-            if entry['frame'] == frame:
-                frame.destroy()
-                self.hostdev_entries.pop(i)
-                self.hostdev_count -= 1
-                # 重新布局
-                for j, e in enumerate(self.hostdev_entries):
-                    e['frame'].grid(row=j, column=0, sticky='ew', pady=5)
-                break
+        self._remove_entry(frame, self.hostdev_entries)
+        self.hostdev_count -= 1
 
     def get_hostdevs(self):
         """获取所有 PCI 直通设备配置."""

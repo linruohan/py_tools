@@ -2,16 +2,15 @@
 
 import customtkinter as ctk
 
+from components.base_tab import BaseConfigTab
 from utils.styles import BG_COLOR_CONTENT, CTK_FONT_BOLD, CTK_FONT_SMALL
 
 
-class PerformanceMonitoringTab(ctk.CTkFrame):
+class PerformanceMonitoringTab(BaseConfigTab):
     """性能监控事件配置 Tab."""
 
     def __init__(self, master, on_change_callback=None, **kwargs):
-        super().__init__(master, **kwargs)
-        self.configure(fg_color='transparent')
-        self.on_change_callback = on_change_callback
+        super().__init__(master, on_change_callback, **kwargs)
 
         self._init_ui()
 
@@ -109,11 +108,6 @@ class PerformanceMonitoringTab(ctk.CTkFrame):
             right_frame, text='alignment_faults', font=CTK_FONT_SMALL, command=self._trigger_change
         )
         self.alignment_faults.grid(row=7, column=0, padx=10, pady=3, sticky='w')
-
-    def _trigger_change(self, *args):
-        """触发变化回调."""
-        if self.on_change_callback:
-            self.on_change_callback()
 
     def get_config(self) -> dict:
         """获取配置数据."""

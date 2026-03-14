@@ -1,18 +1,64 @@
-"""磁盘配置框架."""
+"""磁盘配置框架 - 提供可滚动配置框架基类和磁盘配置实现."""
 
 import customtkinter as ctk
 
 from utils.styles import CTK_FONT_SMALL
 
 
-class ScrollableDiskFrame(ctk.CTkScrollableFrame):
-    """可滚动磁盘配置框架."""
+class ScrollableConfigFrame(ctk.CTkScrollableFrame):
+    """可滚动配置框架基类.
+
+    提供了通用的添加/删除配置行和重新布局的功能,
+    子类只需要实现具体的 UI 创建逻辑即可.
+    """
 
     def __init__(self, master, on_change_callback=None, **kwargs):
         super().__init__(master, **kwargs)
+        self.entries = []
+        self.count = 0
+        self.on_change_callback = on_change_callback
+
+    def _trigger_change(self):
+        """触发变化回调."""
+        if self.on_change_callback:
+            self.on_change_callback()
+
+    def _remove_entry(self, frame, entry_list=None):
+        """删除配置行并重新布局.
+
+        Args:
+            frame: 要删除的 frame
+            entry_list: 条目列表, 默认为 self.entries
+        """
+        entries = entry_list or self.entries
+        for i, entry in enumerate(entries):
+            if entry.get('frame') == frame:
+                frame.destroy()
+                entries.pop(i)
+                self.count -= 1
+                # 重新布局
+                for j, e in enumerate(entries):
+                    e['frame'].grid(row=j, column=0, sticky='ew', pady=5)
+                break
+
+    def _relayout_entries(self, entry_list=None):
+        """重新布局所有条目.
+
+        Args:
+            entry_list: 条目列表, 默认为 self.entries
+        """
+        entries = entry_list or self.entries
+        for j, e in enumerate(entries):
+            e['frame'].grid(row=j, column=0, sticky='ew', pady=5)
+
+
+class ScrollableDiskFrame(ScrollableConfigFrame):
+    """可滚动磁盘配置框架."""
+
+    def __init__(self, master, on_change_callback=None, **kwargs):
+        super().__init__(master, on_change_callback, **kwargs)
         self.disk_entries = []
         self.disk_count = 0
-        self.on_change_callback = on_change_callback
 
     def add_disk(self):
         """添加磁盘配置行."""
@@ -108,22 +154,10 @@ class ScrollableDiskFrame(ctk.CTkScrollableFrame):
         )
         self.disk_count += 1
 
-    def _trigger_change(self):
-        """触发变化回调."""
-        if self.on_change_callback:
-            self.on_change_callback()
-
     def remove_disk(self, frame):
         """删除磁盘配置行."""
-        for i, entry in enumerate(self.disk_entries):
-            if entry['frame'] == frame:
-                frame.destroy()
-                self.disk_entries.pop(i)
-                self.disk_count -= 1
-                # 重新布局
-                for j, e in enumerate(self.disk_entries):
-                    e['frame'].grid(row=j, column=0, sticky='ew', pady=5)
-                break
+        self._remove_entry(frame, self.disk_entries)
+        self.disk_count -= 1
 
     def add_cdrom(self):
         """添加光驱配置行."""

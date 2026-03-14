@@ -1,4 +1,10 @@
+"""CPU 模型定义."""
+
+from __future__ import annotations
+
 from dataclasses import dataclass, field
+
+from .topology import CPUTopology
 
 
 @dataclass
@@ -17,15 +23,6 @@ class CPUModel:
     name: str
     fallback: str | None = None  # allow, forbid, require
     check: bool | None = None
-
-
-@dataclass
-class CPUTopology:
-    """CPU 拓扑"""
-
-    sockets: int
-    cores: int
-    threads: int
 
 
 @dataclass

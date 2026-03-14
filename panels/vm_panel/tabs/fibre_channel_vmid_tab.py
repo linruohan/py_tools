@@ -2,16 +2,15 @@
 
 import customtkinter as ctk
 
+from components.base_tab import BaseConfigTab
 from utils.styles import BG_COLOR_CONTENT, CTK_FONT_BOLD, CTK_FONT_MAIN, CTK_FONT_SMALL
 
 
-class FibreChannelVMIDTab(ctk.CTkFrame):
+class FibreChannelVMIDTab(BaseConfigTab):
     """光纤通道 VMID 配置 Tab - FC SAN QoS 和访问控制."""
 
     def __init__(self, master, on_change_callback=None, **kwargs):
-        super().__init__(master, **kwargs)
-        self.configure(fg_color='transparent')
-        self.on_change_callback = on_change_callback
+        super().__init__(master, on_change_callback, **kwargs)
 
         self._init_ui()
 
@@ -77,11 +76,6 @@ class FibreChannelVMIDTab(ctk.CTkFrame):
             text_color='#aaaaaa',
             justify='left',
         ).grid(row=1, column=0, padx=10, pady=5, sticky='w')
-
-    def _trigger_change(self, *args):
-        """触发变化回调."""
-        if self.on_change_callback:
-            self.on_change_callback()
 
     def get_config(self) -> dict:
         """获取配置数据."""

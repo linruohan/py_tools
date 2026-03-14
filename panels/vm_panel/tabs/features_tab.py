@@ -2,16 +2,15 @@
 
 import customtkinter as ctk
 
+from components.base_tab import BaseConfigTab
 from utils.styles import BG_COLOR_CONTENT, CTK_FONT_BOLD, CTK_FONT_SMALL
 
 
-class FeaturesTab(ctk.CTkFrame):
+class FeaturesTab(BaseConfigTab):
     """功能特性 Tab."""
 
     def __init__(self, master, on_change_callback=None, **kwargs):
-        super().__init__(master, **kwargs)
-        self.configure(fg_color='transparent')
-        self.on_change_callback = on_change_callback
+        super().__init__(master, on_change_callback, **kwargs)
 
         # 控件引用
         self.acpi_check = None
@@ -61,11 +60,6 @@ class FeaturesTab(ctk.CTkFrame):
             features_frame, text='IOMMU', font=CTK_FONT_SMALL, command=self._trigger_change
         )
         self.iommu_check.grid(row=1, column=3, padx=10, pady=5, sticky='w')
-
-    def _trigger_change(self, *args):
-        """触发变化回调."""
-        if self.on_change_callback:
-            self.on_change_callback()
 
     def get_features(self):
         """获取功能特性配置."""

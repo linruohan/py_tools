@@ -1,7 +1,7 @@
 """内存分配配置 Tab - Memory Allocation."""
 
 from components.base_tab import BaseConfigTab, create_two_column_layout
-from utils.parsers import MEMORY_OPTIONS, parse_memory_to_kib, parse_integer_value
+from utils.parsers import MEMORY_OPTIONS, parse_integer_value, parse_memory_to_kib
 
 
 class MemoryAllocationTab(BaseConfigTab):
@@ -46,13 +46,13 @@ class MemoryAllocationTab(BaseConfigTab):
         self._create_section_title(right_frame, '说明', text_color='#ff9800', row=3)
         info_text = (
             '内存 (memory):\n'
-            '启动时分配的最大内存。\n\n'
+            '启动时分配的最大内存.\n\n'
             '当前内存 (currentMemory):\n'
             '实际分配的内存,可以小于\n'
-            '最大值以支持内存气球。\n\n'
+            '最大值以支持内存气球.\n\n'
             '最大内存 (maxMemory):\n'
             '运行时可通过热插拔增加\n'
-            '到的最大内存限制。'
+            '到的最大内存限制.'
         )
         self._create_info_label(right_frame, info_text, row=4)
 

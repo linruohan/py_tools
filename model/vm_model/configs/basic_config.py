@@ -1,92 +1,62 @@
-"""基础信息配置类 - 管理虚拟机基础配置信息."""
+"""基础信息配置类 - 使用 dataclass 简化的配置类."""
+
+from dataclasses import dataclass, field
+
+from model.vm_model.cpu.topology import CPUTopology
 
 
+@dataclass
 class BasicConfig:
     """基础信息配置类."""
 
-    def __init__(self):
-        """初始化基础配置."""
-        self.name = 'vm0'
-        self.title = ''
-        self.description = ''
-        self.uuid = ''
-        self.genid = ''
-        self.arch = 'x86'
-        self.machine = 'virt'
-        self.virt_type = 'hvm'
-        self.chipset = 'virtio'
-        self.vcpu = 2
-        self.cpu_mode = 'host-model'
-        self.cpu_topology = {
-            'sockets': 1,
-            'cores': 2,
-            'threads': 1,
-        }
-        self.memory = 2048  # MB
-        self.current_memory = 2048  # MB
-        self.max_memory = 4096  # MB
-        self.swap = 0  # MB
+    name: str = 'vm0'
+    title: str = ''
+    description: str = ''
+    uuid: str = ''
+    genid: str = ''
+    arch: str = 'x86'
+    machine: str = 'virt'
+    virt_type: str = 'hvm'
+    chipset: str = 'virtio'
+    vcpu: int = 2
+    cpu_mode: str = 'host-model'
+    cpu_topology: CPUTopology = field(default_factory=lambda: CPUTopology.basic_topology())
+    memory: int = 2048  # MB
+    current_memory: int = 2048  # MB
+    max_memory: int = 4096  # MB
+    swap: int = 0  # MB
 
     def update(self, data: dict) -> None:
-        """更新配置.
-
-        Args:
-            data: 配置数据
-        """
-        if 'name' in data:
-            self.name = data['name']
-        if 'title' in data:
-            self.title = data['title']
-        if 'description' in data:
-            self.description = data['description']
-        if 'uuid' in data:
-            self.uuid = data['uuid']
-        if 'genid' in data:
-            self.genid = data['genid']
-        if 'arch' in data:
-            self.arch = data['arch']
-        if 'machine' in data:
-            self.machine = data['machine']
-        if 'virt_type' in data:
-            self.virt_type = data['virt_type']
-        if 'chipset' in data:
-            self.chipset = data['chipset']
-        if 'vcpu' in data:
-            self.vcpu = data['vcpu']
-        if 'cpu_mode' in data:
-            self.cpu_mode = data['cpu_mode']
+        """更新配置."""
+        for key in [
+            'name',
+            'title',
+            'description',
+            'uuid',
+            'genid',
+            'arch',
+            'machine',
+            'virt_type',
+            'chipset',
+            'vcpu',
+            'cpu_mode',
+            'memory',
+            'current_memory',
+            'max_memory',
+            'swap',
+        ]:
+            if key in data:
+                setattr(self, key, data[key])
         if 'cpu_topology' in data:
-            self.cpu_topology.update(data['cpu_topology'])
-        if 'memory' in data:
-            self.memory = data['memory']
-        if 'current_memory' in data:
-            self.current_memory = data['current_memory']
-        if 'max_memory' in data:
-            self.max_memory = data['max_memory']
-        if 'swap' in data:
-            self.swap = data['swap']
+            if isinstance(data['cpu_topology'], dict):
+                self.cpu_topology = CPUTopology.from_dict(data['cpu_topology'])
+            else:
+                self.cpu_topology = data['cpu_topology']
 
     def to_dict(self) -> dict:
-        """转换为字典格式.
+        """转换为字典格式."""
+        from dataclasses import asdict
 
-        Returns:
-            配置字典
-        """
-        return {
-            'name': self.name,
-            'title': self.title,
-            'description': self.description,
-            'uuid': self.uuid,
-            'genid': self.genid,
-            'arch': self.arch,
-            'machine': self.machine,
-            'virt_type': self.virt_type,
-            'chipset': self.chipset,
-            'vcpu': self.vcpu,
-            'cpu_mode': self.cpu_mode,
-            'cpu_topology': self.cpu_topology,
-            'memory': self.memory,
-            'current_memory': self.current_memory,
-            'max_memory': self.max_memory,
-            'swap': self.swap,
-        }
+        result = asdict(self)
+        result['cpu_topology'] = self.cpu_topology.to_dict()
+        return result

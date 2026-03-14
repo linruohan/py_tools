@@ -2,16 +2,15 @@
 
 import customtkinter as ctk
 
+from components.base_tab import BaseConfigTab
 from utils.styles import BG_COLOR_CONTENT, CTK_FONT_BOLD, CTK_FONT_MAIN, CTK_FONT_SMALL
 
 
-class CPUTuningTab(ctk.CTkFrame):
+class CPUTuningTab(BaseConfigTab):
     """CPU 优化配置 Tab."""
 
     def __init__(self, master, on_change_callback=None, **kwargs):
-        super().__init__(master, **kwargs)
-        self.configure(fg_color='transparent')
-        self.on_change_callback = on_change_callback
+        super().__init__(master, on_change_callback, **kwargs)
 
         self._init_ui()
 
@@ -108,11 +107,6 @@ class CPUTuningTab(ctk.CTkFrame):
         self.priority = ctk.CTkEntry(right_frame, placeholder_text='1-99', width=80)
         self.priority.grid(row=2, column=1, padx=5, pady=5, sticky='w')
         self.priority.bind('<KeyRelease>', lambda e: self._trigger_change())
-
-    def _trigger_change(self, *args):
-        """触发变化回调."""
-        if self.on_change_callback:
-            self.on_change_callback()
 
     def get_config(self) -> dict:
         """获取配置数据."""

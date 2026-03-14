@@ -4,17 +4,16 @@ from typing import ClassVar
 
 import customtkinter as ctk
 
+from components.base_tab import BaseConfigTab
 from components.inner_tab_panel import InnerTabPanel
 from utils.styles import BG_COLOR_CONTENT, CTK_FONT_BOLD, CTK_FONT_MAIN
 
 
-class BIOSInfoSubTab(ctk.CTkFrame):
+class BIOSInfoSubTab(BaseConfigTab):
     """BIOS 信息子 Tab."""
 
     def __init__(self, master, on_change_callback=None, **kwargs):
-        super().__init__(master, **kwargs)
-        self.configure(fg_color='transparent')
-        self.on_change_callback = on_change_callback
+        super().__init__(master, on_change_callback, **kwargs)
 
         self._init_ui()
 
@@ -59,11 +58,6 @@ class BIOSInfoSubTab(ctk.CTkFrame):
         self.release.grid(row=4, column=1, padx=5, pady=5, sticky='w')
         self.release.bind('<KeyRelease>', lambda e: self._trigger_change())
 
-    def _trigger_change(self, *args):
-        """触发变化回调."""
-        if self.on_change_callback:
-            self.on_change_callback()
-
     def get_config(self) -> dict:
         """获取配置数据."""
         return {
@@ -74,13 +68,11 @@ class BIOSInfoSubTab(ctk.CTkFrame):
         }
 
 
-class SystemInfoSubTab(ctk.CTkFrame):
+class SystemInfoSubTab(BaseConfigTab):
     """系统信息子 Tab."""
 
     def __init__(self, master, on_change_callback=None, **kwargs):
-        super().__init__(master, **kwargs)
-        self.configure(fg_color='transparent')
-        self.on_change_callback = on_change_callback
+        super().__init__(master, on_change_callback, **kwargs)
 
         self._init_ui()
 
@@ -146,11 +138,6 @@ class SystemInfoSubTab(ctk.CTkFrame):
         self.family.grid(row=7, column=1, padx=5, pady=5, sticky='w')
         self.family.bind('<KeyRelease>', lambda e: self._trigger_change())
 
-    def _trigger_change(self, *args):
-        """触发变化回调."""
-        if self.on_change_callback:
-            self.on_change_callback()
-
     def get_config(self) -> dict:
         """获取配置数据."""
         return {
@@ -164,13 +151,11 @@ class SystemInfoSubTab(ctk.CTkFrame):
         }
 
 
-class BaseBoardSubTab(ctk.CTkFrame):
+class BaseBoardSubTab(BaseConfigTab):
     """主板信息子 Tab."""
 
     def __init__(self, master, on_change_callback=None, **kwargs):
-        super().__init__(master, **kwargs)
-        self.configure(fg_color='transparent')
-        self.on_change_callback = on_change_callback
+        super().__init__(master, on_change_callback, **kwargs)
 
         self._init_ui()
 
@@ -229,11 +214,6 @@ class BaseBoardSubTab(ctk.CTkFrame):
         self.location.grid(row=6, column=1, padx=5, pady=5, sticky='w')
         self.location.bind('<KeyRelease>', lambda e: self._trigger_change())
 
-    def _trigger_change(self, *args):
-        """触发变化回调."""
-        if self.on_change_callback:
-            self.on_change_callback()
-
     def get_config(self) -> dict:
         """获取配置数据."""
         return {
@@ -246,13 +226,11 @@ class BaseBoardSubTab(ctk.CTkFrame):
         }
 
 
-class ChassisSubTab(ctk.CTkFrame):
+class ChassisSubTab(BaseConfigTab):
     """机箱信息子 Tab."""
 
     def __init__(self, master, on_change_callback=None, **kwargs):
-        super().__init__(master, **kwargs)
-        self.configure(fg_color='transparent')
-        self.on_change_callback = on_change_callback
+        super().__init__(master, on_change_callback, **kwargs)
 
         self._init_ui()
 
@@ -304,11 +282,6 @@ class ChassisSubTab(ctk.CTkFrame):
         self.sku.grid(row=5, column=1, padx=5, pady=5, sticky='w')
         self.sku.bind('<KeyRelease>', lambda e: self._trigger_change())
 
-    def _trigger_change(self, *args):
-        """触发变化回调."""
-        if self.on_change_callback:
-            self.on_change_callback()
-
     def get_config(self) -> dict:
         """获取配置数据."""
         return {
@@ -320,7 +293,7 @@ class ChassisSubTab(ctk.CTkFrame):
         }
 
 
-class SMBIOSSystemTab(ctk.CTkFrame):
+class SMBIOSSystemTab(BaseConfigTab):
     """SMBIOS 系统信息配置 Tab."""
 
     SUB_TABS_CONFIG: ClassVar[dict] = {
@@ -347,9 +320,7 @@ class SMBIOSSystemTab(ctk.CTkFrame):
     }
 
     def __init__(self, master, on_change_callback=None, **kwargs):
-        super().__init__(master, **kwargs)
-        self.configure(fg_color='transparent')
-        self.on_change_callback = on_change_callback
+        super().__init__(master, on_change_callback, **kwargs)
 
         self._init_ui()
 

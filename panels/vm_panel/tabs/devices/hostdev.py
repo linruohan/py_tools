@@ -2,16 +2,15 @@
 
 import customtkinter as ctk
 
+from components.base_tab import BaseConfigTab
 from utils.styles import BG_COLOR_CONTENT, CTK_FONT_BOLD, CTK_FONT_MAIN, CTK_FONT_SMALL
 
 
-class USBHostdevTab(ctk.CTkFrame):
+class USBHostdevTab(BaseConfigTab):
     """USB 设备直通配置."""
 
     def __init__(self, master, on_change_callback=None, **kwargs):
-        super().__init__(master, **kwargs)
-        self.configure(fg_color='transparent')
-        self.on_change_callback = on_change_callback
+        super().__init__(master, on_change_callback, **kwargs)
         self.usb_list = []
 
         self._init_ui()
@@ -144,11 +143,6 @@ class USBHostdevTab(ctk.CTkFrame):
         else:
             self.usb_display.configure(text='暂无设备')
 
-    def _trigger_change(self, *args):
-        """触发变化回调."""
-        if self.on_change_callback:
-            self.on_change_callback()
-
     def get_config(self) -> dict:
         """获取配置."""
         return {
@@ -160,13 +154,11 @@ class USBHostdevTab(ctk.CTkFrame):
         }
 
 
-class PCIHostdevTab(ctk.CTkFrame):
+class PCIHostdevTab(BaseConfigTab):
     """PCI 设备直通配置."""
 
     def __init__(self, master, on_change_callback=None, **kwargs):
-        super().__init__(master, **kwargs)
-        self.configure(fg_color='transparent')
-        self.on_change_callback = on_change_callback
+        super().__init__(master, on_change_callback, **kwargs)
         self.pci_list = []
 
         self._init_ui()
@@ -319,11 +311,6 @@ class PCIHostdevTab(ctk.CTkFrame):
         else:
             self.pci_display.configure(text='暂无设备')
 
-    def _trigger_change(self, *args):
-        """触发变化回调."""
-        if self.on_change_callback:
-            self.on_change_callback()
-
     def get_config(self) -> dict:
         """获取配置."""
         return {
@@ -336,13 +323,11 @@ class PCIHostdevTab(ctk.CTkFrame):
         }
 
 
-class SCSIHostdevTab(ctk.CTkFrame):
+class SCSIHostdevTab(BaseConfigTab):
     """SCSI 设备直通配置."""
 
     def __init__(self, master, on_change_callback=None, **kwargs):
-        super().__init__(master, **kwargs)
-        self.configure(fg_color='transparent')
-        self.on_change_callback = on_change_callback
+        super().__init__(master, on_change_callback, **kwargs)
         self.scsi_list = []
 
         self._init_ui()
@@ -651,11 +636,6 @@ class SCSIHostdevTab(ctk.CTkFrame):
         else:
             self.scsi_display.configure(text='暂无设备')
 
-    def _trigger_change(self, *args):
-        """触发变化回调."""
-        if self.on_change_callback:
-            self.on_change_callback()
-
     def get_config(self) -> dict:
         """获取配置."""
         return {
@@ -664,13 +644,11 @@ class SCSIHostdevTab(ctk.CTkFrame):
         }
 
 
-class MdevHostdevTab(ctk.CTkFrame):
+class MdevHostdevTab(BaseConfigTab):
     """MDEV 设备直通配置."""
 
     def __init__(self, master, on_change_callback=None, **kwargs):
-        super().__init__(master, **kwargs)
-        self.configure(fg_color='transparent')
-        self.on_change_callback = on_change_callback
+        super().__init__(master, on_change_callback, **kwargs)
         self.mdev_list = []
 
         self._init_ui()
@@ -805,11 +783,6 @@ class MdevHostdevTab(ctk.CTkFrame):
             self.mdev_display.configure(text=f'已添加:{", ".join(devs)}')
         else:
             self.mdev_display.configure(text='暂无设备')
-
-    def _trigger_change(self, *args):
-        """触发变化回调."""
-        if self.on_change_callback:
-            self.on_change_callback()
 
     def get_config(self) -> dict:
         """获取配置."""

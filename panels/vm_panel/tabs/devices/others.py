@@ -2,16 +2,15 @@
 
 import customtkinter as ctk
 
+from components.base_tab import BaseConfigTab
 from utils.styles import BG_COLOR_CONTENT, CTK_FONT_BOLD, CTK_FONT_MAIN, CTK_FONT_SMALL
 
 
-class OthersTab(ctk.CTkFrame):
+class OthersTab(BaseConfigTab):
     """其他设备配置 Tab - 串口、TPM、控制器."""
 
     def __init__(self, master, on_change_callback=None, **kwargs):
-        super().__init__(master, **kwargs)
-        self.configure(fg_color='transparent')
-        self.on_change_callback = on_change_callback
+        super().__init__(master, on_change_callback, **kwargs)
 
         self.serial_type = None
         self.serial_port = None
@@ -124,11 +123,6 @@ class OthersTab(ctk.CTkFrame):
         self.audio_model.set('ich9')
         self.audio_model.grid(row=1, column=3, padx=5, pady=5, sticky='w')
         self.audio_model.configure(command=self._trigger_change)
-
-    def _trigger_change(self, *args):
-        """触发变化回调."""
-        if self.on_change_callback:
-            self.on_change_callback()
 
     def get_serial_config(self):
         """获取串口配置."""

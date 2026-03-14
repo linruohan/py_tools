@@ -6,6 +6,8 @@ from tkinter import END, filedialog, messagebox
 
 import customtkinter as ctk
 
+from components.tab_toggle import TABS_CONFIG, TabTogglePanel
+from model.vm_model.core.vm_config import VMConfig
 from utils.styles import (
     BG_COLOR_CONTENT,
     BG_COLOR_MAIN,
@@ -13,8 +15,6 @@ from utils.styles import (
     CTK_FONT_MONO,
     CTK_FONT_SMALL,
 )
-from components.tab_toggle import TabTogglePanel, TABS_CONFIG
-from model.vm_model.core.vm_config import VMConfig
 from utils.xml_generator import LibvirtXMLGenerator
 
 # Tab 类映射 - 延迟导入
@@ -491,7 +491,7 @@ class VmPanel(ctk.CTkFrame):
         except FileNotFoundError:
             messagebox.showerror(
                 '错误',
-                '未找到 virsh 命令!\n请确保已安装 libvirt-client 并以管理员/root 身份运行。',
+                '未找到 virsh 命令!\n请确保已安装 libvirt-client 并以管理员/root 身份运行.',
             )
             self.update_info('未找到 virsh 命令', False)
         except Exception as e:

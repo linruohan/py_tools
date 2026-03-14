@@ -2,16 +2,15 @@
 
 import customtkinter as ctk
 
+from components.base_tab import BaseConfigTab
 from utils.styles import BG_COLOR_CONTENT, CTK_FONT_BOLD, CTK_FONT_MAIN, CTK_FONT_SMALL
 
 
-class OSTab(ctk.CTkFrame):
+class OSTab(BaseConfigTab):
     """引导/OS 配置 Tab."""
 
     def __init__(self, master, on_change_callback=None, **kwargs):
-        super().__init__(master, **kwargs)
-        self.configure(fg_color='transparent')
-        self.on_change_callback = on_change_callback
+        super().__init__(master, on_change_callback, **kwargs)
 
         # 控件引用
         self.firmware_type = None
@@ -115,11 +114,6 @@ class OSTab(ctk.CTkFrame):
         self.boot_timeout_entry.grid(row=2, column=3, padx=5, pady=5, sticky='w')
         self.boot_timeout_entry.insert(0, '-1')
         self.boot_timeout_entry.bind('<KeyRelease>', lambda e: self._trigger_change())
-
-    def _trigger_change(self, *args):
-        """触发变化回调."""
-        if self.on_change_callback:
-            self.on_change_callback()
 
     def get_os_config(self):
         """获取 OS 配置."""

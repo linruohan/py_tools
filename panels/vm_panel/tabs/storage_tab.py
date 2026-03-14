@@ -2,18 +2,17 @@
 
 import customtkinter as ctk
 
+from components.base_tab import BaseConfigTab
 from utils.styles import BG_COLOR_CONTENT
 
 from ..frames import ScrollableDiskFrame
 
 
-class StorageTab(ctk.CTkFrame):
+class StorageTab(BaseConfigTab):
     """存储配置 Tab."""
 
     def __init__(self, master, on_change_callback=None, **kwargs):
-        super().__init__(master, **kwargs)
-        self.configure(fg_color='transparent')
-        self.on_change_callback = on_change_callback
+        super().__init__(master, on_change_callback, **kwargs)
         self.disk_frame = None
 
         # 初始化 UI
@@ -62,11 +61,6 @@ class StorageTab(ctk.CTkFrame):
 
         # 默认添加一个磁盘
         self.add_disk()
-
-    def _trigger_change(self, *args):
-        """触发变化回调."""
-        if self.on_change_callback:
-            self.on_change_callback()
 
     def add_disk(self):
         """添加磁盘配置行."""

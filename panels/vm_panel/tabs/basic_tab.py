@@ -2,17 +2,15 @@
 
 import customtkinter as ctk
 
+from components.base_tab import BaseConfigTab
+from utils.parsers import parse_memory_to_mib
 from utils.styles import BG_COLOR_CONTENT, CTK_FONT_BOLD, CTK_FONT_MAIN, CTK_FONT_SMALL
 
 
-class BasicTab(ctk.CTkFrame):
+class BasicTab(BaseConfigTab):
     """基础配置 Tab."""
 
     def __init__(self, master, on_change_callback=None, **kwargs):
-        super().__init__(master, **kwargs)
-        self.configure(fg_color='transparent')
-        self.on_change_callback = on_change_callback
-
         # 架构类型变量
         self.arch_type = ctk.StringVar(value='x86')
 
@@ -34,8 +32,7 @@ class BasicTab(ctk.CTkFrame):
         self.cpu_cores_entry = None
         self.cpu_threads_entry = None
 
-        # 初始化 UI
-        self._init_ui()
+        super().__init__(master, on_change_callback, **kwargs)
 
     def _init_ui(self) -> None:
         """初始化界面."""
@@ -268,33 +265,6 @@ class BasicTab(ctk.CTkFrame):
         self.swap_entry.insert(0, '0')
         self.swap_entry.bind('<KeyRelease>', lambda e: self._trigger_change())
 
-    def _parse_memory_value(self, value: str) -> int:
-        """解析内存值字符串为 MB 整数.
-
-        Args:
-            value: 内存值字符串,如 '4G' 或 '512M'
-
-        Returns:
-            内存值(MB)
-        """
-        if not value:
-            return 2048
-        value = value.strip().upper()
-        if value.endswith('G'):
-            return int(value[:-1]) * 1024
-        elif value.endswith('M'):
-            return int(value[:-1])
-        else:
-            try:
-                return int(value)
-            except ValueError:
-                return 2048
-
-    def _trigger_change(self, *args):
-        """触发变化回调."""
-        if self.on_change_callback:
-            self.on_change_callback()
-
     def _on_arch_change(self):
         """架构切换时更新机型."""
         arch = self.arch_type.get()
@@ -325,21 +295,21 @@ class BasicTab(ctk.CTkFrame):
                 'cores': int(self.cpu_cores_entry.get().strip() or '2'),
                 'threads': int(self.cpu_threads_entry.get().strip() or '1'),
             },
-            'memory': self._parse_memory_value(self.memory_combo.get()),
-            'current_memory': self._parse_memory_value(self.current_memory_combo.get()),
-            'max_memory': self._parse_memory_value(self.max_memory_combo.get()),
+            'memory': parse_memory_to_mib(self.memory_combo.get()),
+            'current_memory': parse_memory_to_mib(self.current_memory_combo.get()),
+            'max_memory': parse_memory_to_mib(self.max_memory_combo.get()),
             'swap': int(self.swap_entry.get().strip() or '0'),
         }
 
     def get_config(self) -> dict:
-        """获取配置数据(兼容新接口)."""
+        """获取配置数据 (兼容新接口)."""
         return self.get_basic_config()
 
     def to_xml(self) -> dict:
-        """生成XML配置字典.
+        """生成 XML 配置字典.
 
         Returns:
-            包含XML配置的字典,用于XML生成器
+            包含 XML 配置的字典, 用于 XML 生成器
         """
         config = self.get_basic_config()
         return {

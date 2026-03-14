@@ -2,8 +2,7 @@
 
 from typing import ClassVar
 
-import customtkinter as ctk
-
+from components.base_tab import BaseConfigTab
 from components.inner_tab_panel import InnerTabPanel
 
 from .disk import DiskDevicesTab
@@ -12,7 +11,7 @@ from .hostdev import MdevHostdevTab, PCIHostdevTab, SCSIHostdevTab, USBHostdevTa
 from .others import OthersTab
 
 
-class DevicesTab(ctk.CTkFrame):
+class DevicesTab(BaseConfigTab):
     """设备配置 Tab - 包含图形、hostdev 子选项."""
 
     SUB_TABS_CONFIG: ClassVar[dict] = {
@@ -54,9 +53,7 @@ class DevicesTab(ctk.CTkFrame):
     }
 
     def __init__(self, master, on_change_callback=None, **kwargs):
-        super().__init__(master, **kwargs)
-        self.configure(fg_color='transparent')
-        self.on_change_callback = on_change_callback
+        super().__init__(master, on_change_callback, **kwargs)
 
         self._init_ui()
 
@@ -71,11 +68,6 @@ class DevicesTab(ctk.CTkFrame):
             on_change_callback=self.on_change_callback,
         )
         self.inner_panel.grid(row=0, column=0, sticky='nsew')
-
-    def _trigger_change(self, *args):
-        """触发变化回调."""
-        if self.on_change_callback:
-            self.on_change_callback()
 
     def get_graphics_config(self):
         """获取图形配置."""

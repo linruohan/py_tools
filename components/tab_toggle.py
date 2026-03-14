@@ -1,7 +1,9 @@
 """Tab 切换开关 - 管理 24 个 Tab 的显示/隐藏."""
 
+from collections.abc import Callable
+from typing import ClassVar
+
 import customtkinter as ctk
-from typing import Dict, Optional, Callable, Any
 
 from config.tabs_config import TABS_CONFIG
 from utils.color import get_random_color
@@ -16,9 +18,9 @@ class TabToggleSwitch(ctk.CTkFrame):
         master,
         tab_key: str,
         tab_display_name: str,
-        on_change_callback: Optional[Callable[[str, bool], None]] = None,
+        on_change_callback: Callable[[str, bool], None] | None = None,
         default_on: bool = True,
-        text_color: Optional[str] = None,
+        text_color: str | None = None,
         **kwargs,
     ):
         """初始化 Tab 切换开关组件.
@@ -29,7 +31,7 @@ class TabToggleSwitch(ctk.CTkFrame):
             tab_display_name: Tab 的显示名称
             on_change_callback: 状态改变时的回调函数
             default_on: 默认是否启用
-            text_color: 文本颜色，None 则随机选择
+            text_color: 文本颜色, None 则随机选择
             **kwargs: 其他参数
         """
         super().__init__(master, **kwargs)
@@ -41,7 +43,7 @@ class TabToggleSwitch(ctk.CTkFrame):
 
         self.toggle_var = ctk.BooleanVar(value=default_on)
 
-        # 如果没有指定颜色，随机选择一个
+        # 如果没有指定颜色, 随机选择一个
         self.text_color = text_color if text_color else get_random_color()
 
         self.toggle_switch = ctk.CTkCheckBox(
@@ -82,7 +84,7 @@ class TabTogglePanel(ctk.CTkFrame):
     """Tab 切换开关面板 - 管理 24 个 Tab 的开关."""
 
     # 面板配置
-    PANEL_CONFIG = {
+    PANEL_CONFIG: ClassVar[dict] = {
         'label_text': 'vm cfgs:',
         'label_color': '#64b5f6',
         'max_columns': 12,
@@ -91,10 +93,7 @@ class TabTogglePanel(ctk.CTkFrame):
     }
 
     def __init__(
-        self, 
-        master, 
-        on_tab_toggle_callback: Optional[Callable[[str, bool], None]] = None, 
-        **kwargs
+        self, master, on_tab_toggle_callback: Callable[[str, bool], None] | None = None, **kwargs
     ):
         """初始化 Tab 切换开关面板.
 
@@ -107,7 +106,7 @@ class TabTogglePanel(ctk.CTkFrame):
         self.configure(fg_color='transparent')
 
         self.on_tab_toggle_callback = on_tab_toggle_callback
-        self.toggle_switches: Dict[str, TabToggleSwitch] = {}
+        self.toggle_switches: dict[str, TabToggleSwitch] = {}
         self.expanded = True
 
         self._create_ui()
@@ -166,13 +165,7 @@ class TabTogglePanel(ctk.CTkFrame):
                 on_change_callback=self._on_toggle,
                 default_on=config.get('default_on', True),
             )
-            switch.grid(
-                row=row, 
-                column=col, 
-                padx=grid_padx, 
-                pady=grid_pady, 
-                sticky='w'
-            )
+            switch.grid(row=row, column=col, padx=grid_padx, pady=grid_pady, sticky='w')
             self.toggle_switches[tab_key] = switch
 
     def _on_toggle(self, tab_key: str, enabled: bool) -> None:
@@ -209,9 +202,13 @@ class TabTogglePanel(ctk.CTkFrame):
         Returns:
             bool: 是否启用
         """
-        return self.toggle_switches.get(tab_key, TabToggleSwitch).is_enabled() if hasattr(TabToggleSwitch, 'is_enabled') else False
+        return (
+            self.toggle_switches.get(tab_key, TabToggleSwitch).is_enabled()
+            if hasattr(TabToggleSwitch, 'is_enabled')
+            else False
+        )
 
-    def get_all_states(self) -> Dict[str, bool]:
+    def get_all_states(self) -> dict[str, bool]:
         """获取所有 Tab 的开关状态.
 
         Returns:

@@ -2,16 +2,15 @@
 
 import customtkinter as ctk
 
+from components.base_tab import BaseConfigTab
 from utils.styles import BG_COLOR_CONTENT, CTK_FONT_BOLD, CTK_FONT_MAIN, CTK_FONT_SMALL
 
 
-class ResourcePartitioningTab(ctk.CTkFrame):
+class ResourcePartitioningTab(BaseConfigTab):
     """资源分区配置 Tab."""
 
     def __init__(self, master, on_change_callback=None, **kwargs):
-        super().__init__(master, **kwargs)
-        self.configure(fg_color='transparent')
-        self.on_change_callback = on_change_callback
+        super().__init__(master, on_change_callback, **kwargs)
 
         self._init_ui()
 
@@ -55,17 +54,12 @@ class ResourcePartitioningTab(ctk.CTkFrame):
 
         info_label = ctk.CTkLabel(
             right_frame,
-            text='FC SAN 可根据 VMID 提供\n不同 QoS 级别和访问控制,\n也可收集遥测数据。',
+            text='FC SAN 可根据 VMID 提供\n不同 QoS 级别和访问控制,\n也可收集遥测数据.',
             font=CTK_FONT_SMALL,
             text_color='#888888',
             justify='left',
         )
         info_label.grid(row=2, column=0, columnspan=2, padx=10, pady=5, sticky='w')
-
-    def _trigger_change(self, *args):
-        """触发变化回调."""
-        if self.on_change_callback:
-            self.on_change_callback()
 
     def get_config(self) -> dict:
         """获取配置数据."""

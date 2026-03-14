@@ -4,17 +4,16 @@ from typing import ClassVar
 
 import customtkinter as ctk
 
+from components.base_tab import BaseConfigTab
 from components.inner_tab_panel import InnerTabPanel
 from utils.styles import BG_COLOR_CONTENT, CTK_FONT_BOLD, CTK_FONT_MAIN, CTK_FONT_SMALL
 
 
-class HypervFeaturesSubTab(ctk.CTkFrame):
+class HypervFeaturesSubTab(BaseConfigTab):
     """Hyper-V 特性子 Tab."""
 
     def __init__(self, master, on_change_callback=None, **kwargs):
-        super().__init__(master, **kwargs)
-        self.configure(fg_color='transparent')
-        self.on_change_callback = on_change_callback
+        super().__init__(master, on_change_callback, **kwargs)
 
         self._init_ui()
 
@@ -115,11 +114,6 @@ class HypervFeaturesSubTab(ctk.CTkFrame):
         self.hyperv_mode.grid(row=7, column=1, padx=5, pady=5, sticky='w')
         self.hyperv_mode.configure(command=self._trigger_change)
 
-    def _trigger_change(self, *args):
-        """触发变化回调."""
-        if self.on_change_callback:
-            self.on_change_callback()
-
     def get_config(self) -> dict:
         """获取配置数据."""
         return {
@@ -140,13 +134,11 @@ class HypervFeaturesSubTab(ctk.CTkFrame):
         }
 
 
-class KVMFeaturesSubTab(ctk.CTkFrame):
+class KVMFeaturesSubTab(BaseConfigTab):
     """KVM 特性子 Tab."""
 
     def __init__(self, master, on_change_callback=None, **kwargs):
-        super().__init__(master, **kwargs)
-        self.configure(fg_color='transparent')
-        self.on_change_callback = on_change_callback
+        super().__init__(master, on_change_callback, **kwargs)
 
         self._init_ui()
 
@@ -201,11 +193,6 @@ class KVMFeaturesSubTab(ctk.CTkFrame):
         self.dirty_ring_size.grid(row=1, column=2, padx=5, pady=5, sticky='w')
         self.dirty_ring_size.bind('<KeyRelease>', lambda e: self._trigger_change())
 
-    def _trigger_change(self, *args):
-        """触发变化回调."""
-        if self.on_change_callback:
-            self.on_change_callback()
-
     def get_config(self) -> dict:
         """获取配置数据."""
         return {
@@ -218,13 +205,11 @@ class KVMFeaturesSubTab(ctk.CTkFrame):
         }
 
 
-class GeneralFeaturesSubTab(ctk.CTkFrame):
+class GeneralFeaturesSubTab(BaseConfigTab):
     """通用特性子 Tab."""
 
     def __init__(self, master, on_change_callback=None, **kwargs):
-        super().__init__(master, **kwargs)
-        self.configure(fg_color='transparent')
-        self.on_change_callback = on_change_callback
+        super().__init__(master, on_change_callback, **kwargs)
 
         self._init_ui()
 
@@ -309,11 +294,6 @@ class GeneralFeaturesSubTab(ctk.CTkFrame):
         )
         self.ras.grid(row=6, column=0, padx=10, pady=3, sticky='w')
 
-    def _trigger_change(self, *args):
-        """触发变化回调."""
-        if self.on_change_callback:
-            self.on_change_callback()
-
     def get_config(self) -> dict:
         """获取配置数据."""
         return {
@@ -332,7 +312,7 @@ class GeneralFeaturesSubTab(ctk.CTkFrame):
         }
 
 
-class HypervisorFeaturesTab(ctk.CTkFrame):
+class HypervisorFeaturesTab(BaseConfigTab):
     """虚拟化特性配置 Tab."""
 
     SUB_TABS_CONFIG: ClassVar[dict] = {
@@ -354,9 +334,7 @@ class HypervisorFeaturesTab(ctk.CTkFrame):
     }
 
     def __init__(self, master, on_change_callback=None, **kwargs):
-        super().__init__(master, **kwargs)
-        self.configure(fg_color='transparent')
-        self.on_change_callback = on_change_callback
+        super().__init__(master, on_change_callback, **kwargs)
 
         self._init_ui()
 

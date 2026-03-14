@@ -1,27 +1,53 @@
 """基础 Tab 组件 - 提供所有配置 Tab 的基类.
 
-这个模块提供了基础类来减少重复代码，让所有 Tab 类都能继承这些公共功能。
+这个模块提供了基础类来减少重复代码, 让所有 Tab 类都能继承这些公共功能.
 """
 
-from typing import Any, Callable, Optional
+from collections.abc import Callable
+from dataclasses import dataclass, field
+from typing import Any, ClassVar, Literal
+
 import customtkinter as ctk
 
 from utils.styles import BG_COLOR_CONTENT, CTK_FONT_BOLD, CTK_FONT_MAIN, CTK_FONT_SMALL
+
+FieldType = Literal['entry', 'option', 'checkbox', 'info']
+
+
+@dataclass
+class FieldConfig:
+    """字段配置."""
+
+    label: str
+    field_type: FieldType = 'entry'
+    default: Any = ''
+    values: list[str] | None = None  # 用于 option 类型
+    width: int = 100
+    label_width: int = 100
+    placeholder: str = ''
+    tooltip: str = ''
+
+
+@dataclass
+class SectionConfig:
+    """区域配置."""
+
+    title: str
+    fields: list[FieldConfig] = field(default_factory=list)
+    color: str = '#64b5f6'
 
 
 class BaseConfigTab(ctk.CTkFrame):
     """所有配置 Tab 的基类.
 
-    提供了通用的初始化、变化触发和配置获取功能。
-    子类只需要实现 _init_ui() 和 get_config() 方法即可。
+    提供了通用的初始化、变化触发和配置获取功能.
+    子类只需要实现 _init_ui() 和 get_config() 方法即可.
 
     Attributes:
         on_change_callback: 当配置发生变化时的回调函数
     """
 
-    def __init__(
-        self, master: Any, on_change_callback: Optional[Callable] = None, **kwargs
-    ) -> None:
+    def __init__(self, master: Any, on_change_callback: Callable | None = None, **kwargs) -> None:
         """初始化基础 Tab.
 
         Args:
@@ -45,10 +71,10 @@ class BaseConfigTab(ctk.CTkFrame):
     def _trigger_change(self, *args: Any) -> None:
         """触发配置变化回调.
 
-        当任何配置项发生变化时调用此方法，会通知父组件配置已更改。
+        当任何配置项发生变化时调用此方法, 会通知父组件配置已更改.
 
         Args:
-            *args: 接受任何参数，方便绑定到各种事件
+            *args: 接受任何参数, 方便绑定到各种事件
         """
         if self.on_change_callback:
             self.on_change_callback()
@@ -67,8 +93,8 @@ class BaseConfigTab(ctk.CTkFrame):
     def to_xml(self) -> dict:
         """生成 XML 配置字典.
 
-        默认实现使用类名（去除 'Tab' 后缀并小写）作为键。
-        子类可以重写此方法以自定义 XML 结构。
+        默认实现使用类名 (去除 'Tab' 后缀并小写) 作为键.
+        子类可以重写此方法以自定义 XML 结构.
 
         Returns:
             XML 配置字典
@@ -88,7 +114,7 @@ class BaseConfigTab(ctk.CTkFrame):
     ) -> ctk.CTkEntry:
         """创建 Label + Entry 组合控件.
 
-        这是一个便捷方法，用于快速创建标签和输入框的组合。
+        这是一个便捷方法, 用于快速创建标签和输入框的组合.
 
         Args:
             parent: 父级容器
@@ -126,7 +152,7 @@ class BaseConfigTab(ctk.CTkFrame):
     ) -> ctk.CTkOptionMenu:
         """创建 Label + OptionMenu 组合控件.
 
-        这是一个便捷方法，用于快速创建标签和下拉菜单的组合。
+        这是一个便捷方法, 用于快速创建标签和下拉菜单的组合.
 
         Args:
             parent: 父级容器
@@ -230,11 +256,252 @@ class BaseConfigTab(ctk.CTkFrame):
 class BaseInnerTab(BaseConfigTab):
     """用于 InnerTabPanel 的子 Tab 基类.
 
-    继承自 BaseConfigTab，专门用于作为 InnerTabPanel 的子标签页。
-    提供了相同的接口，但语义上更清晰。
+    继承自 BaseConfigTab, 专门用于作为 InnerTabPanel 的子标签页.
+    提供了相同的接口, 但语义上更清晰.
     """
 
     pass
+
+
+class StandardConfigTab(BaseConfigTab):
+    """标准配置 Tab 基类 - 使用声明式配置自动生成 UI.
+
+    适用于简单的配置场景,只需定义字段配置即可自动生成界面.
+
+    Example:
+        class PowerManagementTab(StandardConfigTab):
+            SECTIONS = {
+                'left': SectionConfig(
+                    title='电源管理',
+                    fields=[
+                        FieldConfig('S3 (挂起到内存):', 'option', 'yes', ['yes', 'no']),
+                        FieldConfig('S4 (挂起到磁盘):', 'option', 'yes', ['yes', 'no']),
+                    ],
+                    color='#64b5f6'
+                ),
+                'right': SectionConfig(
+                    title='说明',
+                    fields=[
+                        FieldConfig('说明文本', 'info', 'S3: 系统状态保存到内存...'),
+                    ],
+                    color='#4caf50'
+                )
+            }
+    """
+
+    SECTIONS: ClassVar[dict[str, SectionConfig]] = {}  # 子类定义
+    LEFT_TITLE: str = ''  # 兼容旧的命名方式
+    RIGHT_TITLE: str = ''
+    LEFT_COLOR: str = '#64b5f6'
+    RIGHT_COLOR: str = '#4caf50'
+    FIELDS: ClassVar[list[FieldConfig]] = []  # 兼容旧的命名方式 (仅左侧)
+
+    def _init_ui(self) -> None:
+        """初始化界面."""
+        # 兼容旧的使用 LEFT_TITLE/RIGHT_TITLE 的方式
+        if self.LEFT_TITLE and not self.SECTIONS:
+            self._init_legacy_ui()
+        else:
+            self._init_sections_ui()
+
+    def _init_legacy_ui(self) -> None:
+        """初始化传统双栏 UI (兼容旧代码)."""
+        self.left_frame, self.right_frame = create_two_column_layout(
+            self, self.LEFT_TITLE, self.RIGHT_TITLE, self.LEFT_COLOR, self.RIGHT_COLOR
+        )
+        self._create_fields(self.left_frame, self.FIELDS, start_row=1)
+        self._current_row_right = 1
+
+    def _init_sections_ui(self) -> None:
+        """初始化基于 Sections 的 UI."""
+        num_sections = len(self.SECTIONS)
+        if num_sections == 0:
+            return
+
+        # 配置列权重
+        for i in range(num_sections):
+            self.grid_columnconfigure(i, weight=1)
+
+        self.section_frames = {}
+        self.section_rows = {}
+
+        # 创建每个区域
+        for idx, (section_key, section) in enumerate(self.SECTIONS.items()):
+            frame = ctk.CTkFrame(self, fg_color=BG_COLOR_CONTENT, corner_radius=6)
+            frame.grid(row=0, column=idx, sticky='nsew', padx=5, pady=5)
+            frame.grid_columnconfigure(1, weight=1)
+
+            ctk.CTkLabel(
+                frame, text=section.title, font=CTK_FONT_BOLD, text_color=section.color
+            ).grid(row=0, column=0, columnspan=2, padx=10, pady=5, sticky='w')
+
+            self._create_fields(frame, section.fields, start_row=1)
+            self.section_frames[section_key] = frame
+            self.section_rows[section_key] = 1
+
+    def _create_fields(
+        self, parent: ctk.CTkFrame, fields: list[FieldConfig], start_row: int = 1
+    ) -> dict:
+        """创建一组字段.
+
+        Args:
+            parent: 父容器
+            fields: 字段配置列表
+            start_row: 起始行号
+
+        Returns:
+            创建的控件字典
+        """
+        widgets = {}
+        for i, field_config in enumerate(fields):
+            row = start_row + i
+            widget = self._create_field(parent, field_config, row)
+            widgets[field_config.label] = widget
+        return widgets
+
+    def _create_field(
+        self, parent: ctk.CTkFrame, field_config: FieldConfig, row: int
+    ) -> ctk.CTkEntry | ctk.CTkOptionMenu | ctk.CTkCheckBox | ctk.CTkLabel:
+        """创建单个字段.
+
+        Args:
+            parent: 父容器
+            field_config: 字段配置
+            row: 行号
+
+        Returns:
+            创建的控件
+        """
+        if field_config.field_type == 'entry':
+            return self._create_entry_field(parent, field_config, row)
+        elif field_config.field_type == 'option':
+            return self._create_option_field(parent, field_config, row)
+        elif field_config.field_type == 'checkbox':
+            return self._create_checkbox_field(parent, field_config, row)
+        elif field_config.field_type == 'info':
+            return self._create_info_field(parent, field_config, row)
+        else:
+            raise ValueError(f'未知的字段类型:{field_config.field_type}')
+
+    def _create_entry_field(
+        self, parent: ctk.CTkFrame, field_config: FieldConfig, row: int
+    ) -> ctk.CTkEntry:
+        """创建 Entry 字段."""
+        ctk.CTkLabel(
+            parent,
+            text=field_config.label,
+            font=CTK_FONT_MAIN,
+            width=field_config.label_width,
+            anchor='w',
+        ).grid(row=row, column=0, padx=10, pady=5, sticky='w')
+
+        entry = ctk.CTkEntry(
+            parent,
+            placeholder_text=field_config.placeholder,
+            width=field_config.width,
+        )
+        entry.grid(row=row, column=1, padx=5, pady=5, sticky='w')
+        if field_config.default:
+            entry.insert(0, str(field_config.default))
+        entry.bind('<KeyRelease>', lambda e: self._trigger_change())
+        return entry
+
+    def _create_option_field(
+        self, parent: ctk.CTkFrame, field_config: FieldConfig, row: int
+    ) -> ctk.CTkOptionMenu:
+        """创建 Option 字段."""
+        ctk.CTkLabel(
+            parent,
+            text=field_config.label,
+            font=CTK_FONT_MAIN,
+            width=field_config.label_width,
+            anchor='w',
+        ).grid(row=row, column=0, padx=10, pady=5, sticky='w')
+
+        option = ctk.CTkOptionMenu(
+            parent,
+            values=field_config.values or [],
+            width=field_config.width,
+            font=CTK_FONT_SMALL,
+        )
+        option.set(field_config.default)
+        option.grid(row=row, column=1, padx=5, pady=5, sticky='w')
+        option.configure(command=self._trigger_change)
+        return option
+
+    def _create_checkbox_field(
+        self, parent: ctk.CTkFrame, field_config: FieldConfig, row: int
+    ) -> ctk.CTkCheckBox:
+        """创建 Checkbox 字段."""
+        ctk.CTkLabel(
+            parent,
+            text=field_config.label,
+            font=CTK_FONT_MAIN,
+            width=field_config.label_width,
+            anchor='w',
+        ).grid(row=row, column=0, padx=10, pady=5, sticky='w')
+
+        checkbox = ctk.CTkCheckBox(
+            parent, text='', font=CTK_FONT_SMALL, command=self._trigger_change
+        )
+        if field_config.default:
+            checkbox.select()
+        checkbox.grid(row=row, column=1, padx=5, pady=5, sticky='w')
+        return checkbox
+
+    def _create_info_field(
+        self, parent: ctk.CTkFrame, field_config: FieldConfig, row: int
+    ) -> ctk.CTkLabel:
+        """创建 Info 字段 (多行说明文本)."""
+        label = ctk.CTkLabel(
+            parent,
+            text=field_config.default,
+            font=CTK_FONT_SMALL,
+            text_color='#888888',
+            justify='left',
+        )
+        label.grid(row=row, column=0, columnspan=2, padx=10, pady=5, sticky='nw')
+        return label
+
+    def get_config(self) -> dict:
+        """获取配置数据.
+
+        默认实现会从所有 section 中收集配置.
+        子类可以重写此方法以自定义配置收集逻辑.
+        """
+        config = {}
+        # 收集所有 section 的字段值
+        for _section_key, section in self.SECTIONS.items():
+            for field_config in section.fields:
+                if field_config.field_type == 'info':
+                    continue  # 跳过 info 类型
+                widget = getattr(self, f'_{self._sanitize_name(field_config.label)}', None)
+                if widget:
+                    key = self._sanitize_name(field_config.label, prefix='')
+                    if isinstance(widget, ctk.CTkEntry):
+                        config[key] = widget.get().strip()
+                    elif isinstance(widget, ctk.CTkOptionMenu):
+                        config[key] = widget.get()
+                    elif isinstance(widget, ctk.CTkCheckBox):
+                        config[key] = bool(widget.get())
+        return config
+
+    @staticmethod
+    def _sanitize_name(label: str, prefix: str = '_') -> str:
+        """将标签文本转换为合法的属性名.
+
+        Args:
+            label: 标签文本
+            prefix: 前缀
+
+        Returns:
+            合法的 Python 属性名
+        """
+        name = label.lower()
+        name = name.replace('(', '').replace(')', '').replace(':', '')
+        name = name.replace(' ', '_').replace('-', '_')
+        name = name.replace('/', '_').replace('.', '')
+        return prefix + name if prefix else name
 
 
 def create_two_column_layout(
@@ -246,7 +513,7 @@ def create_two_column_layout(
 ) -> tuple[ctk.CTkFrame, ctk.CTkFrame]:
     """创建标准的双列布局.
 
-    这是一个工具函数，用于快速创建左右两栏的标准布局。
+    这是一个工具函数, 用于快速创建左右两栏的标准布局.
 
     Args:
         parent: 父级容器
@@ -293,7 +560,7 @@ def create_three_column_layout(
 ) -> tuple[ctk.CTkFrame, ctk.CTkFrame, ctk.CTkFrame]:
     """创建标准的三列布局.
 
-    这是一个工具函数，用于快速创建左中右三栏的标准布局。
+    这是一个工具函数, 用于快速创建左中右三栏的标准布局.
 
     Args:
         parent: 父级容器

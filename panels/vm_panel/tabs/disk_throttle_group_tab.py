@@ -2,16 +2,15 @@
 
 import customtkinter as ctk
 
+from components.base_tab import BaseConfigTab
 from utils.styles import BG_COLOR_CONTENT, CTK_FONT_BOLD, CTK_FONT_MAIN, CTK_FONT_SMALL
 
 
-class DiskThrottleGroupTab(ctk.CTkFrame):
+class DiskThrottleGroupTab(BaseConfigTab):
     """磁盘节流组配置 Tab - 创建命名节流组."""
 
     def __init__(self, master, on_change_callback=None, **kwargs):
-        super().__init__(master, **kwargs)
-        self.configure(fg_color='transparent')
-        self.on_change_callback = on_change_callback
+        super().__init__(master, on_change_callback, **kwargs)
         self.throttle_groups = []
 
         self._init_ui()
@@ -126,11 +125,6 @@ class DiskThrottleGroupTab(ctk.CTkFrame):
             self.groups_display.configure(text=', '.join([g['name'] for g in self.throttle_groups]))
             self.group_name.delete(0, 'end')
             self._trigger_change()
-
-    def _trigger_change(self, *args):
-        """触发变化回调."""
-        if self.on_change_callback:
-            self.on_change_callback()
 
     def get_config(self) -> dict:
         """获取配置数据."""

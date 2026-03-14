@@ -1,7 +1,5 @@
 """CPU 分配配置 Tab - vCPU 分配和配置."""
 
-import customtkinter as ctk
-
 from components.base_tab import BaseConfigTab, create_three_column_layout
 from utils.parsers import parse_integer_value
 

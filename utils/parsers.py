@@ -1,7 +1,7 @@
 """解析工具函数 - 提供各种数据解析功能.
 
-这个模块包含了解析各种配置值的工具函数，
-主要用于处理用户输入并转换为内部使用的数据格式。
+这个模块包含了解析各种配置值的工具函数,
+主要用于处理用户输入并转换为内部使用的数据格式.
 """
 
 # 内存选项常量 - 统一在所有地方使用
@@ -20,14 +20,13 @@ MEMORY_OPTIONS = [
     '512G',
 ]
 
-# 基础内存选项（用于简单场景）
+# 基础内存选项 (用于简单场景)
 MEMORY_OPTIONS_BASIC = ['1G', '2G', '4G', '8G', '16G', '32G', '64G', '128G']
 
-# 内存单位换算因子（转换为 KiB）
+# 内存单位换算因子 (转换为 KiB)
 MEMORY_UNIT_FACTORS = {
     'B': 1 / 1024,
     'BYTES': 1 / 1024,
-    'B': 1 / 1024,
     'K': 1,
     'KB': 1,
     'KIB': 1,
@@ -46,13 +45,13 @@ MEMORY_UNIT_FACTORS = {
 def parse_memory_value(value: str, default: int = 2048, target_unit: str = 'MiB') -> int:
     """解析内存值为指定单位的数值.
 
-    支持各种单位后缀（B, K, M, G, T 及其变体），
-    自动识别并转换为指定的目标单位。
+    支持各种单位后缀 (B, K, M, G, T 及其变体),
+    自动识别并转换为指定的目标单位.
 
     Args:
-        value: 要解析的内存值字符串，如 '2G', '512M', '1024'
+        value: 要解析的内存值字符串, 如 '2G', '512M', '1024'
         default: 解析失败时返回的默认值
-        target_unit: 目标单位，可选 'KiB', 'MiB', 'GiB', 'TiB'
+        target_unit: 目标单位, 可选 'KiB', 'MiB', 'GiB', 'TiB'
 
     Returns:
         转换后的整数值
@@ -90,7 +89,7 @@ def parse_memory_value(value: str, default: int = 2048, target_unit: str = 'MiB'
     except ValueError:
         return default
 
-    # 获取源单位的换算因子（转换为 KiB）
+    # 获取源单位的换算因子 (转换为 KiB)
     source_factor = MEMORY_UNIT_FACTORS.get(unit_part, 1)  # 默认按 KiB 处理
 
     # 计算 KiB 值
@@ -113,11 +112,11 @@ def parse_memory_value(value: str, default: int = 2048, target_unit: str = 'MiB'
 def parse_memory_to_kib(value: str, default: int = 2097152) -> int:
     """解析内存值为 KiB.
 
-    这是 parse_memory_value 的便捷封装，专门用于获取 KiB 值。
+    这是 parse_memory_value 的便捷封装, 专门用于获取 KiB 值.
 
     Args:
         value: 要解析的内存值字符串
-        default: 解析失败时返回的默认值（默认 2GiB = 2097152 KiB）
+        default: 解析失败时返回的默认值 (默认 2GiB = 2097152 KiB)
 
     Returns:
         以 KiB 为单位的整数值
@@ -134,11 +133,11 @@ def parse_memory_to_kib(value: str, default: int = 2097152) -> int:
 def parse_memory_to_mib(value: str, default: int = 2048) -> int:
     """解析内存值为 MiB.
 
-    这是 parse_memory_value 的便捷封装，专门用于获取 MiB 值。
+    这是 parse_memory_value 的便捷封装, 专门用于获取 MiB 值.
 
     Args:
         value: 要解析的内存值字符串
-        default: 解析失败时返回的默认值（默认 2GiB = 2048 MiB）
+        default: 解析失败时返回的默认值 (默认 2GiB = 2048 MiB)
 
     Returns:
         以 MiB 为单位的整数值
@@ -160,7 +159,7 @@ def format_memory_value(value: int, unit: str = 'MiB') -> str:
         unit: 数值的单位
 
     Returns:
-        格式化后的字符串，如 '2G', '512M'
+        格式化后的字符串, 如 '2G', '512M'
 
     Examples:
         >>> format_memory_value(2048, 'MiB')
@@ -194,9 +193,9 @@ def format_memory_value(value: int, unit: str = 'MiB') -> str:
 
 
 def parse_integer_value(
-    value: str, default: int = 0, min_value: int = None, max_value: int = None
+    value: str, default: int = 0, min_value: int | None = None, max_value: int | None = None
 ) -> int:
-    """解析整数值，支持范围限制.
+    """解析整数值, 支持范围限制.
 
     Args:
         value: 要解析的字符串
@@ -232,9 +231,9 @@ def parse_integer_value(
 
 
 def parse_float_value(
-    value: str, default: float = 0.0, min_value: float = None, max_value: float = None
+    value: str, default: float = 0.0, min_value: float | None = None, max_value: float | None = None
 ) -> float:
-    """解析浮点数值，支持范围限制.
+    """解析浮点数值, 支持范围限制.
 
     Args:
         value: 要解析的字符串

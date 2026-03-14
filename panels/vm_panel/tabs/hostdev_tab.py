@@ -2,18 +2,17 @@
 
 import customtkinter as ctk
 
+from components.base_tab import BaseConfigTab
 from utils.styles import BG_COLOR_CONTENT, CTK_FONT_BOLD
 
 from ..frames import ScrollableHostdevFrame
 
 
-class HostdevTab(ctk.CTkFrame):
+class HostdevTab(BaseConfigTab):
     """PCI 直通设备 Tab."""
 
     def __init__(self, master, on_change_callback=None, **kwargs):
-        super().__init__(master, **kwargs)
-        self.configure(fg_color='transparent')
-        self.on_change_callback = on_change_callback
+        super().__init__(master, on_change_callback, **kwargs)
         self.hostdev_frame = None
 
         # 初始化 UI
@@ -56,11 +55,6 @@ class HostdevTab(ctk.CTkFrame):
             on_change_callback=self._trigger_change,
         )
         self.hostdev_frame.grid(row=2, column=0, sticky='nsew', padx=10, pady=5)
-
-    def _trigger_change(self, *args):
-        """触发变化回调."""
-        if self.on_change_callback:
-            self.on_change_callback()
 
     def add_hostdev(self):
         """添加 PCI 直通设备."""

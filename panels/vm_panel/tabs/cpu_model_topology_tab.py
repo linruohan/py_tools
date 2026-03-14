@@ -4,17 +4,16 @@ from typing import ClassVar
 
 import customtkinter as ctk
 
+from components.base_tab import BaseConfigTab
 from components.inner_tab_panel import InnerTabPanel
 from utils.styles import BG_COLOR_CONTENT, CTK_FONT_BOLD, CTK_FONT_MAIN, CTK_FONT_SMALL
 
 
-class CPUModelSubTab(ctk.CTkFrame):
+class CPUModelSubTab(BaseConfigTab):
     """CPU 模型子 Tab."""
 
     def __init__(self, master, on_change_callback=None, **kwargs):
-        super().__init__(master, **kwargs)
-        self.configure(fg_color='transparent')
-        self.on_change_callback = on_change_callback
+        super().__init__(master, on_change_callback, **kwargs)
 
         self._init_ui()
 
@@ -125,11 +124,6 @@ class CPUModelSubTab(ctk.CTkFrame):
         self.check.grid(row=3, column=1, padx=5, pady=5, sticky='w')
         self.check.configure(command=self._trigger_change)
 
-    def _trigger_change(self, *args):
-        """触发变化回调."""
-        if self.on_change_callback:
-            self.on_change_callback()
-
     def get_config(self) -> dict:
         """获取配置数据."""
         return {
@@ -144,13 +138,11 @@ class CPUModelSubTab(ctk.CTkFrame):
         }
 
 
-class CPUFeatureSubTab(ctk.CTkFrame):
+class CPUFeatureSubTab(BaseConfigTab):
     """CPU 特性子 Tab."""
 
     def __init__(self, master, on_change_callback=None, **kwargs):
-        super().__init__(master, **kwargs)
-        self.configure(fg_color='transparent')
-        self.on_change_callback = on_change_callback
+        super().__init__(master, on_change_callback, **kwargs)
         self.features_list = []
 
         self._init_ui()
@@ -219,11 +211,6 @@ class CPUFeatureSubTab(ctk.CTkFrame):
             self.feature_name.delete(0, 'end')
             self._trigger_change()
 
-    def _trigger_change(self, *args):
-        """触发变化回调."""
-        if self.on_change_callback:
-            self.on_change_callback()
-
     def get_config(self) -> dict:
         """获取配置数据."""
         return {
@@ -231,13 +218,11 @@ class CPUFeatureSubTab(ctk.CTkFrame):
         }
 
 
-class CPUCacheSubTab(ctk.CTkFrame):
+class CPUCacheSubTab(BaseConfigTab):
     """CPU 缓存子 Tab."""
 
     def __init__(self, master, on_change_callback=None, **kwargs):
-        super().__init__(master, **kwargs)
-        self.configure(fg_color='transparent')
-        self.on_change_callback = on_change_callback
+        super().__init__(master, on_change_callback, **kwargs)
 
         self._init_ui()
 
@@ -315,11 +300,6 @@ class CPUCacheSubTab(ctk.CTkFrame):
         self.physaddr_limit.grid(row=3, column=1, padx=5, pady=5, sticky='w')
         self.physaddr_limit.bind('<KeyRelease>', lambda e: self._trigger_change())
 
-    def _trigger_change(self, *args):
-        """触发变化回调."""
-        if self.on_change_callback:
-            self.on_change_callback()
-
     def get_config(self) -> dict:
         """获取配置数据."""
         return {
@@ -335,7 +315,7 @@ class CPUCacheSubTab(ctk.CTkFrame):
         }
 
 
-class CPUModelTopologyTab(ctk.CTkFrame):
+class CPUModelTopologyTab(BaseConfigTab):
     """CPU 模型与拓扑配置 Tab."""
 
     SUB_TABS_CONFIG: ClassVar[dict] = {
@@ -357,9 +337,7 @@ class CPUModelTopologyTab(ctk.CTkFrame):
     }
 
     def __init__(self, master, on_change_callback=None, **kwargs):
-        super().__init__(master, **kwargs)
-        self.configure(fg_color='transparent')
-        self.on_change_callback = on_change_callback
+        super().__init__(master, on_change_callback, **kwargs)
 
         self._init_ui()
 

@@ -1,4 +1,4 @@
-"""网络配置框架."""
+"""网络配置框架 - 使用通用可滚动配置框架基类."""
 
 import uuid
 
@@ -8,15 +8,16 @@ import customtkinter as ctk
 
 from utils.styles import CTK_FONT_SMALL
 
+from .disk_frame import ScrollableConfigFrame
 
-class ScrollableNetworkFrame(ctk.CTkScrollableFrame):
+
+class ScrollableNetworkFrame(ScrollableConfigFrame):
     """可滚动网络配置框架."""
 
     def __init__(self, master, on_change_callback=None, **kwargs):
-        super().__init__(master, **kwargs)
+        super().__init__(master, on_change_callback, **kwargs)
         self.network_entries = []
         self.network_count = 0
-        self.on_change_callback = on_change_callback
 
     def add_network(self):
         """添加网络配置行."""
@@ -131,22 +132,10 @@ class ScrollableNetworkFrame(ctk.CTkScrollableFrame):
         )
         self.network_count += 1
 
-    def _trigger_change(self):
-        """触发变化回调."""
-        if self.on_change_callback:
-            self.on_change_callback()
-
     def remove_network(self, frame):
         """删除网络配置行."""
-        for i, entry in enumerate(self.network_entries):
-            if entry['frame'] == frame:
-                frame.destroy()
-                self.network_entries.pop(i)
-                self.network_count -= 1
-                # 重新布局
-                for j, e in enumerate(self.network_entries):
-                    e['frame'].grid(row=j, column=0, sticky='ew', pady=5)
-                break
+        self._remove_entry(frame, self.network_entries)
+        self.network_count -= 1
 
     def generate_mac(self, mac_entry: ctk.CTkEntry):
         """生成随机 MAC 地址."""
