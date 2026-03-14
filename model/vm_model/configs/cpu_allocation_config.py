@@ -14,6 +14,7 @@ class CPUAllocationConfig:
     placement: str = 'static'
     cpuset: str = ''
     topology: CPUTopology = field(default_factory=lambda: CPUTopology.full_topology())
+    vcpu_instances: list = field(default_factory=list)
 
     def update(self, data: dict) -> None:
         """更新配置."""
@@ -25,9 +26,13 @@ class CPUAllocationConfig:
                 self.topology = CPUTopology.from_dict(data['topology'])
             else:
                 self.topology = data['topology']
+        if 'vcpu_instances' in data:
+            self.vcpu_instances = data['vcpu_instances']
 
     def to_dict(self) -> dict:
         """转换为字典格式."""
         from dataclasses import asdict
 
-        return asdict(self)
+        result = asdict(self)
+        result['topology'] = self.topology.to_dict()
+        return result

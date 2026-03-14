@@ -20,11 +20,6 @@ class BasicTab(BaseConfigTab):
         self.current_vcpu = None
         self.placement = None
         self.cpuset = None
-        self.sockets = None
-        self.dies = None
-        self.clusters = None
-        self.cores = None
-        self.threads = None
         # vCPU 实例列表
         self.vcpu_instances = []
         # 内存分配控件
@@ -43,7 +38,7 @@ class BasicTab(BaseConfigTab):
         self.grid_columnconfigure(0, weight=1)
         self.grid_columnconfigure(1, weight=1)
         self.grid_rowconfigure(0, weight=0)
-        self.grid_rowconfigure(1, weight=0)
+        self.grid_rowconfigure(1, weight=1)
 
         # ===== 第 1 行: 系统配置 =====
         sys_frame = ctk.CTkFrame(self, fg_color=BG_COLOR_CONTENT, corner_radius=8)
@@ -94,79 +89,57 @@ class BasicTab(BaseConfigTab):
         self.vm_name_entry.insert(0, 'vm0')
         self.vm_name_entry.bind('<KeyRelease>', lambda e: self._trigger_change())
 
-        # ===== 第 2 行: CPU 分配配置 =====
-        from components.base_tab import create_three_column_layout
+        # ===== 第 2 行: CPU 和内存分配配置 =====
+        from components.base_tab import create_two_column_layout
+        from utils.parsers import MEMORY_OPTIONS
 
-        cpu_frame = ctk.CTkFrame(self, fg_color='transparent')
-        cpu_frame.grid(row=1, column=0, sticky='nsew', padx=5, pady=5)
-        cpu_frame.grid_columnconfigure(0, weight=1)
-        cpu_frame.grid_columnconfigure(1, weight=1)
-        cpu_frame.grid_columnconfigure(2, weight=1)
-        cpu_frame.grid_rowconfigure(0, weight=1)
-
-        left_frame, mid_frame, right_frame = create_three_column_layout(
-            cpu_frame,
-            left_title='vCPU 配置',
-            mid_title='CPU 拓扑',
-            right_title='vCPU 状态',
+        # 使用 create_two_column_layout 创建两列布局
+        cpu_frame, mem_frame = create_two_column_layout(
+            self,
+            left_title='CPU 分配',
+            right_title='内存分配',
             left_color='#64b5f6',
-            mid_color='#4caf50',
-            right_color='#ff9800',
+            right_color='#4caf50',
         )
+        cpu_frame.grid(row=1, column=0, sticky='nsew', padx=5, pady=5)
+        mem_frame.grid(row=1, column=1, sticky='nsew', padx=5, pady=5)
 
-        # 左侧面板 - vCPU 配置
+        # 基本 CPU 配置
         self.max_vcpu = self._create_label_entry(
-            left_frame, '最大 vCPU:', placeholder='2', default_value='2', width=100, row=1
+            cpu_frame,
+            '最大 vCPU:',
+            placeholder='2',
+            default_value='2',
+            width=200,
+            row=1,
+            column=0,
         )
         self.current_vcpu = self._create_label_entry(
-            left_frame, '当前 vCPU:', placeholder='2', default_value='2', width=100, row=2
+            cpu_frame,
+            '当前 vCPU:',
+            placeholder='1',
+            default_value='1',
+            width=200,
+            row=2,
+            column=0,
         )
         self.placement = self._create_label_option(
-            left_frame, '放置模式:', ['static', 'auto'], 'static', width=100, row=3
+            cpu_frame, '放置模式:', ['static', 'auto'], 'static', width=200, row=3, column=0
         )
         self.cpuset = self._create_label_entry(
-            left_frame, 'CPU 亲和性:', placeholder='1-4,^3', width=150, row=4
+            cpu_frame,
+            'CPU 亲和性:',
+            placeholder='1-4,^3,6',
+            default_value='1-4,^3,6',
+            width=200,
+            row=4,
+            column=0,
         )
 
-        # 中间面板 - CPU 拓扑
-        self.sockets = self._create_label_entry(
-            mid_frame,
-            'Sockets:',
-            placeholder='1',
-            default_value='1',
-            width=80,
-            row=1,
-            label_width=80,
-        )
-        self.dies = self._create_label_entry(
-            mid_frame, 'Dies:', placeholder='1', default_value='1', width=80, row=2, label_width=80
-        )
-        self.clusters = self._create_label_entry(
-            mid_frame,
-            'Clusters:',
-            placeholder='1',
-            default_value='1',
-            width=80,
-            row=3,
-            label_width=80,
-        )
-        self.cores = self._create_label_entry(
-            mid_frame, 'Cores:', placeholder='2', default_value='2', width=80, row=4, label_width=80
-        )
-        self.threads = self._create_label_entry(
-            mid_frame,
-            'Threads:',
-            placeholder='1',
-            default_value='1',
-            width=80,
-            row=5,
-            label_width=80,
-        )
-
-        # 右侧面板 - vCPU 状态
-        # 添加/删除 vCPU 实例按钮
-        btn_frame = ctk.CTkFrame(right_frame, fg_color='transparent')
-        btn_frame.grid(row=1, column=0, columnspan=2, sticky='ew', pady=5)
+        # vCPU 实例
+        self._create_section_title(cpu_frame, 'vCPU 实例', row=5, column=0, columnspan=2)
+        btn_frame = ctk.CTkFrame(cpu_frame, fg_color='transparent')
+        btn_frame.grid(row=6, column=0, columnspan=2, sticky='ew', pady=5)
         btn_frame.grid_columnconfigure(0, weight=1)
         btn_frame.grid_columnconfigure(1, weight=1)
 
@@ -174,7 +147,7 @@ class BasicTab(BaseConfigTab):
             btn_frame,
             text='添加 vCPU',
             font=CTK_FONT_MAIN,
-            command=lambda: self._add_vcpu_instance(right_frame),
+            command=lambda: self._add_vcpu_instance(cpu_frame),
         )
         add_btn.grid(row=0, column=0, padx=2, pady=2, sticky='ew')
 
@@ -182,74 +155,63 @@ class BasicTab(BaseConfigTab):
             btn_frame,
             text='删除 vCPU',
             font=CTK_FONT_MAIN,
-            command=lambda: self._remove_vcpu_instance(right_frame),
+            command=lambda: self._remove_vcpu_instance(cpu_frame),
         )
         remove_btn.grid(row=0, column=1, padx=2, pady=2, sticky='ew')
 
         # vCPU 实例列表容器
-        self.vcpu_list_frame = ctk.CTkFrame(right_frame, fg_color='transparent')
-        self.vcpu_list_frame.grid(row=2, column=0, columnspan=2, sticky='nsew')
+        self.vcpu_list_frame = ctk.CTkFrame(cpu_frame, fg_color='transparent')
+        self.vcpu_list_frame.grid(row=7, column=0, columnspan=2, sticky='nsew')
         self.vcpu_list_frame.grid_columnconfigure(0, weight=1)
 
-        # 添加默认 vCPU 实例
-        self._add_vcpu_instance(right_frame)
+        # 默认不添加 vCPU 实例，保持 vcpu_instances 为空
 
-        # ===== 第 2 行: 内存分配配置 =====
-        from components.base_tab import create_two_column_layout
-        from utils.parsers import MEMORY_OPTIONS
-
-        mem_frame = ctk.CTkFrame(self, fg_color='transparent')
-        mem_frame.grid(row=1, column=1, sticky='nsew', padx=5, pady=5)
+        # 内存配置内容
         mem_frame.grid_columnconfigure(0, weight=1)
         mem_frame.grid_columnconfigure(1, weight=1)
-        mem_frame.grid_rowconfigure(0, weight=1)
 
-        left_frame, right_frame = create_two_column_layout(
-            mem_frame,
-            left_title='内存配置',
-            right_title='单位设置',
-            left_color='#64b5f6',
-            right_color='#4caf50',
+        # 内存基本配置
+        self.memory = self._create_label_option(
+            mem_frame, '内存:', MEMORY_OPTIONS, '2G', width=200, row=1, column=0
         )
-
-        # 左侧面板 - 内存配置
-        self.memory = self._create_label_option(left_frame, '内存:', MEMORY_OPTIONS, '2G', row=1)
         self.current_memory = self._create_label_option(
-            left_frame, '当前内存:', MEMORY_OPTIONS, '2G', row=2
+            mem_frame, '当前内存:', MEMORY_OPTIONS, '2G', width=200, row=2, column=0
         )
         self.max_memory = self._create_label_option(
-            left_frame, '最大内存:', MEMORY_OPTIONS, '4G', row=3
+            mem_frame, '最大内存:', MEMORY_OPTIONS, '4G', width=200, row=3, column=0
         )
         self.memory_slots = self._create_label_entry(
-            left_frame, '内存槽位:', placeholder='16', default_value='16', width=80, row=4
+            mem_frame,
+            '内存槽位:',
+            placeholder='16',
+            default_value='16',
+            width=200,
+            row=4,
+            column=0,
         )
-
-        # 右侧面板 - 单位设置
         self.memory_unit = self._create_label_option(
-            right_frame,
+            mem_frame,
             '单位:',
             ['KiB', 'MiB', 'GiB', 'TiB', 'KB', 'MB', 'GB', 'TB', 'b', 'bytes'],
             'KiB',
-            width=80,
-            row=1,
+            width=200,
+            row=5,
+            column=0,
         )
         self.dump_core = self._create_label_option(
-            right_frame, 'Dump Core:', ['on', 'off'], 'on', width=80, row=2
+            mem_frame, 'Dump Core:', ['on', 'off'], 'on', width=200, row=6, column=0
         )
 
         # 说明信息
-        self._create_section_title(right_frame, '说明', text_color='#ff9800', row=3)
-        info_text = (
-            '内存 (memory):\n'
-            '启动时分配的最大内存.\n\n'
-            '当前内存 (currentMemory):\n'
-            '实际分配的内存,可以小于\n'
-            '最大值以支持内存气球.\n\n'
-            '最大内存 (maxMemory):\n'
-            '运行时可通过热插拔增加\n'
-            '到的最大内存限制.'
+        self._create_section_title(
+            mem_frame, '说明', text_color='#ff9800', row=7, column=0, columnspan=2
         )
-        self._create_info_label(right_frame, info_text, row=4)
+        info_text = (
+            '内存 (memory):启动时分配的最大内存.\n'
+            '当前内存 (currentMemory):实际分配的内存,可以小于最大值以支持内存气球.\n'
+            '最大内存 (maxMemory):运行时可通过热插拔增加到的最大内存限制.'
+        )
+        self._create_info_label(mem_frame, info_text, row=8, column=0, columnspan=2)
 
     def _on_arch_change(self):
         """架构切换时的处理."""
@@ -265,7 +227,11 @@ class BasicTab(BaseConfigTab):
         new_id = len(self.vcpu_instances)
 
         # 创建 vCPU 实例框架
-        instance_frame = ctk.CTkFrame(self.vcpu_list_frame, fg_color='#f0f0f0', corner_radius=4)
+        from utils.styles import BG_COLOR_SELECT
+
+        instance_frame = ctk.CTkFrame(
+            self.vcpu_list_frame, fg_color=BG_COLOR_SELECT, corner_radius=4
+        )
         instance_frame.grid(row=len(self.vcpu_instances), column=0, sticky='ew', pady=2, padx=2)
         instance_frame.grid_columnconfigure(0, weight=1)
         instance_frame.grid_columnconfigure(1, weight=1)
@@ -318,7 +284,7 @@ class BasicTab(BaseConfigTab):
         Args:
             parent: 父容器
         """
-        if len(self.vcpu_instances) > 1:
+        if len(self.vcpu_instances) > 0:
             # 获取最后一个实例
             instance = self.vcpu_instances[-1]
             # 销毁框架
@@ -336,27 +302,29 @@ class BasicTab(BaseConfigTab):
         """
         from utils.parsers import parse_integer_value, parse_memory_to_kib
 
+        max_vcpu = parse_integer_value(self.max_vcpu.get(), default=2)
+        current_vcpu = parse_integer_value(self.current_vcpu.get(), default=1)
+
         return {
             'arch': self.arch_type.get(),
             'name': self.vm_name_entry.get().strip() or 'vm0',
+            'title': '',
+            'description': '',
             'cpu_allocation': {
-                'max_vcpu': parse_integer_value(self.max_vcpu.get(), default=2),
-                'current_vcpu': parse_integer_value(self.current_vcpu.get(), default=2),
+                'max_vcpu': max_vcpu,
+                'current_vcpu': current_vcpu,
                 'placement': self.placement.get(),
                 'cpuset': self.cpuset.get().strip(),
-                'topology': {
-                    'sockets': parse_integer_value(self.sockets.get(), default=1),
-                    'dies': parse_integer_value(self.dies.get(), default=1),
-                    'clusters': parse_integer_value(self.clusters.get(), default=1),
-                    'cores': parse_integer_value(self.cores.get(), default=2),
-                    'threads': parse_integer_value(self.threads.get(), default=1),
-                },
                 'vcpu_instances': [
                     {
                         'id': parse_integer_value(instance['id'].get(), default=i),
                         'enabled': instance['enabled'].get(),
                         'hotpluggable': instance['hotpluggable'].get(),
-                        'order': parse_integer_value(instance['order'].get(), default=i + 1),
+                        **(
+                            {'order': parse_integer_value(instance['order'].get())}
+                            if instance['order'].get().strip()
+                            else {}
+                        ),
                     }
                     for i, instance in enumerate(self.vcpu_instances)
                 ],
@@ -368,6 +336,11 @@ class BasicTab(BaseConfigTab):
                 'memory_slots': parse_integer_value(self.memory_slots.get(), default=16),
                 'unit': self.memory_unit.get(),
                 'dump_core': self.dump_core.get(),
+            },
+            'os_booting': {
+                'type': 'guest_firmware',
+                'os_type': 'hvm',
+                'arch': self.arch_type.get(),
             },
         }
 
@@ -382,18 +355,8 @@ class BasicTab(BaseConfigTab):
             包含 XML 配置的字典, 用于 XML 生成器
         """
         config = self.get_basic_config()
-        return {
-            'name': config['name'],
-            'title': '',
-            'description': '',
-            'memory_allocation': config.get('memory_allocation', {}),
-            'cpu_allocation': config.get('cpu_allocation', {}),
-            'os_booting': {
-                'type': 'guest_firmware',
-                'os_type': 'hvm',
-                'arch': config.get('arch', 'x86_64'),
-            },
-        }
+        # 直接返回get_basic_config的结果，确保所有配置都被正确包含
+        return config
 
     def load_config(self, config: dict):
         """加载配置数据到 UI.
@@ -423,23 +386,6 @@ class BasicTab(BaseConfigTab):
             if 'cpuset' in cpu_alloc:
                 self.cpuset.delete(0, ctk.END)
                 self.cpuset.insert(0, cpu_alloc['cpuset'])
-            if 'topology' in cpu_alloc:
-                topology = cpu_alloc['topology']
-                if 'sockets' in topology:
-                    self.sockets.delete(0, ctk.END)
-                    self.sockets.insert(0, str(topology['sockets']))
-                if 'dies' in topology:
-                    self.dies.delete(0, ctk.END)
-                    self.dies.insert(0, str(topology['dies']))
-                if 'clusters' in topology:
-                    self.clusters.delete(0, ctk.END)
-                    self.clusters.insert(0, str(topology['clusters']))
-                if 'cores' in topology:
-                    self.cores.delete(0, ctk.END)
-                    self.cores.insert(0, str(topology['cores']))
-                if 'threads' in topology:
-                    self.threads.delete(0, ctk.END)
-                    self.threads.insert(0, str(topology['threads']))
             if 'vcpu_instances' in cpu_alloc:
                 # 清空现有实例
                 for instance in self.vcpu_instances:
@@ -450,8 +396,10 @@ class BasicTab(BaseConfigTab):
                 for vcpu_instance in cpu_alloc['vcpu_instances']:
                     # 创建实例
                     new_id = len(self.vcpu_instances)
+                    from utils.styles import BG_COLOR_SELECT
+
                     instance_frame = ctk.CTkFrame(
-                        self.vcpu_list_frame, fg_color='#f0f0f0', corner_radius=4
+                        self.vcpu_list_frame, fg_color=BG_COLOR_SELECT, corner_radius=4
                     )
                     instance_frame.grid(row=new_id, column=0, sticky='ew', pady=2, padx=2)
                     instance_frame.grid_columnconfigure(0, weight=1)
@@ -512,8 +460,10 @@ class BasicTab(BaseConfigTab):
                 self.vcpu_instances = []
 
                 # 创建单个实例
+                from utils.styles import BG_COLOR_SELECT
+
                 instance_frame = ctk.CTkFrame(
-                    self.vcpu_list_frame, fg_color='#f0f0f0', corner_radius=4
+                    self.vcpu_list_frame, fg_color=BG_COLOR_SELECT, corner_radius=4
                 )
                 instance_frame.grid(row=0, column=0, sticky='ew', pady=2, padx=2)
                 instance_frame.grid_columnconfigure(0, weight=1)

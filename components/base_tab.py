@@ -110,6 +110,8 @@ class BaseConfigTab(ctk.CTkFrame):
         default_value: str = '',
         width: int = 100,
         row: int = 0,
+        column: int = 0,
+        columnspan: int = 1,
         label_width: int = 100,
     ) -> ctk.CTkEntry:
         """创建 Label + Entry 组合控件.
@@ -123,6 +125,8 @@ class BaseConfigTab(ctk.CTkFrame):
             default_value: 默认值
             width: 输入框宽度
             row: 网格行号
+            column: 网格列号
+            columnspan: 列跨度
             label_width: 标签宽度
 
         Returns:
@@ -130,10 +134,10 @@ class BaseConfigTab(ctk.CTkFrame):
         """
         ctk.CTkLabel(
             parent, text=label_text, font=CTK_FONT_MAIN, width=label_width, anchor='w'
-        ).grid(row=row, column=0, padx=10, pady=5, sticky='w')
+        ).grid(row=row, column=column, padx=10, pady=5, sticky='w')
 
         entry = ctk.CTkEntry(parent, placeholder_text=placeholder, width=width)
-        entry.grid(row=row, column=1, padx=5, pady=5, sticky='w')
+        entry.grid(row=row, column=column + 1, padx=5, pady=5, sticky='w')
         if default_value:
             entry.insert(0, default_value)
         entry.bind('<KeyRelease>', lambda e: self._trigger_change())
@@ -148,6 +152,8 @@ class BaseConfigTab(ctk.CTkFrame):
         default_value: str,
         width: int = 120,
         row: int = 0,
+        column: int = 0,
+        columnspan: int = 1,
         label_width: int = 100,
     ) -> ctk.CTkOptionMenu:
         """创建 Label + OptionMenu 组合控件.
@@ -161,6 +167,8 @@ class BaseConfigTab(ctk.CTkFrame):
             default_value: 默认值
             width: 下拉菜单宽度
             row: 网格行号
+            column: 网格列号
+            columnspan: 列跨度
             label_width: 标签宽度
 
         Returns:
@@ -168,11 +176,11 @@ class BaseConfigTab(ctk.CTkFrame):
         """
         ctk.CTkLabel(
             parent, text=label_text, font=CTK_FONT_MAIN, width=label_width, anchor='w'
-        ).grid(row=row, column=0, padx=10, pady=5, sticky='w')
+        ).grid(row=row, column=column, padx=10, pady=5, sticky='w')
 
         option = ctk.CTkOptionMenu(parent, values=values, width=width, font=CTK_FONT_SMALL)
         option.set(default_value)
-        option.grid(row=row, column=1, padx=5, pady=5, sticky='w')
+        option.grid(row=row, column=column + 1, padx=5, pady=5, sticky='w')
         option.configure(command=self._trigger_change)
 
         return option
@@ -183,6 +191,7 @@ class BaseConfigTab(ctk.CTkFrame):
         label_text: str,
         default_checked: bool = False,
         row: int = 0,
+        column: int = 0,
         label_width: int = 100,
     ) -> ctk.CTkCheckBox:
         """创建 Label + CheckBox 组合控件.
@@ -192,6 +201,7 @@ class BaseConfigTab(ctk.CTkFrame):
             label_text: 标签文本
             default_checked: 默认是否选中
             row: 网格行号
+            column: 网格列号
             label_width: 标签宽度
 
         Returns:
@@ -199,14 +209,14 @@ class BaseConfigTab(ctk.CTkFrame):
         """
         ctk.CTkLabel(
             parent, text=label_text, font=CTK_FONT_MAIN, width=label_width, anchor='w'
-        ).grid(row=row, column=0, padx=10, pady=5, sticky='w')
+        ).grid(row=row, column=column, padx=10, pady=5, sticky='w')
 
         checkbox = ctk.CTkCheckBox(
             parent, text='', font=CTK_FONT_SMALL, command=self._trigger_change
         )
         if default_checked:
             checkbox.select()
-        checkbox.grid(row=row, column=1, padx=5, pady=5, sticky='w')
+        checkbox.grid(row=row, column=column + 1, padx=5, pady=5, sticky='w')
 
         return checkbox
 
@@ -216,6 +226,8 @@ class BaseConfigTab(ctk.CTkFrame):
         title: str,
         text_color: str = '#64b5f6',
         row: int = 0,
+        column: int = 0,
+        columnspan: int = 2,
     ) -> None:
         """创建章节标题.
 
@@ -224,9 +236,11 @@ class BaseConfigTab(ctk.CTkFrame):
             title: 标题文本
             text_color: 标题颜色
             row: 网格行号
+            column: 网格列号
+            columnspan: 列跨度
         """
         ctk.CTkLabel(parent, text=title, font=CTK_FONT_BOLD, text_color=text_color).grid(
-            row=row, column=0, columnspan=2, padx=10, pady=5, sticky='w'
+            row=row, column=column, columnspan=columnspan, padx=10, pady=5, sticky='w'
         )
 
     def _create_info_label(
@@ -234,6 +248,8 @@ class BaseConfigTab(ctk.CTkFrame):
         parent: ctk.CTkFrame,
         info_text: str,
         row: int = 0,
+        column: int = 0,
+        columnspan: int = 2,
         text_color: str = '#888888',
     ) -> None:
         """创建说明文本标签.
@@ -242,6 +258,8 @@ class BaseConfigTab(ctk.CTkFrame):
             parent: 父级容器
             info_text: 说明文本
             row: 网格行号
+            column: 网格列号
+            columnspan: 列跨度
             text_color: 文本颜色
         """
         ctk.CTkLabel(
@@ -250,7 +268,7 @@ class BaseConfigTab(ctk.CTkFrame):
             font=CTK_FONT_SMALL,
             text_color=text_color,
             justify='left',
-        ).grid(row=row, column=0, columnspan=2, padx=10, pady=5, sticky='nw')
+        ).grid(row=row, column=column, columnspan=columnspan, padx=10, pady=5, sticky='nw')
 
 
 class BaseInnerTab(BaseConfigTab):
@@ -606,3 +624,76 @@ def create_three_column_layout(
     )
 
     return left_frame, mid_frame, right_frame
+
+
+def create_four_column_layout(
+    parent: ctk.CTkFrame,
+    left_title: str = '左侧面板',
+    mid1_title: str = '中间面板 1',
+    mid2_title: str = '中间面板 2',
+    right_title: str = '右侧面板',
+    left_color: str = '#64b5f6',
+    mid1_color: str = '#9c27b0',
+    mid2_color: str = '#4caf50',
+    right_color: str = '#ff9800',
+) -> tuple[ctk.CTkFrame, ctk.CTkFrame, ctk.CTkFrame, ctk.CTkFrame]:
+    """创建标准的四列布局.
+
+    这是一个工具函数, 用于快速创建左中1中2右四栏的标准布局.
+
+    Args:
+        parent: 父级容器
+        left_title: 左侧面板标题
+        mid1_title: 中间面板 1 标题
+        mid2_title: 中间面板 2 标题
+        right_title: 右侧面板标题
+        left_color: 左侧标题颜色
+        mid1_color: 中间面板 1 标题颜色
+        mid2_color: 中间面板 2 标题颜色
+        right_color: 右侧标题颜色
+
+    Returns:
+        (左侧面板, 中间面板 1, 中间面板 2, 右侧面板) 的元组
+    """
+    parent.grid_columnconfigure(0, weight=1)
+    parent.grid_columnconfigure(1, weight=1)
+    parent.grid_columnconfigure(2, weight=1)
+    parent.grid_columnconfigure(3, weight=1)
+
+    # 左侧面板
+    left_frame = ctk.CTkFrame(parent, fg_color=BG_COLOR_CONTENT, corner_radius=6)
+    left_frame.grid(row=0, column=0, sticky='nsew', padx=5, pady=5)
+    left_frame.grid_columnconfigure(1, weight=1)
+
+    ctk.CTkLabel(left_frame, text=left_title, font=CTK_FONT_BOLD, text_color=left_color).grid(
+        row=0, column=0, columnspan=2, padx=10, pady=5, sticky='w'
+    )
+
+    # 中间面板 1
+    mid1_frame = ctk.CTkFrame(parent, fg_color=BG_COLOR_CONTENT, corner_radius=6)
+    mid1_frame.grid(row=0, column=1, sticky='nsew', padx=5, pady=5)
+    mid1_frame.grid_columnconfigure(1, weight=1)
+
+    ctk.CTkLabel(mid1_frame, text=mid1_title, font=CTK_FONT_BOLD, text_color=mid1_color).grid(
+        row=0, column=0, columnspan=2, padx=10, pady=5, sticky='w'
+    )
+
+    # 中间面板 2
+    mid2_frame = ctk.CTkFrame(parent, fg_color=BG_COLOR_CONTENT, corner_radius=6)
+    mid2_frame.grid(row=0, column=2, sticky='nsew', padx=5, pady=5)
+    mid2_frame.grid_columnconfigure(1, weight=1)
+
+    ctk.CTkLabel(mid2_frame, text=mid2_title, font=CTK_FONT_BOLD, text_color=mid2_color).grid(
+        row=0, column=0, columnspan=2, padx=10, pady=5, sticky='w'
+    )
+
+    # 右侧面板
+    right_frame = ctk.CTkFrame(parent, fg_color=BG_COLOR_CONTENT, corner_radius=6)
+    right_frame.grid(row=0, column=3, sticky='nsew', padx=5, pady=5)
+    right_frame.grid_columnconfigure(1, weight=1)
+
+    ctk.CTkLabel(right_frame, text=right_title, font=CTK_FONT_BOLD, text_color=right_color).grid(
+        row=0, column=0, columnspan=2, padx=10, pady=5, sticky='w'
+    )
+
+    return left_frame, mid1_frame, mid2_frame, right_frame

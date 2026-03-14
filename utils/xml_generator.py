@@ -99,8 +99,8 @@ class LibvirtXMLGenerator:
         vcpu_attrs = {'placement': placement}
         if cpuset:
             vcpu_attrs['cpuset'] = cpuset
-        if current_vcpu != vcpu_count:
-            vcpu_attrs['current'] = str(current_vcpu)
+        # 总是添加current属性，无论是否等于max_vcpu
+        vcpu_attrs['current'] = str(current_vcpu)
 
         vcpu = ET.SubElement(self.domain, 'vcpu', **vcpu_attrs)
         vcpu.text = str(vcpu_count)

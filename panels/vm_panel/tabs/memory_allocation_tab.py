@@ -45,14 +45,9 @@ class MemoryAllocationTab(BaseConfigTab):
         # 说明信息
         self._create_section_title(right_frame, '说明', text_color='#ff9800', row=3)
         info_text = (
-            '内存 (memory):\n'
-            '启动时分配的最大内存.\n\n'
-            '当前内存 (currentMemory):\n'
-            '实际分配的内存,可以小于\n'
-            '最大值以支持内存气球.\n\n'
-            '最大内存 (maxMemory):\n'
-            '运行时可通过热插拔增加\n'
-            '到的最大内存限制.'
+            '内存 (memory):启动时分配的最大内存.\n'
+            '当前内存 (currentMemory):实际分配的内存,可以小于最大值以支持内存气球.\n'
+            '最大内存 (maxMemory):运行时可通过热插拔增加到的最大内存限制.'
         )
         self._create_info_label(right_frame, info_text, row=4)
 
