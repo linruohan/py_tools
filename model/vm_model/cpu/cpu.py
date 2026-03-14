@@ -36,7 +36,7 @@ class CPU:
     model: Optional[CPUModel] = None
     topology: Optional[CPUTopology] = None
     features: List[CPUFeature] = field(default_factory=list)
-    mode: Optional[str] = None  # custom, host-model, host-passthrough
+    mode: Optional[str] = None  # custom, host-model, host-passthrough, maximum
     match: Optional[str] = None  # exact, minimum, strict
     vendor_id: Optional[str] = None
     placeholder: Optional[bool] = None

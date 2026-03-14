@@ -15,6 +15,9 @@ from config.strategies.option_strategies import (
     MemoryUnit,
 )
 
+# 引入 NUMA 配置
+from .cpu.numa import NUMA
+
 
 # ========== 类型定义 ==========
 
@@ -62,6 +65,7 @@ class CpuMode(str, Enum):
     HOST_MODEL = 'host-model'
     HOST_PASSTHROUGH = 'host-passthrough'
     HOST_MODEL_REQUIRED = 'host-model-required'
+    MAXIMUM = 'maximum'
 
 
 # ========== 基础数据类 ==========
@@ -162,6 +166,9 @@ class CPU:
     match: Optional[str] = None
     vendor_id: Optional[str] = None
     placeholder: Optional[bool] = None
+    numa: Optional[NUMA] = None
+    cache: Optional[Dict[str, Any]] = None
+    maxphysaddr: Optional[Dict[str, Any]] = None
 
     @classmethod
     def from_dict(cls, data: Dict[str, Any]) -> 'CPU':
@@ -178,6 +185,11 @@ class CPU:
         if model and isinstance(model, dict):
             model = CPUModel.from_dict(model)
 
+        numa = data.get('numa')
+        if numa and isinstance(numa, dict):
+            # 这里可以根据需要实现 NUMA 从字典创建的逻辑
+            pass
+
         return cls(
             mode=CpuMode(data.get('mode', 'host-model')),
             model=model,
@@ -186,6 +198,9 @@ class CPU:
             match=data.get('match'),
             vendor_id=data.get('vendor_id'),
             placeholder=data.get('placeholder'),
+            numa=numa,
+            cache=data.get('cache'),
+            maxphysaddr=data.get('maxphysaddr'),
         )
 
     def to_dict(self) -> Dict[str, Any]:
@@ -198,6 +213,9 @@ class CPU:
             'match': self.match,
             'vendor_id': self.vendor_id,
             'placeholder': self.placeholder,
+            'numa': self.numa,
+            'cache': self.cache,
+            'maxphysaddr': self.maxphysaddr,
         }
 
 
@@ -437,15 +455,24 @@ class OS:
     firmware_features: List[Dict[str, Any]] = field(default_factory=list)
     loader: Optional[Loader] = None
     nvram: Optional[Nvram] = None
+    varstore: Optional[Dict[str, Any]] = None
     boot: List[Boot] = field(default_factory=list)
     bootmenu: Optional[Bootmenu] = None
-    smbios_mode: Optional[str] = None
+    smbios: Optional[Dict[str, Any]] = None
+    bios: Optional[Dict[str, Any]] = None
     kernel: Optional[str] = None
     initrd: Optional[str] = None
     cmdline: Optional[str] = None
+    shim: Optional[str] = None
     dtb: Optional[str] = None
     init: Optional[str] = None
-    init_args: List[str] = field(default_factory=list)
+    initargs: List[str] = field(default_factory=list)
+    initenv: List[Dict[str, Any]] = field(default_factory=list)
+    initdir: Optional[str] = None
+    inituser: Optional[str] = None
+    initgroup: Optional[str] = None
+    idmap: Optional[Dict[str, Any]] = None
+    acpi: Optional[Dict[str, Any]] = None
     bootloader: Optional[str] = None
     bootloader_args: Optional[str] = None
 
@@ -488,15 +515,24 @@ class OS:
             firmware_features=data.get('firmware_features', []),
             loader=loader,
             nvram=nvram,
+            varstore=data.get('varstore'),
             boot=boot,
             bootmenu=bootmenu,
-            smbios_mode=data.get('smbios_mode'),
+            smbios=data.get('smbios'),
+            bios=data.get('bios'),
             kernel=data.get('kernel'),
             initrd=data.get('initrd'),
             cmdline=data.get('cmdline'),
+            shim=data.get('shim'),
             dtb=data.get('dtb'),
             init=data.get('init'),
-            init_args=data.get('init_args', []),
+            initargs=data.get('initargs', []),
+            initenv=data.get('initenv', []),
+            initdir=data.get('initdir'),
+            inituser=data.get('inituser'),
+            initgroup=data.get('initgroup'),
+            idmap=data.get('idmap'),
+            acpi=data.get('acpi'),
             bootloader=data.get('bootloader'),
             bootloader_args=data.get('bootloader_args'),
         )
@@ -511,15 +547,24 @@ class OS:
             'firmware_features': self.firmware_features,
             'loader': self.loader.to_dict() if self.loader else None,
             'nvram': self.nvram.to_dict() if self.nvram else None,
+            'varstore': self.varstore,
             'boot': [b.to_dict() for b in self.boot],
             'bootmenu': self.bootmenu.to_dict() if self.bootmenu else None,
-            'smbios_mode': self.smbios_mode,
+            'smbios': self.smbios,
+            'bios': self.bios,
             'kernel': self.kernel,
             'initrd': self.initrd,
             'cmdline': self.cmdline,
+            'shim': self.shim,
             'dtb': self.dtb,
             'init': self.init,
-            'init_args': self.init_args,
+            'initargs': self.initargs,
+            'initenv': self.initenv,
+            'initdir': self.initdir,
+            'inituser': self.inituser,
+            'initgroup': self.initgroup,
+            'idmap': self.idmap,
+            'acpi': self.acpi,
             'bootloader': self.bootloader,
             'bootloader_args': self.bootloader_args,
         }
@@ -797,6 +842,16 @@ class Devices:
     watchdogs: List[Dict[str, Any]] = field(default_factory=list)
     balloons: List[Dict[str, Any]] = field(default_factory=list)
     filesystems: List[Dict[str, Any]] = field(default_factory=list)
+    parallel: List[Dict[str, Any]] = field(default_factory=list)
+    smartcard: List[Dict[str, Any]] = field(default_factory=list)
+    shmem: List[Dict[str, Any]] = field(default_factory=list)
+    vsock: List[Dict[str, Any]] = field(default_factory=list)
+    crypto: List[Dict[str, Any]] = field(default_factory=list)
+    iommu: List[Dict[str, Any]] = field(default_factory=list)
+    panic: List[Dict[str, Any]] = field(default_factory=list)
+    pstore: List[Dict[str, Any]] = field(default_factory=list)
+    memory: List[Dict[str, Any]] = field(default_factory=list)
+    nvram: List[Dict[str, Any]] = field(default_factory=list)
 
     @classmethod
     def from_dict(cls, data: Dict[str, Any]) -> 'Devices':
@@ -836,6 +891,16 @@ class Devices:
             watchdogs=data.get('watchdogs', []),
             balloons=data.get('balloons', []),
             filesystems=data.get('filesystems', []),
+            parallel=data.get('parallel', []),
+            smartcard=data.get('smartcard', []),
+            shmem=data.get('shmem', []),
+            vsock=data.get('vsock', []),
+            crypto=data.get('crypto', []),
+            iommu=data.get('iommu', []),
+            panic=data.get('panic', []),
+            pstore=data.get('pstore', []),
+            memory=data.get('memory', []),
+            nvram=data.get('nvram', []),
         )
 
     def to_dict(self) -> Dict[str, Any]:
@@ -859,6 +924,16 @@ class Devices:
             'watchdogs': self.watchdogs,
             'balloons': self.balloons,
             'filesystems': self.filesystems,
+            'parallel': self.parallel,
+            'smartcard': self.smartcard,
+            'shmem': self.shmem,
+            'vsock': self.vsock,
+            'crypto': self.crypto,
+            'iommu': self.iommu,
+            'panic': self.panic,
+            'pstore': self.pstore,
+            'memory': self.memory,
+            'nvram': self.nvram,
         }
 
 
@@ -875,11 +950,19 @@ class Features:
     pvspinlock: Optional[bool] = None
     pmu: Optional[bool] = None
     vmport: Optional[bool] = None
-    smm: Optional[bool] = None
+    smm: Optional[Dict[str, Any]] = None
     hyperv: Optional[Dict[str, Any]] = None
     kvm: Optional[Dict[str, Any]] = None
+    xen: Optional[Dict[str, Any]] = None
+    gic: Optional[Dict[str, Any]] = None
+    ioapic: Optional[Dict[str, Any]] = None
+    hpt: Optional[Dict[str, Any]] = None
+    tcg: Optional[Dict[str, Any]] = None
     vmcoreinfo: Optional[bool] = None
     ras: Optional[bool] = None
+    async_teardown: Optional[bool] = None
+    ps2: Optional[bool] = None
+    aia: Optional[str] = None
 
     @classmethod
     def from_dict(cls, data: Dict[str, Any]) -> 'Features':
@@ -887,6 +970,11 @@ class Features:
         general = data.get('general', data)
         hyperv = data.get('hyperv')
         kvm = data.get('kvm')
+        xen = data.get('xen')
+        gic = data.get('gic')
+        ioapic = data.get('ioapic')
+        hpt = data.get('hpt')
+        tcg = data.get('tcg')
 
         return cls(
             acpi=general.get('acpi', True),
@@ -901,8 +989,16 @@ class Features:
             smm=general.get('smm'),
             hyperv=hyperv,
             kvm=kvm,
+            xen=xen,
+            gic=gic,
+            ioapic=ioapic,
+            hpt=hpt,
+            tcg=tcg,
             vmcoreinfo=general.get('vmcoreinfo'),
             ras=general.get('ras'),
+            async_teardown=general.get('async_teardown'),
+            ps2=general.get('ps2'),
+            aia=general.get('aia'),
         )
 
     def to_dict(self) -> Dict[str, Any]:
@@ -921,9 +1017,17 @@ class Features:
                 'smm': self.smm,
                 'vmcoreinfo': self.vmcoreinfo,
                 'ras': self.ras,
+                'async_teardown': self.async_teardown,
+                'ps2': self.ps2,
+                'aia': self.aia,
             },
             'hyperv': self.hyperv,
             'kvm': self.kvm,
+            'xen': self.xen,
+            'gic': self.gic,
+            'ioapic': self.ioapic,
+            'hpt': self.hpt,
+            'tcg': self.tcg,
         }
 
 
@@ -969,6 +1073,8 @@ class Domain:
     type: VirtType = VirtType.KVM
     name: str = 'vm0'
     uuid: Optional[str] = None
+    hwuuid: Optional[str] = None
+    genid: Optional[str] = None
     title: Optional[str] = None
     description: Optional[str] = None
     vcpu: Optional[VCPU] = None
@@ -983,7 +1089,21 @@ class Domain:
     on_poweroff: str = 'destroy'
     on_reboot: str = 'restart'
     on_crash: str = 'destroy'
+    on_lockfailure: Optional[str] = None
     metadata: Optional[Dict[str, Any]] = None
+    seclabel: Optional[Dict[str, Any]] = None
+    numatune: Optional[Dict[str, Any]] = None
+    memtune: Optional[Dict[str, Any]] = None
+    blkiotune: Optional[Dict[str, Any]] = None
+    cputune: Optional[Dict[str, Any]] = None
+    iothreads: Optional[Dict[str, Any]] = None
+    launch_security: Optional[Dict[str, Any]] = None
+    sysinfo: Optional[Dict[str, Any]] = None
+    memory_backing: Optional[Dict[str, Any]] = None
+    perf: Optional[Dict[str, Any]] = None
+    throttlegroups: Optional[Dict[str, Any]] = None
+    keywrap: Optional[Dict[str, Any]] = None
+    resource: Optional[Dict[str, Any]] = None
 
     @classmethod
     def from_config(cls, config: Dict[str, Any]) -> 'Domain':
@@ -998,6 +1118,8 @@ class Domain:
         # 基础配置
         name = config.get('name', 'vm0')
         uuid = config.get('uuid')
+        hwuuid = config.get('hwuuid')
+        genid = config.get('genid')
         title = config.get('title')
         description = config.get('description')
 
@@ -1049,11 +1171,29 @@ class Domain:
         on_poweroff = config.get('events_configuration', {}).get('on_poweroff', 'destroy')
         on_reboot = config.get('events_configuration', {}).get('on_reboot', 'restart')
         on_crash = config.get('events_configuration', {}).get('on_crash', 'destroy')
+        on_lockfailure = config.get('events_configuration', {}).get('on_lockfailure')
+
+        # 其他配置
+        seclabel = config.get('seclabel')
+        numatune = config.get('numatune')
+        memtune = config.get('memtune')
+        blkiotune = config.get('blkiotune')
+        cputune = config.get('cputune')
+        iothreads = config.get('iothreads')
+        launch_security = config.get('launch_security')
+        sysinfo = config.get('sysinfo')
+        memory_backing = config.get('memory_backing')
+        perf = config.get('perf')
+        throttlegroups = config.get('throttlegroups')
+        keywrap = config.get('keywrap')
+        resource = config.get('resource')
 
         return cls(
             type=VirtType(config.get('hypervisor', 'kvm')),
             name=name,
             uuid=uuid,
+            hwuuid=hwuuid,
+            genid=genid,
             title=title,
             description=description,
             vcpu=vcpu,
@@ -1068,7 +1208,21 @@ class Domain:
             on_poweroff=on_poweroff,
             on_reboot=on_reboot,
             on_crash=on_crash,
+            on_lockfailure=on_lockfailure,
             metadata=config.get('metadata'),
+            seclabel=seclabel,
+            numatune=numatune,
+            memtune=memtune,
+            blkiotune=blkiotune,
+            cputune=cputune,
+            iothreads=iothreads,
+            launch_security=launch_security,
+            sysinfo=sysinfo,
+            memory_backing=memory_backing,
+            perf=perf,
+            throttlegroups=throttlegroups,
+            keywrap=keywrap,
+            resource=resource,
         )
 
     def to_config(self) -> Dict[str, Any]:
@@ -1080,6 +1234,8 @@ class Domain:
         config = {
             'name': self.name,
             'uuid': self.uuid,
+            'hwuuid': self.hwuuid,
+            'genid': self.genid,
             'title': self.title,
             'description': self.description,
             'hypervisor': self.type.value,
@@ -1130,6 +1286,36 @@ class Domain:
             'on_reboot': self.on_reboot,
             'on_crash': self.on_crash,
         }
+        if self.on_lockfailure:
+            config['events_configuration']['on_lockfailure'] = self.on_lockfailure
+
+        # 其他配置
+        if self.seclabel:
+            config['seclabel'] = self.seclabel
+        if self.numatune:
+            config['numatune'] = self.numatune
+        if self.memtune:
+            config['memtune'] = self.memtune
+        if self.blkiotune:
+            config['blkiotune'] = self.blkiotune
+        if self.cputune:
+            config['cputune'] = self.cputune
+        if self.iothreads:
+            config['iothreads'] = self.iothreads
+        if self.launch_security:
+            config['launch_security'] = self.launch_security
+        if self.sysinfo:
+            config['sysinfo'] = self.sysinfo
+        if self.memory_backing:
+            config['memory_backing'] = self.memory_backing
+        if self.perf:
+            config['perf'] = self.perf
+        if self.throttlegroups:
+            config['throttlegroups'] = self.throttlegroups
+        if self.keywrap:
+            config['keywrap'] = self.keywrap
+        if self.resource:
+            config['resource'] = self.resource
 
         return config
 
@@ -1152,6 +1338,14 @@ class Domain:
         if self.uuid:
             uuid_elem = ET.SubElement(domain, 'uuid')
             uuid_elem.text = self.uuid
+
+        if self.hwuuid:
+            hwuuid_elem = ET.SubElement(domain, 'hwuuid')
+            hwuuid_elem.text = self.hwuuid
+
+        if self.genid:
+            genid_elem = ET.SubElement(domain, 'genid')
+            genid_elem.text = self.genid
 
         if self.title:
             title_elem = ET.SubElement(domain, 'title')
@@ -1202,6 +1396,45 @@ class Domain:
                 feat_elem.set('name', feature.name)
                 if feature.policy:
                     feat_elem.set('policy', feature.policy)
+
+            if self.cpu.cache:
+                cache_elem = ET.SubElement(cpu_elem, 'cache')
+                if 'level' in self.cpu.cache:
+                    cache_elem.set('level', str(self.cpu.cache['level']))
+                if 'mode' in self.cpu.cache:
+                    cache_elem.set('mode', self.cpu.cache['mode'])
+
+            if self.cpu.maxphysaddr:
+                maxphysaddr_elem = ET.SubElement(cpu_elem, 'maxphysaddr')
+                if 'mode' in self.cpu.maxphysaddr:
+                    maxphysaddr_elem.set('mode', self.cpu.maxphysaddr['mode'])
+                if 'bits' in self.cpu.maxphysaddr:
+                    maxphysaddr_elem.set('bits', str(self.cpu.maxphysaddr['bits']))
+                if 'limit' in self.cpu.maxphysaddr:
+                    maxphysaddr_elem.set('limit', str(self.cpu.maxphysaddr['limit']))
+
+            if self.cpu.numa:
+                numa_elem = ET.SubElement(cpu_elem, 'numa')
+                if self.cpu.numa.nodes:
+                    for node in self.cpu.numa.nodes:
+                        node_elem = ET.SubElement(numa_elem, 'cell')
+                        node_elem.set('id', str(node.id))
+                        if node.cpus:
+                            node_elem.set('cpus', node.cpus)
+                        if node.memory:
+                            node_elem.set('memory', str(node.memory))
+                        if node.unit:
+                            node_elem.set('unit', node.unit)
+                        if node.memAccess:
+                            node_elem.set('memAccess', node.memAccess)
+                        if node.discard is not None:
+                            node_elem.set('discard', 'yes' if node.discard else 'no')
+                        if node.distances:
+                            distances_elem = ET.SubElement(node_elem, 'distances')
+                            for sibling in node.distances:
+                                sibling_elem = ET.SubElement(distances_elem, 'sibling')
+                                sibling_elem.set('id', str(sibling.id))
+                                sibling_elem.set('value', str(sibling.value))
 
         # 内存
         if self.memory:
@@ -1261,6 +1494,92 @@ class Domain:
                 if self.os.nvram.template:
                     nvram_elem.set('template', self.os.nvram.template)
 
+            if self.os.varstore:
+                varstore_elem = ET.SubElement(os_elem, 'varstore')
+                if 'path' in self.os.varstore:
+                    varstore_elem.set('path', self.os.varstore['path'])
+                if 'template' in self.os.varstore:
+                    varstore_elem.set('template', self.os.varstore['template'])
+
+            if self.os.smbios:
+                smbios_elem = ET.SubElement(os_elem, 'smbios')
+                if 'mode' in self.os.smbios:
+                    smbios_elem.set('mode', self.os.smbios['mode'])
+
+            if self.os.bios:
+                bios_elem = ET.SubElement(os_elem, 'bios')
+                if 'useserial' in self.os.bios:
+                    bios_elem.set('useserial', 'yes' if self.os.bios['useserial'] else 'no')
+                if 'rebootTimeout' in self.os.bios:
+                    bios_elem.set('rebootTimeout', str(self.os.bios['rebootTimeout']))
+
+            if self.os.kernel:
+                ET.SubElement(os_elem, 'kernel').text = self.os.kernel
+
+            if self.os.initrd:
+                ET.SubElement(os_elem, 'initrd').text = self.os.initrd
+
+            if self.os.cmdline:
+                ET.SubElement(os_elem, 'cmdline').text = self.os.cmdline
+
+            if self.os.shim:
+                ET.SubElement(os_elem, 'shim').text = self.os.shim
+
+            if self.os.dtb:
+                ET.SubElement(os_elem, 'dtb').text = self.os.dtb
+
+            if self.os.init:
+                ET.SubElement(os_elem, 'init').text = self.os.init
+
+            for arg in self.os.initargs:
+                ET.SubElement(os_elem, 'initarg').text = arg
+
+            for env in self.os.initenv:
+                if 'name' in env and 'value' in env:
+                    env_elem = ET.SubElement(os_elem, 'initenv')
+                    env_elem.set('name', env['name'])
+                    env_elem.text = env['value']
+
+            if self.os.initdir:
+                ET.SubElement(os_elem, 'initdir').text = self.os.initdir
+
+            if self.os.inituser:
+                ET.SubElement(os_elem, 'inituser').text = self.os.inituser
+
+            if self.os.initgroup:
+                ET.SubElement(os_elem, 'initgroup').text = self.os.initgroup
+
+            if self.os.idmap:
+                idmap_elem = ET.SubElement(os_elem, 'idmap')
+                if 'uid' in self.os.idmap:
+                    uid = self.os.idmap['uid']
+                    uid_elem = ET.SubElement(idmap_elem, 'uid')
+                    if 'start' in uid:
+                        uid_elem.set('start', str(uid['start']))
+                    if 'target' in uid:
+                        uid_elem.set('target', str(uid['target']))
+                    if 'count' in uid:
+                        uid_elem.set('count', str(uid['count']))
+                if 'gid' in self.os.idmap:
+                    gid = self.os.idmap['gid']
+                    gid_elem = ET.SubElement(idmap_elem, 'gid')
+                    if 'start' in gid:
+                        gid_elem.set('start', str(gid['start']))
+                    if 'target' in gid:
+                        gid_elem.set('target', str(gid['target']))
+                    if 'count' in gid:
+                        gid_elem.set('count', str(gid['count']))
+
+            if self.os.acpi:
+                acpi_elem = ET.SubElement(os_elem, 'acpi')
+                if 'tables' in self.os.acpi:
+                    for table in self.os.acpi['tables']:
+                        table_elem = ET.SubElement(acpi_elem, 'table')
+                        if 'type' in table:
+                            table_elem.set('type', table['type'])
+                        if 'path' in table:
+                            table_elem.text = table['path']
+
         # 电源管理
         pm_elem = ET.SubElement(domain, 'pm')
         suspend_mem = ET.SubElement(pm_elem, 'suspend-to-mem')
@@ -1275,6 +1594,8 @@ class Domain:
             ET.SubElement(domain, 'on_reboot').text = self.on_reboot
         if self.on_crash:
             ET.SubElement(domain, 'on_crash').text = self.on_crash
+        if self.on_lockfailure:
+            ET.SubElement(domain, 'on_lockfailure').text = self.on_lockfailure
 
         # 特性
         if self.features:
@@ -1282,21 +1603,103 @@ class Domain:
             if self.features.acpi:
                 ET.SubElement(features_elem, 'acpi')
             if self.features.apic:
-                ET.SubElement(features_elem, 'apic')
+                apic_elem = ET.SubElement(features_elem, 'apic')
+                # 可以添加 eoi 属性
             if self.features.pae:
                 ET.SubElement(features_elem, 'pae')
+            if self.features.hap is not None:
+                hap_elem = ET.SubElement(features_elem, 'hap')
+                hap_elem.set('state', 'on' if self.features.hap else 'off')
+            if self.features.viridian:
+                ET.SubElement(features_elem, 'viridian')
+            if self.features.privnet:
+                ET.SubElement(features_elem, 'privnet')
+            if self.features.pvspinlock is not None:
+                pvspinlock_elem = ET.SubElement(features_elem, 'pvspinlock')
+                pvspinlock_elem.set('state', 'on' if self.features.pvspinlock else 'off')
+            if self.features.pmu is not None:
+                pmu_elem = ET.SubElement(features_elem, 'pmu')
+                pmu_elem.set('state', 'on' if self.features.pmu else 'off')
+            if self.features.vmport is not None:
+                vmport_elem = ET.SubElement(features_elem, 'vmport')
+                vmport_elem.set('state', 'on' if self.features.vmport else 'off')
+            if self.features.smm:
+                smm_elem = ET.SubElement(features_elem, 'smm')
+                smm_elem.set('state', 'on' if self.features.smm.get('state', True) else 'off')
+                if 'tseg' in self.features.smm:
+                    tseg_elem = ET.SubElement(smm_elem, 'tseg')
+                    tseg_elem.text = str(self.features.smm['tseg'])
+                    if 'unit' in self.features.smm:
+                        tseg_elem.set('unit', self.features.smm['unit'])
             if self.features.hyperv:
                 hyperv_elem = ET.SubElement(features_elem, 'hyperv')
+                if 'mode' in self.features.hyperv:
+                    hyperv_elem.set('mode', self.features.hyperv['mode'])
                 for key, value in self.features.hyperv.items():
-                    if isinstance(value, bool):
-                        ET.SubElement(hyperv_elem, key).set('state', 'on' if value else 'off')
-                    elif isinstance(value, dict):
-                        ET.SubElement(hyperv_elem, key, attrib=value)
+                    if key != 'mode':
+                        if isinstance(value, bool):
+                            ET.SubElement(hyperv_elem, key).set('state', 'on' if value else 'off')
+                        elif isinstance(value, dict):
+                            elem = ET.SubElement(hyperv_elem, key)
+                            for k, v in value.items():
+                                if isinstance(v, bool):
+                                    elem.set(k, 'on' if v else 'off')
+                                else:
+                                    elem.set(k, str(v))
             if self.features.kvm:
                 kvm_elem = ET.SubElement(features_elem, 'kvm')
                 for key, value in self.features.kvm.items():
                     if isinstance(value, bool):
                         ET.SubElement(kvm_elem, key).set('state', 'on' if value else 'off')
+                    elif isinstance(value, dict):
+                        elem = ET.SubElement(kvm_elem, key)
+                        for k, v in value.items():
+                            elem.set(k, str(v))
+            if self.features.xen:
+                xen_elem = ET.SubElement(features_elem, 'xen')
+                for key, value in self.features.xen.items():
+                    if isinstance(value, bool):
+                        ET.SubElement(xen_elem, key).set('state', 'on' if value else 'off')
+                    elif isinstance(value, dict):
+                        elem = ET.SubElement(xen_elem, key)
+                        for k, v in value.items():
+                            elem.set(k, str(v))
+            if self.features.gic:
+                gic_elem = ET.SubElement(features_elem, 'gic')
+                if 'version' in self.features.gic:
+                    gic_elem.set('version', str(self.features.gic['version']))
+            if self.features.ioapic:
+                ioapic_elem = ET.SubElement(features_elem, 'ioapic')
+                if 'driver' in self.features.ioapic:
+                    ioapic_elem.set('driver', self.features.ioapic['driver'])
+            if self.features.hpt:
+                hpt_elem = ET.SubElement(features_elem, 'hpt')
+                if 'resizing' in self.features.hpt:
+                    hpt_elem.set('resizing', self.features.hpt['resizing'])
+                if 'maxpagesize' in self.features.hpt:
+                    maxpagesize_elem = ET.SubElement(hpt_elem, 'maxpagesize')
+                    maxpagesize_elem.text = str(self.features.hpt['maxpagesize'])
+                    if 'unit' in self.features.hpt:
+                        maxpagesize_elem.set('unit', self.features.hpt['unit'])
+            if self.features.tcg:
+                tcg_elem = ET.SubElement(features_elem, 'tcg')
+                if 'tb-cache' in self.features.tcg:
+                    tbcache_elem = ET.SubElement(tcg_elem, 'tb-cache')
+                    tbcache_elem.text = str(self.features.tcg['tb-cache'])
+                    if 'unit' in self.features.tcg:
+                        tbcache_elem.set('unit', self.features.tcg['unit'])
+            if self.features.vmcoreinfo:
+                ET.SubElement(features_elem, 'vmcoreinfo').set('state', 'on')
+            if self.features.ras:
+                ET.SubElement(features_elem, 'ras').set('state', 'on')
+            if self.features.async_teardown:
+                async_elem = ET.SubElement(features_elem, 'async-teardown')
+                async_elem.set('enabled', 'yes')
+            if self.features.ps2:
+                ET.SubElement(features_elem, 'ps2').set('state', 'on')
+            if self.features.aia:
+                aia_elem = ET.SubElement(features_elem, 'aia')
+                aia_elem.set('value', self.features.aia)
 
         # 时钟
         if self.clock:
@@ -1379,6 +1782,109 @@ class Domain:
 
                 model_elem = ET.SubElement(iface_elem, 'model')
                 model_elem.set('type', iface.model)
+
+        # 安全标签
+        if self.seclabel:
+            seclabel_elem = ET.SubElement(domain, 'seclabel')
+            for key, value in self.seclabel.items():
+                if value is not None:
+                    seclabel_elem.set(key, str(value))
+
+        # NUMA 调优
+        if self.numatune:
+            numatune_elem = ET.SubElement(domain, 'numatune')
+            if 'memory_mode' in self.numatune:
+                numatune_elem.set('memoryMode', self.numatune['memory_mode'])
+            if 'memory_nodeset' in self.numatune:
+                numatune_elem.set('memoryNodeset', self.numatune['memory_nodeset'])
+            if 'memory_placement' in self.numatune:
+                numatune_elem.set('memoryPlacement', self.numatune['memory_placement'])
+
+        # 内存调优
+        if self.memtune:
+            memtune_elem = ET.SubElement(domain, 'memtune')
+            if 'hard_limit' in self.memtune:
+                hard_limit = ET.SubElement(memtune_elem, 'hard_limit')
+                hard_limit.text = str(self.memtune['hard_limit'])
+                if 'hard_limit_unit' in self.memtune:
+                    hard_limit.set('unit', self.memtune['hard_limit_unit'])
+
+        # 块 IO 调优
+        if self.blkiotune:
+            blkiotune_elem = ET.SubElement(domain, 'blkiotune')
+            if 'weight' in self.blkiotune:
+                ET.SubElement(blkiotune_elem, 'weight').text = str(self.blkiotune['weight'])
+
+        # CPU 调优
+        if self.cputune:
+            cputune_elem = ET.SubElement(domain, 'cputune')
+            if 'shares' in self.cputune:
+                ET.SubElement(cputune_elem, 'shares').text = str(self.cputune['shares'])
+
+        # IO 线程
+        if self.iothreads:
+            if 'count' in self.iothreads:
+                ET.SubElement(domain, 'iothreads').text = str(self.iothreads['count'])
+
+        # 启动安全
+        if self.launch_security:
+            launch_security_elem = ET.SubElement(domain, 'launchSecurity')
+            for key, value in self.launch_security.items():
+                if value is not None:
+                    launch_security_elem.set(key, str(value))
+
+        # 系统信息
+        if self.sysinfo:
+            sysinfo_elem = ET.SubElement(domain, 'sysinfo')
+            sysinfo_elem.set('type', self.sysinfo.get('type', 'smbios'))
+
+        # 内存后端
+        if self.memory_backing:
+            memory_backing_elem = ET.SubElement(domain, 'memoryBacking')
+            if self.memory_backing.get('locked'):
+                ET.SubElement(memory_backing_elem, 'locked')
+
+        # 性能配置
+        if self.perf:
+            perf_elem = ET.SubElement(domain, 'perf')
+            if 'events' in self.perf:
+                for event in self.perf['events']:
+                    event_elem = ET.SubElement(perf_elem, 'event')
+                    event_elem.set('name', event.get('name'))
+                    event_elem.set('enabled', str(event.get('enabled')))
+
+        # 节流组
+        if self.throttlegroups:
+            throttlegroups_elem = ET.SubElement(domain, 'throttlegroups')
+            if 'throttlegroups' in self.throttlegroups:
+                for group in self.throttlegroups['throttlegroups']:
+                    group_elem = ET.SubElement(throttlegroups_elem, 'throttlegroup')
+                    group_elem.set('name', group.get('name'))
+
+        # 密钥包装
+        if self.keywrap:
+            keywrap_elem = ET.SubElement(domain, 'keywrap')
+            for key, value in self.keywrap.items():
+                if value is not None:
+                    keywrap_elem.set(key, str(value))
+
+        # 资源配置
+        if self.resource:
+            resource_elem = ET.SubElement(domain, 'resource')
+            if 'partition' in self.resource:
+                ET.SubElement(resource_elem, 'partition').text = self.resource['partition']
+            if 'fibrechannel' in self.resource:
+                fc = self.resource['fibrechannel']
+                fc_elem = ET.SubElement(resource_elem, 'fibrechannel')
+                if 'appid' in fc:
+                    fc_elem.set('appid', fc['appid'])
+            if 'resources' in self.resource:
+                for res in self.resource['resources']:
+                    res_elem = ET.SubElement(resource_elem, 'resource')
+                    res_elem.set('name', res.get('name'))
+                    res_elem.text = str(res.get('value'))
+                    if 'unit' in res:
+                        res_elem.set('unit', res.get('unit'))
 
         return domain
 
