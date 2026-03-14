@@ -7,12 +7,12 @@ class ThrottleGroup:
     """节流组配置"""
 
     name: str
-    cpu_shares: Optional[int] = None
-    cpu_period: Optional[int] = None
-    cpu_quota: Optional[int] = None
-    memory_hard_limit: Optional[int] = None
-    memory_soft_limit: Optional[int] = None
-    blkio_weight: Optional[int] = None
+    total_bytes_sec: Optional[int] = None
+    read_bytes_sec: Optional[int] = None
+    write_bytes_sec: Optional[int] = None
+    read_iops_sec: Optional[int] = None
+    write_iops_sec: Optional[int] = None
+    total_iops_sec: Optional[int] = None
 
 
 @dataclass

@@ -17,13 +17,12 @@ from .memory_allocation_tab import MemoryAllocationTab
 from .memory_backing_tab import MemoryBackingTab
 from .memory_tuning_tab import MemoryTuningTab
 from .numa_node_tuning_tab import NUMANodeTuningTab
-from .os_booting_tab import OSBootingTab
+from .os_tab import OSTab
 from .performance_monitoring_tab import PerformanceMonitoringTab
 from .power_management_tab import PowerManagementTab
 from .resource_partitioning_tab import ResourcePartitioningTab
 from .security_label_tab import SecurityLabelTab
 from .smbios_system_tab import SMBIOSSystemTab
-from .storage_tab import StorageTab
 from .time_keeping_tab import TimeKeepingTab
 
 __all__ = [
@@ -44,12 +43,11 @@ __all__ = [
     'MemoryBackingTab',
     'MemoryTuningTab',
     'NUMANodeTuningTab',
-    'OSBootingTab',
+    'OSTab',
     'PerformanceMonitoringTab',
     'PowerManagementTab',
     'ResourcePartitioningTab',
     'SecurityLabelTab',
     'SMBIOSSystemTab',
-    'StorageTab',
     'TimeKeepingTab',
 ]

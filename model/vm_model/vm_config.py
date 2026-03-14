@@ -43,7 +43,7 @@ class VMConfig:
             return
 
         # 基础配置
-        if tab_key == 'general_metadata' or 'basic' in tab_data:
+        if tab_key == 'general_metadata' or tab_key == 'basic_info' or 'basic' in tab_data or 'name' in tab_data:
             self.basic.update(tab_data)
             self._sync_context()
 

@@ -371,3 +371,77 @@ class BasicTab(ctk.CTkFrame):
                 'machine': config.get('machine', 'q35'),
             },
         }
+
+    def load_config(self, config: dict):
+        """加载配置数据到 UI.
+
+        Args:
+            config: 包含配置数据的字典
+        """
+        # 系统配置
+        if 'name' in config:
+            self.vm_name_entry.delete(0, ctk.END)
+            self.vm_name_entry.insert(0, config['name'])
+        if 'description' in config:
+            self.vm_desc_entry.delete(0, ctk.END)
+            self.vm_desc_entry.insert(0, config['description'])
+        if 'uuid' in config:
+            self.uuid_entry.delete(0, ctk.END)
+            self.uuid_entry.insert(0, config['uuid'])
+        if 'machine' in config:
+            self.machine_type.set(config['machine'])
+        if 'virt_type' in config:
+            self.virt_type.set(config['virt_type'])
+        if 'chipset' in config:
+            self.chipset_type.set(config['chipset'])
+        if 'arch' in config:
+            self.arch_type.set(config['arch'])
+            self._on_arch_change()
+
+        # CPU 配置
+        if 'vcpu' in config:
+            self.vcpu_entry.delete(0, ctk.END)
+            self.vcpu_entry.insert(0, str(config['vcpu']))
+        if 'cpu_mode' in config:
+            self.cpu_mode.set(config['cpu_mode'])
+        if 'cpu_topology' in config:
+            topology = config['cpu_topology']
+            if 'sockets' in topology:
+                self.cpu_sockets_entry.delete(0, ctk.END)
+                self.cpu_sockets_entry.insert(0, str(topology['sockets']))
+            if 'cores' in topology:
+                self.cpu_cores_entry.delete(0, ctk.END)
+                self.cpu_cores_entry.insert(0, str(topology['cores']))
+            if 'threads' in topology:
+                self.cpu_threads_entry.delete(0, ctk.END)
+                self.cpu_threads_entry.insert(0, str(topology['threads']))
+
+        # 内存配置
+        if 'memory' in config:
+            memory = config['memory']
+            if isinstance(memory, int):
+                # 转换为 GB 显示
+                memory_gb = memory // 1024
+                if memory_gb > 0:
+                    self.memory_combo.set(f'{memory_gb}G')
+                else:
+                    self.memory_combo.set('1G')
+        if 'current_memory' in config:
+            current_memory = config['current_memory']
+            if isinstance(current_memory, int):
+                current_memory_gb = current_memory // 1024
+                if current_memory_gb > 0:
+                    self.current_memory_combo.set(f'{current_memory_gb}G')
+                else:
+                    self.current_memory_combo.set('1G')
+        if 'max_memory' in config:
+            max_memory = config['max_memory']
+            if isinstance(max_memory, int):
+                max_memory_gb = max_memory // 1024
+                if max_memory_gb > 0:
+                    self.max_memory_combo.set(f'{max_memory_gb}G')
+                else:
+                    self.max_memory_combo.set('2G')
+        if 'swap' in config:
+            self.swap_entry.delete(0, ctk.END)
+            self.swap_entry.insert(0, str(config['swap']))

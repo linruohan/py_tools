@@ -1,4 +1,4 @@
-"""VmPanel - 虚拟机 XML 配置生成面板."""
+"""VmPanel - 虚拟机 XML 配置生成面板 (24 Tab 版本)."""
 
 import subprocess
 
@@ -6,21 +6,107 @@ from tkinter import END, filedialog, messagebox
 
 import customtkinter as ctk
 
+from model.vm_model.vm_config import VMConfig
+
 from .styles import (
     BG_COLOR_CONTENT,
     BG_COLOR_MAIN,
     CTK_FONT_BOLD,
-    CTK_FONT_MAIN,
     CTK_FONT_MONO,
     CTK_FONT_SMALL,
 )
 from .tab_toggle import TabTogglePanel
 from .xml_generator import LibvirtXMLGenerator
-from model.vm_model.vm_config import VMConfig
+
+# 24 个 Tab 配置
+TABS_CONFIG = {
+    # 基础 Tab (默认启用)
+    'general_metadata': {'name': 'General Metadata', 'class': 'BasicTab', 'default_on': True},
+    'os_booting': {'name': 'Os Booting', 'class': 'OSTab', 'default_on': True},
+    'devices': {'name': 'Devices', 'class': 'DevicesTab', 'default_on': True},
+    'cpu_allocation': {'name': 'CPU Allocation', 'class': 'CPUAllocationTab', 'default_on': True},
+    'memory_allocation': {
+        'name': 'Memory Allocation',
+        'class': 'MemoryAllocationTab',
+        'default_on': True,
+    },
+    # 高级调优 Tab (默认禁用)
+    'smbios_system': {
+        'name': 'SMBIOS System Information',
+        'class': 'SMBIOSSystemTab',
+        'default_on': False,
+    },
+    'iothreads_allocation': {
+        'name': 'IOThreads Allocation',
+        'class': 'IOThreadsAllocationTab',
+        'default_on': False,
+    },
+    'cpu_tuning': {'name': 'CPU Tuning', 'class': 'CPUTuningTab', 'default_on': False},
+    'memory_backing': {'name': 'Memory Backing', 'class': 'MemoryBackingTab', 'default_on': False},
+    'memory_tuning': {'name': 'Memory Tuning', 'class': 'MemoryTuningTab', 'default_on': False},
+    'numa_node_tuning': {
+        'name': 'NUMA Node Tuning',
+        'class': 'NUMANodeTuningTab',
+        'default_on': False,
+    },
+    'block_io_tuning': {
+        'name': 'Block I/O Tuning',
+        'class': 'BlockIOTuningTab',
+        'default_on': False,
+    },
+    'resource_partitioning': {
+        'name': 'Resource Partitioning',
+        'class': 'ResourcePartitioningTab',
+        'default_on': False,
+    },
+    'fibre_channel_vmid': {
+        'name': 'Fibre Channel VMID',
+        'class': 'FibreChannelVMIDTab',
+        'default_on': False,
+    },
+    'cpu_model_topology': {
+        'name': 'CPU Model and Topology',
+        'class': 'CPUModelTopologyTab',
+        'default_on': False,
+    },
+    'events_configuration': {
+        'name': 'Events Configuration',
+        'class': 'EventsConfigurationTab',
+        'default_on': False,
+    },
+    'power_management': {
+        'name': 'Power Management',
+        'class': 'PowerManagementTab',
+        'default_on': False,
+    },
+    'disk_throttle_group': {
+        'name': 'Disk Throttle Group',
+        'class': 'DiskThrottleGroupTab',
+        'default_on': False,
+    },
+    'hypervisor_features': {
+        'name': 'Hypervisor Features',
+        'class': 'HypervisorFeaturesTab',
+        'default_on': False,
+    },
+    'time_keeping': {'name': 'Time Keeping', 'class': 'TimeKeepingTab', 'default_on': False},
+    'performance_monitoring': {
+        'name': 'Performance Monitoring',
+        'class': 'PerformanceMonitoringTab',
+        'default_on': False,
+    },
+    'security_label': {'name': 'Security Label', 'class': 'SecurityLabelTab', 'default_on': False},
+    'key_wrap': {'name': 'Key Wrap', 'class': 'KeyWrapTab', 'default_on': False},
+    'launch_security': {
+        'name': 'Launch Security',
+        'class': 'LaunchSecurityTab',
+        'default_on': False,
+    },
+}
 
 
 class VmPanel(ctk.CTkFrame):
-    """虚拟机 XML 配置生成面板."""
+    """虚拟机 XML 配置生成面板 - 24 Tab 版本."""
 
     def __init__(self, parent: ctk.CTk) -> None:
         """初始化 VmPanel."""
@@ -30,19 +116,14 @@ class VmPanel(ctk.CTkFrame):
 
         # 主布局：1 行 1 列
         self.grid_columnconfigure(0, weight=1)
+        self.grid_rowconfigure(0, weight=1)
 
-        self.vm_config = VMConfig()  # VM配置管理实例
+        self.vm_config = VMConfig()  # VM 配置管理实例
         self._updating_xml = False  # 防止递归更新
 
         # Tab 管理
         self.tab_instances = {}  # 存储已创建的 Tab 实例
         self.tab_enabled = {}  # 存储 Tab 启用状态
-
-        # 从 TabTogglePanel 获取默认配置
-        self.tabs_default_config = {
-            tab_key: config.get('default_on', False)
-            for tab_key, config in TabTogglePanel.TABS_CONFIG.items()
-        }
 
         # 初始化 UI
         self.init_ui()
@@ -53,20 +134,13 @@ class VmPanel(ctk.CTkFrame):
         main_frame = ctk.CTkFrame(self, fg_color=BG_COLOR_MAIN, corner_radius=8)
         main_frame.grid(row=0, column=0, padx=10, pady=10, sticky='nsew')
 
-        # 配置 VmPanel 自身的网格权重，确保 main_frame 能正确扩展
-        self.grid_rowconfigure(0, weight=1)
-        self.grid_columnconfigure(0, weight=1)
-
-        # 配置内部网格 - 合理分配权重让控件占满空间
+        # 配置内部网格
         main_frame.grid_rowconfigure(0, weight=0)  # 工具栏
         main_frame.grid_rowconfigure(1, weight=0)  # Tab 开关面板
-        main_frame.grid_rowconfigure(2, weight=1)  # Tab 配置区（主要区域）
-        main_frame.grid_rowconfigure(3, weight=1)  # XML 预览区
+        main_frame.grid_rowconfigure(2, weight=1)  # Tab 配置区
+        main_frame.grid_rowconfigure(3, weight=0)  # XML 预览区
         main_frame.grid_rowconfigure(4, weight=0)  # 信息栏
         main_frame.grid_columnconfigure(0, weight=1)
-
-        # 确保 tabview 内部的 tab 页面也能正确扩展
-        # 需要在 tabview 创建后配置其内部页面
 
         # 顶部工具栏
         self._create_toolbar(main_frame)
@@ -78,7 +152,7 @@ class VmPanel(ctk.CTkFrame):
         )
         self.tab_toggle_panel.grid(row=1, column=0, padx=15, pady=(5, 10), sticky='ew')
 
-        # Tab 配置区
+        # Tab 配置区 - 使用 CTkTabview
         self.tabview = ctk.CTkTabview(
             main_frame,
             segmented_button_selected_color=('#3B8ED0', '#1F6AA5'),
@@ -87,31 +161,11 @@ class VmPanel(ctk.CTkFrame):
         )
         self.tabview.grid(row=2, column=0, padx=15, pady=(5, 10), sticky='nsew')
 
-        # 初始化默认启用的 Tab 状态
-        for tab_key, default_enabled in self.tabs_default_config.items():
-            self.tab_enabled[tab_key] = default_enabled
+        # 初始化 Tab 状态
+        for tab_key, config in TABS_CONFIG.items():
+            self.tab_enabled[tab_key] = config.get('default_on', False)
 
-        # 添加默认启用的 Tab
-        first_tab = None
-        for tab_key, enabled in self.tab_enabled.items():
-            if enabled:
-                tab_name = TabTogglePanel.TABS_CONFIG[tab_key]['name']
-                tab = self.tabview.add(tab_name)
-                self.tab_instances[tab_key] = {'tab': tab, 'widget': None}
-
-                # 配置网格
-                tab.grid_columnconfigure(0, weight=1)
-                tab.grid_rowconfigure(0, weight=1)
-
-                # 记录第一个 tab
-                if first_tab is None:
-                    first_tab = tab_name
-
-        # 在初始化 tab 内容之前，先切换到第一个 tab，确保 tab 页面已激活
-        if first_tab:
-            self.tabview.set(first_tab)
-
-        # 初始化各个 Tab 的内容
+        # 初始化各个 Tab
         self._init_tabs()
 
         # 底部 XML 预览区
@@ -120,10 +174,106 @@ class VmPanel(ctk.CTkFrame):
         # 底部信息栏
         self._create_info_bar(main_frame)
 
-        # 绑定所有基础配置的变化事件，实现动态 XML 预览
-        self._bind_basic_events()
-
         # 初始生成 XML
+        self._update_xml_preview()
+
+    def _on_tab_toggle(self, tab_key: str, enabled: bool) -> None:
+        """Tab 开关改变时的回调."""
+        tab_config = TABS_CONFIG.get(tab_key)
+        if not tab_config:
+            return
+
+        tab_name = tab_config['name']
+
+        if enabled:
+            # 开关打开：添加 Tab
+            tab = self.tabview.add(tab_name)
+            tab.grid_columnconfigure(0, weight=1)
+            tab.grid_rowconfigure(0, weight=1)
+
+            # 导入 Tab 类
+            from .tabs import (
+                BasicTab,
+                BlockIOTuningTab,
+                CPUAllocationTab,
+                CPUModelTopologyTab,
+                CPUTuningTab,
+                DevicesTab,
+                DiskThrottleGroupTab,
+                EventsConfigurationTab,
+                FibreChannelVMIDTab,
+                HypervisorFeaturesTab,
+                IOThreadsAllocationTab,
+                KeyWrapTab,
+                LaunchSecurityTab,
+                MemoryAllocationTab,
+                MemoryBackingTab,
+                MemoryTuningTab,
+                NUMANodeTuningTab,
+                OSTab,
+                PerformanceMonitoringTab,
+                PowerManagementTab,
+                ResourcePartitioningTab,
+                SecurityLabelTab,
+                SMBIOSSystemTab,
+                TimeKeepingTab,
+            )
+
+            # Tab 类映射
+            tab_classes = {
+                'BasicTab': BasicTab,
+                'BlockIOTuningTab': BlockIOTuningTab,
+                'CPUAllocationTab': CPUAllocationTab,
+                'CPUModelTopologyTab': CPUModelTopologyTab,
+                'CPUTuningTab': CPUTuningTab,
+                'DevicesTab': DevicesTab,
+                'DiskThrottleGroupTab': DiskThrottleGroupTab,
+                'EventsConfigurationTab': EventsConfigurationTab,
+                'FibreChannelVMIDTab': FibreChannelVMIDTab,
+                'HypervisorFeaturesTab': HypervisorFeaturesTab,
+                'IOThreadsAllocationTab': IOThreadsAllocationTab,
+                'KeyWrapTab': KeyWrapTab,
+                'LaunchSecurityTab': LaunchSecurityTab,
+                'MemoryAllocationTab': MemoryAllocationTab,
+                'MemoryBackingTab': MemoryBackingTab,
+                'MemoryTuningTab': MemoryTuningTab,
+                'NUMANodeTuningTab': NUMANodeTuningTab,
+                'OSTab': OSTab,
+                'PerformanceMonitoringTab': PerformanceMonitoringTab,
+                'PowerManagementTab': PowerManagementTab,
+                'ResourcePartitioningTab': ResourcePartitioningTab,
+                'SecurityLabelTab': SecurityLabelTab,
+                'SMBIOSSystemTab': SMBIOSSystemTab,
+                'TimeKeepingTab': TimeKeepingTab,
+            }
+
+            # 创建 Tab 实例
+            tab_class = tab_classes.get(tab_config['class'])
+            if tab_class:
+                tab_instance = tab_class(
+                    tab,
+                    on_change_callback=self._update_xml_preview,
+                )
+                tab_instance.grid(row=0, column=0, sticky='nsew')
+                self.tab_instances[tab_key] = {'tab': tab, 'widget': tab_instance}
+
+                # 切换到该 Tab
+                self.tabview.set(tab_name)
+                self.update_info(f'已启用 Tab: {tab_name}')
+        else:
+            # 开关关闭：从 TabView 中移除 Tab
+            if tab_key in self.tab_instances:
+                try:
+                    self.tabview.delete(tab_name)
+                except Exception:
+                    pass
+
+                del self.tab_instances[tab_key]
+
+            self.tab_enabled[tab_key] = False
+            self.update_info(f'已禁用 Tab: {tab_name}')
+
+        # 更新 XML 预览
         self._update_xml_preview()
 
     def _create_toolbar(self, parent) -> None:
@@ -193,172 +343,93 @@ class VmPanel(ctk.CTkFrame):
         )
         create_btn.pack(side='left', padx=5)
 
-    def _on_tab_toggle(self, tab_key: str, enabled: bool) -> None:
-        """Tab 开关改变时的回调，参考 001.py 的 toggle_tab 实现."""
-        tab_config = TabTogglePanel.TABS_CONFIG.get(tab_key)
-        if not tab_config:
-            return
+    def _init_tabs(self) -> None:
+        """初始化所有启用的 Tab."""
+        # 导入所有 Tab 类
+        from .tabs import (
+            BasicTab,
+            BlockIOTuningTab,
+            CPUAllocationTab,
+            CPUModelTopologyTab,
+            CPUTuningTab,
+            DevicesTab,
+            DiskThrottleGroupTab,
+            EventsConfigurationTab,
+            FibreChannelVMIDTab,
+            HypervisorFeaturesTab,
+            IOThreadsAllocationTab,
+            KeyWrapTab,
+            LaunchSecurityTab,
+            MemoryAllocationTab,
+            MemoryBackingTab,
+            MemoryTuningTab,
+            NUMANodeTuningTab,
+            OSTab,
+            PerformanceMonitoringTab,
+            PowerManagementTab,
+            ResourcePartitioningTab,
+            SecurityLabelTab,
+            SMBIOSSystemTab,
+            TimeKeepingTab,
+        )
 
-        tab_name = tab_config['name']
+        # Tab 类映射
+        tab_classes = {
+            'BasicTab': BasicTab,
+            'BlockIOTuningTab': BlockIOTuningTab,
+            'CPUAllocationTab': CPUAllocationTab,
+            'CPUModelTopologyTab': CPUModelTopologyTab,
+            'CPUTuningTab': CPUTuningTab,
+            'DevicesTab': DevicesTab,
+            'DiskThrottleGroupTab': DiskThrottleGroupTab,
+            'EventsConfigurationTab': EventsConfigurationTab,
+            'FibreChannelVMIDTab': FibreChannelVMIDTab,
+            'HypervisorFeaturesTab': HypervisorFeaturesTab,
+            'IOThreadsAllocationTab': IOThreadsAllocationTab,
+            'KeyWrapTab': KeyWrapTab,
+            'LaunchSecurityTab': LaunchSecurityTab,
+            'MemoryAllocationTab': MemoryAllocationTab,
+            'MemoryBackingTab': MemoryBackingTab,
+            'MemoryTuningTab': MemoryTuningTab,
+            'NUMANodeTuningTab': NUMANodeTuningTab,
+            'OSTab': OSTab,
+            'PerformanceMonitoringTab': PerformanceMonitoringTab,
+            'PowerManagementTab': PowerManagementTab,
+            'ResourcePartitioningTab': ResourcePartitioningTab,
+            'SecurityLabelTab': SecurityLabelTab,
+            'SMBIOSSystemTab': SMBIOSSystemTab,
+            'TimeKeepingTab': TimeKeepingTab,
+        }
 
-        if enabled:
-            # 开关打开：添加/恢复 Tab
-            # 检查 Tab 是否已在 tab_instances 中
-            if tab_key not in self.tab_instances:
-                # Tab 不存在，创建新 Tab
+        first_tab = None
+        for tab_key, config in TABS_CONFIG.items():
+            if config.get('default_on', False):
+                tab_name = config['name']
                 tab = self.tabview.add(tab_name)
-                self.tab_instances[tab_key] = {'tab': tab, 'widget': None}
-
-                # 配置网格
                 tab.grid_columnconfigure(0, weight=1)
                 tab.grid_rowconfigure(0, weight=1)
 
-                # 创建 Tab 内容
-                self._create_tab_content(tab_key, tab)
+                # 创建 Tab 实例
+                tab_class = tab_classes.get(config['class'])
+                if tab_class:
+                    tab_instance = tab_class(
+                        tab,
+                        on_change_callback=self._update_xml_preview,
+                    )
+                    tab_instance.grid(row=0, column=0, sticky='nsew')
+                    self.tab_instances[tab_key] = {'tab': tab, 'widget': tab_instance}
 
-                # 切换到此 Tab
-                self.tabview.set(tab_name)
-            elif self.tab_instances[tab_key].get('widget') is None:
-                # Tab 在 tab_instances 中但 widget 不存在，需要重新创建
-                # 对于默认 Tab，tab 可能已经在 tabview 中（只是被隐藏了）
-                tab = self.tab_instances[tab_key]['tab']
+                    if first_tab is None:
+                        first_tab = tab_name
 
-                # 如果 tab 也不存在了，需要重新添加
-                try:
-                    self.tabview.tab(tab_name)
-                except ValueError:
-                    # tab 不存在，重新添加
-                    tab = self.tabview.add(tab_name)
-                    self.tab_instances[tab_key]['tab'] = tab
-
-                # 重新创建 Tab 内容
-                self._create_tab_content(tab_key, tab)
-
-                # 切换到此 Tab
-                self.tabview.set(tab_name)
-
-            self.tab_enabled[tab_key] = True
-            self.update_info(f'已启用 Tab: {tab_name}')
-        else:
-            # 开关关闭：隐藏 Tab
-            if tab_key in self.tab_instances:
-                tab_widget = self.tab_instances[tab_key].get('widget')
-                if tab_widget:
-                    tab_widget.destroy()
-                    self.tab_instances[tab_key]['widget'] = None
-
-                # 尝试从 tabview 中删除 tab
-                try:
-                    self.tabview.delete(tab_name)
-                except ValueError:
-                    # 标签页不存在，无需处理
-                    pass
-
-            self.tab_enabled[tab_key] = False
-            self.update_info(f'已禁用 Tab: {tab_name}')
-
-        # 更新 XML 预览
-        self._update_xml_preview()
-
-    def _create_tab_content(self, tab_key: str, tab_parent) -> None:
-        """创建 Tab 内容."""
-        tab_config = TabTogglePanel.TABS_CONFIG.get(tab_key)
-        if not tab_config:
-            return
-
-        tab_class = tab_config.get('class')
-        has_callback = tab_config.get('has_callback', False)
-
-        # 如果 Tab 类未实现（为 None），显示占位符
-        if tab_class is None:
-            placeholder = ctk.CTkLabel(
-                tab_parent,
-                text=f'{tab_config["name"]} - 功能开发中...\n(To be implemented)',
-                font=CTK_FONT_MAIN,
-                text_color='#888888',
-            )
-            placeholder.grid(row=0, column=0, padx=20, pady=20)
-            self.tab_instances[tab_key] = {'tab': tab_parent, 'widget': placeholder}
-            return
-
-        if has_callback:
-            tab_instance = tab_class(tab_parent, on_change_callback=self._update_xml_preview)
-        else:
-            tab_instance = tab_class(tab_parent)
-
-        # 确保 tab_parent 的 grid 配置正确
-        tab_parent.grid_columnconfigure(0, weight=1)
-        tab_parent.grid_rowconfigure(0, weight=1)
-
-        tab_instance.grid(row=0, column=0, sticky='nsew')
-        self.tab_instances[tab_key]['widget'] = tab_instance
-
-        # 更新引用
-        self._update_tab_references()
-
-    def _init_tabs(self) -> None:
-        """初始化所有 Tab."""
-        # 通过统一方法创建所有 Tab 内容
-        for tab_key in TabTogglePanel.TABS_CONFIG:
-            tab_info = self.tab_instances.get(tab_key)
-            if tab_info:
-                tab_widget = tab_info['tab']
-                if tab_widget:
-                    self._create_tab_content(tab_key, tab_widget)
-
-        # 更新引用
-        self._update_tab_references()
-
-    def _update_tab_references(self) -> None:
-        """更新 Tab 引用."""
-        # Basic Tab
-        if 'general_metadata' in self.tab_instances and self.tab_instances['general_metadata'].get(
-            'widget'
-        ):
-            self.basic_tab = self.tab_instances['general_metadata']['widget']
-            self.name_entry = self.basic_tab.vm_name_entry
-            self.title_entry = self.basic_tab.vm_desc_entry
-            self.uuid_entry = self.basic_tab.uuid_entry
-            self.machine_entry = self.basic_tab.machine_type
-            self.virt_type_entry = self.basic_tab.virt_type
-            self.chipset_entry = self.basic_tab.chipset_type
-            self.vcpu_entry = self.basic_tab.vcpu_entry
-            self.cpu_mode_entry = self.basic_tab.cpu_mode
-            self.memory_entry = self.basic_tab.memory_combo
-            self.current_memory_entry = self.basic_tab.current_memory_combo
-            self.max_memory_entry = self.basic_tab.max_memory_combo
-            self.swap_entry = self.basic_tab.swap_entry
-
-        # Storage Tab
-        if 'storage' in self.tab_instances and self.tab_instances['storage'].get('widget'):
-            self.storage_tab = self.tab_instances['storage']['widget']
-
-        # Devices Tab
-        if 'devices' in self.tab_instances and self.tab_instances['devices'].get('widget'):
-            self.devices_tab = self.tab_instances['devices']['widget']
-            # 获取图形显示子 Tab 的控件
-            graphics_tab = self.devices_tab.inner_panel.get_tab_instance('graphics')
-            if graphics_tab:
-                self.graphics_type = graphics_tab.graphics_type
-                self.graphics_listen = graphics_tab.graphics_listen
-                self.graphics_port = graphics_tab.graphics_port
-                self.video_model = graphics_tab.video_model
-                self.vram_entry = graphics_tab.vram_entry
-            # 获取其他设备子 Tab 的控件
-            others_tab = self.devices_tab.inner_panel.get_tab_instance('others')
-            if others_tab:
-                self.serial_type = others_tab.serial_type
-                self.serial_port = others_tab.serial_port
-                self.tpm_model = others_tab.tpm_model
-                self.tpm_version = others_tab.tpm_version
-                self.disable_usb_check = others_tab.disable_usb_check
-                self.disable_sound_check = others_tab.disable_sound_check
-                self.audio_model = others_tab.audio_model
+        # 切换到第一个 Tab
+        if first_tab:
+            self.tabview.set(first_tab)
 
     def _create_xml_preview(self, parent) -> None:
         """创建 XML 预览区."""
         preview_frame = ctk.CTkFrame(parent, fg_color=BG_COLOR_CONTENT, corner_radius=8)
-        preview_frame.grid(row=3, column=0, padx=15, pady=(0, 10), sticky='nsew')
+        preview_frame.grid(row=2, column=0, padx=15, pady=(0, 10), sticky='nsew')
 
         # 预览区标题
         preview_label = ctk.CTkLabel(
@@ -378,6 +449,7 @@ class VmPanel(ctk.CTkFrame):
             border_color='#333333',
             border_width=1,
             corner_radius=6,
+            height=200,
         )
         self.xml_textbox.grid(row=1, column=0, padx=10, pady=(0, 10), sticky='nsew')
         preview_frame.grid_rowconfigure(1, weight=1)
@@ -388,7 +460,7 @@ class VmPanel(ctk.CTkFrame):
         self.info_frame = ctk.CTkFrame(
             parent, fg_color=BG_COLOR_CONTENT, corner_radius=0, height=30
         )
-        self.info_frame.grid(row=4, column=0, sticky='ew')
+        self.info_frame.grid(row=3, column=0, sticky='ew')
         self.info_frame.grid_propagate(False)
 
         self.info_label = ctk.CTkLabel(
@@ -404,58 +476,6 @@ class VmPanel(ctk.CTkFrame):
         """更新底部信息栏."""
         color = '#4caf50' if is_success else '#f44336'
         self.info_label.configure(text=text, text_color=color)
-
-    def _bind_basic_events(self) -> None:
-        """绑定基础配置的变化事件，实现动态 XML 预览."""
-        # 绑定 Basic Tab 中的控件
-        if hasattr(self, 'basic_tab'):
-            # Basic Tab 的所有输入框已经在 basic_tab.py 中绑定了 KeyRelease 事件
-            # 这里只需要确保文本框的变化能触发更新
-            pass
-
-        # 绑定 Devices Tab 中的控件
-        if hasattr(self, 'devices_tab'):
-            # 绑定 Entry 的 KeyRelease 事件
-            entry_widgets = []
-            if hasattr(self, 'graphics_listen'):
-                entry_widgets.append(self.graphics_listen)
-            if hasattr(self, 'graphics_port'):
-                entry_widgets.append(self.graphics_port)
-            if hasattr(self, 'vram_entry'):
-                entry_widgets.append(self.vram_entry)
-
-            for widget in entry_widgets:
-                widget.bind('<KeyRelease>', lambda e: self._update_xml_preview())
-
-            # 绑定 OptionMenu 的变化事件
-            option_widgets = []
-            if hasattr(self, 'graphics_type'):
-                option_widgets.append(self.graphics_type)
-            if hasattr(self, 'video_model'):
-                option_widgets.append(self.video_model)
-            if hasattr(self, 'usb_controller'):
-                option_widgets.append(self.usb_controller)
-            if hasattr(self, 'serial_type'):
-                option_widgets.append(self.serial_type)
-            if hasattr(self, 'tpm_model'):
-                option_widgets.append(self.tpm_model)
-            if hasattr(self, 'tpm_version'):
-                option_widgets.append(self.tpm_version)
-            if hasattr(self, 'audio_model'):
-                option_widgets.append(self.audio_model)
-
-            for widget in option_widgets:
-                widget.configure(command=lambda *args: self._update_xml_preview())
-
-            # 绑定 Checkbox 的变化事件
-            checkbox_widgets = []
-            if hasattr(self, 'disable_usb_check'):
-                checkbox_widgets.append(self.disable_usb_check)
-            if hasattr(self, 'disable_sound_check'):
-                checkbox_widgets.append(self.disable_sound_check)
-
-            for widget in checkbox_widgets:
-                widget.configure(command=self._update_xml_preview)
 
     def _update_xml_preview(self) -> None:
         """更新 XML 预览（不显示错误消息）."""
@@ -481,14 +501,6 @@ class VmPanel(ctk.CTkFrame):
         except Exception:
             return '<!-- 配置不完整或无效，请检查输入 -->'
 
-    # ========== 设备配置方法 ==========
-    def add_usb(self) -> None:
-        """添加 USB 设备."""
-        if hasattr(self, 'devices_tab'):
-            usb_tab = self.devices_tab.inner_panel.get_tab_instance('usb_hostdev')
-            if usb_tab and hasattr(usb_tab, '_add_usb_device'):
-                usb_tab._add_usb_device()
-
     # ========== 核心功能方法 ==========
     def clear_all(self) -> None:
         """清空所有配置."""
@@ -496,26 +508,11 @@ class VmPanel(ctk.CTkFrame):
             # 重置配置
             self.vm_config.reset()
 
-            # 清空 Devices Tab
-            if hasattr(self, 'devices_tab'):
-                # 获取图形显示子 Tab
-                graphics_tab = self.devices_tab.inner_panel.get_tab_instance('graphics')
-                if graphics_tab:
-                    graphics_tab.graphics_type.set('vnc')
-                    graphics_tab.graphics_listen.delete(0, END)
-                    graphics_tab.graphics_listen.insert(0, '0.0.0.0')
-                    graphics_tab.video_model.set('qxl')
-                    graphics_tab.vram_entry.delete(0, END)
-                    graphics_tab.vram_entry.insert(0, '64')
-                # 获取其他设备子 Tab
-                others_tab = self.devices_tab.inner_panel.get_tab_instance('others')
-                if others_tab:
-                    others_tab.disable_usb_check.deselect()
-                    others_tab.disable_sound_check.deselect()
-                # 清空 USB 设备列表
-                usb_tab = self.devices_tab.inner_panel.get_tab_instance('usb_hostdev')
-                if usb_tab and hasattr(usb_tab, '_clear_usb_list'):
-                    usb_tab._clear_usb_list()
+            # 清空各 Tab
+            for tab in self.tab_instances.values():
+                widget = tab.get('widget')
+                if widget and hasattr(widget, 'load_config'):
+                    widget.load_config({})
 
             # 清空 XML 预览
             self.xml_textbox.delete('1.0', END)
@@ -523,7 +520,7 @@ class VmPanel(ctk.CTkFrame):
             self.update_info('已清空所有配置')
 
     def collect_vm_data(self) -> dict:
-        """收集虚拟机配置数据 - 通过各Tab的to_xml方法."""
+        """收集虚拟机配置数据 - 通过各 Tab 的 to_xml 方法."""
         # 重置配置
         self.vm_config.reset()
 
@@ -532,7 +529,7 @@ class VmPanel(ctk.CTkFrame):
                 continue
 
             widget = tab_info.get('widget')
-            if widget and hasattr(widget, 'to_xml'):
+            if hasattr(widget, 'to_xml'):
                 try:
                     xml_config = widget.to_xml()
                     if isinstance(xml_config, dict):
@@ -608,7 +605,7 @@ class VmPanel(ctk.CTkFrame):
                 vm_name = self.vm_config.basic.get('name', 'vm')
                 messagebox.showinfo(
                     '成功',
-                    f'虚拟机 {vm_name} 定义成功!\n\n请运行以下命令启动:\n  virsh start {vm_name}',
+                    f'虚拟机 {vm_name} 定义成功！\n\n请运行以下命令启动:\n  virsh start {vm_name}',
                 )
                 self.update_info(f'虚拟机 {vm_name} 定义成功')
             else:

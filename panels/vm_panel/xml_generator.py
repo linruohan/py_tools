@@ -149,89 +149,183 @@ class LibvirtXMLGenerator:
     def _add_os(self, config: dict) -> None:
         """添加操作系统配置."""
         os_booting = config.get('os_booting', {})
-        boot_type = os_booting.get('type', 'guest_firmware')
 
         os_elem = ET.SubElement(self.domain, 'os')
 
-        if boot_type == 'guest_firmware':
-            firmware = os_booting.get('firmware', 'bios')
-            if firmware:
-                os_elem.set('firmware', firmware)
+        # OS type, arch, machine
+        os_type = os_booting.get('type', 'hvm')
+        arch = os_booting.get('arch', 'x86_64')
+        machine = os_booting.get('machine', 'q35')
+        type_elem = ET.SubElement(os_elem, 'type', arch=arch, machine=machine)
+        type_elem.text = os_type
 
-            os_type = os_booting.get('os_type', 'hvm')
-            arch = os_booting.get('arch', 'x86_64')
-            type_elem = ET.SubElement(os_elem, 'type', arch=arch)
-            type_elem.text = os_type
+        # Firmware auto-selection
+        firmware = os_booting.get('firmware', '')
+        if firmware:
+            os_elem.set('firmware', firmware)
 
-            loader_path = os_booting.get('loader_path')
-            if loader_path:
-                loader = ET.SubElement(os_elem, 'loader')
-                loader.text = loader_path
+        # Firmware features
+        firmware_features = os_booting.get('firmware_features', [])
+        for feat in firmware_features:
+            ET.SubElement(os_elem, 'firmware', name=feat.get('name', ''), enabled=str(feat.get('enabled', '')).lower())
 
-            nvram_path = os_booting.get('nvram_path')
-            if nvram_path:
-                nvram = ET.SubElement(os_elem, 'nvram')
-                nvram.text = nvram_path
+        # Loader configuration
+        loader = os_booting.get('loader', {})
+        if isinstance(loader, dict) and loader.get('path'):
+            loader_attrs = {}
+            if loader.get('readonly') is not None:
+                loader_attrs['readonly'] = 'yes' if loader['readonly'] else 'no'
+            if loader.get('secure'):
+                loader_attrs['secure'] = 'yes'
+            if loader.get('type'):
+                loader_attrs['type'] = loader['type']
+            if loader.get('stateless'):
+                loader_attrs['stateless'] = 'yes'
+            if loader.get('format'):
+                loader_attrs['format'] = loader['format']
+            loader_elem = ET.SubElement(os_elem, 'loader', **loader_attrs)
+            loader_elem.text = loader['path']
+        elif os_booting.get('loader_path'):
+            # Legacy support
+            loader_elem = ET.SubElement(os_elem, 'loader')
+            loader_elem.text = os_booting['loader_path']
 
-            boot_dev = os_booting.get('boot_dev', 'hd')
-            ET.SubElement(os_elem, 'boot', dev=boot_dev)
+        # NVRAM configuration
+        nvram = os_booting.get('nvram', {})
+        if isinstance(nvram, dict) and (nvram.get('path') or nvram.get('template')):
+            nvram_attrs = {}
+            if nvram.get('type'):
+                nvram_attrs['type'] = nvram['type']
+            if nvram.get('template'):
+                nvram_attrs['template'] = nvram['template']
+            if nvram.get('templateFormat'):
+                nvram_attrs['templateFormat'] = nvram['templateFormat']
+            if nvram.get('format'):
+                nvram_attrs['format'] = nvram['format']
+            nvram_elem = ET.SubElement(os_elem, 'nvram', **nvram_attrs)
+            if nvram.get('path'):
+                nvram_elem.text = nvram['path']
+            # NVRAM source (for network/block backed)
+            nvram_source = nvram.get('source')
+            if nvram_source:
+                source_elem = ET.SubElement(nvram_elem, 'source')
+                if nvram_source.get('protocol'):
+                    source_elem.set('protocol', nvram_source['protocol'])
+                if nvram_source.get('name'):
+                    source_elem.set('name', nvram_source['name'])
+        elif os_booting.get('nvram_path'):
+            # Legacy support
+            nvram_elem = ET.SubElement(os_elem, 'nvram')
+            nvram_elem.text = os_booting['nvram_path']
 
-            if os_booting.get('boot_menu'):
-                timeout = os_booting.get('boot_timeout', 3000)
-                ET.SubElement(os_elem, 'bootmenu', enable='yes', timeout=str(timeout))
+        # Varstore (alternative to nvram)
+        varstore = os_booting.get('varstore', {})
+        if isinstance(varstore, dict) and varstore.get('path'):
+            varstore_attrs = {'path': varstore['path']}
+            if varstore.get('template'):
+                varstore_attrs['template'] = varstore['template']
+            ET.SubElement(os_elem, 'varstore', **varstore_attrs)
 
-            smbios_mode = os_booting.get('smbios_mode')
-            if smbios_mode:
-                ET.SubElement(os_elem, 'smbios', mode=smbios_mode)
+        # Boot devices
+        boot_devices = os_booting.get('boot_devices', [])
+        if isinstance(boot_devices, list):
+            for dev in boot_devices:
+                if isinstance(dev, dict):
+                    ET.SubElement(os_elem, 'boot', dev=dev.get('dev', 'hd'))
+                else:
+                    ET.SubElement(os_elem, 'boot', dev=str(dev))
 
-        elif boot_type == 'direct_kernel':
-            type_elem = ET.SubElement(os_elem, 'type', arch='x86_64')
-            type_elem.text = 'hvm'
+        # Boot menu
+        bootmenu = os_booting.get('bootmenu', {})
+        if isinstance(bootmenu, dict) and bootmenu.get('enable'):
+            bootmenu_attrs = {'enable': 'yes'}
+            timeout = bootmenu.get('timeout')
+            if timeout is not None and timeout >= 0:
+                bootmenu_attrs['timeout'] = str(timeout)
+            ET.SubElement(os_elem, 'bootmenu', **bootmenu_attrs)
 
-            kernel = os_booting.get('kernel')
-            if kernel:
-                kernel_elem = ET.SubElement(os_elem, 'kernel')
-                kernel_elem.text = kernel
+        # BIOS configuration
+        bios = os_booting.get('bios', {})
+        if isinstance(bios, dict):
+            bios_attrs = {}
+            if bios.get('useserial'):
+                bios_attrs['useserial'] = 'yes'
+            reboot_timeout = bios.get('rebootTimeout')
+            if reboot_timeout is not None and reboot_timeout >= 0:
+                bios_attrs['rebootTimeout'] = str(reboot_timeout)
+            if bios_attrs:
+                ET.SubElement(os_elem, 'bios', **bios_attrs)
 
-            initrd = os_booting.get('initrd')
-            if initrd:
-                initrd_elem = ET.SubElement(os_elem, 'initrd')
-                initrd_elem.text = initrd
+        # SMBIOS
+        smbios = os_booting.get('smbios', {})
+        if isinstance(smbios, dict) and smbios.get('mode'):
+            ET.SubElement(os_elem, 'smbios', mode=smbios['mode'])
 
-            cmdline = os_booting.get('cmdline')
-            if cmdline:
-                cmdline_elem = ET.SubElement(os_elem, 'cmdline')
-                cmdline_elem.text = cmdline
+        # Direct kernel boot
+        kernel = os_booting.get('kernel')
+        if kernel:
+            ET.SubElement(os_elem, 'kernel').text = kernel
+        initrd = os_booting.get('initrd')
+        if initrd:
+            ET.SubElement(os_elem, 'initrd').text = initrd
+        cmdline = os_booting.get('cmdline')
+        if cmdline:
+            ET.SubElement(os_elem, 'cmdline').text = cmdline
+        shim = os_booting.get('shim')
+        if shim:
+            ET.SubElement(os_elem, 'shim').text = shim
+        dtb = os_booting.get('dtb')
+        if dtb:
+            ET.SubElement(os_elem, 'dtb').text = dtb
 
-            dtb = os_booting.get('dtb')
-            if dtb:
-                dtb_elem = ET.SubElement(os_elem, 'dtb')
-                dtb_elem.text = dtb
+        # Host bootloader
+        bootloader = os_booting.get('bootloader')
+        if bootloader:
+            ET.SubElement(self.domain, 'bootloader').text = bootloader
+        bootloader_args = os_booting.get('bootloader_args')
+        if bootloader_args:
+            ET.SubElement(self.domain, 'bootloader_args').text = bootloader_args
 
-        elif boot_type == 'container':
-            type_elem = ET.SubElement(os_elem, 'type', arch='x86_64')
-            type_elem.text = 'exe'
+        # Container boot
+        container_init = os_booting.get('init')
+        if container_init:
+            ET.SubElement(os_elem, 'init').text = container_init
+        initargs = os_booting.get('initargs', [])
+        if initargs:
+            for arg in initargs:
+                ET.SubElement(os_elem, 'initarg').text = arg
+        initenv = os_booting.get('initenv', [])
+        if initenv:
+            for env in initenv:
+                ET.SubElement(os_elem, 'initenv', name=env.get('name', '')).text = env.get('value', '')
+        initdir = os_booting.get('initdir')
+        if initdir:
+            ET.SubElement(os_elem, 'initdir').text = initdir
+        inituser = os_booting.get('inituser')
+        if inituser:
+            ET.SubElement(os_elem, 'inituser').text = inituser
+        initgroup = os_booting.get('initgroup')
+        if initgroup:
+            ET.SubElement(os_elem, 'initgroup').text = initgroup
 
-            init = os_booting.get('init')
-            if init:
-                init_elem = ET.SubElement(os_elem, 'init')
-                init_elem.text = init
+        # ID mapping (for containers)
+        idmap = os_booting.get('idmap', {})
+        if isinstance(idmap, dict) and idmap.get('uid') and idmap.get('gid'):
+            idmap_elem = ET.SubElement(os_elem, 'idmap')
+            uid = idmap['uid']
+            gid = idmap['gid']
+            ET.SubElement(idmap_elem, 'uid', start=str(uid.get('start', 0)),
+                          target=str(uid.get('target', 0)), count=str(uid.get('count', 0)))
+            ET.SubElement(idmap_elem, 'gid', start=str(gid.get('start', 0)),
+                          target=str(gid.get('target', 0)), count=str(gid.get('count', 0)))
 
-            init_args = os_booting.get('init_args')
-            if init_args:
-                for arg in init_args.split():
-                    ET.SubElement(os_elem, 'initarg').text = arg
-
-        elif boot_type == 'host_bootloader':
-            bootloader = os_booting.get('bootloader')
-            if bootloader:
-                bl_elem = ET.SubElement(self.domain, 'bootloader')
-                bl_elem.text = bootloader
-
-            bootloader_args = os_booting.get('bootloader_args')
-            if bootloader_args:
-                bl_args = ET.SubElement(self.domain, 'bootloader_args')
-                bl_args.text = bootloader_args
+        # ACPI tables
+        acpi = os_booting.get('acpi', {})
+        if isinstance(acpi, dict) and acpi.get('tables'):
+            acpi_elem = ET.SubElement(os_elem, 'acpi')
+            for table in acpi['tables']:
+                if isinstance(table, dict):
+                    ET.SubElement(acpi_elem, 'table', type=table.get('type', 'raw')).text = table.get('path', '')
 
     def _add_features(self, config: dict) -> None:
         """添加虚拟化特性."""
@@ -399,32 +493,42 @@ class LibvirtXMLGenerator:
         if emulator:
             ET.SubElement(devices, 'emulator').text = emulator
 
-        # 处理 disk_devices（来自 devices_tab 的磁盘设备）
+        # 处理 disk_devices (来自 devices_tab 的磁盘设备)
         disk_devices = config.get('disk_devices', [])
         for disk in disk_devices:
             self._add_disk_device(devices, disk)
 
-        disks = devices_config.get('disks', [])
+        # 支持复数和单数形式
+        disks = devices_config.get('disks', devices_config.get('disk', []))
         for disk in disks:
             self._add_disk(devices, disk)
 
-        interfaces = devices_config.get('interfaces', [])
+        interfaces = devices_config.get('interfaces', devices_config.get('interface', []))
         for iface in interfaces:
             self._add_interface(devices, iface)
 
-        graphics = devices_config.get('graphics')
+        # graphics 可能是单个对象或列表（支持 graphics 和 graphic 两种字段名）
+        graphics = devices_config.get('graphics', devices_config.get('graphic', None))
         if graphics:
-            self._add_graphics(devices, graphics)
+            if isinstance(graphics, list):
+                for g in graphics:
+                    self._add_graphics(devices, g)
+            else:
+                self._add_graphics(devices, graphics)
 
-        videos = devices_config.get('videos', [])
-        for video in videos:
-            self._add_video(devices, video)
+        # videos 可能是单个对象或列表（支持 videos 和 video 两种字段名）
+        videos = devices_config.get('videos', devices_config.get('video', []))
+        if isinstance(videos, list):
+            for video in videos:
+                self._add_video(devices, video)
+        elif videos:
+            self._add_video(devices, videos)
 
-        controllers = devices_config.get('controllers', [])
+        controllers = devices_config.get('controllers', devices_config.get('controller', []))
         for ctrl in controllers:
             self._add_controller(devices, ctrl)
 
-        serials = devices_config.get('serials', [])
+        serials = devices_config.get('serials', devices_config.get('serial', []))
         for serial in serials:
             self._add_serial(devices, serial)
 
@@ -432,20 +536,20 @@ class LibvirtXMLGenerator:
         console = ET.SubElement(devices, 'console', type='pty')
         ET.SubElement(console, 'target', type='serial', port='0')
 
-        inputs = devices_config.get('inputs', [])
+        inputs = devices_config.get('inputs', devices_config.get('input', []))
         for inp in inputs:
             self._add_input(devices, inp)
 
-        sounds = devices_config.get('sounds', [])
+        sounds = devices_config.get('sounds', devices_config.get('sound', []))
         for sound in sounds:
             ET.SubElement(devices, 'sound', model=sound.get('model', 'ich6'))
 
-        hostdevs = devices_config.get('hostdevs', [])
+        hostdevs = devices_config.get('hostdevs', devices_config.get('hostdev', []))
         for hostdev in hostdevs:
             self._add_hostdev(devices, hostdev)
 
     def _add_disk_device(self, devices: ET.Element, disk: dict) -> None:
-        """添加磁盘设备（支持 file, block, network, volume, dir, nvme, vhostuser, vhostvdpa, ctl 类型）."""
+        """添加磁盘设备 (支持 file, block, network, volume, dir, nvme, vhostuser, vhostvdpa, ctl 类型)."""
         disk_type = disk.get('type', 'file')
         device_type = disk.get('device', 'disk')
 
@@ -464,7 +568,7 @@ class LibvirtXMLGenerator:
         disk_attrs = {'type': type_map.get(disk_type, 'file'), 'device': device_type}
         disk_elem = ET.SubElement(devices, 'disk', **disk_attrs)
 
-        # 驱动（仅 file 和 block 类型需要）
+        # 驱动 (仅 file 和 block 类型需要)
         if disk_type in ('file', 'block'):
             driver = disk.get('driver', 'qcow2')
             driver_attrs = {'name': 'qemu', 'type': driver}
@@ -559,7 +663,13 @@ class LibvirtXMLGenerator:
 
     def _add_disk(self, devices: ET.Element, disk: dict) -> None:
         """添加磁盘设备."""
-        disk_type = disk.get('type', 'file')
+        # 支持 disk_type 和 type 两种字段
+        disk_type_val = disk.get('disk_type') or disk.get('type', 'file')
+        # 将 qcow2, raw 等格式转换为 file 类型
+        if disk_type_val in ('qcow2', 'raw', 'qed', 'vdi', 'vmdk', 'vpc'):
+            disk_type = 'file'
+        else:
+            disk_type = disk_type_val
         device = disk.get('device', 'disk')
 
         disk_attrs = {'type': disk_type, 'device': device}
@@ -570,7 +680,7 @@ class LibvirtXMLGenerator:
 
         driver_attrs = {
             'name': disk.get('driver_name', 'qemu'),
-            'type': disk.get('driver_type', 'qcow2'),
+            'type': disk.get('driver_type', disk.get('format', disk.get('type', 'qcow2'))),
         }
         if disk.get('cache'):
             driver_attrs['cache'] = disk['cache']
@@ -580,8 +690,10 @@ class LibvirtXMLGenerator:
             driver_attrs['discard'] = disk['discard']
         ET.SubElement(disk_elem, 'driver', **driver_attrs)
 
-        if disk_type == 'file' and disk.get('file'):
-            ET.SubElement(disk_elem, 'source', file=disk['file'])
+        # 支持 source_file 和 file 两种字段名
+        source_file = disk.get('source_file') or disk.get('file') or disk.get('path')
+        if disk_type == 'file' and source_file:
+            ET.SubElement(disk_elem, 'source', file=source_file)
         elif disk_type == 'block' and disk.get('dev'):
             ET.SubElement(disk_elem, 'source', dev=disk['dev'])
         elif disk_type == 'network':
@@ -594,7 +706,9 @@ class LibvirtXMLGenerator:
                     source, 'host', name=disk['host'], port=str(disk.get('port', '10809'))
                 )
 
-        target_attrs = {'dev': disk.get('target_dev', 'vda'), 'bus': disk.get('bus', 'virtio')}
+        # 支持 target_dev 和 target 两种字段名
+        target_dev = disk.get('target_dev') or disk.get('target', 'vda')
+        target_attrs = {'dev': target_dev, 'bus': disk.get('bus', 'virtio')}
         ET.SubElement(disk_elem, 'target', **target_attrs)
 
         if disk.get('readonly'):
@@ -611,16 +725,27 @@ class LibvirtXMLGenerator:
         if iface.get('mac'):
             ET.SubElement(iface_elem, 'mac', address=iface['mac'])
 
+        # 支持不同字段名
+        source = iface.get('source')
         if iface_type == 'network':
-            ET.SubElement(iface_elem, 'source', network=iface.get('network', 'default'))
+            ET.SubElement(iface_elem, 'source', network=source or 'default')
         elif iface_type == 'bridge':
-            ET.SubElement(iface_elem, 'source', bridge=iface.get('bridge', 'br0'))
+            ET.SubElement(iface_elem, 'source', bridge=source or iface.get('bridge', 'br0'))
         elif iface_type == 'direct':
             ET.SubElement(
                 iface_elem, 'source', dev=iface.get('dev', 'eth0'), mode=iface.get('mode', 'bridge')
             )
+        elif iface_type == 'user':
+            ET.SubElement(iface_elem, 'source', network='user')
+        elif iface_type == 'internal':
+            ET.SubElement(iface_elem, 'source', dev=iface.get('dev', ''))
 
-        ET.SubElement(iface_elem, 'model', type=iface.get('model', 'virtio'))
+        model = iface.get('model', 'virtio')
+        if isinstance(model, dict):
+            model_type = model.get('type', 'virtio')
+        else:
+            model_type = model
+        ET.SubElement(iface_elem, 'model', type=model_type)
 
         if iface.get('boot_order'):
             ET.SubElement(iface_elem, 'boot', order=str(iface['boot_order']))

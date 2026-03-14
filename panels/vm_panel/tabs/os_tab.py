@@ -133,3 +133,42 @@ class OSTab(ctk.CTkFrame):
             'boot_devices': boot_devices,
             'boot_timeout': int(self.boot_timeout_entry.get().strip() or '-1'),
         }
+
+    def to_xml(self) -> dict:
+        """生成 XML 配置字典."""
+        config = self.get_os_config()
+        firmware_map = {
+            'BIOS': 'bios',
+            'UEFI': 'efi',
+            'EFIVARS': 'efi',
+        }
+        return {
+            'os_booting': {
+                'type': 'hvm',
+                'arch': 'x86_64',
+                'machine': 'q35',
+                'firmware': firmware_map.get(config['firmware'], 'bios'),
+                'secure_boot': config['secure_boot'],
+                'boot_devices': config['boot_devices'],
+                'boot_timeout': config['boot_timeout'],
+            }
+        }
+
+    def load_config(self, config: dict):
+        """加载配置数据到 UI."""
+        if 'firmware' in config:
+            fw_map = {'bios': 'BIOS', 'efi': 'UEFI'}
+            self.firmware_type.set(fw_map.get(config.get('firmware', 'BIOS'), 'BIOS'))
+        if 'secure_boot' in config:
+            if config['secure_boot']:
+                self.secure_boot.select()
+            else:
+                self.secure_boot.deselect()
+        if 'boot_devices' in config:
+            devices = config['boot_devices'] + ['none', 'none']
+            self.boot_device_1.set(devices[0] if len(devices) > 0 else 'hd')
+            self.boot_device_2.set(devices[1] if len(devices) > 1 else 'none')
+            self.boot_device_3.set(devices[2] if len(devices) > 2 else 'none')
+        if 'boot_timeout' in config:
+            self.boot_timeout_entry.delete(0, ctk.END)
+            self.boot_timeout_entry.insert(0, str(config['boot_timeout']))
