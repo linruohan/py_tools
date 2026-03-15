@@ -49,7 +49,7 @@ TABS_CONFIG: dict = {
     'cpu_model_topology': {
         'name': 'CPU模型和拓扑',
         'class': 'CPUModelTopologyTab',
-        'default_on': False,
+        'default_on': True,
     },
     'events_configuration': {
         'name': '事件配置',

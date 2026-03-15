@@ -5,6 +5,7 @@ from ..configs.cpu_allocation_config import CPUAllocationConfig as CPUConfig
 from ..configs.devices_config import DevicesConfig
 from ..configs.memory_allocation_config import MemoryAllocationConfig as MemoryConfig
 from ..configs.os_booting_config import OSBootingConfig as OSConfig
+from ..cpu.topology import CPUTopology
 
 
 class VMConfig:
@@ -62,6 +63,31 @@ class VMConfig:
             data = tab_data.get('cpu_allocation', tab_data)
             self.cpu.update(data)
 
+        # CPU 模型和拓扑配置
+        if tab_key == 'cpu_model_topology' or 'cpu_model_topology' in tab_data:
+            data = tab_data.get('cpu_model_topology', tab_data)
+            # 更新 topology
+            if 'topology' in data:
+                if isinstance(data['topology'], dict):
+                    self.cpu.topology = CPUTopology.from_dict(data['topology'])
+                else:
+                    self.cpu.topology = data['topology']
+            # 更新 CPU 模型相关配置
+            model_data = data.get('model', {})
+            if model_data:
+                for key in ['mode', 'match', 'check', 'migratable', 'model', 'vendor', 'vendor_id', 'fallback']:
+                    if model_data.get(key):
+                        setattr(self.cpu, key, model_data[key])
+            # 更新 cache 配置
+            if data.get('cache'):
+                self.cpu.cache = data['cache']
+            # 更新 maxphysaddr 配置
+            if data.get('maxphysaddr'):
+                self.cpu.maxphysaddr = data['maxphysaddr']
+            # 更新 feature 配置
+            if data.get('feature'):
+                self.cpu.feature = data['feature']
+
         # OS 引导配置
         if tab_key == 'os_booting' or 'os_booting' in tab_data:
             data = tab_data.get('os_booting', tab_data)
@@ -116,6 +142,28 @@ class VMConfig:
 
         # 虚拟机监控程序配置
         config['hypervisor'] = self.hypervisor
+
+        # CPU 模型和拓扑配置 (从 cpu 配置中提取)
+        cpu_model_topology = {}
+        # 提取 CPU 模型相关配置
+        model_config = {}
+        for key in ['mode', 'match', 'check', 'migratable', 'model', 'vendor', 'vendor_id', 'fallback']:
+            if hasattr(self.cpu, key) and getattr(self.cpu, key):
+                model_config[key] = getattr(self.cpu, key)
+        if model_config:
+            cpu_model_topology['model'] = model_config
+        # 提取 cache 配置
+        if hasattr(self.cpu, 'cache') and self.cpu.cache:
+            cpu_model_topology['cache'] = self.cpu.cache
+        # 提取 maxphysaddr 配置
+        if hasattr(self.cpu, 'maxphysaddr') and self.cpu.maxphysaddr:
+            cpu_model_topology['maxphysaddr'] = self.cpu.maxphysaddr
+        # 提取 feature 配置
+        if hasattr(self.cpu, 'feature') and self.cpu.feature:
+            cpu_model_topology['feature'] = self.cpu.feature
+        
+        if cpu_model_topology:
+            config['cpu_model_topology'] = cpu_model_topology
 
         return config
 

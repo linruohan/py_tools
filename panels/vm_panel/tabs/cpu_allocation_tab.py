@@ -510,32 +510,32 @@ class CPUAllocationTab(BaseConfigTab):
         config = {}
 
         # Mode配置
-        if self.mode_frame.winfo_ismapped():
+        if self.mode_checkbox.get():
             config['mode'] = self.cpu_mode.get()
 
         # Match配置
-        if self.match_frame.winfo_ismapped():
+        if self.match_checkbox.get():
             config['match'] = self.cpu_match.get()
 
         # Check配置
-        if self.check_frame.winfo_ismapped():
+        if self.check_checkbox.get():
             config['check'] = self.cpu_check.get() if self.cpu_check.get() else None
 
         # Migratable配置
-        if self.migratable_frame.winfo_ismapped():
+        if self.migratable_checkbox.get():
             config['migratable'] = self.cpu_migratable.get()
 
         # Model配置
-        if self.model_frame.winfo_ismapped():
+        if self.model_checkbox.get():
             config['model'] = self.cpu_model.get() if self.cpu_model.get() else None
             config['fallback'] = self.cpu_fallback.get()
 
         # Vendor配置
-        if self.vendor_frame.winfo_ismapped():
+        if self.vendor_checkbox.get():
             config['vendor'] = self.cpu_vendor.get() if self.cpu_vendor.get() else None
 
         # Topology配置
-        if self.topology_frame.winfo_ismapped():
+        if self.topology_checkbox.get():
             config['topology'] = {
                 'sockets': parse_integer_value(self.sockets.get(), default=1),
                 'dies': parse_integer_value(self.dies.get(), default=1),
@@ -545,7 +545,7 @@ class CPUAllocationTab(BaseConfigTab):
             }
 
         # Cache配置
-        if self.cache_frame.winfo_ismapped():
+        if self.cache_checkbox.get():
             config['cache'] = {
                 'mode': self.cache_mode.get() if self.cache_mode.get() else None,
                 'level': parse_integer_value(self.cache_level.get())
@@ -554,7 +554,7 @@ class CPUAllocationTab(BaseConfigTab):
             }
 
         # Maxphysaddr配置
-        if self.maxphysaddr_frame.winfo_ismapped():
+        if self.maxphysaddr_checkbox.get():
             config['maxphysaddr'] = {
                 'mode': self.maxphysaddr_mode.get(),
                 'bits': parse_integer_value(self.maxphysaddr_bits.get())
@@ -563,7 +563,7 @@ class CPUAllocationTab(BaseConfigTab):
             }
 
         # Feature配置
-        if self.feature_frame.winfo_ismapped():
+        if self.feature_checkbox.get():
             config['feature'] = {
                 'name': self.feature_name.get() if self.feature_name.get() else None,
                 'policy': self.feature_policy.get(),
@@ -644,4 +644,5 @@ class CPUAllocationTab(BaseConfigTab):
         if children:
             cpu_config['children'] = children
 
-        return {'cpu': cpu_config}
+        # 始终返回 cpu_allocation 键，即使 cpu 为空
+        return {'cpu_allocation': {'cpu': cpu_config}}

@@ -14,6 +14,7 @@ class CPUModelSubTab(BaseConfigTab):
 
     def __init__(self, master, on_change_callback=None, **kwargs):
         super().__init__(master, on_change_callback, **kwargs)
+        self._pending_config = {}  # 保存尚未加载的配置
 
         self._init_ui()
 
@@ -137,50 +138,72 @@ class CPUModelSubTab(BaseConfigTab):
             'check': self.check.get(),
         }
 
+    def load_config(self, config: dict) -> None:
+        """加载配置数据."""
+        if 'mode' in config:
+            self.cpu_mode.set(config['mode'])
+        if 'match' in config:
+            self.cpu_match.set(config['match'])
+        if 'model' in config:
+            self.cpu_model.delete(0, 'end')
+            self.cpu_model.insert(0, config['model'])
+        if 'vendor' in config:
+            self.cpu_vendor.delete(0, 'end')
+            self.cpu_vendor.insert(0, config['vendor'])
+        if 'vendor_id' in config:
+            self.vendor_id.delete(0, 'end')
+            self.vendor_id.insert(0, config['vendor_id'])
+        if 'fallback' in config:
+            self.fallback.set(config['fallback'])
+        if 'migratable' in config:
+            self.migratable.set(config['migratable'])
+        if 'check' in config:
+            self.check.set(config['check'])
+
 
 class CPUFeatureSubTab(BaseConfigTab):
     """CPU 特性子 Tab."""
 
     def __init__(self, master, on_change_callback=None, **kwargs):
-        super().__init__(master, on_change_callback, **kwargs)
         self.features_list = []
-
-        self._init_ui()
+        self.feature_widgets = {}
+        super().__init__(master, on_change_callback, **kwargs)
 
     def _init_ui(self) -> None:
         """初始化界面."""
         self.grid_columnconfigure(0, weight=1)
+        self.grid_rowconfigure(1, weight=1)
 
-        frame = ctk.CTkFrame(self, fg_color=BG_COLOR_CONTENT, corner_radius=6)
-        frame.grid(row=0, column=0, sticky='nsew', padx=5, pady=5)
-        frame.grid_columnconfigure(1, weight=1)
+        # 顶部框架:添加新 feature
+        top_frame = ctk.CTkFrame(self, fg_color=BG_COLOR_CONTENT, corner_radius=6)
+        top_frame.grid(row=0, column=0, sticky='ew', padx=5, pady=5)
+        top_frame.grid_columnconfigure(1, weight=1)
 
-        ctk.CTkLabel(frame, text='CPU 特性', font=CTK_FONT_BOLD, text_color='#ff9800').grid(
-            row=0, column=0, columnspan=4, padx=10, pady=5, sticky='w'
+        ctk.CTkLabel(top_frame, text='CPU 特性', font=CTK_FONT_BOLD, text_color='#ff9800').grid(
+            row=0, column=0, columnspan=5, padx=10, pady=5, sticky='w'
         )
 
-        ctk.CTkLabel(frame, text='特性名:', font=CTK_FONT_MAIN, width=80, anchor='w').grid(
+        ctk.CTkLabel(top_frame, text='特性名:', font=CTK_FONT_MAIN, width=80, anchor='w').grid(
             row=1, column=0, padx=10, pady=5, sticky='w'
         )
-        self.feature_name = ctk.CTkEntry(frame, placeholder_text='lahf_lm, pcid...', width=150)
+        self.feature_name = ctk.CTkEntry(top_frame, placeholder_text='lahf_lm, pcid...', width=150)
         self.feature_name.grid(row=1, column=1, padx=5, pady=5, sticky='w')
-        self.feature_name.bind('<KeyRelease>', lambda e: self._trigger_change())
+        self.feature_name.bind('<KeyRelease>', lambda e: self._on_enter_key(e))
 
-        ctk.CTkLabel(frame, text='策略:', font=CTK_FONT_MAIN, width=60, anchor='w').grid(
+        ctk.CTkLabel(top_frame, text='策略:', font=CTK_FONT_MAIN, width=60, anchor='w').grid(
             row=1, column=2, padx=10, pady=5, sticky='w'
         )
         self.feature_policy = ctk.CTkOptionMenu(
-            frame,
+            top_frame,
             values=['require', 'optional', 'force', 'disable', 'forbid'],
             width=100,
             font=CTK_FONT_SMALL,
         )
         self.feature_policy.set('require')
         self.feature_policy.grid(row=1, column=3, padx=5, pady=5, sticky='w')
-        self.feature_policy.configure(command=self._trigger_change)
 
         add_btn = ctk.CTkButton(
-            frame,
+            top_frame,
             text='添加',
             command=self._add_feature,
             fg_color='#00bcd4',
@@ -190,26 +213,101 @@ class CPUFeatureSubTab(BaseConfigTab):
         )
         add_btn.grid(row=1, column=4, padx=5, pady=5)
 
-        self.features_display = ctk.CTkLabel(
-            frame, text='', font=CTK_FONT_SMALL, text_color='#aaaaaa', anchor='w'
-        )
-        self.features_display.grid(row=2, column=0, columnspan=5, padx=10, pady=5, sticky='w')
+        # 底部框架:显示已添加的 feature 列表
+        bottom_frame = ctk.CTkFrame(self, fg_color=BG_COLOR_CONTENT, corner_radius=6)
+        bottom_frame.grid(row=1, column=0, sticky='nsew', padx=5, pady=5)
+        bottom_frame.grid_columnconfigure(0, weight=1)
+        bottom_frame.grid_rowconfigure(0, weight=1)
+
+        self.list_frame = ctk.CTkScrollableFrame(bottom_frame, fg_color='transparent')
+        self.list_frame.grid(row=0, column=0, sticky='nsew', padx=5, pady=5)
+        self.list_frame.grid_columnconfigure(0, weight=1)
+
+        self._refresh_feature_list()
+
+    def _on_enter_key(self, event):
+        """按回车键添加 feature."""
+        if event.keysym == 'Return':
+            self._add_feature()
 
     def _add_feature(self):
         """添加 CPU 特性."""
         name = self.feature_name.get().strip()
-        if name:
-            self.features_list.append(
-                {
-                    'name': name,
-                    'policy': self.feature_policy.get(),
-                }
-            )
-            self.features_display.configure(
-                text=f'已添加: {", ".join([f["name"] for f in self.features_list])}'
-            )
-            self.feature_name.delete(0, 'end')
+        if not name:
+            return
+
+        # 检查是否已存在
+        for feat in self.features_list:
+            if feat['name'] == name:
+                self.feature_name.delete(0, 'end')
+                return
+
+        self.features_list.append(
+            {
+                'name': name,
+                'policy': self.feature_policy.get(),
+            }
+        )
+        self.feature_name.delete(0, 'end')
+        self._refresh_feature_list()
+        self._trigger_change()
+
+    def _remove_feature(self, index: int):
+        """删除指定索引的 CPU 特性."""
+        if 0 <= index < len(self.features_list):
+            del self.features_list[index]
+            self._refresh_feature_list()
             self._trigger_change()
+
+    def _refresh_feature_list(self):
+        """刷新 feature 列表显示."""
+        # 清除所有现有控件
+        for widget in self.list_frame.winfo_children():
+            widget.destroy()
+
+        if not self.features_list:
+            ctk.CTkLabel(
+                self.list_frame,
+                text='暂无已添加的特性',
+                font=CTK_FONT_SMALL,
+                text_color='#888888'
+            ).grid(row=0, column=0, padx=10, pady=10, sticky='w')
+            return
+
+        # 显示每个 feature 及其删除按钮
+        for i, feat in enumerate(self.features_list):
+            row = i // 3  # 每行 3 个
+            col = (i % 3) * 3  # 每个 feature 占 3 列
+
+            # 创建 frame 包裹单个 feature
+            feat_frame = ctk.CTkFrame(self.list_frame, fg_color='#2a2a2a', corner_radius=4)
+            feat_frame.grid(row=row, column=col, padx=5, pady=5, sticky='ew')
+            self.list_frame.grid_columnconfigure(col, weight=1)
+
+            # 显示 feature 名和策略
+            feat_text = f"{feat['name']} ({feat['policy']})"
+            ctk.CTkLabel(
+                feat_frame,
+                text=feat_text,
+                font=CTK_FONT_SMALL,
+                text_color='#64b5f6'
+            ).pack(side='left', padx=5, pady=2)
+
+            # 删除按钮
+            def make_remove_handler(idx):
+                return lambda idx=idx: self._remove_feature(idx)
+
+            del_btn = ctk.CTkButton(
+                feat_frame,
+                text='X',
+                width=24,
+                height=20,
+                fg_color='#f44336',
+                hover_color='#d32f2f',
+                font=CTK_FONT_SMALL,
+                command=make_remove_handler(i)
+            )
+            del_btn.pack(side='right', padx=2, pady=2)
 
     def get_config(self) -> dict:
         """获取配置数据."""
@@ -217,6 +315,10 @@ class CPUFeatureSubTab(BaseConfigTab):
             'features': self.features_list.copy(),
         }
 
+    def load_config(self, config: dict) -> None:
+        """加载配置数据."""
+        self.features_list = config.get('features', []).copy()
+        self._refresh_feature_list()
 
 class CPUCacheSubTab(BaseConfigTab):
     """CPU 缓存子 Tab."""
@@ -314,6 +416,24 @@ class CPUCacheSubTab(BaseConfigTab):
             },
         }
 
+    def load_config(self, config: dict) -> None:
+        """加载配置数据."""
+        cache = config.get('cache', {})
+        if 'level' in cache:
+            self.cache_level.set(str(cache['level']))
+        if 'mode' in cache:
+            self.cache_mode.set(cache['mode'])
+
+        maxphysaddr = config.get('maxphysaddr', {})
+        if 'mode' in maxphysaddr:
+            self.physaddr_mode.set(maxphysaddr['mode'])
+        if 'bits' in maxphysaddr:
+            self.physaddr_bits.delete(0, 'end')
+            self.physaddr_bits.insert(0, maxphysaddr['bits'])
+        if 'limit' in maxphysaddr:
+            self.physaddr_limit.delete(0, 'end')
+            self.physaddr_limit.insert(0, maxphysaddr['limit'])
+
 
 class CPUModelTopologyTab(BaseConfigTab):
     """CPU 模型与拓扑配置 Tab."""
@@ -346,6 +466,18 @@ class CPUModelTopologyTab(BaseConfigTab):
         self.grid_columnconfigure(0, weight=1)
         self.grid_rowconfigure(0, weight=1)
 
+        # 包装 InnerTabPanel 的_switch_tab 方法
+        original_switch = InnerTabPanel._switch_tab
+        def wrapped_switch(self_inner, *args, **kwargs):
+            original_switch(self_inner, *args, **kwargs)
+            # Tab 切换后尝试加载配置
+            if hasattr(self, '_pending_config') and args[0] in self._pending_config:
+                tab_instance = self_inner.get_tab_instance(args[0])
+                if tab_instance and hasattr(tab_instance, 'load_config'):
+                    tab_instance.load_config(self._pending_config[args[0]])
+
+        InnerTabPanel._switch_tab = wrapped_switch
+
         self.inner_panel = InnerTabPanel(
             self,
             tabs_config=self.SUB_TABS_CONFIG,
@@ -360,3 +492,12 @@ class CPUModelTopologyTab(BaseConfigTab):
     def to_xml(self) -> dict:
         """生成XML配置字典."""
         return {'cpu_model_topology': self.get_config()}
+    def load_config(self, config: dict) -> None:
+        """加载配置数据到各个子 Tab."""
+        # config 格式:{'model': {...}, 'feature': {...}, 'cache': {...}}
+        self._pending_config = config
+        for tab_key, tab_data in config.items():
+            tab_instance = self.inner_panel.get_tab_instance(tab_key)
+            if tab_instance and hasattr(tab_instance, 'load_config'):
+                tab_instance.load_config(tab_data)
+

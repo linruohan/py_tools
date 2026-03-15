@@ -87,7 +87,7 @@ class LibvirtXMLGenerator:
             mm_elem.text = str(max_memory)
 
     def _add_cpu(self, config: dict) -> None:
-        """添加CPU配置."""
+        """添加 CPU 配置."""
         cpu_alloc = config.get('cpu_allocation', {})
         cpu_model = config.get('cpu_model_topology', {})
 
@@ -99,12 +99,12 @@ class LibvirtXMLGenerator:
         vcpu_attrs = {'placement': placement}
         if cpuset:
             vcpu_attrs['cpuset'] = cpuset
-        # 总是添加current属性，无论是否等于max_vcpu
+        # 总是添加 current 属性 (即使等于 max_vcpu)
         vcpu_attrs['current'] = str(current_vcpu)
 
         vcpu = ET.SubElement(self.domain, 'vcpu', **vcpu_attrs)
         vcpu.text = str(vcpu_count)
-        
+
         # 添加 vcpus 元素
         vcpu_instances = cpu_alloc.get('vcpu_instances', [])
         if vcpu_instances:
@@ -119,7 +119,41 @@ class LibvirtXMLGenerator:
                     vcpu_attrs['order'] = str(instance['order'])
                 ET.SubElement(vcpus_elem, 'vcpu', **vcpu_attrs)
 
+        # 检查是否需要创建 cpu 元素
         topology = cpu_alloc.get('topology', {})
+        model_config = cpu_model.get('model', {})
+
+        # 判断是否需要创建 <cpu> 元素
+        need_cpu_elem = (
+            topology or
+            model_config.get('mode') or
+            model_config.get('match') or
+            model_config.get('check') or
+            model_config.get('migratable') or
+            model_config.get('model') or
+            model_config.get('vendor') or
+            model_config.get('vendor_id') or
+            cpu_model.get('feature', {}).get('features') or
+            cpu_model.get('cache', {}).get('mode') or
+            cpu_model.get('maxphysaddr', {}).get('mode')
+        )
+
+        if not need_cpu_elem:
+            return
+
+        cpu_elem = ET.SubElement(self.domain, 'cpu')
+
+        # 设置 cpu 元素的属性 (mode, match, check, migratable)
+        if model_config.get('mode'):
+            cpu_elem.set('mode', model_config['mode'])
+        if model_config.get('match'):
+            cpu_elem.set('match', model_config['match'])
+        if model_config.get('check'):
+            cpu_elem.set('check', model_config['check'])
+        if model_config.get('migratable'):
+            cpu_elem.set('migratable', model_config['migratable'])
+
+        # 添加 topology 子元素
         if topology:
             sockets = topology.get('sockets', 1)
             dies = topology.get('dies', 1)
@@ -127,7 +161,6 @@ class LibvirtXMLGenerator:
             cores = topology.get('cores', 1)
             threads = topology.get('threads', 1)
 
-            cpu_elem = ET.SubElement(self.domain, 'cpu')
             ET.SubElement(
                 cpu_elem,
                 'topology',
@@ -138,27 +171,47 @@ class LibvirtXMLGenerator:
                 threads=str(threads),
             )
 
-            model_config = cpu_model.get('model', {})
-            if model_config.get('mode'):
-                cpu_elem.set('mode', model_config['mode'])
-            if model_config.get('model'):
-                model = ET.SubElement(cpu_elem, 'model')
-                model.text = model_config['model']
-                if model_config.get('fallback'):
-                    model.set('fallback', model_config['fallback'])
+        # 添加 model 子元素
+        if model_config.get('model'):
+            model = ET.SubElement(cpu_elem, 'model')
+            model.text = model_config['model']
+            if model_config.get('fallback'):
+                model.set('fallback', model_config['fallback'])
 
-            features = cpu_model.get('feature', {}).get('features', [])
-            for feat in features:
-                ET.SubElement(
-                    cpu_elem, 'feature', policy=feat.get('policy', 'require'), name=feat['name']
-                )
+        # 添加 vendor 子元素
+        if model_config.get('vendor'):
+            vendor = ET.SubElement(cpu_elem, 'vendor')
+            vendor.text = model_config['vendor']
+            if model_config.get('vendor_id'):
+                vendor.set('id', model_config['vendor_id'])
+        elif model_config.get('vendor_id'):
+            # 只有 vendor_id 时也创建 vendor 元素
+            ET.SubElement(cpu_elem, 'vendor', id=model_config['vendor_id'])
 
-            cache_config = cpu_model.get('cache', {})
-            if cache_config.get('mode'):
-                cache_attrs = {'mode': cache_config['mode']}
-                if cache_config.get('level'):
-                    cache_attrs['level'] = str(cache_config['level'])
-                ET.SubElement(cpu_elem, 'cache', **cache_attrs)
+        # 添加 feature 子元素
+        features = cpu_model.get('feature', {}).get('features', [])
+        for feat in features:
+            ET.SubElement(
+                cpu_elem, 'feature', policy=feat.get('policy', 'require'), name=feat['name']
+            )
+
+        # 添加 cache 子元素
+        cache_config = cpu_model.get('cache', {})
+        if cache_config.get('mode'):
+            cache_attrs = {'mode': cache_config['mode']}
+            if cache_config.get('level'):
+                cache_attrs['level'] = str(cache_config['level'])
+            ET.SubElement(cpu_elem, 'cache', **cache_attrs)
+
+        # 添加 maxphysaddr 子元素
+        maxphysaddr_config = cpu_model.get('maxphysaddr', {})
+        if maxphysaddr_config.get('mode'):
+            maxphysaddr_attrs = {'mode': maxphysaddr_config['mode']}
+            if maxphysaddr_config.get('bits'):
+                maxphysaddr_attrs['bits'] = maxphysaddr_config['bits']
+            if maxphysaddr_config.get('limit'):
+                maxphysaddr_attrs['limit'] = maxphysaddr_config['limit']
+            ET.SubElement(cpu_elem, 'maxphysaddr', **maxphysaddr_attrs)
 
     def _add_os(self, config: dict) -> None:
         """添加操作系统配置."""

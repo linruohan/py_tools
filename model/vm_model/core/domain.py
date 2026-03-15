@@ -1131,7 +1131,51 @@ class Domain:
             current=vcpu_data.get('current_vcpu'),
         )
 
-        cpu_model_data = config.get('cpu_model_topology', {})
+        # 从 cpu_allocation 中获取 CPU 模型和拓扑数据
+        cpu_model_data = {}
+        if 'cpu' in vcpu_data:
+            cpu_data = vcpu_data['cpu']
+            # 提取 CPU 属性
+            for key in ['mode', 'match', 'check', 'migratable']:
+                if key in cpu_data:
+                    cpu_model_data[key] = cpu_data[key]
+            # 提取 CPU 子元素
+            features = []
+            if 'children' in cpu_data:
+                for child in cpu_data['children']:
+                    if 'model' in child:
+                        # 处理 model 元素
+                        model_name = child['model']
+                        model_dict = {'name': model_name}
+                        if 'fallback' in child:
+                            model_dict['fallback'] = child['fallback']
+                        cpu_model_data['model'] = model_dict
+                    elif 'vendor' in child:
+                        # 处理 vendor 元素
+                        cpu_model_data['vendor_id'] = child['vendor']
+                    elif 'topology' in child:
+                        # 处理 topology 元素
+                        cpu_model_data['topology'] = child['topology']
+                    elif 'cache' in child:
+                        # 处理 cache 元素
+                        cpu_model_data['cache'] = child['cache']
+                    elif 'maxphysaddr' in child:
+                        # 处理 maxphysaddr 元素
+                        cpu_model_data['maxphysaddr'] = child['maxphysaddr']
+                    elif 'feature' in child:
+                        # 处理 feature 元素
+                        features.append(child['feature'])
+            # 添加 features 列表
+            if features:
+                cpu_model_data['features'] = features
+        else:
+            # 如果没有 cpu 键，使用默认值
+            cpu_model_data = {}
+        
+        # 兼容旧的 cpu_model_topology 键
+        if not cpu_model_data:
+            cpu_model_data = config.get('cpu_model_topology', {})
+        
         cpu = CPU.from_dict(cpu_model_data) if cpu_model_data else CPU()
 
         # 内存配置
@@ -1368,42 +1412,65 @@ class Domain:
         # CPU
         if self.cpu:
             cpu_elem = ET.SubElement(domain, 'cpu')
-            if self.cpu.mode:
+            # 处理 CPU 属性
+            if hasattr(self.cpu, 'mode') and self.cpu.mode:
                 cpu_elem.set(
                     'mode',
                     self.cpu.mode.value
-                    if isinstance(self.cpu.mode, CpuMode)
+                    if hasattr(self.cpu.mode, 'value')
                     else str(self.cpu.mode),
                 )
-            if self.cpu.model:
+            if hasattr(self.cpu, 'match') and self.cpu.match:
+                cpu_elem.set('match', self.cpu.match)
+            if hasattr(self.cpu, 'check') and self.cpu.check:
+                cpu_elem.set('check', self.cpu.check)
+            if hasattr(self.cpu, 'migratable') and self.cpu.migratable:
+                cpu_elem.set('migratable', self.cpu.migratable)
+            # 处理 CPU 子元素
+            if hasattr(self.cpu, 'model') and self.cpu.model:
                 model_elem = ET.SubElement(cpu_elem, 'model')
-                model_elem.text = self.cpu.model.name
-                if self.cpu.model.fallback:
-                    model_elem.set('fallback', self.cpu.model.fallback)
-            if self.cpu.topology:
-                ET.SubElement(
-                    cpu_elem,
-                    'topology',
-                    attrib={
-                        'sockets': str(self.cpu.topology.sockets),
-                        'cores': str(self.cpu.topology.cores),
-                        'threads': str(self.cpu.topology.threads),
-                    },
-                )
-            for feature in self.cpu.features:
-                feat_elem = ET.SubElement(cpu_elem, 'feature')
-                feat_elem.set('name', feature.name)
-                if feature.policy:
-                    feat_elem.set('policy', feature.policy)
+                model_elem.text = self.cpu.model
+                if hasattr(self.cpu, 'fallback') and self.cpu.fallback:
+                    model_elem.set('fallback', self.cpu.fallback)
+            if hasattr(self.cpu, 'vendor') and self.cpu.vendor:
+                vendor_elem = ET.SubElement(cpu_elem, 'vendor')
+                vendor_elem.text = self.cpu.vendor
+            if hasattr(self.cpu, 'topology') and self.cpu.topology:
+                topology_attrib = {
+                    'sockets': str(self.cpu.topology.sockets),
+                    'cores': str(self.cpu.topology.cores),
+                    'threads': str(self.cpu.topology.threads),
+                }
+                # 添加 dies 和 clusters 属性（如果存在）
+                if hasattr(self.cpu.topology, 'dies') and self.cpu.topology.dies:
+                    topology_attrib['dies'] = str(self.cpu.topology.dies)
+                if hasattr(self.cpu.topology, 'clusters') and self.cpu.topology.clusters:
+                    topology_attrib['clusters'] = str(self.cpu.topology.clusters)
+                ET.SubElement(cpu_elem, 'topology', attrib=topology_attrib)
+            # 处理 feature
+            if hasattr(self.cpu, 'feature') and self.cpu.feature:
+                feature = self.cpu.feature
+                if 'name' in feature:
+                    feat_elem = ET.SubElement(cpu_elem, 'feature')
+                    feat_elem.set('name', feature['name'])
+                    if 'policy' in feature:
+                        feat_elem.set('policy', feature['policy'])
+            # 处理 features 列表（兼容旧格式）
+            elif hasattr(self.cpu, 'features') and self.cpu.features:
+                for feature in self.cpu.features:
+                    feat_elem = ET.SubElement(cpu_elem, 'feature')
+                    feat_elem.set('name', feature.name)
+                    if feature.policy:
+                        feat_elem.set('policy', feature.policy)
 
-            if self.cpu.cache:
+            if hasattr(self.cpu, 'cache') and self.cpu.cache:
                 cache_elem = ET.SubElement(cpu_elem, 'cache')
                 if 'level' in self.cpu.cache:
                     cache_elem.set('level', str(self.cpu.cache['level']))
                 if 'mode' in self.cpu.cache:
                     cache_elem.set('mode', self.cpu.cache['mode'])
 
-            if self.cpu.maxphysaddr:
+            if hasattr(self.cpu, 'maxphysaddr') and self.cpu.maxphysaddr:
                 maxphysaddr_elem = ET.SubElement(cpu_elem, 'maxphysaddr')
                 if 'mode' in self.cpu.maxphysaddr:
                     maxphysaddr_elem.set('mode', self.cpu.maxphysaddr['mode'])
