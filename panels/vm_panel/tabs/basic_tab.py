@@ -93,16 +93,20 @@ class BasicTab(BaseConfigTab):
         from components.base_tab import create_two_column_layout
         from utils.parsers import MEMORY_OPTIONS
 
+        # 创建一个容器来放置 CPU 和内存分配面板
+        cpu_mem_frame = ctk.CTkFrame(self, fg_color='transparent')
+        cpu_mem_frame.grid(row=1, column=0, columnspan=2, sticky='nsew', padx=5, pady=5)
+        cpu_mem_frame.grid_columnconfigure(0, weight=1)
+        cpu_mem_frame.grid_columnconfigure(1, weight=1)
+
         # 使用 create_two_column_layout 创建两列布局
         cpu_frame, mem_frame = create_two_column_layout(
-            self,
+            cpu_mem_frame,
             left_title='CPU 分配',
             right_title='内存分配',
             left_color='#64b5f6',
             right_color='#4caf50',
         )
-        cpu_frame.grid(row=1, column=0, sticky='nsew', padx=5, pady=5)
-        mem_frame.grid(row=1, column=1, sticky='nsew', padx=5, pady=5)
 
         # 基本 CPU 配置
         self.max_vcpu = self._create_label_entry(
@@ -163,12 +167,23 @@ class BasicTab(BaseConfigTab):
         self.vcpu_list_frame = ctk.CTkFrame(cpu_frame, fg_color='transparent')
         self.vcpu_list_frame.grid(row=7, column=0, columnspan=2, sticky='nsew')
         self.vcpu_list_frame.grid_columnconfigure(0, weight=1)
+        # 添加最小高度，确保即使没有 vCPU 实例也能占据足够空间
+        self.vcpu_list_frame.configure(height=120)
+
+        # 为 cpu_frame 添加行权重配置，确保 vCPU 列表区域即使为空也能占据空间
+        for i in range(1, 7):
+            cpu_frame.grid_rowconfigure(i, weight=0)
+        cpu_frame.grid_rowconfigure(7, weight=1)
 
         # 默认不添加 vCPU 实例，保持 vcpu_instances 为空
 
         # 内存配置内容
         mem_frame.grid_columnconfigure(0, weight=1)
         mem_frame.grid_columnconfigure(1, weight=1)
+        # 为内存面板添加行权重配置，与 CPU 面板保持一致
+        for i in range(1, 8):
+            mem_frame.grid_rowconfigure(i, weight=0)
+        mem_frame.grid_rowconfigure(8, weight=1)
 
         # 内存基本配置
         self.memory = self._create_label_option(
