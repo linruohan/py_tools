@@ -2,7 +2,6 @@
 
 from .basic_tab import BasicTab
 from .block_io_tuning_tab import BlockIOTuningTab
-from .cpu_allocation_tab import CPUAllocationTab
 from .cpu_model_topology_tab import CPUModelTopologyTab
 from .cpu_tuning_tab import CPUTuningTab
 from .devices_tab import DevicesTab
@@ -28,7 +27,6 @@ from .time_keeping_tab import TimeKeepingTab
 __all__ = [
     'BasicTab',
     'BlockIOTuningTab',
-    'CPUAllocationTab',
     'CPUModelTopologyTab',
     'CPUTuningTab',
     'DevicesTab',

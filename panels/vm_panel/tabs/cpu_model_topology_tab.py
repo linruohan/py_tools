@@ -435,6 +435,102 @@ class CPUCacheSubTab(BaseConfigTab):
             self.physaddr_limit.insert(0, maxphysaddr['limit'])
 
 
+class CPUTopologySubTab(BaseConfigTab):
+    """CPU 拓扑子 Tab."""
+
+    def __init__(self, master, on_change_callback=None, **kwargs):
+        super().__init__(master, on_change_callback, **kwargs)
+
+        self._init_ui()
+
+    def _init_ui(self) -> None:
+        """初始化界面."""
+        self.grid_columnconfigure(0, weight=1)
+        self.grid_columnconfigure(1, weight=1)
+
+        left_frame = ctk.CTkFrame(self, fg_color=BG_COLOR_CONTENT, corner_radius=6)
+        left_frame.grid(row=0, column=0, sticky='nsew', padx=5, pady=5)
+        left_frame.grid_columnconfigure(1, weight=1)
+
+        ctk.CTkLabel(left_frame, text='CPU 拓扑', font=CTK_FONT_BOLD, text_color='#ff5722').grid(
+            row=0, column=0, columnspan=2, padx=10, pady=5, sticky='w'
+        )
+
+        ctk.CTkLabel(left_frame, text='Socket数:', font=CTK_FONT_MAIN, width=100, anchor='w').grid(
+            row=1, column=0, padx=10, pady=5, sticky='w'
+        )
+        self.sockets = ctk.CTkEntry(left_frame, placeholder_text='1', width=80)
+        self.sockets.grid(row=1, column=1, padx=5, pady=5, sticky='w')
+        self.sockets.bind('<KeyRelease>', lambda e: self._trigger_change())
+
+        ctk.CTkLabel(left_frame, text='Die数:', font=CTK_FONT_MAIN, width=100, anchor='w').grid(
+            row=2, column=0, padx=10, pady=5, sticky='w'
+        )
+        self.dies = ctk.CTkEntry(left_frame, placeholder_text='1', width=80)
+        self.dies.grid(row=2, column=1, padx=5, pady=5, sticky='w')
+        self.dies.bind('<KeyRelease>', lambda e: self._trigger_change())
+
+        ctk.CTkLabel(left_frame, text='Cluster数:', font=CTK_FONT_MAIN, width=100, anchor='w').grid(
+            row=3, column=0, padx=10, pady=5, sticky='w'
+        )
+        self.clusters = ctk.CTkEntry(left_frame, placeholder_text='1', width=80)
+        self.clusters.grid(row=3, column=1, padx=5, pady=5, sticky='w')
+        self.clusters.bind('<KeyRelease>', lambda e: self._trigger_change())
+
+        right_frame = ctk.CTkFrame(self, fg_color=BG_COLOR_CONTENT, corner_radius=6)
+        right_frame.grid(row=0, column=1, sticky='nsew', padx=5, pady=5)
+        right_frame.grid_columnconfigure(1, weight=1)
+
+        ctk.CTkLabel(right_frame, text='核心配置', font=CTK_FONT_BOLD, text_color='#4caf50').grid(
+            row=0, column=0, columnspan=2, padx=10, pady=5, sticky='w'
+        )
+
+        ctk.CTkLabel(right_frame, text='每Socket核心数:', font=CTK_FONT_MAIN, width=120, anchor='w').grid(
+            row=1, column=0, padx=10, pady=5, sticky='w'
+        )
+        self.cores = ctk.CTkEntry(right_frame, placeholder_text='2', width=80)
+        self.cores.grid(row=1, column=1, padx=5, pady=5, sticky='w')
+        self.cores.bind('<KeyRelease>', lambda e: self._trigger_change())
+
+        ctk.CTkLabel(right_frame, text='每核心线程数:', font=CTK_FONT_MAIN, width=120, anchor='w').grid(
+            row=2, column=0, padx=10, pady=5, sticky='w'
+        )
+        self.threads = ctk.CTkEntry(right_frame, placeholder_text='1', width=80)
+        self.threads.grid(row=2, column=1, padx=5, pady=5, sticky='w')
+        self.threads.bind('<KeyRelease>', lambda e: self._trigger_change())
+
+    def get_config(self) -> dict:
+        """获取配置数据."""
+        return {
+            'topology': {
+                'sockets': self.sockets.get().strip(),
+                'dies': self.dies.get().strip(),
+                'clusters': self.clusters.get().strip(),
+                'cores': self.cores.get().strip(),
+                'threads': self.threads.get().strip(),
+            },
+        }
+
+    def load_config(self, config: dict) -> None:
+        """加载配置数据."""
+        topology = config.get('topology', {})
+        if 'sockets' in topology:
+            self.sockets.delete(0, 'end')
+            self.sockets.insert(0, topology['sockets'])
+        if 'dies' in topology:
+            self.dies.delete(0, 'end')
+            self.dies.insert(0, topology['dies'])
+        if 'clusters' in topology:
+            self.clusters.delete(0, 'end')
+            self.clusters.insert(0, topology['clusters'])
+        if 'cores' in topology:
+            self.cores.delete(0, 'end')
+            self.cores.insert(0, topology['cores'])
+        if 'threads' in topology:
+            self.threads.delete(0, 'end')
+            self.threads.insert(0, topology['threads'])
+
+
 class CPUModelTopologyTab(BaseConfigTab):
     """CPU 模型与拓扑配置 Tab."""
 
@@ -452,6 +548,11 @@ class CPUModelTopologyTab(BaseConfigTab):
         'cache': {
             'name': 'CPU 缓存',
             'class': CPUCacheSubTab,
+            'default': False,
+        },
+        'topology': {
+            'name': 'CPU 拓扑',
+            'class': CPUTopologySubTab,
             'default': False,
         },
     }

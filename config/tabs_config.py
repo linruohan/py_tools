@@ -6,7 +6,6 @@ TABS_CONFIG: dict = {
     'general_metadata': {'name': '通用元数据', 'class': 'BasicTab', 'default_on': True},
     'os_booting': {'name': '系统启动', 'class': 'OSTab', 'default_on': True},
     'devices': {'name': 'Devices', 'class': 'DevicesTab', 'default_on': True},
-    'cpu_allocation': {'name': 'CPU分配', 'class': 'CPUAllocationTab', 'default_on': True},
     'memory_allocation': {
         'name': 'Memory分配',
         'class': 'MemoryAllocationTab',

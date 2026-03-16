@@ -28,7 +28,6 @@ def _get_tab_classes():
         from .tabs import (
             BasicTab,
             BlockIOTuningTab,
-            CPUAllocationTab,
             CPUModelTopologyTab,
             CPUTuningTab,
             DevicesTab,
@@ -55,7 +54,6 @@ def _get_tab_classes():
         _TAB_CLASSES = {
             'BasicTab': BasicTab,
             'BlockIOTuningTab': BlockIOTuningTab,
-            'CPUAllocationTab': CPUAllocationTab,
             'CPUModelTopologyTab': CPUModelTopologyTab,
             'CPUTuningTab': CPUTuningTab,
             'DevicesTab': DevicesTab,
