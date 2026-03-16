@@ -40,6 +40,7 @@ class SearchFilter(ctk.CTkFrame):
         """初始化界面."""
         self.grid_columnconfigure(0, weight=1)
         self.grid_rowconfigure(0, weight=0)
+        self.grid_rowconfigure(1, weight=0)
 
         # 计算并设置最大宽度（在创建输入框之前）
         self._max_width = self._calculate_max_width()
@@ -138,13 +139,8 @@ class SearchFilter(ctk.CTkFrame):
         if not self.filtered_items:
             return
 
-        # 需要等待输入框渲染完成才能获取正确尺寸
-        self.update_idletasks()
-        entry_height = self.search_entry.winfo_height()
+        # 获取输入框的宽度
         entry_width = self.search_entry.winfo_width()
-        # 获取输入框在父容器中的位置
-        entry_y = self.search_entry.winfo_y()
-        entry_x = self.search_entry.winfo_x()
 
         # 创建下拉框架，显示在输入框下方
         # width 和 height 必须在构造函数中设置（customtkinter 要求）
@@ -157,8 +153,8 @@ class SearchFilter(ctk.CTkFrame):
             height=150,  # 固定高度
             width=entry_width,  # 使用输入框的宽度
         )
-        # 使用place布局将下拉框显示在输入框下方，避免影响其他组件布局
-        self.dropdown_frame.place(x=entry_x, y=entry_y + entry_height)
+        # 使用grid布局将下拉框显示在输入框下方
+        self.dropdown_frame.grid(row=1, column=0, sticky='ew', padx=0, pady=0)
         self.dropdown_frame.grid_columnconfigure(0, weight=1)
 
         # 可滚动列表
