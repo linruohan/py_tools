@@ -4,8 +4,8 @@
 a = Analysis(
     ['main.py'],
     pathex=[],
-    binaries=[],
-    datas=[('c:/software/Python3/lib/site-packages/customtkinter', 'customtkinter/'), ('d:/codehub/py_tools/test_images', 'test_images/')],
+    binaries=[],D:\codehub\py_tools\resources\images
+    datas=[('c:/software/Python3/lib/site-packages/customtkinter', 'customtkinter/'), ('d:/codehub/py_tools/resources/images', 'resources/images/')],
     hiddenimports=[],
     hookspath=[],
     hooksconfig={},
@@ -32,7 +32,7 @@ exe = EXE(
     target_arch=None,
     codesign_identity=None,
     entitlements_file=None,
-    icon=['d:\\codehub\\py_tools\\mytool.ico'],
+    icon=['d:\\codehub\\py_tools\\resources\\icons\\mytool.ico'],
 )
 coll = COLLECT(
     exe,

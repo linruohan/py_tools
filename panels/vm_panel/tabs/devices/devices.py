@@ -5,10 +5,55 @@ from typing import ClassVar
 from components.base_tab import BaseConfigTab
 from components.inner_tab_panel import InnerTabPanel
 
+from .audio_backends import AudioBackendsTab
+from .controllers import ControllersTab
+from .crypto import CryptoTab
+from .device_addresses import DeviceAddressesTab
+from .device_leases import DeviceLeasesTab
 from .disk import DiskDevicesTab
+from .filesystems import FilesystemsTab
 from .graphics import GraphicsTab
+from .hard_disks import HardDisksTab
+from .host_device_assignment import (
+    ACPIInitiatorsTab,
+    BlockCharDevicesTab,
+    HostDeviceAssignmentTab,
+    USBPCISCSIDevicesTab,
+)
 from .hostdev import MdevHostdevTab, PCIHostdevTab, SCSIHostdevTab, USBHostdevTab
+from .iommu_devices import IOMMUDevicesTab
+from .memory_devices import MemoryDevicesTab
+from .network_interfaces import (
+    BridgeToLANTab,
+    DirectAttachmentTab,
+    NetworkInterfacesTab,
+    NetworkQoSTab,
+    PasstConnectionTab,
+    PCIPassthroughTab,
+    SLIRPConnectionTab,
+    VirtualNetworkTab,
+)
+from .nvram_device import NVRAMDeviceTab
+from .other_devices import (
+    ConsolesDevicesTab,
+    GraphicalFramebuffersTab,
+    HubDevicesTab,
+    InputDevicesTab,
+    MemoryBalloonTab,
+    SoundDevicesTab,
+    TPMDeviceTab,
+    VideoDevicesTab,
+    WatchdogDevicesTab,
+)
 from .others import OthersTab
+from .panic_device import PanicDeviceTab
+from .pstore import PstoreTab
+from .random_number_generator import RandomNumberGeneratorTab
+from .redirected_devices import RedirectedDevicesTab
+from .shared_memory_device import SharedMemoryDeviceTab
+from .smartcard_devices import SmartcardDevicesTab
+from .virtio import VirtioDeviceModelsTab, VirtioOptionsTab
+from .vsock import VsockTab
 
 
 class DevicesTab(BaseConfigTab):
@@ -20,33 +65,233 @@ class DevicesTab(BaseConfigTab):
             'class': GraphicsTab,
             'default': True,
         },
+        'hard_disks': {
+            'name': 'Hard drives, floppy disks, CDROMs',
+            'class': HardDisksTab,
+            'default': False,
+        },
+        'filesystems': {
+            'name': 'Filesystems',
+            'class': FilesystemsTab,
+            'default': False,
+        },
+        'device_addresses': {
+            'name': 'Device Addresses',
+            'class': DeviceAddressesTab,
+            'default': False,
+        },
+        'virtio_options': {
+            'name': 'Virtio-related options',
+            'class': VirtioOptionsTab,
+            'default': False,
+        },
+        'virtio_models': {
+            'name': 'Virtio device models',
+            'class': VirtioDeviceModelsTab,
+            'default': False,
+        },
+        'controllers': {
+            'name': 'Controllers',
+            'class': ControllersTab,
+            'default': False,
+        },
+        'device_leases': {
+            'name': 'Device leases',
+            'class': DeviceLeasesTab,
+            'default': False,
+        },
+        'host_device_assignment': {
+            'name': 'Host device assignment',
+            'class': HostDeviceAssignmentTab,
+            'default': False,
+        },
+        'usb_pci_scsi': {
+            'name': 'USB / PCI / SCSI devices',
+            'class': USBPCISCSIDevicesTab,
+            'default': False,
+        },
+        'acpi_initiators': {
+            'name': 'ACPI Generic Initiators',
+            'class': ACPIInitiatorsTab,
+            'default': False,
+        },
+        'block_char_devices': {
+            'name': 'Block / character devices',
+            'class': BlockCharDevicesTab,
+            'default': False,
+        },
+        'network_interfaces': {
+            'name': 'Network interfaces',
+            'class': NetworkInterfacesTab,
+            'default': False,
+        },
+        'virtual_network': {
+            'name': 'Virtual network',
+            'class': VirtualNetworkTab,
+            'default': False,
+        },
+        'bridge_to_lan': {
+            'name': 'Bridge to LAN',
+            'class': BridgeToLANTab,
+            'default': False,
+        },
+        'slirp_connection': {
+            'name': 'Userspace connection using SLIRP',
+            'class': SLIRPConnectionTab,
+            'default': False,
+        },
+        'passt_connection': {
+            'name': 'Userspace connection using passt',
+            'class': PasstConnectionTab,
+            'default': False,
+        },
+        'direct_attachment': {
+            'name': 'Direct attachment to physical interface',
+            'class': DirectAttachmentTab,
+            'default': False,
+        },
+        'pci_passthrough': {
+            'name': 'PCI Passthrough',
+            'class': PCIPassthroughTab,
+            'default': False,
+        },
+        'network_qos': {
+            'name': 'Quality of service',
+            'class': NetworkQoSTab,
+            'default': False,
+        },
+        'input_devices': {
+            'name': 'Input devices',
+            'class': InputDevicesTab,
+            'default': False,
+        },
+        'hub_devices': {
+            'name': 'Hub devices',
+            'class': HubDevicesTab,
+            'default': False,
+        },
+        'graphical_framebuffers': {
+            'name': 'Graphical framebuffers',
+            'class': GraphicalFramebuffersTab,
+            'default': False,
+        },
+        'video_devices': {
+            'name': 'Video devices',
+            'class': VideoDevicesTab,
+            'default': False,
+        },
+        'consoles_devices': {
+            'name': 'Consoles, serial, parallel & channel devices',
+            'class': ConsolesDevicesTab,
+            'default': False,
+        },
+        'sound_devices': {
+            'name': 'Sound devices',
+            'class': SoundDevicesTab,
+            'default': False,
+        },
+        'audio_backends': {
+            'name': 'Audio backends',
+            'class': AudioBackendsTab,
+            'default': False,
+        },
+        'watchdog_devices': {
+            'name': 'Watchdog devices',
+            'class': WatchdogDevicesTab,
+            'default': False,
+        },
+        'memory_balloon': {
+            'name': 'Memory balloon device',
+            'class': MemoryBalloonTab,
+            'default': False,
+        },
+        'random_number_generator': {
+            'name': 'Random number generator device',
+            'class': RandomNumberGeneratorTab,
+            'default': False,
+        },
+        'tpm_device': {
+            'name': 'TPM device',
+            'class': TPMDeviceTab,
+            'default': False,
+        },
+        'nvram_device': {
+            'name': 'NVRAM device',
+            'class': NVRAMDeviceTab,
+            'default': False,
+        },
+        'panic_device': {
+            'name': 'Panic device',
+            'class': PanicDeviceTab,
+            'default': False,
+        },
+        'shared_memory_device': {
+            'name': 'Shared memory device',
+            'class': SharedMemoryDeviceTab,
+            'default': False,
+        },
+        'memory_devices': {
+            'name': 'Memory devices',
+            'class': MemoryDevicesTab,
+            'default': False,
+        },
+        'iommu_devices': {
+            'name': 'IOMMU devices',
+            'class': IOMMUDevicesTab,
+            'default': False,
+        },
+        'vsock': {
+            'name': 'Vsock',
+            'class': VsockTab,
+            'default': False,
+        },
+        'crypto': {
+            'name': 'Crypto',
+            'class': CryptoTab,
+            'default': False,
+        },
+        'pstore': {
+            'name': 'Pstore',
+            'class': PstoreTab,
+            'default': False,
+        },
+        'redirected_devices': {
+            'name': 'Redirected devices',
+            'class': RedirectedDevicesTab,
+            'default': False,
+        },
+        'smartcard_devices': {
+            'name': 'Smartcard devices',
+            'class': SmartcardDevicesTab,
+            'default': False,
+        },
         'disk_devices': {
-            'name': 'Disk Devices',
+            'name': 'Disk Devices (Legacy)',
             'class': DiskDevicesTab,
             'default': False,
         },
         'usb_hostdev': {
-            'name': 'USB Devices',
+            'name': 'USB Devices (Legacy)',
             'class': USBHostdevTab,
             'default': False,
         },
         'pci_hostdev': {
-            'name': 'PCI Devices',
+            'name': 'PCI Devices (Legacy)',
             'class': PCIHostdevTab,
             'default': False,
         },
         'scsi_hostdev': {
-            'name': 'SCSI Devices',
+            'name': 'SCSI Devices (Legacy)',
             'class': SCSIHostdevTab,
             'default': False,
         },
         'mdev_hostdev': {
-            'name': 'MDEV Devices',
+            'name': 'MDEV Devices (Legacy)',
             'class': MdevHostdevTab,
             'default': False,
         },
         'others': {
-            'name': 'Other Devices',
+            'name': 'Other Devices (Legacy)',
             'class': OthersTab,
             'default': False,
         },
@@ -110,6 +355,14 @@ class DevicesTab(BaseConfigTab):
             return others_tab.get_controller_config()
         return {'disable_usb': False, 'disable_sound': False}
 
+    def get_controllers_config(self):
+        """获取控制器配置."""
+        controllers_tab = self.inner_panel.get_tab_instance('controllers')
+        if controllers_tab and hasattr(controllers_tab, 'get_config'):
+            config = controllers_tab.get_config()
+            return config.get('controllers', [])
+        return []
+
     def get_disk_devices_config(self) -> list:
         """获取磁盘设备配置."""
         disk_tab = self.inner_panel.get_tab_instance('disk_devices')
@@ -169,6 +422,7 @@ class DevicesTab(BaseConfigTab):
             'disable_sound': self.get_controller_config().get('disable_sound', False),
             'hostdevs': self.get_hostdev_configs(),
             'disk_devices': self.get_disk_devices_config(),
+            'controllers': self.get_controllers_config(),
         }
 
     def to_xml(self) -> dict:
@@ -190,24 +444,52 @@ class DevicesTab(BaseConfigTab):
             'disks': [],
         }
 
+        # 收集已有的控制器类型
+        existing_controllers = set()
+        for controller in devices_config.get('controllers', []):
+            ctrl_type = controller.get('type')
+            if ctrl_type:
+                existing_controllers.add(ctrl_type)
+            devices['controllers'].append(controller)
+
         # 添加磁盘设备
         for disk in devices_config.get('disk_devices', []):
             disk_xml = self._build_disk_xml(disk)
             devices['disks'].append(disk_xml)
 
-        # 添加 USB 控制器
+            # 检查磁盘设备的总线类型，添加相应的控制器
+            bus = disk.get('bus')
+            if bus:
+                if bus == 'scsi' and 'scsi' not in existing_controllers:
+                    devices['controllers'].append({'type': 'scsi', 'model': 'virtio-scsi'})
+                    existing_controllers.add('scsi')
+                elif bus == 'usb' and 'usb' not in existing_controllers:
+                    devices['controllers'].append({'type': 'usb', 'model': 'usb-xhci'})
+                    existing_controllers.add('usb')
+                elif bus == 'sata' and 'sata' not in existing_controllers:
+                    devices['controllers'].append({'type': 'sata', 'model': 'sata'})
+                    existing_controllers.add('sata')
+
+        # 处理主机设备
         hostdevs = devices_config.get('hostdevs', {})
+
+        # 添加 USB 控制器和设备
         usb_config = hostdevs.get('usb', {})
         if usb_config.get('controller') and usb_config.get('controller') != 'none':
-            devices['controllers'].append(
-                {
-                    'type': 'usb',
-                    'model': usb_config['controller'],
-                }
-            )
+            if 'usb' not in existing_controllers:
+                devices['controllers'].append(
+                    {
+                        'type': 'usb',
+                        'model': usb_config['controller'],
+                    }
+                )
+                existing_controllers.add('usb')
 
         # 添加 USB 设备
         for usb_dev in usb_config.get('devices', []):
+            if 'usb' not in existing_controllers:
+                devices['controllers'].append({'type': 'usb', 'model': 'usb-xhci'})
+                existing_controllers.add('usb')
             devices['hostdevs'].append(
                 {
                     'type': 'usb',
@@ -217,6 +499,19 @@ class DevicesTab(BaseConfigTab):
                         'startup_policy': usb_config.get('startup_policy', 'optional'),
                         'guest_reset': usb_config.get('guest_reset', False),
                     },
+                }
+            )
+
+        # 添加 SCSI 设备
+        for scsi_dev in hostdevs.get('scsi', []):
+            if 'scsi' not in existing_controllers:
+                devices['controllers'].append({'type': 'scsi', 'model': 'virtio-scsi'})
+                existing_controllers.add('scsi')
+            devices['hostdevs'].append(
+                {
+                    'type': 'scsi',
+                    'mode': 'subsystem',
+                    'source': scsi_dev,
                 }
             )
 
@@ -236,16 +531,6 @@ class DevicesTab(BaseConfigTab):
                     'boot_order': pci_dev.get('boot_order'),
                     'rom_bar': pci_dev.get('rom_bar'),
                     'rom_file': pci_dev.get('rom_file'),
-                }
-            )
-
-        # 添加 SCSI 设备
-        for scsi_dev in hostdevs.get('scsi', []):
-            devices['hostdevs'].append(
-                {
-                    'type': 'scsi',
-                    'mode': 'subsystem',
-                    'source': scsi_dev,
                 }
             )
 
