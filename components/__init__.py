@@ -11,6 +11,7 @@ from components.base_tab import (
     create_two_column_layout,
 )
 from components.inner_tab_panel import InnerTabPanel
+from components.search_filter import SearchFilter
 from components.tab_toggle import TabTogglePanel, TabToggleSwitch
 
 __all__ = [
@@ -18,6 +19,7 @@ __all__ = [
     'BaseConfigTab',
     'BaseInnerTab',
     'InnerTabPanel',
+    'SearchFilter',
     'TabTogglePanel',
     'TabToggleSwitch',
     'create_three_column_layout',

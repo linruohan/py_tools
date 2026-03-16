@@ -48,6 +48,8 @@ class InnerTabPanel(ctk.CTkFrame):
 
         button_frame = ctk.CTkFrame(self, fg_color=BG_COLOR_CONTENT, corner_radius=6)
         button_frame.grid(row=0, column=0, sticky='ew', padx=5, pady=5)
+        # 允许按钮框架水平扩展
+        button_frame.grid_columnconfigure(0, weight=1)
 
         content_frame = ctk.CTkFrame(self, fg_color='transparent')
         content_frame.grid(row=1, column=0, sticky='nsew', padx=5, pady=5)
@@ -56,7 +58,15 @@ class InnerTabPanel(ctk.CTkFrame):
 
         self.content_frame = content_frame
 
+        # 使用CTKScrollableFrame来实现可滚动的按钮面板
+        from customtkinter import CTkScrollableFrame
+
+        scrollable_frame = CTkScrollableFrame(button_frame)
+        scrollable_frame.grid(row=0, column=0, sticky='nsew', padx=5, pady=5)
+
         col = 0
+        row = 0
+        max_cols = 11  # 每行最多显示6个按钮
         first_tab = None
         for tab_key, config in self.tabs_config.items():
             is_default = config.get('default', False)
@@ -64,18 +74,22 @@ class InnerTabPanel(ctk.CTkFrame):
                 first_tab = tab_key
 
             btn = ctk.CTkButton(
-                button_frame,
+                scrollable_frame,
                 text=config['name'],
-                width=80,
+                width=140,
                 height=28,
                 fg_color='#3B8ED0' if is_default else '#555555',
                 hover_color='#1F6AA5' if is_default else '#444444',
                 font=CTK_FONT_SMALL,
                 command=lambda k=tab_key: self._switch_tab(k),
             )
-            btn.grid(row=0, column=col, padx=3, pady=5)
+            btn.grid(row=row, column=col, padx=3, pady=3, sticky='w')
             self.tab_buttons[tab_key] = btn
+
             col += 1
+            if col >= max_cols:
+                col = 0
+                row += 1
 
         if first_tab:
             self._switch_tab(first_tab, initial=True)

@@ -1,37 +1,27 @@
 """设备配置主模块 - 组合所有设备子模块."""
 
-from typing import ClassVar
+from typing import Any
+
+import customtkinter as ctk
 
 from components.base_tab import BaseConfigTab
-from components.inner_tab_panel import InnerTabPanel
+from components.search_filter import SearchFilter
+from utils.styles import BG_COLOR_CONTENT, CTK_FONT_SMALL
 
 from .audio_backends import AudioBackendsTab
 from .controllers import ControllersTab
 from .crypto import CryptoTab
 from .device_addresses import DeviceAddressesTab
-from .device_leases import DeviceLeasesTab
-from .disk import DiskDevicesTab
 from .filesystems import FilesystemsTab
 from .graphics import GraphicsTab
 from .hard_disks import HardDisksTab
 from .host_device_assignment import (
-    ACPIInitiatorsTab,
-    BlockCharDevicesTab,
     HostDeviceAssignmentTab,
-    USBPCISCSIDevicesTab,
 )
-from .hostdev import MdevHostdevTab, PCIHostdevTab, SCSIHostdevTab, USBHostdevTab
 from .iommu_devices import IOMMUDevicesTab
 from .memory_devices import MemoryDevicesTab
 from .network_interfaces import (
-    BridgeToLANTab,
-    DirectAttachmentTab,
     NetworkInterfacesTab,
-    NetworkQoSTab,
-    PasstConnectionTab,
-    PCIPassthroughTab,
-    SLIRPConnectionTab,
-    VirtualNetworkTab,
 )
 from .nvram_device import NVRAMDeviceTab
 from .other_devices import (
@@ -45,280 +35,328 @@ from .other_devices import (
     VideoDevicesTab,
     WatchdogDevicesTab,
 )
-from .others import OthersTab
 from .panic_device import PanicDeviceTab
 from .pstore import PstoreTab
 from .random_number_generator import RandomNumberGeneratorTab
 from .redirected_devices import RedirectedDevicesTab
 from .shared_memory_device import SharedMemoryDeviceTab
 from .smartcard_devices import SmartcardDevicesTab
-from .virtio import VirtioDeviceModelsTab, VirtioOptionsTab
 from .vsock import VsockTab
 
 
 class DevicesTab(BaseConfigTab):
     """设备配置 Tab - 包含图形、hostdev 子选项."""
 
-    SUB_TABS_CONFIG: ClassVar[dict] = {
-        'graphics': {
-            'name': 'Graphics',
-            'class': GraphicsTab,
-            'default': True,
-        },
-        'hard_disks': {
-            'name': 'Hard drives, floppy disks, CDROMs',
-            'class': HardDisksTab,
-            'default': False,
-        },
-        'filesystems': {
-            'name': 'Filesystems',
-            'class': FilesystemsTab,
-            'default': False,
-        },
-        'device_addresses': {
-            'name': 'Device Addresses',
-            'class': DeviceAddressesTab,
-            'default': False,
-        },
-        'virtio_options': {
-            'name': 'Virtio-related options',
-            'class': VirtioOptionsTab,
-            'default': False,
-        },
-        'virtio_models': {
-            'name': 'Virtio device models',
-            'class': VirtioDeviceModelsTab,
-            'default': False,
-        },
-        'controllers': {
-            'name': 'Controllers',
-            'class': ControllersTab,
-            'default': False,
-        },
-        'device_leases': {
-            'name': 'Device leases',
-            'class': DeviceLeasesTab,
-            'default': False,
-        },
-        'host_device_assignment': {
-            'name': 'Host device assignment',
-            'class': HostDeviceAssignmentTab,
-            'default': False,
-        },
-        'usb_pci_scsi': {
-            'name': 'USB / PCI / SCSI devices',
-            'class': USBPCISCSIDevicesTab,
-            'default': False,
-        },
-        'acpi_initiators': {
-            'name': 'ACPI Generic Initiators',
-            'class': ACPIInitiatorsTab,
-            'default': False,
-        },
-        'block_char_devices': {
-            'name': 'Block / character devices',
-            'class': BlockCharDevicesTab,
-            'default': False,
-        },
-        'network_interfaces': {
-            'name': 'Network interfaces',
-            'class': NetworkInterfacesTab,
-            'default': False,
-        },
-        'virtual_network': {
-            'name': 'Virtual network',
-            'class': VirtualNetworkTab,
-            'default': False,
-        },
-        'bridge_to_lan': {
-            'name': 'Bridge to LAN',
-            'class': BridgeToLANTab,
-            'default': False,
-        },
-        'slirp_connection': {
-            'name': 'Userspace connection using SLIRP',
-            'class': SLIRPConnectionTab,
-            'default': False,
-        },
-        'passt_connection': {
-            'name': 'Userspace connection using passt',
-            'class': PasstConnectionTab,
-            'default': False,
-        },
-        'direct_attachment': {
-            'name': 'Direct attachment to physical interface',
-            'class': DirectAttachmentTab,
-            'default': False,
-        },
-        'pci_passthrough': {
-            'name': 'PCI Passthrough',
-            'class': PCIPassthroughTab,
-            'default': False,
-        },
-        'network_qos': {
-            'name': 'Quality of service',
-            'class': NetworkQoSTab,
-            'default': False,
-        },
-        'input_devices': {
-            'name': 'Input devices',
-            'class': InputDevicesTab,
-            'default': False,
-        },
-        'hub_devices': {
-            'name': 'Hub devices',
-            'class': HubDevicesTab,
-            'default': False,
-        },
-        'graphical_framebuffers': {
-            'name': 'Graphical framebuffers',
-            'class': GraphicalFramebuffersTab,
-            'default': False,
-        },
-        'video_devices': {
-            'name': 'Video devices',
-            'class': VideoDevicesTab,
-            'default': False,
-        },
-        'consoles_devices': {
-            'name': 'Consoles, serial, parallel & channel devices',
-            'class': ConsolesDevicesTab,
-            'default': False,
-        },
-        'sound_devices': {
-            'name': 'Sound devices',
-            'class': SoundDevicesTab,
-            'default': False,
-        },
-        'audio_backends': {
-            'name': 'Audio backends',
-            'class': AudioBackendsTab,
-            'default': False,
-        },
-        'watchdog_devices': {
-            'name': 'Watchdog devices',
-            'class': WatchdogDevicesTab,
-            'default': False,
-        },
-        'memory_balloon': {
-            'name': 'Memory balloon device',
-            'class': MemoryBalloonTab,
-            'default': False,
-        },
-        'random_number_generator': {
-            'name': 'Random number generator device',
-            'class': RandomNumberGeneratorTab,
-            'default': False,
-        },
-        'tpm_device': {
-            'name': 'TPM device',
-            'class': TPMDeviceTab,
-            'default': False,
-        },
-        'nvram_device': {
-            'name': 'NVRAM device',
-            'class': NVRAMDeviceTab,
-            'default': False,
-        },
-        'panic_device': {
-            'name': 'Panic device',
-            'class': PanicDeviceTab,
-            'default': False,
-        },
-        'shared_memory_device': {
-            'name': 'Shared memory device',
-            'class': SharedMemoryDeviceTab,
-            'default': False,
-        },
-        'memory_devices': {
-            'name': 'Memory devices',
-            'class': MemoryDevicesTab,
-            'default': False,
-        },
-        'iommu_devices': {
-            'name': 'IOMMU devices',
-            'class': IOMMUDevicesTab,
-            'default': False,
-        },
-        'vsock': {
-            'name': 'Vsock',
-            'class': VsockTab,
-            'default': False,
-        },
-        'crypto': {
-            'name': 'Crypto',
-            'class': CryptoTab,
-            'default': False,
-        },
-        'pstore': {
-            'name': 'Pstore',
-            'class': PstoreTab,
-            'default': False,
-        },
-        'redirected_devices': {
-            'name': 'Redirected devices',
-            'class': RedirectedDevicesTab,
-            'default': False,
-        },
-        'smartcard_devices': {
-            'name': 'Smartcard devices',
-            'class': SmartcardDevicesTab,
-            'default': False,
-        },
-        'disk_devices': {
-            'name': 'Disk Devices (Legacy)',
-            'class': DiskDevicesTab,
-            'default': False,
-        },
-        'usb_hostdev': {
-            'name': 'USB Devices (Legacy)',
-            'class': USBHostdevTab,
-            'default': False,
-        },
-        'pci_hostdev': {
-            'name': 'PCI Devices (Legacy)',
-            'class': PCIHostdevTab,
-            'default': False,
-        },
-        'scsi_hostdev': {
-            'name': 'SCSI Devices (Legacy)',
-            'class': SCSIHostdevTab,
-            'default': False,
-        },
-        'mdev_hostdev': {
-            'name': 'MDEV Devices (Legacy)',
-            'class': MdevHostdevTab,
-            'default': False,
-        },
-        'others': {
-            'name': 'Other Devices (Legacy)',
-            'class': OthersTab,
-            'default': False,
-        },
+    # 设备类型配置
+    DEVICE_TYPES = [
+        {'value': 'graphics', 'label': 'Graphics'},
+        {'value': 'hard_disks', 'label': 'Hard drives, floppy disks, CDROMs'},
+        {'value': 'filesystems', 'label': 'Filesystems'},
+        {'value': 'device_addresses', 'label': 'Device Addresses'},
+        {'value': 'controllers', 'label': 'Controllers'},
+        {'value': 'host_device_assignment', 'label': 'Host device assignment'},
+        {'value': 'network_interfaces', 'label': 'Network interfaces'},
+        {'value': 'input_devices', 'label': 'Input devices'},
+        {'value': 'hub_devices', 'label': 'Hub devices'},
+        {'value': 'graphical_framebuffers', 'label': 'Graphical framebuffers'},
+        {'value': 'video_devices', 'label': 'Video devices'},
+        {'value': 'consoles_devices', 'label': 'Consoles, serial, parallel & channel devices'},
+        {'value': 'sound_devices', 'label': 'Sound devices'},
+        {'value': 'audio_backends', 'label': 'Audio backends'},
+        {'value': 'watchdog_devices', 'label': 'Watchdog devices'},
+        {'value': 'memory_balloon', 'label': 'Memory balloon device'},
+        {'value': 'random_number_generator', 'label': 'Random number generator device'},
+        {'value': 'tpm_device', 'label': 'TPM device'},
+        {'value': 'nvram_device', 'label': 'NVRAM device'},
+        {'value': 'panic_device', 'label': 'Panic device'},
+        {'value': 'shared_memory_device', 'label': 'Shared memory device'},
+        {'value': 'memory_devices', 'label': 'Memory devices'},
+        {'value': 'iommu_devices', 'label': 'IOMMU devices'},
+        {'value': 'vsock', 'label': 'Vsock'},
+        {'value': 'crypto', 'label': 'Crypto'},
+        {'value': 'pstore', 'label': 'Pstore'},
+        {'value': 'redirected_devices', 'label': 'Redirected devices'},
+        {'value': 'smartcard_devices', 'label': 'Smartcard devices'},
+    ]
+
+    # 设备类映射
+    DEVICE_CLASSES = {
+        'graphics': GraphicsTab,
+        'hard_disks': HardDisksTab,
+        'filesystems': FilesystemsTab,
+        'device_addresses': DeviceAddressesTab,
+        'controllers': ControllersTab,
+        'host_device_assignment': HostDeviceAssignmentTab,
+        'network_interfaces': NetworkInterfacesTab,
+        'input_devices': InputDevicesTab,
+        'hub_devices': HubDevicesTab,
+        'graphical_framebuffers': GraphicalFramebuffersTab,
+        'video_devices': VideoDevicesTab,
+        'consoles_devices': ConsolesDevicesTab,
+        'sound_devices': SoundDevicesTab,
+        'audio_backends': AudioBackendsTab,
+        'watchdog_devices': WatchdogDevicesTab,
+        'memory_balloon': MemoryBalloonTab,
+        'random_number_generator': RandomNumberGeneratorTab,
+        'tpm_device': TPMDeviceTab,
+        'nvram_device': NVRAMDeviceTab,
+        'panic_device': PanicDeviceTab,
+        'shared_memory_device': SharedMemoryDeviceTab,
+        'memory_devices': MemoryDevicesTab,
+        'iommu_devices': IOMMUDevicesTab,
+        'vsock': VsockTab,
+        'crypto': CryptoTab,
+        'pstore': PstoreTab,
+        'redirected_devices': RedirectedDevicesTab,
+        'smartcard_devices': SmartcardDevicesTab,
     }
 
     def __init__(self, master, on_change_callback=None, **kwargs):
         super().__init__(master, on_change_callback, **kwargs)
-
+        self.devices_list = []  # 存储已添加的设备
+        self.current_device_tab = None  # 当前设备配置标签页
         self._init_ui()
 
     def _init_ui(self) -> None:
-        """初始化界面."""
+        """初始化界面 - 上下二层布局"""
         self.grid_columnconfigure(0, weight=1)
-        self.grid_rowconfigure(0, weight=1)
+        self.grid_rowconfigure(0, weight=1)  # 第一层：设备类型搜索和设备配置
+        self.grid_rowconfigure(1, weight=0)  # 第二层：已添加设备列表
 
-        self.inner_panel = InnerTabPanel(
-            self,
-            tabs_config=self.SUB_TABS_CONFIG,
-            on_change_callback=self.on_change_callback,
+        # 第一层：设备类型搜索和设备配置
+        top_frame = ctk.CTkFrame(self, fg_color=BG_COLOR_CONTENT, corner_radius=6)
+        top_frame.grid(row=0, column=0, sticky='nsew', padx=5, pady=5)
+        top_frame.grid_columnconfigure(1, weight=1)
+        top_frame.grid_rowconfigure(0, weight=0)
+        top_frame.grid_rowconfigure(1, weight=1)
+
+        # 第一行：设备类型搜索和添加设备按钮
+        # 设置列权重：column 0 和 2 为固定宽度，column 1 占据剩余空间
+        top_frame.grid_columnconfigure(0, weight=0)  # Label 固定宽度
+        top_frame.grid_columnconfigure(1, weight=1)  # SearchFilter 占据剩余空间
+        top_frame.grid_columnconfigure(2, weight=0)  # 按钮固定宽度
+
+        ctk.CTkLabel(top_frame, text='设备类型:', font=CTK_FONT_SMALL).grid(
+            row=0, column=0, padx=5, pady=5, sticky='w'
         )
-        self.inner_panel.grid(row=0, column=0, sticky='nsew')
+
+        # 设备类型搜索组件
+        self.device_type_search = SearchFilter(
+            top_frame,
+            items=[device['label'] for device in self.DEVICE_TYPES],
+            on_select_callback=self._on_device_type_select,
+            placeholder_text='输入设备类型关键词...',
+        )
+        self.device_type_search.grid(row=0, column=1, padx=5, pady=5, sticky='ew')
+
+        # 添加设备按钮
+        self.add_device_btn = ctk.CTkButton(
+            top_frame,
+            text='添加设备',
+            width=100,
+            height=32,
+            font=CTK_FONT_SMALL,
+            command=self._add_device,
+        )
+        self.add_device_btn.grid(row=0, column=2, padx=5, pady=5, sticky='e')
+
+        # 第二行：设备配置
+        self.config_frame = ctk.CTkFrame(top_frame, fg_color='transparent')
+        self.config_frame.grid(row=1, column=0, columnspan=3, sticky='nsew', padx=5, pady=5)
+        self.config_frame.grid_columnconfigure(0, weight=1)
+        self.config_frame.grid_rowconfigure(0, weight=1)
+
+        # 第二层：已添加设备列表
+        bottom_frame = ctk.CTkFrame(self, fg_color=BG_COLOR_CONTENT, corner_radius=6)
+        bottom_frame.grid(row=1, column=0, sticky='ew', padx=5, pady=5)
+        bottom_frame.grid_columnconfigure(0, weight=1)
+
+        ctk.CTkLabel(bottom_frame, text='已添加设备:', font=CTK_FONT_SMALL).grid(
+            row=0, column=0, padx=5, pady=5, sticky='w'
+        )
+
+        self.devices_list_frame = ctk.CTkScrollableFrame(bottom_frame, fg_color='transparent')
+        self.devices_list_frame.grid(row=1, column=0, sticky='nsew', padx=5, pady=5)
+        self.devices_list_frame.grid_columnconfigure(0, weight=1)
+
+    def _on_device_type_select(self, selected_label) -> None:
+        """设备类型选择时的处理"""
+        # 清空当前配置框架
+        for widget in self.config_frame.winfo_children():
+            widget.destroy()
+
+        if not selected_label:
+            return
+
+        # 查找对应的设备类型值
+        selected_device = None
+        for device in self.DEVICE_TYPES:
+            if device['label'] == selected_label:
+                selected_device = device
+                break
+
+        if not selected_device:
+            return
+
+        # 获取设备类并创建实例
+        device_class = self.DEVICE_CLASSES.get(selected_device['value'])
+        if device_class:
+            self.current_device_tab = device_class(
+                self.config_frame, on_change_callback=self.on_change_callback
+            )
+            self.current_device_tab.grid(row=0, column=0, sticky='nsew')
+
+    def _add_device(self) -> None:
+        """添加设备到列表"""
+        # 获取选中的设备类型
+        selected_label = self.device_type_search.get_selected_item()
+        if not selected_label:
+            return
+
+        # 查找对应的设备类型值
+        selected_device = None
+        for device in self.DEVICE_TYPES:
+            if device['label'] == selected_label:
+                selected_device = device
+                break
+
+        if not selected_device or not self.current_device_tab:
+            return
+
+        # 获取设备配置
+        if hasattr(self.current_device_tab, 'get_config'):
+            device_config = self.current_device_tab.get_config()
+            device_info = {
+                'type': selected_device['value'],
+                'label': selected_device['label'],
+                'config': device_config,
+            }
+
+            # 添加设备到列表
+            self.devices_list.append(device_info)
+            self._update_devices_list()
+
+            # 处理设备间的关联关系
+            self._handle_device_relations(device_info)
+
+            # 触发变化回调
+            if self.on_change_callback:
+                self.on_change_callback()
+
+    def _handle_device_relations(self, device_info: dict[str, Any]) -> None:
+        """处理设备间的关联关系"""
+        device_type = device_info['type']
+
+        # 示例：添加SCSI设备时，自动添加SCSI控制器
+        if device_type == 'scsi_hostdev':
+            # 检查是否已存在SCSI控制器
+            scsi_controller_exists = False
+            for device in self.devices_list:
+                if device['type'] == 'controllers' and 'scsi' in device['config'].get(
+                    'controllers', []
+                ):
+                    scsi_controller_exists = True
+                    break
+
+            if not scsi_controller_exists:
+                # 添加SCSI控制器
+                scsi_controller_info = {
+                    'type': 'controllers',
+                    'label': 'Controllers',
+                    'config': {'controllers': [{'type': 'scsi', 'model': 'virtio-scsi'}]},
+                }
+                self.devices_list.append(scsi_controller_info)
+
+        # 示例：添加USB设备时，自动添加USB控制器
+        elif device_type == 'usb_hostdev':
+            # 检查是否已存在USB控制器
+            usb_controller_exists = False
+            for device in self.devices_list:
+                if device['type'] == 'controllers' and 'usb' in device['config'].get(
+                    'controllers', []
+                ):
+                    usb_controller_exists = True
+                    break
+
+            if not usb_controller_exists:
+                # 添加USB控制器
+                usb_controller_info = {
+                    'type': 'controllers',
+                    'label': 'Controllers',
+                    'config': {'controllers': [{'type': 'usb', 'model': 'usb-xhci'}]},
+                }
+                self.devices_list.append(usb_controller_info)
+
+    def _update_devices_list(self) -> None:
+        """更新设备列表显示"""
+        # 清空列表框架
+        for widget in self.devices_list_frame.winfo_children():
+            widget.destroy()
+
+        # 显示设备列表
+        for i, device in enumerate(self.devices_list):
+            device_frame = ctk.CTkFrame(
+                self.devices_list_frame, fg_color='#444444', corner_radius=4
+            )
+            device_frame.grid(row=i, column=0, sticky='ew', padx=5, pady=3)
+            device_frame.grid_columnconfigure(0, weight=1)
+
+            # 设备名称
+            ctk.CTkLabel(device_frame, text=device['label'], font=CTK_FONT_SMALL).grid(
+                row=0, column=0, padx=5, pady=3, sticky='w'
+            )
+
+            # 编辑按钮
+            edit_btn = ctk.CTkButton(
+                device_frame,
+                text='编辑',
+                width=60,
+                height=24,
+                font=CTK_FONT_SMALL,
+                command=lambda idx=i: self._edit_device(idx),
+            )
+            edit_btn.grid(row=0, column=1, padx=5, pady=3)
+
+            # 删除按钮
+            delete_btn = ctk.CTkButton(
+                device_frame,
+                text='删除',
+                width=60,
+                height=24,
+                font=CTK_FONT_SMALL,
+                fg_color='#D32F2F',
+                hover_color='#B71C1C',
+                command=lambda idx=i: self._delete_device(idx),
+            )
+            delete_btn.grid(row=0, column=2, padx=5, pady=3)
+
+    def _edit_device(self, index: int) -> None:
+        """编辑设备"""
+        if 0 <= index < len(self.devices_list):
+            device = self.devices_list[index]
+            # 设置设备类型选择
+            for device_type in self.DEVICE_TYPES:
+                if device_type['value'] == device['type']:
+                    self.device_type_search.set_selected_item(device_type['label'])
+                    break
+            # 触发设备类型变化，显示配置界面
+            selected_label = self.device_type_search.get_selected_item()
+            self._on_device_type_select(selected_label)
+            # TODO: 加载设备配置到编辑界面
+
+    def _delete_device(self, index: int) -> None:
+        """删除设备"""
+        if 0 <= index < len(self.devices_list):
+            self.devices_list.pop(index)
+            self._update_devices_list()
+            if self.on_change_callback:
+                self.on_change_callback()
 
     def get_graphics_config(self):
         """获取图形配置."""
-        graphics_tab = self.inner_panel.get_tab_instance('graphics')
-        if graphics_tab and hasattr(graphics_tab, 'get_config'):
-            return graphics_tab.get_config()
+        for device in self.devices_list:
+            if device['type'] == 'graphics' and 'config' in device:
+                return device['config']
         return {
             'type': 'vnc',
             'listen': '0.0.0.0',
@@ -329,46 +367,41 @@ class DevicesTab(BaseConfigTab):
 
     def get_serial_config(self):
         """获取串口配置."""
-        others_tab = self.inner_panel.get_tab_instance('others')
-        if others_tab and hasattr(others_tab, 'get_serial_config'):
-            return others_tab.get_serial_config()
+        for device in self.devices_list:
+            if device['type'] == 'consoles_devices' and 'config' in device:
+                return device['config'].get('serial', {'type': 'pty', 'port': '0'})
         return {'type': 'pty', 'port': '0'}
 
     def get_tpm_config(self):
         """获取 TPM 配置."""
-        others_tab = self.inner_panel.get_tab_instance('others')
-        if others_tab and hasattr(others_tab, 'get_tpm_config'):
-            return others_tab.get_tpm_config()
+        for device in self.devices_list:
+            if device['type'] == 'tpm_device' and 'config' in device:
+                return device['config']
         return None
 
     def get_audio_config(self):
         """获取音频配置."""
-        others_tab = self.inner_panel.get_tab_instance('others')
-        if others_tab and hasattr(others_tab, 'get_audio_config'):
-            return others_tab.get_audio_config()
+        for device in self.devices_list:
+            if device['type'] == 'sound_devices' and 'config' in device:
+                return device['config']
         return {'model': 'ich9'}
 
     def get_controller_config(self):
         """获取控制器配置."""
-        others_tab = self.inner_panel.get_tab_instance('others')
-        if others_tab and hasattr(others_tab, 'get_controller_config'):
-            return others_tab.get_controller_config()
         return {'disable_usb': False, 'disable_sound': False}
 
     def get_controllers_config(self):
         """获取控制器配置."""
-        controllers_tab = self.inner_panel.get_tab_instance('controllers')
-        if controllers_tab and hasattr(controllers_tab, 'get_config'):
-            config = controllers_tab.get_config()
-            return config.get('controllers', [])
+        for device in self.devices_list:
+            if device['type'] == 'controllers' and 'config' in device:
+                return device['config'].get('controllers', [])
         return []
 
     def get_disk_devices_config(self) -> list:
         """获取磁盘设备配置."""
-        disk_tab = self.inner_panel.get_tab_instance('disk_devices')
-        if disk_tab and hasattr(disk_tab, 'get_config'):
-            config = disk_tab.get_config()
-            return config.get('devices', [])
+        for device in self.devices_list:
+            if device['type'] == 'hard_disks' and 'config' in device:
+                return device['config'].get('devices', [])
         return []
 
     def get_hostdev_configs(self) -> dict:
@@ -380,34 +413,18 @@ class DevicesTab(BaseConfigTab):
             'mdev': [],
         }
 
-        # USB
-        usb_tab = self.inner_panel.get_tab_instance('usb_hostdev')
-        if usb_tab and hasattr(usb_tab, 'get_config'):
-            config = usb_tab.get_config()
-            hostdevs['usb'] = {
-                'controller': config.get('controller'),
-                'devices': config.get('devices', []),
-                'startup_policy': config.get('startup_policy'),
-                'guest_reset': config.get('guest_reset'),
-            }
-
-        # PCI
-        pci_tab = self.inner_panel.get_tab_instance('pci_hostdev')
-        if pci_tab and hasattr(pci_tab, 'get_config'):
-            config = pci_tab.get_config()
-            hostdevs['pci'] = config.get('devices', [])
-
-        # SCSI
-        scsi_tab = self.inner_panel.get_tab_instance('scsi_hostdev')
-        if scsi_tab and hasattr(scsi_tab, 'get_config'):
-            config = scsi_tab.get_config()
-            hostdevs['scsi'] = config.get('devices', [])
-
-        # MDEV
-        mdev_tab = self.inner_panel.get_tab_instance('mdev_hostdev')
-        if mdev_tab and hasattr(mdev_tab, 'get_config'):
-            config = mdev_tab.get_config()
-            hostdevs['mdev'] = config.get('devices', [])
+        for device in self.devices_list:
+            if device['type'] == 'host_device_assignment' and 'config' in device:
+                config = device['config']
+                # 根据配置类型添加到相应的hostdev类别
+                if 'usb' in config:
+                    hostdevs['usb'] = config['usb']
+                if 'pci' in config:
+                    hostdevs['pci'] = config['pci']
+                if 'scsi' in config:
+                    hostdevs['scsi'] = config['scsi']
+                if 'mdev' in config:
+                    hostdevs['mdev'] = config['mdev']
 
         return hostdevs
 
