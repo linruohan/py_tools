@@ -26,6 +26,7 @@ class FieldConfig:
     label_width: int = 100
     placeholder: str = ''
     tooltip: str = ''
+    text_color: str = ''  # 用于 info 类型的自定义颜色
 
 
 @dataclass
@@ -471,11 +472,13 @@ class StandardConfigTab(BaseConfigTab):
         self, parent: ctk.CTkFrame, field_config: FieldConfig, row: int
     ) -> ctk.CTkLabel:
         """创建 Info 字段 (多行说明文本)."""
+        # 使用自定义颜色或默认颜色
+        text_color = field_config.text_color if field_config.text_color else '#888888'
         label = ctk.CTkLabel(
             parent,
             text=field_config.default,
             font=CTK_FONT_SMALL,
-            text_color='#888888',
+            text_color=text_color,
             justify='left',
         )
         label.grid(row=row, column=0, columnspan=2, padx=10, pady=5, sticky='nw')

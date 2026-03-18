@@ -243,11 +243,13 @@ class LibvirtXMLGenerator:
 
         # Loader configuration
         loader = os_booting.get('loader', {})
+        secure_boot = os_booting.get('secure_boot', False)
+        
         if isinstance(loader, dict) and loader.get('path'):
             loader_attrs = {}
             if loader.get('readonly') is not None:
                 loader_attrs['readonly'] = 'yes' if loader['readonly'] else 'no'
-            if loader.get('secure'):
+            if loader.get('secure') or secure_boot:
                 loader_attrs['secure'] = 'yes'
             if loader.get('type'):
                 loader_attrs['type'] = loader['type']
@@ -259,8 +261,14 @@ class LibvirtXMLGenerator:
             loader_elem.text = loader['path']
         elif os_booting.get('loader_path'):
             # Legacy support
-            loader_elem = ET.SubElement(os_elem, 'loader')
+            loader_attrs = {}
+            if secure_boot:
+                loader_attrs['secure'] = 'yes'
+            loader_elem = ET.SubElement(os_elem, 'loader', **loader_attrs)
             loader_elem.text = os_booting['loader_path']
+        elif secure_boot:
+            # 如果没有loader路径但启用了secure_boot,创建一个带secure属性的loader元素
+            ET.SubElement(os_elem, 'loader', secure='yes')
 
         # NVRAM configuration
         nvram = os_booting.get('nvram', {})
