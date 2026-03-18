@@ -272,7 +272,7 @@ class LibvirtXMLGenerator:
 
         # NVRAM configuration
         nvram = os_booting.get('nvram', {})
-        if isinstance(nvram, dict) and (nvram.get('path') or nvram.get('template')):
+        if isinstance(nvram, dict) and (nvram.get('path') or nvram.get('template') or nvram.get('source')):
             nvram_attrs = {}
             if nvram.get('type'):
                 nvram_attrs['type'] = nvram['type']
@@ -293,6 +293,25 @@ class LibvirtXMLGenerator:
                     source_elem.set('protocol', nvram_source['protocol'])
                 if nvram_source.get('name'):
                     source_elem.set('name', nvram_source['name'])
+                if nvram_source.get('file'):
+                    source_elem.set('file', nvram_source['file'])
+                if nvram_source.get('host'):
+                    host_config = nvram_source['host']
+                    host_attrs = {}
+                    if isinstance(host_config, dict):
+                        if host_config.get('name'):
+                            host_attrs['name'] = host_config['name']
+                        if host_config.get('port'):
+                            host_attrs['port'] = str(host_config['port'])
+                    else:
+                        host_attrs['name'] = str(host_config)
+                    ET.SubElement(source_elem, 'host', **host_attrs)
+                if nvram_source.get('auth'):
+                    auth_config = nvram_source['auth']
+                    auth_elem = ET.SubElement(source_elem, 'auth', username=auth_config.get('username', ''))
+                    if auth_config.get('secret'):
+                        secret_config = auth_config['secret']
+                        ET.SubElement(auth_elem, 'secret', type=secret_config.get('type', 'iscsi'), usage=secret_config.get('usage', ''))
         elif os_booting.get('nvram_path'):
             # Legacy support
             nvram_elem = ET.SubElement(os_elem, 'nvram')
