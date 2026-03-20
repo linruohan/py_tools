@@ -33,18 +33,22 @@ class BasicTab(BaseConfigTab):
         super().__init__(master, on_change_callback, **kwargs)
 
     def _init_ui(self) -> None:
-        """初始化界面."""
-        # 配置 grid 权重 - 2 列布局
-        self.grid_columnconfigure(0, weight=1)
-        self.grid_columnconfigure(1, weight=1)
-        self.grid_rowconfigure(0, weight=0)
-        self.grid_rowconfigure(1, weight=1)
+        """初始化界面 - 竖向布局."""
+        from utils.parsers import MEMORY_OPTIONS
 
-        # ===== 第 1 行: 系统配置 =====
+        # 配置单列布局
+        self.grid_columnconfigure(0, weight=1)
+        # 配置行权重，让 vCPU 列表区域可以伸展
+        for i in range(3):
+            self.grid_rowconfigure(i, weight=0)
+        self.grid_rowconfigure(2, weight=1)
+
+        # ===== 第 1 部分：System Configuration =====
         sys_frame = ctk.CTkFrame(self, fg_color=BG_COLOR_CONTENT, corner_radius=8)
-        sys_frame.grid(row=0, column=0, columnspan=2, sticky='ew', padx=5, pady=5)
-        sys_frame.grid_columnconfigure(1, weight=0)
-        sys_frame.grid_columnconfigure(2, weight=0)
+        sys_frame.grid(row=0, column=0, sticky='ew', padx=5, pady=5)
+        sys_frame.grid_columnconfigure(0, weight=1)
+        sys_frame.grid_columnconfigure(1, weight=1)
+        sys_frame.grid_columnconfigure(2, weight=1)
         sys_frame.grid_columnconfigure(3, weight=1)
 
         ctk.CTkLabel(
@@ -57,8 +61,6 @@ class BasicTab(BaseConfigTab):
         ).grid(row=1, column=0, padx=8, pady=3, sticky='w')
         arch_frame = ctk.CTkFrame(sys_frame, fg_color='transparent')
         arch_frame.grid(row=1, column=1, padx=2, pady=3, sticky='w')
-        arch_frame.grid_columnconfigure(0, weight=1)
-        arch_frame.grid_columnconfigure(1, weight=1)
 
         self.arch_x86_radio = ctk.CTkRadioButton(
             arch_frame,
@@ -81,69 +83,135 @@ class BasicTab(BaseConfigTab):
         self.arch_arm_radio.grid(row=0, column=1, padx=2, sticky='w')
 
         # 虚拟机名称
-        ctk.CTkLabel(sys_frame, text='VM Name:', font=CTK_FONT_MAIN, width=60, anchor='w').grid(
+        ctk.CTkLabel(sys_frame, text='VM Name:', font=CTK_FONT_MAIN, width=80, anchor='w').grid(
             row=1, column=2, padx=8, pady=3, sticky='w'
         )
         self.vm_name_entry = ctk.CTkEntry(sys_frame, placeholder_text='vm-name', width=150)
-        self.vm_name_entry.grid(row=1, column=3, padx=2, pady=3, sticky='ew')
+        self.vm_name_entry.grid(row=1, column=3, padx=2, pady=3, sticky='w')
         self.vm_name_entry.insert(0, 'vm0')
         self.vm_name_entry.bind('<KeyRelease>', lambda e: self._trigger_change())
 
-        # ===== 第 2 行: CPU 和内存分配配置 =====
-        from components.base_tab import create_two_column_layout
-        from utils.parsers import MEMORY_OPTIONS
+        # ===== 第 2 部分：内存分配 =====
+        mem_frame = ctk.CTkFrame(self, fg_color=BG_COLOR_CONTENT, corner_radius=8)
+        mem_frame.grid(row=1, column=0, sticky='ew', padx=5, pady=5)
+        # 为6个控件配置12列（每个控件占2列）
+        for i in range(12):
+            mem_frame.grid_columnconfigure(i, weight=1)
 
-        # 创建一个容器来放置 CPU 和内存分配面板
-        cpu_mem_frame = ctk.CTkFrame(self, fg_color='transparent')
-        cpu_mem_frame.grid(row=1, column=0, columnspan=2, sticky='nsew', padx=5, pady=5)
-        cpu_mem_frame.grid_columnconfigure(0, weight=1)
-        cpu_mem_frame.grid_columnconfigure(1, weight=1)
-
-        # 使用 create_two_column_layout 创建两列布局
-        cpu_frame, mem_frame = create_two_column_layout(
-            cpu_mem_frame,
-            left_title='CPU 分配',
-            right_title='内存分配',
-            left_color='#64b5f6',
-            right_color='#4caf50',
+        ctk.CTkLabel(mem_frame, text='内存分配', font=CTK_FONT_BOLD, text_color='#4caf50').grid(
+            row=0, column=0, columnspan=12, padx=8, pady=3, sticky='w'
         )
 
-        # 基本 CPU 配置
+        self.memory = self._create_label_option(
+            mem_frame, '内存:', MEMORY_OPTIONS, '2G', width=100, row=1, column=0, label_width=80
+        )
+        self.current_memory = self._create_label_option(
+            mem_frame,
+            '当前内存:',
+            ['None'] + MEMORY_OPTIONS,
+            'None',
+            width=100,
+            row=1,
+            column=2,
+            label_width=80,
+        )
+        self.max_memory = self._create_label_option(
+            mem_frame,
+            '最大内存:',
+            ['None'] + MEMORY_OPTIONS,
+            'None',
+            width=100,
+            row=1,
+            column=4,
+            label_width=80,
+        )
+        self.memory_slots = self._create_label_entry(
+            mem_frame,
+            '内存槽位:',
+            placeholder='16',
+            default_value='16',
+            width=100,
+            row=1,
+            column=6,
+            label_width=80,
+        )
+        self.memory_unit = self._create_label_option(
+            mem_frame,
+            '单位:',
+            ['KiB', 'MiB', 'GiB', 'TiB', 'KB', 'MB', 'GB', 'TB', 'b', 'bytes'],
+            'KiB',
+            width=100,
+            row=1,
+            column=8,
+            label_width=80,
+        )
+        self.dump_core = self._create_label_option(
+            mem_frame,
+            'Dump Core:',
+            ['None', 'on', 'off'],
+            'None',
+            width=100,
+            row=1,
+            column=10,
+            label_width=80,
+        )
+
+        # ===== 第 3 部分：CPU 分配 =====
+        cpu_frame = ctk.CTkFrame(self, fg_color=BG_COLOR_CONTENT, corner_radius=8)
+        cpu_frame.grid(row=2, column=0, sticky='ew', padx=5, pady=5)
+        # 为4个控件配置8列（每个控件占2列）
+        for i in range(8):
+            cpu_frame.grid_columnconfigure(i, weight=1)
+
+        ctk.CTkLabel(cpu_frame, text='CPU 分配', font=CTK_FONT_BOLD, text_color='#64b5f6').grid(
+            row=0, column=0, columnspan=8, padx=8, pady=3, sticky='w'
+        )
+
         self.max_vcpu = self._create_label_entry(
             cpu_frame,
             '最大 vCPU:',
             placeholder='2',
             default_value='2',
-            width=200,
+            width=120,
             row=1,
             column=0,
+            label_width=80,
         )
         self.current_vcpu = self._create_label_entry(
             cpu_frame,
             '当前 vCPU:',
             placeholder='1',
-            default_value='1',
-            width=200,
-            row=2,
-            column=0,
+            default_value='',
+            width=120,
+            row=1,
+            column=2,
+            label_width=80,
         )
         self.placement = self._create_label_option(
-            cpu_frame, '放置模式:', ['static', 'auto'], 'static', width=200, row=3, column=0
+            cpu_frame,
+            '放置模式:',
+            ['None', 'static', 'auto'],
+            'None',
+            width=120,
+            row=1,
+            column=4,
+            label_width=80,
         )
         self.cpuset = self._create_label_entry(
             cpu_frame,
             'CPU 亲和性:',
             placeholder='1-4,^3,6',
-            default_value='1-4,^3,6',
-            width=200,
-            row=4,
-            column=0,
+            default_value='',
+            width=120,
+            row=1,
+            column=6,
+            label_width=80,
         )
 
-        # vCPU 实例
-        self._create_section_title(cpu_frame, 'vCPU 实例', row=5, column=0, columnspan=2)
+        # ===== 第 4 部分：vCPU 实例 =====
+        self._create_section_title(cpu_frame, 'vCPU 实例', row=2, column=0, columnspan=8)
         btn_frame = ctk.CTkFrame(cpu_frame, fg_color='transparent')
-        btn_frame.grid(row=6, column=0, columnspan=2, sticky='ew', pady=5)
+        btn_frame.grid(row=3, column=0, columnspan=8, sticky='ew', pady=5)
         btn_frame.grid_columnconfigure(0, weight=1)
         btn_frame.grid_columnconfigure(1, weight=1)
 
@@ -165,68 +233,9 @@ class BasicTab(BaseConfigTab):
 
         # vCPU 实例列表容器
         self.vcpu_list_frame = ctk.CTkFrame(cpu_frame, fg_color='transparent')
-        self.vcpu_list_frame.grid(row=7, column=0, columnspan=2, sticky='nsew')
+        self.vcpu_list_frame.grid(row=4, column=0, columnspan=8, sticky='nsew')
         self.vcpu_list_frame.grid_columnconfigure(0, weight=1)
-        # 添加最小高度，确保即使没有 vCPU 实例也能占据足够空间
-        self.vcpu_list_frame.configure(height=120)
-
-        # 为 cpu_frame 添加行权重配置，确保 vCPU 列表区域即使为空也能占据空间
-        for i in range(1, 7):
-            cpu_frame.grid_rowconfigure(i, weight=0)
-        cpu_frame.grid_rowconfigure(7, weight=1)
-
-        # 默认不添加 vCPU 实例，保持 vcpu_instances 为空
-
-        # 内存配置内容
-        mem_frame.grid_columnconfigure(0, weight=1)
-        mem_frame.grid_columnconfigure(1, weight=1)
-        # 为内存面板添加行权重配置，与 CPU 面板保持一致
-        for i in range(1, 8):
-            mem_frame.grid_rowconfigure(i, weight=0)
-        mem_frame.grid_rowconfigure(8, weight=1)
-
-        # 内存基本配置
-        self.memory = self._create_label_option(
-            mem_frame, '内存:', MEMORY_OPTIONS, '2G', width=200, row=1, column=0
-        )
-        self.current_memory = self._create_label_option(
-            mem_frame, '当前内存:', MEMORY_OPTIONS, '2G', width=200, row=2, column=0
-        )
-        self.max_memory = self._create_label_option(
-            mem_frame, '最大内存:', MEMORY_OPTIONS, '4G', width=200, row=3, column=0
-        )
-        self.memory_slots = self._create_label_entry(
-            mem_frame,
-            '内存槽位:',
-            placeholder='16',
-            default_value='16',
-            width=200,
-            row=4,
-            column=0,
-        )
-        self.memory_unit = self._create_label_option(
-            mem_frame,
-            '单位:',
-            ['KiB', 'MiB', 'GiB', 'TiB', 'KB', 'MB', 'GB', 'TB', 'b', 'bytes'],
-            'KiB',
-            width=200,
-            row=5,
-            column=0,
-        )
-        self.dump_core = self._create_label_option(
-            mem_frame, 'Dump Core:', ['on', 'off'], 'on', width=200, row=6, column=0
-        )
-
-        # 说明信息
-        self._create_section_title(
-            mem_frame, '说明', text_color='#ff9800', row=7, column=0, columnspan=2
-        )
-        info_text = (
-            '内存 (memory):启动时分配的最大内存.\n'
-            '当前内存 (currentMemory):实际分配的内存,可以小于最大值以支持内存气球.\n'
-            '最大内存 (maxMemory):运行时可通过热插拔增加到的最大内存限制.'
-        )
-        self._create_info_label(mem_frame, info_text, row=8, column=0, columnspan=2)
+        self.vcpu_list_frame.configure(height=100)
 
     def _on_arch_change(self):
         """架构切换时的处理."""
@@ -315,10 +324,53 @@ class BasicTab(BaseConfigTab):
         Returns:
             包含基础配置数据的字典
         """
-        from utils.parsers import parse_integer_value, parse_memory_to_kib
+        from utils.parsers import parse_integer_value, parse_memory_value
 
-        max_vcpu = parse_integer_value(self.max_vcpu.get(), default=2)
-        current_vcpu = parse_integer_value(self.current_vcpu.get(), default=1)
+        max_vcpu_raw = self.max_vcpu.get().strip()
+        max_vcpu = parse_integer_value(max_vcpu_raw, default=2) if max_vcpu_raw else None
+
+        current_vcpu_raw = self.current_vcpu.get().strip()
+        current_vcpu = (
+            parse_integer_value(current_vcpu_raw, default=1) if current_vcpu_raw else None
+        )
+
+        target_unit = self.memory_unit.get()
+        memory = parse_memory_value(self.memory.get(), target_unit=target_unit)
+
+        current_memory_raw = self.current_memory.get()
+        current_memory = (
+            None
+            if current_memory_raw == 'None'
+            else parse_memory_value(current_memory_raw, target_unit=target_unit)
+        )
+
+        max_memory_raw = self.max_memory.get()
+        max_memory = (
+            None
+            if max_memory_raw == 'None'
+            else parse_memory_value(max_memory_raw, target_unit=target_unit)
+        )
+
+        # 验证内存值关系: current_memory ≤ memory ≤ max_memory
+        if current_memory is not None and current_memory > memory:
+            current_memory = memory
+        if max_memory is not None and memory > max_memory:
+            memory = max_memory
+        if current_memory is not None and max_memory is not None and current_memory > max_memory:
+            current_memory = max_memory
+
+        memory_config = {
+            'memory': memory,
+            'unit': self.memory_unit.get(),
+        }
+        dump_core_value = self.dump_core.get()
+        if dump_core_value != 'None':
+            memory_config['dump_core'] = dump_core_value == 'on'
+        if current_memory is not None:
+            memory_config['current_memory'] = current_memory
+        if max_memory is not None:
+            memory_config['max_memory'] = max_memory
+            memory_config['memory_slots'] = parse_integer_value(self.memory_slots.get(), default=16)
 
         return {
             'arch': self.arch_type.get(),
@@ -328,8 +380,8 @@ class BasicTab(BaseConfigTab):
             'cpu_allocation': {
                 'max_vcpu': max_vcpu,
                 'current_vcpu': current_vcpu,
-                'placement': self.placement.get(),
-                'cpuset': self.cpuset.get().strip(),
+                'placement': None if self.placement.get() == 'None' else self.placement.get(),
+                'cpuset': self.cpuset.get().strip() or None,
                 'vcpu_instances': [
                     {
                         'id': parse_integer_value(instance['id'].get(), default=i),
@@ -344,19 +396,7 @@ class BasicTab(BaseConfigTab):
                     for i, instance in enumerate(self.vcpu_instances)
                 ],
             },
-            'memory_allocation': {
-                'memory': parse_memory_to_kib(self.memory.get()),
-                'current_memory': parse_memory_to_kib(self.current_memory.get()),
-                'max_memory': parse_memory_to_kib(self.max_memory.get()),
-                'memory_slots': parse_integer_value(self.memory_slots.get(), default=16),
-                'unit': self.memory_unit.get(),
-                'dump_core': self.dump_core.get(),
-            },
-            'os_booting': {
-                'type': 'guest_firmware',
-                'os_type': 'hvm',
-                'arch': self.arch_type.get(),
-            },
+            'memory_allocation': memory_config,
         }
 
     def get_config(self) -> dict:
@@ -367,10 +407,10 @@ class BasicTab(BaseConfigTab):
         """生成 XML 配置字典.
 
         Returns:
-            包含 XML 配置的字典, 用于 XML 生成器
+            包含 XML 配置的字典，用于 XML 生成器
         """
         config = self.get_basic_config()
-        # 直接返回get_basic_config的结果，确保所有配置都被正确包含
+        # 直接返回 get_basic_config 的结果，确保所有配置都被正确包含
         return config
 
     def load_config(self, config: dict):
@@ -392,15 +432,20 @@ class BasicTab(BaseConfigTab):
             cpu_alloc = config['cpu_allocation']
             if 'max_vcpu' in cpu_alloc:
                 self.max_vcpu.delete(0, ctk.END)
-                self.max_vcpu.insert(0, str(cpu_alloc['max_vcpu']))
+                if cpu_alloc['max_vcpu'] is not None:
+                    self.max_vcpu.insert(0, str(cpu_alloc['max_vcpu']))
             if 'current_vcpu' in cpu_alloc:
                 self.current_vcpu.delete(0, ctk.END)
-                self.current_vcpu.insert(0, str(cpu_alloc['current_vcpu']))
+                if cpu_alloc['current_vcpu'] is not None:
+                    self.current_vcpu.insert(0, str(cpu_alloc['current_vcpu']))
             if 'placement' in cpu_alloc:
-                self.placement.set(cpu_alloc['placement'])
+                self.placement.set(
+                    'None' if cpu_alloc['placement'] is None else cpu_alloc['placement']
+                )
             if 'cpuset' in cpu_alloc:
                 self.cpuset.delete(0, ctk.END)
-                self.cpuset.insert(0, cpu_alloc['cpuset'])
+                if cpu_alloc['cpuset']:
+                    self.cpuset.insert(0, cpu_alloc['cpuset'])
             if 'vcpu_instances' in cpu_alloc:
                 # 清空现有实例
                 for instance in self.vcpu_instances:

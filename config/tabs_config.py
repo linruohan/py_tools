@@ -3,14 +3,9 @@
 # Tab 配置 - 统一的配置
 TABS_CONFIG: dict = {
     # 基础 Tab (默认启用)
-    'general_metadata': {'name': '通用元数据', 'class': 'BasicTab', 'default_on': True},
+    'general_metadata': {'name': '通用元数据', 'class': 'BasicTab', 'default_on': True}, # cpu分配+内存分配
     'os_booting': {'name': '系统启动', 'class': 'OSTab', 'default_on': True},
     'devices': {'name': 'Devices', 'class': 'DevicesTab', 'default_on': True},
-    'memory_allocation': {
-        'name': 'Memory分配',
-        'class': 'MemoryAllocationTab',
-        'default_on': True,
-    },
     # 高级调优 Tab (默认禁用)
     'smbios_system': {
         'name': 'SMBIOS系统信息',

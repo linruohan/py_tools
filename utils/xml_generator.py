@@ -72,35 +72,47 @@ class LibvirtXMLGenerator:
 
         memory = memory_config.get('memory', 2097152)
         unit = memory_config.get('unit', 'KiB')
+        dump_core = memory_config.get('dump_core')
 
         mem_elem = ET.SubElement(self.domain, 'memory', unit=unit)
+        if dump_core is not None:
+            mem_elem.set('dumpCore', 'on' if dump_core else 'off')
         mem_elem.text = str(memory)
 
-        current_memory = memory_config.get('current_memory', memory)
-        cm_elem = ET.SubElement(self.domain, 'currentMemory', unit=unit)
-        cm_elem.text = str(current_memory)
+        if 'current_memory' in memory_config:
+            current_memory = memory_config.get('current_memory', memory)
+            cm_elem = ET.SubElement(self.domain, 'currentMemory', unit=unit)
+            cm_elem.text = str(current_memory)
 
-        max_memory = memory_config.get('max_memory')
-        if max_memory and max_memory > memory:
-            slots = memory_config.get('memory_slots', 16)
-            mm_elem = ET.SubElement(self.domain, 'maxMemory', slots=str(slots), unit=unit)
-            mm_elem.text = str(max_memory)
+        if 'max_memory' in memory_config:
+            max_memory = memory_config.get('max_memory')
+            if max_memory and max_memory > memory:
+                slots = memory_config.get('memory_slots', 16)
+                mm_elem = ET.SubElement(self.domain, 'maxMemory', slots=str(slots), unit=unit)
+                mm_elem.text = str(max_memory)
 
     def _add_cpu(self, config: dict) -> None:
         """添加 CPU 配置."""
         cpu_alloc = config.get('cpu_allocation', {})
         cpu_model = config.get('cpu_model_topology', {})
 
-        vcpu_count = cpu_alloc.get('max_vcpu', 1)
-        current_vcpu = cpu_alloc.get('current_vcpu', vcpu_count)
-        placement = cpu_alloc.get('placement', 'static')
-        cpuset = cpu_alloc.get('cpuset', '')
+        max_vcpu = cpu_alloc.get('max_vcpu')
+        current_vcpu = cpu_alloc.get('current_vcpu')
+        placement = cpu_alloc.get('placement')
+        cpuset = cpu_alloc.get('cpuset')
 
-        vcpu_attrs = {'placement': placement}
+        # 如果 max_vcpu 为 None，不生成 vcpu 元素
+        if max_vcpu is None:
+            return
+
+        vcpu_count = max_vcpu
+        vcpu_attrs = {}
+        if placement:
+            vcpu_attrs['placement'] = placement
         if cpuset:
             vcpu_attrs['cpuset'] = cpuset
-        # 总是添加 current 属性 (即使等于 max_vcpu)
-        vcpu_attrs['current'] = str(current_vcpu)
+        if current_vcpu is not None:
+            vcpu_attrs['current'] = str(current_vcpu)
 
         vcpu = ET.SubElement(self.domain, 'vcpu', **vcpu_attrs)
         vcpu.text = str(vcpu_count)
@@ -297,21 +309,26 @@ class LibvirtXMLGenerator:
                     source_elem.set('file', nvram_source['file'])
                 if nvram_source.get('host'):
                     host_config = nvram_source['host']
-                    host_attrs = {}
                     if isinstance(host_config, dict):
+                        host_elem = ET.SubElement(source_elem, 'host')
                         if host_config.get('name'):
-                            host_attrs['name'] = host_config['name']
+                            host_elem.set('name', host_config['name'])
                         if host_config.get('port'):
-                            host_attrs['port'] = str(host_config['port'])
+                            host_elem.set('port', str(host_config['port']))
                     else:
-                        host_attrs['name'] = str(host_config)
-                    ET.SubElement(source_elem, 'host', **host_attrs)
+                        ET.SubElement(source_elem, 'host', name=str(host_config))
                 if nvram_source.get('auth'):
                     auth_config = nvram_source['auth']
-                    auth_elem = ET.SubElement(source_elem, 'auth', username=auth_config.get('username', ''))
+                    auth_elem = ET.SubElement(source_elem, 'auth')
+                    if auth_config.get('username'):
+                        auth_elem.set('username', auth_config['username'])
                     if auth_config.get('secret'):
                         secret_config = auth_config['secret']
-                        ET.SubElement(auth_elem, 'secret', type=secret_config.get('type', 'iscsi'), usage=secret_config.get('usage', ''))
+                        secret_elem = ET.SubElement(auth_elem, 'secret')
+                        if secret_config.get('type'):
+                            secret_elem.set('type', secret_config['type'])
+                        if secret_config.get('usage'):
+                            secret_elem.set('usage', secret_config['usage'])
         elif os_booting.get('nvram_path'):
             # Legacy support
             nvram_elem = ET.SubElement(os_elem, 'nvram')

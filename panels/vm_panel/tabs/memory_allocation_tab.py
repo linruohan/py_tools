@@ -1,7 +1,7 @@
 """内存分配配置 Tab - Memory Allocation."""
 
 from components.base_tab import BaseConfigTab, create_two_column_layout
-from utils.parsers import MEMORY_OPTIONS, parse_integer_value, parse_memory_to_kib
+from utils.parsers import MEMORY_OPTIONS, parse_integer_value
 
 
 class MemoryAllocationTab(BaseConfigTab):
@@ -17,13 +17,15 @@ class MemoryAllocationTab(BaseConfigTab):
             right_color='#4caf50',
         )
 
+        memory_options_with_none = ['None'] + MEMORY_OPTIONS
+
         # 左侧面板 - 内存配置
         self.memory = self._create_label_option(left_frame, '内存:', MEMORY_OPTIONS, '2G', row=1)
         self.current_memory = self._create_label_option(
-            left_frame, '当前内存:', MEMORY_OPTIONS, '2G', row=2
+            left_frame, '当前内存:', memory_options_with_none, '2G', row=2
         )
         self.max_memory = self._create_label_option(
-            left_frame, '最大内存:', MEMORY_OPTIONS, '4G', row=3
+            left_frame, '最大内存:', memory_options_with_none, '4G', row=3
         )
         self.memory_slots = self._create_label_entry(
             left_frame, '内存槽位:', placeholder='16', default_value='16', width=80, row=4
@@ -39,7 +41,7 @@ class MemoryAllocationTab(BaseConfigTab):
             row=1,
         )
         self.dump_core = self._create_label_option(
-            right_frame, 'Dump Core:', ['on', 'off'], 'on', width=80, row=2
+            right_frame, 'Dump Core:', ['None', 'on', 'off'], 'on', width=80, row=2
         )
 
         # 说明信息
@@ -53,14 +55,31 @@ class MemoryAllocationTab(BaseConfigTab):
 
     def get_config(self) -> dict:
         """获取配置数据."""
-        return {
-            'memory': parse_memory_to_kib(self.memory.get()),
-            'current_memory': parse_memory_to_kib(self.current_memory.get()),
-            'max_memory': parse_memory_to_kib(self.max_memory.get()),
-            'memory_slots': parse_integer_value(self.memory_slots.get(), default=16),
+        from utils.parsers import parse_memory_value
+
+        target_unit = self.memory_unit.get()
+        memory = parse_memory_value(self.memory.get(), target_unit=target_unit)
+
+        current_memory_raw = self.current_memory.get()
+        current_memory = None if current_memory_raw == 'None' else parse_memory_value(current_memory_raw, target_unit=target_unit)
+
+        max_memory_raw = self.max_memory.get()
+        max_memory = None if max_memory_raw == 'None' else parse_memory_value(max_memory_raw, target_unit=target_unit)
+
+        memory_config = {
+            'memory': memory,
             'unit': self.memory_unit.get(),
-            'dump_core': self.dump_core.get(),
         }
+        dump_core_value = self.dump_core.get()
+        if dump_core_value != 'None':
+            memory_config['dump_core'] = dump_core_value == 'on'
+        if current_memory is not None:
+            memory_config['current_memory'] = current_memory
+        if max_memory is not None:
+            memory_config['max_memory'] = max_memory
+            memory_config['memory_slots'] = parse_integer_value(self.memory_slots.get(), default=16)
+
+        return memory_config
 
     def to_xml(self) -> dict:
         """生成XML配置字典."""

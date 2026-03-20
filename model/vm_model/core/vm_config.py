@@ -57,6 +57,12 @@ class VMConfig:
         if tab_key == 'memory_allocation' or 'memory_allocation' in tab_data:
             data = tab_data.get('memory_allocation', tab_data)
             self.memory.update(data)
+            if 'current_memory' not in data:
+                self.memory.current_memory = None
+            if 'max_memory' not in data:
+                self.memory.max_memory = None
+            if 'dump_core' not in data:
+                self.memory.dump_core = None
 
         # CPU 配置
         if tab_key == 'cpu_allocation' or 'cpu_allocation' in tab_data:
@@ -75,7 +81,16 @@ class VMConfig:
             # 更新 CPU 模型相关配置
             model_data = data.get('model', {})
             if model_data:
-                for key in ['mode', 'match', 'check', 'migratable', 'model', 'vendor', 'vendor_id', 'fallback']:
+                for key in [
+                    'mode',
+                    'match',
+                    'check',
+                    'migratable',
+                    'model',
+                    'vendor',
+                    'vendor_id',
+                    'fallback',
+                ]:
                     if model_data.get(key):
                         setattr(self.cpu, key, model_data[key])
             # 更新 cache 配置
@@ -123,7 +138,14 @@ class VMConfig:
         config.update(self.basic.to_dict())
 
         # 内存配置
-        config['memory_allocation'] = self.memory.to_dict()
+        memory_dict = self.memory.to_dict()
+        if memory_dict.get('current_memory') is None:
+            del memory_dict['current_memory']
+        if memory_dict.get('max_memory') is None:
+            del memory_dict['max_memory']
+        if memory_dict.get('dump_core') is None:
+            del memory_dict['dump_core']
+        config['memory_allocation'] = memory_dict
 
         # CPU 配置
         config['cpu_allocation'] = self.cpu.to_dict()
@@ -147,7 +169,16 @@ class VMConfig:
         cpu_model_topology = {}
         # 提取 CPU 模型相关配置
         model_config = {}
-        for key in ['mode', 'match', 'check', 'migratable', 'model', 'vendor', 'vendor_id', 'fallback']:
+        for key in [
+            'mode',
+            'match',
+            'check',
+            'migratable',
+            'model',
+            'vendor',
+            'vendor_id',
+            'fallback',
+        ]:
             if hasattr(self.cpu, key) and getattr(self.cpu, key):
                 model_config[key] = getattr(self.cpu, key)
         if model_config:
@@ -161,7 +192,7 @@ class VMConfig:
         # 提取 feature 配置
         if hasattr(self.cpu, 'feature') and self.cpu.feature:
             cpu_model_topology['feature'] = self.cpu.feature
-        
+
         if cpu_model_topology:
             config['cpu_model_topology'] = cpu_model_topology
 

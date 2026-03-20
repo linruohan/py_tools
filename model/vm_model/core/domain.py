@@ -1508,7 +1508,7 @@ class Domain:
             mem_elem.text = str(self.memory.size)
             mem_elem.set('unit', self.memory.unit.value)
             if self.memory.dump_core is not None:
-                mem_elem.set('dumpCore', 'yes' if self.memory.dump_core else 'no')
+                mem_elem.set('dumpCore', 'on' if self.memory.dump_core else 'off')
 
         if self.current_memory:
             curr_mem_elem = ET.SubElement(domain, 'currentMemory')

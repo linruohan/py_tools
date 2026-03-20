@@ -179,10 +179,11 @@ class BaseConfigTab(ctk.CTkFrame):
             parent, text=label_text, font=CTK_FONT_MAIN, width=label_width, anchor='w'
         ).grid(row=row, column=column, padx=10, pady=5, sticky='w')
 
-        option = ctk.CTkOptionMenu(parent, values=values, width=width, font=CTK_FONT_SMALL)
+        option = ctk.CTkOptionMenu(
+            parent, values=values, width=width, font=CTK_FONT_SMALL, command=self._trigger_change
+        )
         option.set(default_value)
         option.grid(row=row, column=column + 1, padx=5, pady=5, sticky='w')
-        option.configure(command=self._trigger_change)
 
         return option
 
@@ -442,10 +443,10 @@ class StandardConfigTab(BaseConfigTab):
             values=field_config.values or [],
             width=field_config.width,
             font=CTK_FONT_SMALL,
+            command=self._trigger_change,
         )
         option.set(field_config.default)
         option.grid(row=row, column=1, padx=5, pady=5, sticky='w')
-        option.configure(command=self._trigger_change)
         return option
 
     def _create_checkbox_field(

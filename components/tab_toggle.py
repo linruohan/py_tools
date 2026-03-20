@@ -81,13 +81,13 @@ class TabToggleSwitch(ctk.CTkFrame):
 
 
 class TabTogglePanel(ctk.CTkFrame):
-    """Tab 切换开关面板 - 管理 24 个 Tab 的开关."""
+    """Tab 切换开关面板 - 管理 22 个 Tab 的开关."""
 
     # 面板配置
     PANEL_CONFIG: ClassVar[dict] = {
         'label_text': 'vm cfgs:',
         'label_color': '#64b5f6',
-        'max_columns': 12,
+        'max_columns': 11,
         'grid_padx': 1,
         'grid_pady': 0,
     }
