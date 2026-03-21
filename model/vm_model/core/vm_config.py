@@ -44,6 +44,7 @@ class VMConfig:
         self.memory_tuning = MemoryTuningConfig()  # 内存调优配置
         self.memory_backing = MemoryBackingConfig()  # 内存后端配置
         self.numa_tuning = NumaTuneConfig()  # NUMA 节点调优配置
+        self.iothreads_allocation = {}  # IO 线程分配配置
 
         # 简化版本，移除策略管理器
         self._sync_context()
@@ -285,6 +286,19 @@ class VMConfig:
         if numa_tuning_data and isinstance(numa_tuning_data, dict):
             self.numa_tuning = NumaTuneConfig.from_dict(numa_tuning_data)
 
+        # IO 线程分配配置（支持 tab_key 和 tab_data 两种格式）
+        if tab_key == 'iothreads_allocation' and 'iothreads_allocation' not in tab_data:
+            # tab_key 指定且 tab_data 中没有 iothreads_allocation 键，直接使用 tab_data
+            iothreads_data = tab_data
+        elif 'iothreads_allocation' in tab_data:
+            # tab_data 中有 iothreads_allocation 键，使用其值
+            iothreads_data = tab_data['iothreads_allocation']
+        else:
+            iothreads_data = None
+
+        if iothreads_data and isinstance(iothreads_data, dict):
+            self.iothreads_allocation = iothreads_data
+
     def to_dict(self) -> dict:
         """将配置转换为字典格式.
 
@@ -426,6 +440,10 @@ class VMConfig:
         if not self.numa_tuning.is_empty():
             config['numa_node_tuning'] = self.numa_tuning.to_dict()
 
+        # IO 线程分配配置
+        if self.iothreads_allocation:
+            config['iothreads_allocation'] = self.iothreads_allocation
+
         # CPU 模型和拓扑配置 (从 cpu 配置中提取)
         cpu_model_topology = {}
 
@@ -528,6 +546,7 @@ class VMConfig:
         self.memory_tuning = MemoryTuningConfig()  # 内存调优配置
         self.memory_backing = MemoryBackingConfig()  # 内存后端配置
         self.numa_tuning = NumaTuneConfig()  # NUMA 节点调优配置
+        self.iothreads_allocation = {}  # IO 线程分配配置
 
         # 重新同步上下文
         self._sync_context()

@@ -1781,24 +1781,74 @@ class LibvirtXMLGenerator:
                 ET.SubElement(device_elem, 'write_iops_sec').text = str(device['write_iops_sec'])
 
     def _add_iothreads(self, config: dict) -> None:
-        """添加IO线程配置."""
-        iothreads_config = config.get('iothreads_allocation', {})
-        iothreads = iothreads_config.get('iothreads', 0)
+        """添加 IO 线程配置.
 
-        if iothreads <= 0:
+        支持以下配置:
+        - iothreads: IOThread 总数
+        - iothreadids: 自定义 IOThread ID 列表
+        - defaultiothread: 默认事件 loop 的 worker 线程边界
+        """
+        iothreads_config = config.get('iothreads_allocation', {})
+        if not iothreads_config:
             return
 
-        ET.SubElement(self.domain, 'iothreads').text = str(iothreads)
+        iothreads = iothreads_config.get('iothreads')
 
-        thread_pool_min = iothreads_config.get('thread_pool_min')
-        thread_pool_max = iothreads_config.get('thread_pool_max')
+        # 如果没有设置 iothreads 且没有其他配置，不生成 XML
+        if iothreads is None:
+            iothreadids = iothreads_config.get('iothreadids', [])
+            defaultiothread = iothreads_config.get('defaultiothread')
+            if not iothreadids and not defaultiothread:
+                return
 
-        if thread_pool_min or thread_pool_max:
-            default_iothread = ET.SubElement(self.domain, 'defaultiothread')
-            if thread_pool_min:
-                default_iothread.set('thread_pool_min', str(thread_pool_min))
-            if thread_pool_max:
-                default_iothread.set('thread_pool_max', str(thread_pool_max))
+        # 生成 iothreads 元素
+        if iothreads and iothreads > 0:
+            ET.SubElement(self.domain, 'iothreads').text = str(iothreads)
+
+        # 生成 iothreadids 元素
+        iothreadids = iothreads_config.get('iothreadids', [])
+        if iothreadids:
+            iothreadids_elem = ET.SubElement(self.domain, 'iothreadids')
+            for iothread in iothreadids:
+                if not iothread.get('id'):
+                    continue
+
+                iothread_attrs = {'id': str(iothread['id'])}
+
+                # 线程池边界
+                if iothread.get('thread_pool_min') is not None:
+                    iothread_attrs['thread_pool_min'] = str(iothread['thread_pool_min'])
+                if iothread.get('thread_pool_max') is not None:
+                    iothread_attrs['thread_pool_max'] = str(iothread['thread_pool_max'])
+
+                iothread_elem = ET.SubElement(iothreadids_elem, 'iothread', **iothread_attrs)
+
+                # poll 子元素
+                poll_max = iothread.get('poll_max')
+                poll_grow = iothread.get('poll_grow')
+                poll_shrink = iothread.get('poll_shrink')
+
+                if poll_max is not None or poll_grow is not None or poll_shrink is not None:
+                    poll_attrs = {}
+                    if poll_max is not None:
+                        poll_attrs['max'] = str(poll_max)
+                    if poll_grow is not None:
+                        poll_attrs['grow'] = str(poll_grow)
+                    if poll_shrink is not None:
+                        poll_attrs['shrink'] = str(poll_shrink)
+                    ET.SubElement(iothread_elem, 'poll', **poll_attrs)
+
+        # 生成 defaultiothread 元素
+        defaultiothread = iothreads_config.get('defaultiothread')
+        if defaultiothread:
+            default_attrs = {}
+            if defaultiothread.get('thread_pool_min') is not None:
+                default_attrs['thread_pool_min'] = str(defaultiothread['thread_pool_min'])
+            if defaultiothread.get('thread_pool_max') is not None:
+                default_attrs['thread_pool_max'] = str(defaultiothread['thread_pool_max'])
+
+            if default_attrs:
+                ET.SubElement(self.domain, 'defaultiothread', **default_attrs)
 
     def _add_resource(self, config: dict) -> None:
         """添加资源配置."""

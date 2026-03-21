@@ -71,16 +71,74 @@ class NUMANodeTuningTab(BaseConfigTab):
             text_color='#4caf50',
         ).pack(side='left')
 
+        # 按钮组框架
+        btn_frame = ctk.CTkFrame(node_title_frame, fg_color='transparent')
+        btn_frame.pack(side='right')
+
+        # 批量添加框架（两行布局）
+        batch_outer_frame = ctk.CTkFrame(btn_frame, fg_color='transparent')
+        batch_outer_frame.pack(side='left')
+
+        # 第一行：数量 | 起始 ID | 模式
+        batch_row1 = ctk.CTkFrame(batch_outer_frame, fg_color='transparent')
+        batch_row1.pack(fill='x')
+
+        ctk.CTkLabel(batch_row1, text='数量:', font=CTK_FONT_SMALL, width=30).pack(
+            side='left', padx=(0, 2)
+        )
+        self.batch_count = ctk.CTkEntry(batch_row1, placeholder_text='数量', width=45)
+        self.batch_count.pack(side='left', padx=2)
+
+        ctk.CTkLabel(batch_row1, text='起始 ID:', font=CTK_FONT_SMALL, width=45).pack(
+            side='left', padx=(5, 2)
+        )
+        self.batch_start_id = ctk.CTkEntry(batch_row1, placeholder_text='0', width=45)
+        self.batch_start_id.pack(side='left', padx=2)
+
+        ctk.CTkLabel(batch_row1, text='模式:', font=CTK_FONT_SMALL, width=30).pack(
+            side='left', padx=(5, 2)
+        )
+        self.batch_mode = ctk.CTkOptionMenu(
+            batch_row1,
+            values=['strict', 'preferred', 'interleave', 'restrictive', 'None'],
+            width=85,
+            font=CTK_FONT_SMALL,
+        )
+        self.batch_mode.set('strict')
+        self.batch_mode.pack(side='left', padx=2)
+
+        # 第二行：节点集 | 批量添加按钮 | 单个添加按钮
+        batch_row2 = ctk.CTkFrame(batch_outer_frame, fg_color='transparent')
+        batch_row2.pack(fill='x')
+
+        ctk.CTkLabel(batch_row2, text='节点集:', font=CTK_FONT_SMALL, width=45).pack(
+            side='left', padx=(0, 2)
+        )
+        self.batch_nodeset = ctk.CTkEntry(batch_row2, placeholder_text='1-4,^3', width=80)
+        self.batch_nodeset.pack(side='left', padx=2)
+
+        self.batch_add_btn = ctk.CTkButton(
+            batch_row2,
+            text='批量添加',
+            width=70,
+            height=24,
+            font=CTK_FONT_SMALL,
+            fg_color='#27ae60',
+            hover_color='#219a52',
+            command=self._batch_add_memnode_rows,
+        )
+        self.batch_add_btn.pack(side='left', padx=5)
+
         # 添加节点按钮
         self.add_node_btn = ctk.CTkButton(
-            node_title_frame,
+            btn_frame,
             text='+ 添加节点',
             width=80,
             height=24,
             font=CTK_FONT_SMALL,
             command=self._add_memnode_row,
         )
-        self.add_node_btn.pack(side='right')
+        self.add_node_btn.pack(side='left', padx=5)
 
         # MemNode 条目容器
         self.memnode_container = ctk.CTkFrame(main_frame, fg_color='transparent')
@@ -99,7 +157,8 @@ class NUMANodeTuningTab(BaseConfigTab):
             '           restrictive - 使用系统默认策略\n'
             '节点集 (nodeset): 指定 NUMA 节点范围，如 1-4,^3 表示节点 1-4 排除 3\n'
             '放置 (placement): static - 静态放置 | auto - 使用 numad 自动放置\n'
-            'memnode: 针对每个客户机 NUMA 节点的内存分配策略'
+            'memnode: 针对每个客户机 NUMA 节点的内存分配策略\n'
+            '批量添加：指定数量、起始 ID、模式和节点集，自动递增 Cell ID'
         )
         ctk.CTkLabel(
             info_frame,
@@ -169,6 +228,38 @@ class NUMANodeTuningTab(BaseConfigTab):
                 'nodeset': nodeset_entry,
             }
         )
+
+    def _batch_add_memnode_rows(self) -> None:
+        """批量添加相同配置的 memnode 行，使用用户指定的模式、节点集."""
+        try:
+            count_str = self.batch_count.get().strip()
+            start_id_str = self.batch_start_id.get().strip()
+
+            if not count_str:
+                return
+
+            count = int(count_str)
+            start_id = int(start_id_str) if start_id_str else 0
+
+            # 使用用户指定的模式和节点集
+            batch_mode = self.batch_mode.get()
+            batch_nodeset = self.batch_nodeset.get().strip()
+
+            # 批量添加
+            for i in range(count):
+                cellid = str(start_id + i)
+                self._add_memnode_row(cellid=cellid, mode=batch_mode, nodeset=batch_nodeset)
+
+            # 清空输入框
+            self.batch_count.delete(0, 'end')
+            self.batch_start_id.delete(0, 'end')
+            self.batch_nodeset.delete(0, 'end')
+
+            self._trigger_change()
+
+        except ValueError:
+            # 输入无效，忽略
+            pass
 
     def _remove_memnode_row(self, row_frame: ctk.CTkFrame) -> None:
         """删除一个 memnode 配置行."""

@@ -121,33 +121,40 @@ class CPUTuningTab(StandardConfigTab):
             row=row, column=0, padx=10, pady=3, sticky='w'
         )
 
-        # 添加按钮行
-        btn_frame = ctk.CTkFrame(parent, fg_color='transparent')
-        btn_frame.grid(row=row, column=1, sticky='w')
+        # 添加按钮行 - 添加的数据直接放到按钮后面
+        self.vcpupin_frame = ctk.CTkFrame(parent, fg_color='transparent')
+        self.vcpupin_frame.grid(row=row, column=1, sticky='w')
+        self.vcpupin_entries = []  # [(id_entry, cpuset_entry), ...]
 
-        ctk.CTkLabel(btn_frame, text='vCPU ID:', font=('', 9), width=50, anchor='w').pack(
+        # 添加输入框
+        ctk.CTkLabel(self.vcpupin_frame, text='vCPU:', font=('', 9), width=35, anchor='w').pack(
             side='left'
         )
-        self.vcpupin_add_id = ctk.CTkEntry(btn_frame, width=50, font=('', 9))
+        self.vcpupin_add_id = ctk.CTkEntry(self.vcpupin_frame, width=40, font=('', 9))
         self.vcpupin_add_id.insert(0, '0')
         self.vcpupin_add_id.pack(side='left', padx=2)
 
-        ctk.CTkLabel(btn_frame, text='CPUs:', font=('', 9), width=30, anchor='w').pack(
+        ctk.CTkLabel(self.vcpupin_frame, text='CPUs:', font=('', 9), width=35, anchor='w').pack(
             side='left', padx=(5, 2)
         )
-        self.vcpupin_add_cpuset = ctk.CTkEntry(btn_frame, width=80, font=('', 9))
+        self.vcpupin_add_cpuset = ctk.CTkEntry(self.vcpupin_frame, width=70, font=('', 9))
         self.vcpupin_add_cpuset.insert(0, '0-3')
         self.vcpupin_add_cpuset.pack(side='left', padx=2)
 
         add_btn = ctk.CTkButton(
-            btn_frame, text='添加', width=40, height=20, command=self._add_vcpupin, font=('', 9)
+            self.vcpupin_frame,
+            text='+',
+            width=28,
+            height=22,
+            command=self._add_vcpupin,
+            font=('', 9),
         )
         add_btn.pack(side='left', padx=5)
 
-        # 显示区域
-        self.vcpupin_frame = ctk.CTkFrame(parent, fg_color='transparent')
-        self.vcpupin_frame.grid(row=row + 1, column=0, columnspan=2, padx=10, pady=3, sticky='w')
-        self.vcpupin_entries = []  # [(id_entry, cpuset_entry), ...]
+        # 分隔线
+        ctk.CTkLabel(self.vcpupin_frame, text='|', font=('', 9), text_color='#555').pack(
+            side='left', padx=5
+        )
 
     def _add_vcpupin(self) -> None:
         """添加一个 vCPU Pin 配置."""
@@ -161,21 +168,24 @@ class CPUTuningTab(StandardConfigTab):
             if id_entry.get().strip() == vcpu_id:
                 return
 
-        row_frame = ctk.CTkFrame(self.vcpupin_frame, fg_color='transparent')
+        # 添加到按钮后面的横向框架中
+        row_frame = ctk.CTkFrame(self.vcpupin_frame, fg_color='#2a2a2a', corner_radius=4)
         row_frame.pack(side='left', padx=3, pady=2)
 
-        ctk.CTkLabel(row_frame, text='vCPU', font=('', 9), width=30, anchor='w').pack(side='left')
-        id_entry = ctk.CTkEntry(row_frame, width=40, font=('', 9))
+        ctk.CTkLabel(row_frame, text='vCPU', font=('', 8), width=28, anchor='w').pack(
+            side='left', padx=2
+        )
+        id_entry = ctk.CTkEntry(row_frame, width=35, font=('', 8))
         id_entry.insert(0, vcpu_id)
-        id_entry.pack(side='left', padx=2)
+        id_entry.pack(side='left', padx=1)
         id_entry.bind('<KeyRelease>', lambda e: self._trigger_change())
 
-        ctk.CTkLabel(row_frame, text='CPUs:', font=('', 9), width=30, anchor='w').pack(
-            side='left', padx=(2, 2)
+        ctk.CTkLabel(row_frame, text='CPUs', font=('', 8), width=28, anchor='w').pack(
+            side='left', padx=(2, 1)
         )
-        cpuset_entry = ctk.CTkEntry(row_frame, width=70, font=('', 9))
+        cpuset_entry = ctk.CTkEntry(row_frame, width=60, font=('', 8))
         cpuset_entry.insert(0, cpuset)
-        cpuset_entry.pack(side='left', padx=2)
+        cpuset_entry.pack(side='left', padx=1)
         cpuset_entry.bind('<KeyRelease>', lambda e: self._trigger_change())
 
         del_btn = ctk.CTkButton(
@@ -184,7 +194,7 @@ class CPUTuningTab(StandardConfigTab):
             width=20,
             height=18,
             command=lambda: self._remove_vcpupin(row_frame, id_entry, cpuset_entry),
-            font=('', 9),
+            font=('', 8),
         )
         del_btn.pack(side='left', padx=2)
 
@@ -239,35 +249,40 @@ class CPUTuningTab(StandardConfigTab):
             row=row, column=0, padx=10, pady=3, sticky='w'
         )
 
-        # 添加按钮行
-        btn_frame = ctk.CTkFrame(parent, fg_color='transparent')
-        btn_frame.grid(row=row, column=1, sticky='w')
+        # 添加按钮行 - 添加的数据直接放到按钮后面
+        self.iothreadpin_frame = ctk.CTkFrame(parent, fg_color='transparent')
+        self.iothreadpin_frame.grid(row=row, column=1, sticky='w')
+        self.iothreadpin_entries = []  # [(id_entry, cpuset_entry), ...]
 
-        ctk.CTkLabel(btn_frame, text='IOThread ID:', font=('', 9), width=70, anchor='w').pack(
-            side='left'
-        )
-        self.iothreadpin_add_id = ctk.CTkEntry(btn_frame, width=50, font=('', 9))
+        # 添加输入框
+        ctk.CTkLabel(
+            self.iothreadpin_frame, text='IOThread:', font=('', 9), width=50, anchor='w'
+        ).pack(side='left')
+        self.iothreadpin_add_id = ctk.CTkEntry(self.iothreadpin_frame, width=40, font=('', 9))
         self.iothreadpin_add_id.insert(0, '1')
         self.iothreadpin_add_id.pack(side='left', padx=2)
 
-        ctk.CTkLabel(btn_frame, text='CPUs:', font=('', 9), width=30, anchor='w').pack(
+        ctk.CTkLabel(self.iothreadpin_frame, text='CPUs:', font=('', 9), width=35, anchor='w').pack(
             side='left', padx=(5, 2)
         )
-        self.iothreadpin_add_cpuset = ctk.CTkEntry(btn_frame, width=80, font=('', 9))
+        self.iothreadpin_add_cpuset = ctk.CTkEntry(self.iothreadpin_frame, width=70, font=('', 9))
         self.iothreadpin_add_cpuset.insert(0, '4-7')
         self.iothreadpin_add_cpuset.pack(side='left', padx=2)
 
         add_btn = ctk.CTkButton(
-            btn_frame, text='添加', width=40, height=20, command=self._add_iothreadpin, font=('', 9)
+            self.iothreadpin_frame,
+            text='+',
+            width=28,
+            height=22,
+            command=self._add_iothreadpin,
+            font=('', 9),
         )
         add_btn.pack(side='left', padx=5)
 
-        # 显示区域
-        self.iothreadpin_frame = ctk.CTkFrame(parent, fg_color='transparent')
-        self.iothreadpin_frame.grid(
-            row=row + 1, column=0, columnspan=2, padx=10, pady=3, sticky='w'
+        # 分隔线
+        ctk.CTkLabel(self.iothreadpin_frame, text='|', font=('', 9), text_color='#555').pack(
+            side='left', padx=5
         )
-        self.iothreadpin_entries = []  # [(id_entry, cpuset_entry), ...]
 
     def _add_iothreadpin(self) -> None:
         """添加一个 IOThread Pin 配置."""
@@ -281,23 +296,24 @@ class CPUTuningTab(StandardConfigTab):
             if id_entry.get().strip() == iothread_id:
                 return
 
-        row_frame = ctk.CTkFrame(self.iothreadpin_frame, fg_color='transparent')
+        # 添加到按钮后面的横向框架中
+        row_frame = ctk.CTkFrame(self.iothreadpin_frame, fg_color='#2a2a2a', corner_radius=4)
         row_frame.pack(side='left', padx=3, pady=2)
 
-        ctk.CTkLabel(row_frame, text='IOThread', font=('', 9), width=50, anchor='w').pack(
-            side='left'
+        ctk.CTkLabel(row_frame, text='IOThread', font=('', 8), width=40, anchor='w').pack(
+            side='left', padx=2
         )
-        id_entry = ctk.CTkEntry(row_frame, width=40, font=('', 9))
+        id_entry = ctk.CTkEntry(row_frame, width=35, font=('', 8))
         id_entry.insert(0, iothread_id)
-        id_entry.pack(side='left', padx=2)
+        id_entry.pack(side='left', padx=1)
         id_entry.bind('<KeyRelease>', lambda e: self._trigger_change())
 
-        ctk.CTkLabel(row_frame, text='CPUs:', font=('', 9), width=30, anchor='w').pack(
-            side='left', padx=(2, 2)
+        ctk.CTkLabel(row_frame, text='CPUs', font=('', 8), width=28, anchor='w').pack(
+            side='left', padx=(2, 1)
         )
-        cpuset_entry = ctk.CTkEntry(row_frame, width=70, font=('', 9))
+        cpuset_entry = ctk.CTkEntry(row_frame, width=60, font=('', 8))
         cpuset_entry.insert(0, cpuset)
-        cpuset_entry.pack(side='left', padx=2)
+        cpuset_entry.pack(side='left', padx=1)
         cpuset_entry.bind('<KeyRelease>', lambda e: self._trigger_change())
 
         del_btn = ctk.CTkButton(
@@ -306,7 +322,7 @@ class CPUTuningTab(StandardConfigTab):
             width=20,
             height=18,
             command=lambda: self._remove_iothreadpin(row_frame, id_entry, cpuset_entry),
-            font=('', 9),
+            font=('', 8),
         )
         del_btn.pack(side='left', padx=2)
 
@@ -599,117 +615,131 @@ class CPUTuningTab(StandardConfigTab):
     # ========== 缓存调优 (Cachetune) ==========
     def _create_cachetune_section(self, parent: ctk.CTkFrame, row: int) -> None:
         """创建 cachetune 配置区域."""
-        # 添加 cachetune 按钮行
-        btn_frame = ctk.CTkFrame(parent, fg_color='transparent')
-        btn_frame.grid(row=row, column=0, columnspan=2, padx=10, pady=3, sticky='w')
+        # 添加按钮行 - 添加的数据直接放到按钮后面
+        self.cachetune_frame = ctk.CTkFrame(parent, fg_color='transparent')
+        self.cachetune_frame.grid(row=row, column=0, columnspan=2, padx=10, pady=3, sticky='w')
+        self.cachetune_entries = []
 
         ctk.CTkButton(
-            btn_frame,
-            text='添加 CacheTune',
+            self.cachetune_frame,
+            text='+ CacheTune',
             width=100,
             height=25,
             command=self._add_cachetune,
             font=('', 9),
         ).pack(side='left', padx=0)
 
-        # cachetune 列表显示区域
-        self.cachetune_container = ctk.CTkScrollableFrame(
-            parent, fg_color='transparent', height=120
+        # 分隔线
+        ctk.CTkLabel(self.cachetune_frame, text='|', font=('', 9), text_color='#555').pack(
+            side='left', padx=8
         )
-        self.cachetune_container.grid(
-            row=row + 1, column=0, columnspan=2, padx=10, pady=3, sticky='nsew'
-        )
-        self.cachetune_entries = []  # [cachetune_frame, ...]
 
     def _add_cachetune(self) -> None:
         """添加一个 cachetune 配置组."""
-        frame = ctk.CTkFrame(self.cachetune_container, fg_color='#2a2a2a', corner_radius=4)
-        frame.pack(fill='x', padx=5, pady=3)
+        # 添加到按钮后面的横向框架中，使用滚动框架支持多个
+        if not hasattr(self, 'cachetune_scroll_frame') or self.cachetune_entries:
+            # 创建滚动框架来容纳多个 cachetune
+            if not hasattr(self, 'cachetune_scroll_frame'):
+                self.cachetune_scroll_frame = ctk.CTkScrollableFrame(
+                    self.section_frames['cputune'],
+                    fg_color='transparent',
+                    height=80,
+                    orientation='horizontal',
+                )
+                self.cachetune_scroll_frame.grid(
+                    row=self.section_rows['cputune'],
+                    column=0,
+                    columnspan=2,
+                    padx=10,
+                    pady=3,
+                    sticky='ew',
+                )
+            frame = ctk.CTkFrame(self.cachetune_scroll_frame, fg_color='#2a2a2a', corner_radius=4)
+            frame.pack(side='left', padx=5, pady=3)
+        else:
+            # 第一个直接放在按钮后面
+            frame = ctk.CTkFrame(self.cachetune_frame, fg_color='#2a2a2a', corner_radius=4)
+            frame.pack(side='left', padx=5, pady=3)
 
         # 第一行：vcpus 和删除按钮
         top_row = ctk.CTkFrame(frame, fg_color='transparent')
         top_row.pack(fill='x', padx=5, pady=2)
 
-        ctk.CTkLabel(top_row, text='vCPUs:', font=('', 9), width=40, anchor='w').pack(side='left')
-        vcpus_entry = ctk.CTkEntry(top_row, width=80, font=('', 9))
+        ctk.CTkLabel(top_row, text='vCPUs:', font=('', 8), width=35, anchor='w').pack(side='left')
+        vcpus_entry = ctk.CTkEntry(top_row, width=70, font=('', 8))
         vcpus_entry.insert(0, '0-3')
         vcpus_entry.pack(side='left', padx=2)
         vcpus_entry.bind('<KeyRelease>', lambda e: self._trigger_change())
 
         del_btn = ctk.CTkButton(
             top_row,
-            text='删除',
-            width=40,
+            text='×',
+            width=24,
             height=18,
             command=lambda: self._remove_cachetune(frame),
-            font=('', 9),
+            font=('', 8),
         )
-        del_btn.pack(side='left', padx=10)
+        del_btn.pack(side='left', padx=5)
 
         # 第二行：cache 配置
         cache_row = ctk.CTkFrame(frame, fg_color='transparent')
-        cache_row.pack(fill='x', padx=5, pady=2)
+        cache_row.pack(fill='x', padx=5, pady=1)
 
-        ctk.CTkLabel(cache_row, text='Cache:', font=('', 9), width=45, anchor='w').pack(side='left')
-        ctk.CTkLabel(cache_row, text='Level:', font=('', 8), width=35, anchor='w').pack(
-            side='left', padx=(5, 2)
+        ctk.CTkLabel(cache_row, text='Cache:', font=('', 8), width=35, anchor='w').pack(side='left')
+        ctk.CTkLabel(cache_row, text='L:', font=('', 8), width=18, anchor='w').pack(
+            side='left', padx=(5, 1)
         )
-        cache_level = ctk.CTkOptionMenu(cache_row, values=['1', '2', '3'], width=45, font=('', 8))
+        cache_level = ctk.CTkOptionMenu(cache_row, values=['1', '2', '3'], width=38, font=('', 8))
         cache_level.set('3')
-        cache_level.pack(side='left', padx=2)
+        cache_level.pack(side='left', padx=1)
         cache_level.configure(command=lambda e: self._trigger_change())
 
-        ctk.CTkLabel(cache_row, text='Type:', font=('', 8), width=30, anchor='w').pack(
-            side='left', padx=(5, 2)
+        ctk.CTkLabel(cache_row, text='T:', font=('', 8), width=15, anchor='w').pack(
+            side='left', padx=(3, 1)
         )
         cache_type = ctk.CTkOptionMenu(
-            cache_row, values=['code', 'data', 'both'], width=50, font=('', 8)
+            cache_row, values=['code', 'data', 'both'], width=42, font=('', 8)
         )
         cache_type.set('both')
-        cache_type.pack(side='left', padx=2)
+        cache_type.pack(side='left', padx=1)
         cache_type.configure(command=lambda e: self._trigger_change())
 
-        ctk.CTkLabel(cache_row, text='Size:', font=('', 8), width=30, anchor='w').pack(
-            side='left', padx=(5, 2)
+        ctk.CTkLabel(cache_row, text='S:', font=('', 8), width=15, anchor='w').pack(
+            side='left', padx=(3, 1)
         )
-        cache_size = ctk.CTkEntry(cache_row, width=50, font=('', 8))
+        cache_size = ctk.CTkEntry(cache_row, width=40, font=('', 8))
         cache_size.insert(0, '3')
-        cache_size.pack(side='left', padx=2)
+        cache_size.pack(side='left', padx=1)
         cache_size.bind('<KeyRelease>', lambda e: self._trigger_change())
 
-        ctk.CTkLabel(cache_row, text='Unit:', font=('', 8), width=30, anchor='w').pack(
-            side='left', padx=(2, 2)
-        )
         cache_unit = ctk.CTkOptionMenu(
-            cache_row, values=['KiB', 'MiB', 'GiB'], width=45, font=('', 8)
+            cache_row, values=['KiB', 'MiB', 'GiB'], width=38, font=('', 8)
         )
         cache_unit.set('MiB')
-        cache_unit.pack(side='left', padx=2)
+        cache_unit.pack(side='left', padx=1)
         cache_unit.configure(command=lambda e: self._trigger_change())
 
         # 第三行：monitor 配置
         monitor_row = ctk.CTkFrame(frame, fg_color='transparent')
-        monitor_row.pack(fill='x', padx=5, pady=2)
+        monitor_row.pack(fill='x', padx=5, pady=1)
 
-        ctk.CTkLabel(monitor_row, text='Monitor:', font=('', 9), width=45, anchor='w').pack(
-            side='left'
-        )
+        ctk.CTkLabel(monitor_row, text='Mon:', font=('', 8), width=35, anchor='w').pack(side='left')
         ctk.CTkLabel(monitor_row, text='vCPUs:', font=('', 8), width=35, anchor='w').pack(
-            side='left', padx=(5, 2)
+            side='left', padx=(2, 1)
         )
-        monitor_vcpus = ctk.CTkEntry(monitor_row, width=80, font=('', 8))
+        monitor_vcpus = ctk.CTkEntry(monitor_row, width=70, font=('', 8))
         monitor_vcpus.insert(0, '0-3')
-        monitor_vcpus.pack(side='left', padx=2)
+        monitor_vcpus.pack(side='left', padx=1)
         monitor_vcpus.bind('<KeyRelease>', lambda e: self._trigger_change())
 
-        ctk.CTkLabel(monitor_row, text='Level:', font=('', 8), width=30, anchor='w').pack(
-            side='left', padx=(10, 2)
+        ctk.CTkLabel(monitor_row, text='L:', font=('', 8), width=18, anchor='w').pack(
+            side='left', padx=(5, 1)
         )
         monitor_level = ctk.CTkOptionMenu(
-            monitor_row, values=['1', '2', '3'], width=45, font=('', 8)
+            monitor_row, values=['1', '2', '3'], width=38, font=('', 8)
         )
         monitor_level.set('3')
-        monitor_level.pack(side='left', padx=2)
+        monitor_level.pack(side='left', padx=1)
         monitor_level.configure(command=lambda e: self._trigger_change())
 
         self.cachetune_entries.append(
@@ -735,69 +765,86 @@ class CPUTuningTab(StandardConfigTab):
     # ========== 内存带宽调优 (MemoryTune) ==========
     def _create_memorytune_section(self, parent: ctk.CTkFrame, row: int) -> None:
         """创建 memorytune 配置区域."""
-        # 添加 memorytune 按钮行
-        btn_frame = ctk.CTkFrame(parent, fg_color='transparent')
-        btn_frame.grid(row=row, column=0, columnspan=2, padx=10, pady=3, sticky='w')
+        # 添加按钮行 - 添加的数据直接放到按钮后面
+        self.memorytune_frame = ctk.CTkFrame(parent, fg_color='transparent')
+        self.memorytune_frame.grid(row=row, column=0, columnspan=2, padx=10, pady=3, sticky='w')
+        self.memorytune_entries = []
 
         ctk.CTkButton(
-            btn_frame,
-            text='添加 MemoryTune',
+            self.memorytune_frame,
+            text='+ MemoryTune',
             width=100,
             height=25,
             command=self._add_memorytune,
             font=('', 9),
         ).pack(side='left', padx=0)
 
-        # memorytune 列表显示区域
-        self.memorytune_container = ctk.CTkScrollableFrame(
-            parent, fg_color='transparent', height=120
+        # 分隔线
+        ctk.CTkLabel(self.memorytune_frame, text='|', font=('', 9), text_color='#555').pack(
+            side='left', padx=8
         )
-        self.memorytune_container.grid(
-            row=row + 1, column=0, columnspan=2, padx=10, pady=3, sticky='nsew'
-        )
-        self.memorytune_entries = []  # [memorytune_frame, ...]
 
     def _add_memorytune(self) -> None:
         """添加一个 memorytune 配置组."""
-        frame = ctk.CTkFrame(self.memorytune_container, fg_color='#2a2a2a', corner_radius=4)
-        frame.pack(fill='x', padx=5, pady=3)
+        # 添加到按钮后面的横向框架中
+        if not hasattr(self, 'memorytune_scroll_frame') or self.memorytune_entries:
+            # 创建滚动框架来容纳多个 memorytune
+            if not hasattr(self, 'memorytune_scroll_frame'):
+                self.memorytune_scroll_frame = ctk.CTkScrollableFrame(
+                    self.section_frames['cputune'],
+                    fg_color='transparent',
+                    height=60,
+                    orientation='horizontal',
+                )
+                self.memorytune_scroll_frame.grid(
+                    row=self.section_rows['cputune'] + 1,
+                    column=0,
+                    columnspan=2,
+                    padx=10,
+                    pady=3,
+                    sticky='ew',
+                )
+            frame = ctk.CTkFrame(self.memorytune_scroll_frame, fg_color='#2a2a2a', corner_radius=4)
+            frame.pack(side='left', padx=5, pady=3)
+        else:
+            # 第一个直接放在按钮后面
+            frame = ctk.CTkFrame(self.memorytune_frame, fg_color='#2a2a2a', corner_radius=4)
+            frame.pack(side='left', padx=5, pady=3)
 
         # 第一行：vcpus 和删除按钮
         top_row = ctk.CTkFrame(frame, fg_color='transparent')
         top_row.pack(fill='x', padx=5, pady=2)
 
-        ctk.CTkLabel(top_row, text='vCPUs:', font=('', 9), width=40, anchor='w').pack(side='left')
-        vcpus_entry = ctk.CTkEntry(top_row, width=80, font=('', 9))
+        ctk.CTkLabel(top_row, text='vCPUs:', font=('', 8), width=35, anchor='w').pack(side='left')
+        vcpus_entry = ctk.CTkEntry(top_row, width=70, font=('', 8))
         vcpus_entry.insert(0, '0-3')
         vcpus_entry.pack(side='left', padx=2)
         vcpus_entry.bind('<KeyRelease>', lambda e: self._trigger_change())
 
         del_btn = ctk.CTkButton(
             top_row,
-            text='删除',
-            width=40,
+            text='×',
+            width=24,
             height=18,
             command=lambda: self._remove_memorytune(frame),
-            font=('', 9),
+            font=('', 8),
         )
-        del_btn.pack(side='left', padx=10)
+        del_btn.pack(side='left', padx=5)
 
         # 第二行：node 配置
         node_row = ctk.CTkFrame(frame, fg_color='transparent')
-        node_row.pack(fill='x', padx=5, pady=2)
+        node_row.pack(fill='x', padx=5, pady=1)
 
-        ctk.CTkLabel(node_row, text='NUMA Node:', font=('', 9), width=60, anchor='w').pack(
-            side='left'
-        )
-        node_id = ctk.CTkEntry(node_row, width=50, font=('', 9))
+        ctk.CTkLabel(node_row, text='Node:', font=('', 8), width=35, anchor='w').pack(side='left')
+        node_id = ctk.CTkEntry(node_row, width=40, font=('', 8))
         node_id.insert(0, '0')
         node_id.pack(side='left', padx=2)
         node_id.bind('<KeyRelease>', lambda e: self._trigger_change())
 
-        ctk.CTkLabel(node_row, text='Bandwidth (%):', font=('', 9), width=80, anchor='w').pack(
-            side='left', padx=(10, 2)
+        ctk.CTkLabel(node_row, text='Bandwidth (%):', font=('', 8), width=75, anchor='w').pack(
+            side='left', padx=(5, 2)
         )
-        bandwidth = ctk.CTkEntry(node_row, width=50, font=('', 9))
+        bandwidth = ctk.CTkEntry(node_row, width=45, font=('', 8))
         bandwidth.insert(0, '100')
         bandwidth.pack(side='left', padx=2)
         bandwidth.bind('<KeyRelease>', lambda e: self._trigger_change())
