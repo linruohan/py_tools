@@ -15,10 +15,24 @@ class SearchFilterExample(ctk.CTk):
 
         # 创建示例数据
         self.sample_items = [
-            'Apple', 'Banana', 'Cherry', 'Date', 'Elderberry',
-            'Fig', 'Grape', 'Honeydew', 'Kiwi', 'Lemon',
-            'Mango', 'Orange', 'Pear', 'Quince', 'Raspberry',
-            'Strawberry', 'Tangerine', 'Watermelon'
+            'Apple',
+            'Banana',
+            'Cherry',
+            'Date',
+            'Elderberry',
+            'Fig',
+            'Grape',
+            'Honeydew',
+            'Kiwi',
+            'Lemon',
+            'Mango',
+            'Orange',
+            'Pear',
+            'Quince',
+            'Raspberry',
+            'Strawberry',
+            'Tangerine',
+            'Watermelon',
         ]
 
         self._init_ui()
@@ -40,9 +54,7 @@ class SearchFilterExample(ctk.CTk):
 
         # 创建选中结果显示
         self.result_label = ctk.CTkLabel(
-            main_frame,
-            text='选中的项目: 无',
-            font=('Microsoft YaHei UI', 12)
+            main_frame, text='选中的项目: 无', font=('Microsoft YaHei UI', 12)
         )
         self.result_label.pack(pady=0)
 
@@ -53,7 +65,6 @@ class SearchFilterExample(ctk.CTk):
     def _on_item_selected(self, item):
         """选中项回调."""
         self.result_label.configure(text=f'选中的项目: {item}')
-
 
 
 if __name__ == '__main__':

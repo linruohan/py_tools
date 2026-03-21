@@ -21,16 +21,12 @@ class OthersTab(BaseConfigTab):
         frame.grid(row=0, column=0, sticky='nsew', padx=10, pady=10)
         frame.grid_columnconfigure(0, weight=1)
 
-        ctk.CTkLabel(
-            frame, 
-            text='其他设备配置', 
-            font=ctk.CTkFont(size=16, weight='bold')
-        ).grid(row=0, column=0, padx=10, pady=10, sticky='w')
+        ctk.CTkLabel(frame, text='其他设备配置', font=ctk.CTkFont(size=16, weight='bold')).grid(
+            row=0, column=0, padx=10, pady=10, sticky='w'
+        )
 
         ctk.CTkLabel(
-            frame, 
-            text='此模块已被拆分到各个专门的子模块中', 
-            font=ctk.CTkFont(size=12)
+            frame, text='此模块已被拆分到各个专门的子模块中', font=ctk.CTkFont(size=12)
         ).grid(row=1, column=0, padx=10, pady=5, sticky='w')
 
     def get_serial_config(self):

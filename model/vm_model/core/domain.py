@@ -155,13 +155,17 @@ class CPUModel:
         )
 
     def to_dict(self) -> dict[str, Any]:
-        """转换为字典"""
-        return {
-            'name': self.name,
-            'fallback': self.fallback,
-            'vendor': self.vendor,
-            'vendor_id': self.vendor_id,
-        }
+        """转换为字典，过滤掉None值"""
+        result = {'name': self.name}
+
+        if self.fallback is not None:
+            result['fallback'] = self.fallback
+        if self.vendor is not None:
+            result['vendor'] = self.vendor
+        if self.vendor_id is not None:
+            result['vendor_id'] = self.vendor_id
+
+        return result
 
 
 @dataclass
@@ -173,17 +177,18 @@ class CPU:
         model: CPU 模型
         topology: CPU 拓扑结构
         features: CPU 特性列表
-        match: 匹配模式 (exact, minimum, strict)
+        match: 匹配模式 (exact, minimum, strict) - host-model 模式下无效
         check: CPU 检查模式 (none, partial, full)
-        migratable: 可迁移性 (on, off)
+        migratable: 可迁移性 (on, off) - Since 6.5.0
         vendor_id: CPU 厂商标识符 (12 字符)
         placeholder: 占位符
         numa: NUMA 配置
         cache: 缓存配置
         maxphysaddr: 物理地址配置
+        deprecated_features: 废弃特性开关 (on, off) - Since 11.0.0, S390 专用
     """
 
-    mode: CpuMode = CpuMode.HOST_MODEL
+    mode: CpuMode | None = CpuMode.HOST_MODEL
     model: CPUModel | None = None
     topology: CPUTopology | None = None
     features: list[CPUFeature] = field(default_factory=list)
@@ -195,6 +200,7 @@ class CPU:
     numa: NUMA | None = None
     cache: dict[str, Any] | None = None
     maxphysaddr: dict[str, Any] | None = None
+    deprecated_features: str | None = None
 
     @classmethod
     def from_dict(cls, data: dict[str, Any]) -> 'CPU':
@@ -216,37 +222,55 @@ class CPU:
             # 这里可以根据需要实现 NUMA 从字典创建的逻辑
             pass
 
+        # 处理mode：只有当mode存在且不为None（包括字符串'None'）时才转换为CpuMode
+        mode_value = data.get('mode')
+        if mode_value is not None and mode_value != 'None' and mode_value != '':
+            mode = CpuMode(mode_value)
+        else:
+            # UI 选中 "None" 时，mode 设为 None（不输出到 XML）
+            mode = None
+
         return cls(
-            mode=CpuMode(data.get('mode', 'host-model')),
+            mode=mode,
             model=model,
             topology=topology,
             features=features if isinstance(features, list) else [],
-            match=data.get('match'),
-            check=data.get('check'),
-            migratable=data.get('migratable'),
+            match=data.get('match') if data.get('match') != 'None' else None,
+            check=data.get('check') if data.get('check') != 'None' else None,
+            migratable=data.get('migratable') if data.get('migratable') != 'None' else None,
             vendor_id=data.get('vendor_id'),
             placeholder=data.get('placeholder'),
             numa=numa,
             cache=data.get('cache'),
             maxphysaddr=data.get('maxphysaddr'),
+            deprecated_features=data.get('deprecated_features'),
         )
 
     def to_dict(self) -> dict[str, Any]:
-        """转换为字典"""
-        return {
-            'mode': self.mode.value if isinstance(self.mode, CpuMode) else str(self.mode),
+        """转换为字典，过滤掉None值"""
+        result = {
             'model': self.model.to_dict() if self.model else None,
             'topology': self.topology.to_dict() if self.topology else None,
             'features': [f.to_dict() for f in self.features],
-            'match': self.match,
-            'check': self.check,
-            'migratable': self.migratable,
             'vendor_id': self.vendor_id,
             'placeholder': self.placeholder,
             'numa': self.numa,
             'cache': self.cache,
             'maxphysaddr': self.maxphysaddr,
+            'deprecated_features': self.deprecated_features,
         }
+
+        # 只添加非None值的mode、match、check、migratable
+        if self.mode is not None:
+            result['mode'] = self.mode.value if isinstance(self.mode, CpuMode) else str(self.mode)
+        if self.match is not None:
+            result['match'] = self.match
+        if self.check is not None:
+            result['check'] = self.check
+        if self.migratable is not None:
+            result['migratable'] = self.migratable
+
+        return result
 
 
 @dataclass
@@ -1202,26 +1226,31 @@ class Domain:
         else:
             # 如果没有 cpu 键，使用默认值
             cpu_model_data = {}
-        
+
         # 兼容旧的 cpu_model_topology 键
         if not cpu_model_data:
             cpu_model_data = config.get('cpu_model_topology', {})
-        
+
         cpu = CPU.from_dict(cpu_model_data) if cpu_model_data else CPU()
 
         # 内存配置
         mem_data = config.get('memory_allocation', {})
+        unit_str = mem_data.get('unit', 'KiB')
+        from config.strategies.option_strategies import MemoryUnit
+
+        unit = MemoryUnit(unit_str) if isinstance(unit_str, str) else unit_str
+
         memory = Memory(
             size=mem_data.get('memory', 2097152),
-            unit=mem_data.get('unit', 'KiB'),
+            unit=unit,
         )
         current_memory = CurrentMemory(
             size=mem_data.get('current_memory', 2097152),
-            unit=mem_data.get('unit', 'KiB'),
+            unit=unit,
         )
         max_memory = MaxMemory(
             size=mem_data.get('max_memory', 4194304),
-            unit=mem_data.get('unit', 'KiB'),
+            unit=unit,
             slots=mem_data.get('memory_slots'),
         )
 
@@ -1320,11 +1349,7 @@ class Domain:
             config['cpu_allocation'] = self.vcpu.to_dict()
         if self.cpu:
             cpu_dict = self.cpu.to_dict()
-            config['cpu_model_topology'] = {
-                'model': cpu_dict.get('model'),
-                'feature': cpu_dict.get('features'),
-                'cache': cpu_dict.get('cache'),
-            }
+            config['cpu_model_topology'] = cpu_dict
 
         # 内存配置
         if self.memory:
@@ -1447,9 +1472,7 @@ class Domain:
             if hasattr(self.cpu, 'mode') and self.cpu.mode:
                 cpu_elem.set(
                     'mode',
-                    self.cpu.mode.value
-                    if hasattr(self.cpu.mode, 'value')
-                    else str(self.cpu.mode),
+                    self.cpu.mode.value if hasattr(self.cpu.mode, 'value') else str(self.cpu.mode),
                 )
             if hasattr(self.cpu, 'match') and self.cpu.match:
                 cpu_elem.set('match', self.cpu.match)
@@ -1457,12 +1480,20 @@ class Domain:
                 cpu_elem.set('check', self.cpu.check)
             if hasattr(self.cpu, 'migratable') and self.cpu.migratable:
                 cpu_elem.set('migratable', self.cpu.migratable)
+            if hasattr(self.cpu, 'deprecated_features') and self.cpu.deprecated_features:
+                cpu_elem.set('deprecated_features', self.cpu.deprecated_features)
             # 处理 CPU 子元素
             if hasattr(self.cpu, 'model') and self.cpu.model:
                 model_elem = ET.SubElement(cpu_elem, 'model')
-                model_elem.text = self.cpu.model
-                if hasattr(self.cpu, 'fallback') and self.cpu.fallback:
-                    model_elem.set('fallback', self.cpu.fallback)
+                model_elem.text = (
+                    self.cpu.model.name if hasattr(self.cpu.model, 'name') else str(self.cpu.model)
+                )
+                if hasattr(self.cpu.model, 'fallback') and self.cpu.model.fallback:
+                    model_elem.set('fallback', self.cpu.model.fallback)
+                if hasattr(self.cpu.model, 'vendor') and self.cpu.model.vendor:
+                    model_elem.set('vendor', self.cpu.model.vendor)
+                if hasattr(self.cpu.model, 'vendor_id') and self.cpu.model.vendor_id:
+                    model_elem.set('vendor_id', self.cpu.model.vendor_id)
             if hasattr(self.cpu, 'vendor') and self.cpu.vendor:
                 vendor_elem = ET.SubElement(cpu_elem, 'vendor')
                 vendor_elem.text = self.cpu.vendor

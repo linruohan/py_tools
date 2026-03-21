@@ -23,7 +23,10 @@ class NetworkTeamingTab(BaseConfigTab):
         frame.grid_columnconfigure(1, weight=1)
 
         ctk.CTkLabel(
-            frame, text='Teaming a virtio/hostdev NIC pair', font=CTK_FONT_BOLD, text_color='#ff9800'
+            frame,
+            text='Teaming a virtio/hostdev NIC pair',
+            font=CTK_FONT_BOLD,
+            text_color='#ff9800',
         ).grid(row=0, column=0, columnspan=4, padx=10, pady=5, sticky='w')
 
         # Team Name
@@ -45,7 +48,7 @@ class NetworkTeamingTab(BaseConfigTab):
             values=['active-backup', 'round-robin', 'broadcast', 'loadbalance'],
             width=150,
             font=CTK_FONT_SMALL,
-            command=self._trigger_change
+            command=self._trigger_change,
         )
         self.team_mode.set('active-backup')
         self.team_mode.grid(row=2, column=1, padx=5, pady=5, sticky='w')
@@ -56,5 +59,5 @@ class NetworkTeamingTab(BaseConfigTab):
             'type': 'network',
             'source': 'team',
             'team_name': self.team_name.get().strip() or 'team0',
-            'mode': self.team_mode.get()
+            'mode': self.team_mode.get(),
         }

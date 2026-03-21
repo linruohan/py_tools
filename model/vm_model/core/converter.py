@@ -50,11 +50,7 @@ class DomainConfigConverter:
                     else [],
                 }
             )
-            config['cpu_model_topology'] = {
-                'model': cpu_dict.get('model'),
-                'feature': cpu_dict.get('features', []),
-                'cache': cpu_dict.get('cache', {}),
-            }
+            config['cpu_model_topology'] = cpu_dict
 
         # 内存配置
         if domain.memory:

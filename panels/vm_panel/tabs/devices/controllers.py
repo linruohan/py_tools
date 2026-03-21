@@ -176,7 +176,18 @@ class ControllerConfigDialog:
         )
         self.type_menu = ctk.CTkOptionMenu(
             info_frame,
-            values=['pci', 'usb', 'scsi', 'ide', 'sata', 'fdc', 'ccid', 'virtio-serial', 'virtio-blk', 'virtio-net'],
+            values=[
+                'pci',
+                'usb',
+                'scsi',
+                'ide',
+                'sata',
+                'fdc',
+                'ccid',
+                'virtio-serial',
+                'virtio-blk',
+                'virtio-net',
+            ],
             width=150,
             font=CTK_FONT_SMALL,
             command=self._on_type_changed,
@@ -190,7 +201,21 @@ class ControllerConfigDialog:
         )
         self.model_menu = ctk.CTkOptionMenu(
             info_frame,
-            values=['', 'virtio', 'e1000', 'e1000e', 'rtl8139', 'pcnet', 'ide', 'scsi', 'sata', 'usb-ohci', 'usb-uhci', 'usb-ehci', 'usb-xhci'],
+            values=[
+                '',
+                'virtio',
+                'e1000',
+                'e1000e',
+                'rtl8139',
+                'pcnet',
+                'ide',
+                'scsi',
+                'sata',
+                'usb-ohci',
+                'usb-uhci',
+                'usb-ehci',
+                'usb-xhci',
+            ],
             width=150,
             font=CTK_FONT_SMALL,
         )
@@ -202,10 +227,7 @@ class ControllerConfigDialog:
             row=2, column=0, padx=5, pady=5, sticky='w'
         )
         self.index_entry = ctk.CTkEntry(
-            info_frame,
-            placeholder_text='0',
-            width=100,
-            font=CTK_FONT_SMALL
+            info_frame, placeholder_text='0', width=100, font=CTK_FONT_SMALL
         )
         self.index_entry.grid(row=2, column=1, padx=5, pady=5, sticky='w')
 
@@ -214,10 +236,7 @@ class ControllerConfigDialog:
             row=3, column=0, padx=5, pady=5, sticky='w'
         )
         self.address_entry = ctk.CTkEntry(
-            info_frame,
-            placeholder_text='0000:00:00.0',
-            width=150,
-            font=CTK_FONT_SMALL
+            info_frame, placeholder_text='0000:00:00.0', width=150, font=CTK_FONT_SMALL
         )
         self.address_entry.grid(row=3, column=1, padx=5, pady=5, sticky='w')
 

@@ -61,10 +61,18 @@ class MemoryAllocationTab(BaseConfigTab):
         memory = parse_memory_value(self.memory.get(), target_unit=target_unit)
 
         current_memory_raw = self.current_memory.get()
-        current_memory = None if current_memory_raw == 'None' else parse_memory_value(current_memory_raw, target_unit=target_unit)
+        current_memory = (
+            None
+            if current_memory_raw == 'None'
+            else parse_memory_value(current_memory_raw, target_unit=target_unit)
+        )
 
         max_memory_raw = self.max_memory.get()
-        max_memory = None if max_memory_raw == 'None' else parse_memory_value(max_memory_raw, target_unit=target_unit)
+        max_memory = (
+            None
+            if max_memory_raw == 'None'
+            else parse_memory_value(max_memory_raw, target_unit=target_unit)
+        )
 
         memory_config = {
             'memory': memory,

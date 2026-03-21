@@ -22,9 +22,9 @@ class TCPTunnelTab(BaseConfigTab):
         frame.grid(row=0, column=0, sticky='nsew', padx=5, pady=5)
         frame.grid_columnconfigure(1, weight=1)
 
-        ctk.CTkLabel(
-            frame, text='TCP tunnel', font=CTK_FONT_BOLD, text_color='#ff5722'
-        ).grid(row=0, column=0, columnspan=4, padx=10, pady=5, sticky='w')
+        ctk.CTkLabel(frame, text='TCP tunnel', font=CTK_FONT_BOLD, text_color='#ff5722').grid(
+            row=0, column=0, columnspan=4, padx=10, pady=5, sticky='w'
+        )
 
         # Host
         ctk.CTkLabel(frame, text='Host:', font=CTK_FONT_MAIN, width=100, anchor='w').grid(
@@ -40,9 +40,7 @@ class TCPTunnelTab(BaseConfigTab):
         ctk.CTkLabel(frame, text='Port:', font=CTK_FONT_MAIN, width=100, anchor='w').grid(
             row=2, column=0, padx=10, pady=5, sticky='w'
         )
-        self.port = ctk.CTkEntry(
-            frame, placeholder_text='1234', width=100, font=CTK_FONT_SMALL
-        )
+        self.port = ctk.CTkEntry(frame, placeholder_text='1234', width=100, font=CTK_FONT_SMALL)
         self.port.grid(row=2, column=1, padx=5, pady=5, sticky='w')
         self.port.bind('<KeyRelease>', lambda e: self._trigger_change())
 
@@ -52,5 +50,5 @@ class TCPTunnelTab(BaseConfigTab):
             'type': 'network',
             'source': 'tcp',
             'host': self.host.get().strip(),
-            'port': self.port.get().strip() or '1234'
+            'port': self.port.get().strip() or '1234',
         }

@@ -37,9 +37,9 @@ class NetworkNWFilterTab(BaseConfigTab):
         self.filter_name.bind('<KeyRelease>', lambda e: self._trigger_change())
 
         # Filter Parameters
-        ctk.CTkLabel(frame, text='Filter Parameters:', font=CTK_FONT_MAIN, width=100, anchor='w').grid(
-            row=2, column=0, padx=10, pady=5, sticky='w'
-        )
+        ctk.CTkLabel(
+            frame, text='Filter Parameters:', font=CTK_FONT_MAIN, width=100, anchor='w'
+        ).grid(row=2, column=0, padx=10, pady=5, sticky='w')
         self.filter_params = ctk.CTkTextbox(
             frame, placeholder_text='param1=value1\nparam2=value2', height=100, font=CTK_FONT_SMALL
         )
@@ -51,5 +51,5 @@ class NetworkNWFilterTab(BaseConfigTab):
         return {
             'type': 'network',
             'filter_name': self.filter_name.get().strip() or 'default',
-            'filter_params': self.filter_params.get('1.0', 'end').strip()
+            'filter_params': self.filter_params.get('1.0', 'end').strip(),
         }

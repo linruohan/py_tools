@@ -54,7 +54,9 @@ class Nvram:
     templateFormat: str = ''
     type: str = 'file'  # file, block, network
     format: str = ''
-    source: dict = None  # source 配置 (file/block 类型: {'file': path}, network 类型: {'protocol': xxx, ...})
+    source: dict = (
+        None  # source 配置 (file/block 类型: {'file': path}, network 类型: {'protocol': xxx, ...})
+    )
 
     def __post_init__(self):
         if self.source is None:
@@ -296,7 +298,9 @@ class OSBootingConfig:
         """
         result = {
             'type': self.type,
-            'arch': self.arch if self.arch else None,  # 空值返回 None，让 XML 生成器决定是否使用默认值
+            'arch': self.arch
+            if self.arch
+            else None,  # 空值返回 None，让 XML 生成器决定是否使用默认值
             'machine': self.machine if self.machine else None,
             'firmware': self.firmware if self.firmware else None,
             'boot_devices': [d.dev for d in self.boot_devices],

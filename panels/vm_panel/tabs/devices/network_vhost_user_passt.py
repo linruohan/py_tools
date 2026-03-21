@@ -23,7 +23,10 @@ class NetworkVhostUserPasstTab(BaseConfigTab):
         frame.grid_columnconfigure(1, weight=1)
 
         ctk.CTkLabel(
-            frame, text='vhost-user connection with passt backend', font=CTK_FONT_BOLD, text_color='#2196f3'
+            frame,
+            text='vhost-user connection with passt backend',
+            font=CTK_FONT_BOLD,
+            text_color='#2196f3',
         ).grid(row=0, column=0, columnspan=4, padx=10, pady=5, sticky='w')
 
         # Socket Path
@@ -52,5 +55,5 @@ class NetworkVhostUserPasstTab(BaseConfigTab):
             'type': 'network',
             'source': 'vhostuser',
             'socket_path': self.socket_path.get().strip(),
-            'passt_args': self.passt_args.get().strip()
+            'passt_args': self.passt_args.get().strip(),
         }

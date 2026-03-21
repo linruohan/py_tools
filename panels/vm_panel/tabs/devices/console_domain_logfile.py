@@ -22,16 +22,19 @@ class DomainLogfileTab(BaseConfigTab):
         frame.grid(row=0, column=0, sticky='nsew', padx=5, pady=5)
         frame.grid_columnconfigure(1, weight=1)
 
-        ctk.CTkLabel(
-            frame, text='Domain logfile', font=CTK_FONT_BOLD, text_color='#ff5722'
-        ).grid(row=0, column=0, columnspan=4, padx=10, pady=5, sticky='w')
+        ctk.CTkLabel(frame, text='Domain logfile', font=CTK_FONT_BOLD, text_color='#ff5722').grid(
+            row=0, column=0, columnspan=4, padx=10, pady=5, sticky='w'
+        )
 
         # Log Path
         ctk.CTkLabel(frame, text='Log Path:', font=CTK_FONT_MAIN, width=100, anchor='w').grid(
             row=1, column=0, padx=10, pady=5, sticky='w'
         )
         self.log_path = ctk.CTkEntry(
-            frame, placeholder_text='/var/log/libvirt/qemu/domain.log', width=200, font=CTK_FONT_SMALL
+            frame,
+            placeholder_text='/var/log/libvirt/qemu/domain.log',
+            width=200,
+            font=CTK_FONT_SMALL,
         )
         self.log_path.grid(row=1, column=1, padx=5, pady=5, sticky='w')
         self.log_path.bind('<KeyRelease>', lambda e: self._trigger_change())
@@ -45,7 +48,7 @@ class DomainLogfileTab(BaseConfigTab):
             values=['debug', 'info', 'warning', 'error'],
             width=100,
             font=CTK_FONT_SMALL,
-            command=self._trigger_change
+            command=self._trigger_change,
         )
         self.log_level.set('info')
         self.log_level.grid(row=2, column=1, padx=5, pady=5, sticky='w')
@@ -55,5 +58,5 @@ class DomainLogfileTab(BaseConfigTab):
         return {
             'type': 'logfile',
             'path': self.log_path.get().strip(),
-            'level': self.log_level.get()
+            'level': self.log_level.get(),
         }

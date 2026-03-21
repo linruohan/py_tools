@@ -22,9 +22,9 @@ class NetworkIPConfigTab(BaseConfigTab):
         frame.grid(row=0, column=0, sticky='nsew', padx=5, pady=5)
         frame.grid_columnconfigure(1, weight=1)
 
-        ctk.CTkLabel(
-            frame, text='IP configuration', font=CTK_FONT_BOLD, text_color='#607d8b'
-        ).grid(row=0, column=0, columnspan=4, padx=10, pady=5, sticky='w')
+        ctk.CTkLabel(frame, text='IP configuration', font=CTK_FONT_BOLD, text_color='#607d8b').grid(
+            row=0, column=0, columnspan=4, padx=10, pady=5, sticky='w'
+        )
 
         # IP Address
         ctk.CTkLabel(frame, text='IP Address:', font=CTK_FONT_MAIN, width=100, anchor='w').grid(
@@ -62,5 +62,5 @@ class NetworkIPConfigTab(BaseConfigTab):
             'type': 'network',
             'ip_address': self.ip_address.get().strip(),
             'netmask': self.netmask.get().strip(),
-            'gateway': self.gateway.get().strip()
+            'gateway': self.gateway.get().strip(),
         }

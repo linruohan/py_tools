@@ -35,15 +35,15 @@ class NetworkLinkStateTab(BaseConfigTab):
             values=['up', 'down'],
             width=100,
             font=CTK_FONT_SMALL,
-            command=self._trigger_change
+            command=self._trigger_change,
         )
         self.link_state.set('up')
         self.link_state.grid(row=1, column=1, padx=5, pady=5, sticky='w')
 
         # Auto-negotiation
-        ctk.CTkLabel(frame, text='Auto-negotiation:', font=CTK_FONT_MAIN, width=120, anchor='w').grid(
-            row=2, column=0, padx=10, pady=5, sticky='w'
-        )
+        ctk.CTkLabel(
+            frame, text='Auto-negotiation:', font=CTK_FONT_MAIN, width=120, anchor='w'
+        ).grid(row=2, column=0, padx=10, pady=5, sticky='w')
         self.auto_negotiate = ctk.CTkCheckBox(
             frame, text='Enable', font=CTK_FONT_SMALL, command=self._trigger_change
         )
@@ -54,5 +54,5 @@ class NetworkLinkStateTab(BaseConfigTab):
         return {
             'type': 'network',
             'link_state': self.link_state.get(),
-            'auto_negotiate': self.auto_negotiate.get()
+            'auto_negotiate': self.auto_negotiate.get(),
         }

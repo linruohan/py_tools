@@ -189,7 +189,7 @@ class DeviceLeaseConfigDialog:
             info_frame,
             placeholder_text='iqn.2003-01.org.linux-iscsi.test:target1',
             width=300,
-            font=CTK_FONT_SMALL
+            font=CTK_FONT_SMALL,
         )
         self.target_entry.grid(row=1, column=1, padx=5, pady=5, sticky='w')
 
@@ -201,7 +201,7 @@ class DeviceLeaseConfigDialog:
             info_frame,
             placeholder_text='iqn.2003-01.org.linux-iscsi.test:initiator1',
             width=300,
-            font=CTK_FONT_SMALL
+            font=CTK_FONT_SMALL,
         )
         self.initiator_entry.grid(row=2, column=1, padx=5, pady=5, sticky='w')
 
@@ -210,10 +210,7 @@ class DeviceLeaseConfigDialog:
             row=3, column=0, padx=5, pady=5, sticky='w'
         )
         self.address_entry = ctk.CTkEntry(
-            info_frame,
-            placeholder_text='192.168.1.1',
-            width=150,
-            font=CTK_FONT_SMALL
+            info_frame, placeholder_text='192.168.1.1', width=150, font=CTK_FONT_SMALL
         )
         self.address_entry.grid(row=3, column=1, padx=5, pady=5, sticky='w')
 
@@ -222,10 +219,7 @@ class DeviceLeaseConfigDialog:
             row=4, column=0, padx=5, pady=5, sticky='w'
         )
         self.port_entry = ctk.CTkEntry(
-            info_frame,
-            placeholder_text='3260',
-            width=100,
-            font=CTK_FONT_SMALL
+            info_frame, placeholder_text='3260', width=100, font=CTK_FONT_SMALL
         )
         self.port_entry.grid(row=4, column=1, padx=5, pady=5, sticky='w')
 

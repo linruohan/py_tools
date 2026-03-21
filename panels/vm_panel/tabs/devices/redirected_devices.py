@@ -35,21 +35,21 @@ class RedirectedDevicesTab(BaseConfigTab):
             values=['smartcard', 'usb', 'serial'],
             width=100,
             font=CTK_FONT_SMALL,
-            command=self._trigger_change
+            command=self._trigger_change,
         )
         self.device_type.set('smartcard')
         self.device_type.grid(row=1, column=1, padx=5, pady=5, sticky='w')
 
         # 重定向方法
-        ctk.CTkLabel(frame, text='Redirect Method:', font=CTK_FONT_MAIN, width=100, anchor='w').grid(
-            row=2, column=0, padx=10, pady=5, sticky='w'
-        )
+        ctk.CTkLabel(
+            frame, text='Redirect Method:', font=CTK_FONT_MAIN, width=100, anchor='w'
+        ).grid(row=2, column=0, padx=10, pady=5, sticky='w')
         self.redirect_method = ctk.CTkOptionMenu(
             frame,
             values=['spice', 'usb-redir', 'tcpserial'],
             width=100,
             font=CTK_FONT_SMALL,
-            command=self._trigger_change
+            command=self._trigger_change,
         )
         self.redirect_method.set('spice')
         self.redirect_method.grid(row=2, column=1, padx=5, pady=5, sticky='w')
@@ -59,5 +59,5 @@ class RedirectedDevicesTab(BaseConfigTab):
         return {
             'type': 'redirected',
             'device_type': self.device_type.get(),
-            'redirect_method': self.redirect_method.get()
+            'redirect_method': self.redirect_method.get(),
         }

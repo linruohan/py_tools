@@ -1,5 +1,5 @@
 {
-    "python.languageServer": "None",
+    "python.languageServer": "Pylance",
     "editor.formatOnSave": true,
     "window.density.editorTabHeight": "compact",
     "files.autoSave": "onFocusChange"

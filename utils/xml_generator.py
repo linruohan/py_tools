@@ -125,7 +125,7 @@ class LibvirtXMLGenerator:
                 vcpu_attrs = {
                     'id': str(instance.get('id', 0)),
                     'enabled': 'yes' if instance.get('enabled', True) else 'no',
-                    'hotpluggable': 'yes' if instance.get('hotpluggable', False) else 'no'
+                    'hotpluggable': 'yes' if instance.get('hotpluggable', False) else 'no',
                 }
                 if 'order' in instance:
                     vcpu_attrs['order'] = str(instance['order'])
@@ -137,17 +137,18 @@ class LibvirtXMLGenerator:
 
         # 判断是否需要创建 <cpu> 元素
         need_cpu_elem = (
-            topology or
-            model_config.get('mode') or
-            model_config.get('match') or
-            model_config.get('check') or
-            model_config.get('migratable') or
-            model_config.get('model') or
-            model_config.get('vendor') or
-            model_config.get('vendor_id') or
-            cpu_model.get('feature', {}).get('features') or
-            cpu_model.get('cache', {}).get('mode') or
-            cpu_model.get('maxphysaddr', {}).get('mode')
+            topology
+            or model_config.get('mode')
+            or model_config.get('match')
+            or model_config.get('check')
+            or model_config.get('migratable')
+            or model_config.get('deprecated_features')
+            or model_config.get('model')
+            or model_config.get('vendor')
+            or model_config.get('vendor_id')
+            or cpu_model.get('feature', {}).get('features')
+            or cpu_model.get('cache', {}).get('mode')
+            or cpu_model.get('maxphysaddr', {}).get('mode')
         )
 
         if not need_cpu_elem:
@@ -155,7 +156,7 @@ class LibvirtXMLGenerator:
 
         cpu_elem = ET.SubElement(self.domain, 'cpu')
 
-        # 设置 cpu 元素的属性 (mode, match, check, migratable)
+        # 设置 cpu 元素的属性 (mode, match, check, migratable, deprecated_features)
         if model_config.get('mode'):
             cpu_elem.set('mode', model_config['mode'])
         if model_config.get('match'):
@@ -164,6 +165,8 @@ class LibvirtXMLGenerator:
             cpu_elem.set('check', model_config['check'])
         if model_config.get('migratable'):
             cpu_elem.set('migratable', model_config['migratable'])
+        if model_config.get('deprecated_features'):
+            cpu_elem.set('deprecated_features', model_config['deprecated_features'])
 
         # 添加 topology 子元素
         if topology:
@@ -263,7 +266,7 @@ class LibvirtXMLGenerator:
         # Loader configuration
         loader = os_booting.get('loader', {})
         secure_boot = os_booting.get('secure_boot', False)
-        
+
         if isinstance(loader, dict) and loader.get('path'):
             loader_attrs = {}
             if loader.get('readonly') is not None:
@@ -291,7 +294,9 @@ class LibvirtXMLGenerator:
 
         # NVRAM configuration
         nvram = os_booting.get('nvram', {})
-        if isinstance(nvram, dict) and (nvram.get('path') or nvram.get('template') or nvram.get('source')):
+        if isinstance(nvram, dict) and (
+            nvram.get('path') or nvram.get('template') or nvram.get('source')
+        ):
             nvram_attrs = {}
             if nvram.get('type'):
                 nvram_attrs['type'] = nvram['type']

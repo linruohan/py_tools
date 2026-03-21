@@ -112,7 +112,11 @@ class DeviceAddressesTab(BaseConfigTab):
             slot = address.get('slot', '')
             function = address.get('function', '')
 
-            address_text = f'{type_label}: {domain}:{bus}:{slot}.{function}' if type_label == '[pci]' else f'{type_label}: {address.get("address", "")}'
+            address_text = (
+                f'{type_label}: {domain}:{bus}:{slot}.{function}'
+                if type_label == '[pci]'
+                else f'{type_label}: {address.get("address", "")}'
+            )
 
             label = ctk.CTkLabel(
                 addr_frame,
@@ -187,10 +191,7 @@ class DeviceAddressConfigDialog:
             row=0, column=0, padx=5, pady=2, sticky='w'
         )
         self.domain_entry = ctk.CTkEntry(
-            self.pci_frame,
-            placeholder_text='0x0000',
-            width=100,
-            font=CTK_FONT_SMALL
+            self.pci_frame, placeholder_text='0x0000', width=100, font=CTK_FONT_SMALL
         )
         self.domain_entry.grid(row=0, column=1, padx=5, pady=2, sticky='w')
 
@@ -198,10 +199,7 @@ class DeviceAddressConfigDialog:
             row=0, column=2, padx=5, pady=2, sticky='w'
         )
         self.bus_entry = ctk.CTkEntry(
-            self.pci_frame,
-            placeholder_text='0x00',
-            width=80,
-            font=CTK_FONT_SMALL
+            self.pci_frame, placeholder_text='0x00', width=80, font=CTK_FONT_SMALL
         )
         self.bus_entry.grid(row=0, column=3, padx=5, pady=2, sticky='w')
 
@@ -209,21 +207,15 @@ class DeviceAddressConfigDialog:
             row=0, column=4, padx=5, pady=2, sticky='w'
         )
         self.slot_entry = ctk.CTkEntry(
-            self.pci_frame,
-            placeholder_text='0x00',
-            width=80,
-            font=CTK_FONT_SMALL
+            self.pci_frame, placeholder_text='0x00', width=80, font=CTK_FONT_SMALL
         )
         self.slot_entry.grid(row=0, column=5, padx=5, pady=2, sticky='w')
 
-        ctk.CTkLabel(self.pci_frame, text='Function:', font=CTK_FONT_MAIN, width=60, anchor='w').grid(
-            row=0, column=6, padx=5, pady=2, sticky='w'
-        )
+        ctk.CTkLabel(
+            self.pci_frame, text='Function:', font=CTK_FONT_MAIN, width=60, anchor='w'
+        ).grid(row=0, column=6, padx=5, pady=2, sticky='w')
         self.function_entry = ctk.CTkEntry(
-            self.pci_frame,
-            placeholder_text='0x0',
-            width=80,
-            font=CTK_FONT_SMALL
+            self.pci_frame, placeholder_text='0x0', width=80, font=CTK_FONT_SMALL
         )
         self.function_entry.grid(row=0, column=7, padx=5, pady=2, sticky='w')
 
@@ -232,14 +224,11 @@ class DeviceAddressConfigDialog:
         self.other_frame.grid(row=2, column=0, columnspan=2, sticky='ew', padx=5, pady=5)
         self.other_frame.grid_columnconfigure(1, weight=1)
 
-        ctk.CTkLabel(self.other_frame, text='Address:', font=CTK_FONT_MAIN, width=80, anchor='w').grid(
-            row=0, column=0, padx=5, pady=5, sticky='w'
-        )
+        ctk.CTkLabel(
+            self.other_frame, text='Address:', font=CTK_FONT_MAIN, width=80, anchor='w'
+        ).grid(row=0, column=0, padx=5, pady=5, sticky='w')
         self.address_entry = ctk.CTkEntry(
-            self.other_frame,
-            placeholder_text='Address',
-            width=300,
-            font=CTK_FONT_SMALL
+            self.other_frame, placeholder_text='Address', width=300, font=CTK_FONT_SMALL
         )
         self.address_entry.grid(row=0, column=1, padx=5, pady=5, sticky='w')
 

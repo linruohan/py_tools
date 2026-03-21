@@ -23,7 +23,10 @@ class NetworkDriverDomainTab(BaseConfigTab):
         frame.grid_columnconfigure(1, weight=1)
 
         ctk.CTkLabel(
-            frame, text='Setting up a network backend in a driver domain', font=CTK_FONT_BOLD, text_color='#4caf50'
+            frame,
+            text='Setting up a network backend in a driver domain',
+            font=CTK_FONT_BOLD,
+            text_color='#4caf50',
         ).grid(row=0, column=0, columnspan=4, padx=10, pady=5, sticky='w')
 
         # Driver Domain Name
@@ -51,5 +54,5 @@ class NetworkDriverDomainTab(BaseConfigTab):
         return {
             'type': 'network',
             'driver_domain': self.driver_domain.get().strip(),
-            'interface': self.interface.get().strip()
+            'interface': self.interface.get().strip(),
         }

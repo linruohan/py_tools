@@ -23,7 +23,10 @@ class NetworkIsolationTab(BaseConfigTab):
         frame.grid_columnconfigure(1, weight=1)
 
         ctk.CTkLabel(
-            frame, text='Isolating guests\' network traffic from each other', font=CTK_FONT_BOLD, text_color='#ff9800'
+            frame,
+            text="Isolating guests' network traffic from each other",
+            font=CTK_FONT_BOLD,
+            text_color='#ff9800',
         ).grid(row=0, column=0, columnspan=4, padx=10, pady=5, sticky='w')
 
         # Isolation Mode
@@ -35,7 +38,7 @@ class NetworkIsolationTab(BaseConfigTab):
             values=['none', 'vlan', 'private', 'isolated'],
             width=150,
             font=CTK_FONT_SMALL,
-            command=self._trigger_change
+            command=self._trigger_change,
         )
         self.isolation_mode.set('none')
         self.isolation_mode.grid(row=1, column=1, padx=5, pady=5, sticky='w')
@@ -55,5 +58,5 @@ class NetworkIsolationTab(BaseConfigTab):
         return {
             'type': 'network',
             'isolation_mode': self.isolation_mode.get(),
-            'isolation_tag': self.isolation_tag.get().strip()
+            'isolation_tag': self.isolation_tag.get().strip(),
         }

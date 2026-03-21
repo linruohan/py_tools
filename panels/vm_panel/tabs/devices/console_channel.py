@@ -22,9 +22,9 @@ class ChannelTab(BaseConfigTab):
         frame.grid(row=0, column=0, sticky='nsew', padx=5, pady=5)
         frame.grid_columnconfigure(1, weight=1)
 
-        ctk.CTkLabel(
-            frame, text='Channel', font=CTK_FONT_BOLD, text_color='#9c27b0'
-        ).grid(row=0, column=0, columnspan=4, padx=10, pady=5, sticky='w')
+        ctk.CTkLabel(frame, text='Channel', font=CTK_FONT_BOLD, text_color='#9c27b0').grid(
+            row=0, column=0, columnspan=4, padx=10, pady=5, sticky='w'
+        )
 
         # Channel Type
         ctk.CTkLabel(frame, text='Type:', font=CTK_FONT_MAIN, width=100, anchor='w').grid(
@@ -35,7 +35,7 @@ class ChannelTab(BaseConfigTab):
             values=['spicevmc', 'unix', 'tcp', 'pty', 'null'],
             width=100,
             font=CTK_FONT_SMALL,
-            command=self._trigger_change
+            command=self._trigger_change,
         )
         self.channel_type.set('spicevmc')
         self.channel_type.grid(row=1, column=1, padx=5, pady=5, sticky='w')
@@ -55,5 +55,5 @@ class ChannelTab(BaseConfigTab):
         return {
             'type': 'channel',
             'channel_type': self.channel_type.get(),
-            'name': self.name.get().strip()
+            'name': self.name.get().strip(),
         }

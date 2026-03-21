@@ -22,9 +22,9 @@ class VDPADevicesTab(BaseConfigTab):
         frame.grid(row=0, column=0, sticky='nsew', padx=5, pady=5)
         frame.grid_columnconfigure(1, weight=1)
 
-        ctk.CTkLabel(
-            frame, text='vDPA devices', font=CTK_FONT_BOLD, text_color='#4caf50'
-        ).grid(row=0, column=0, columnspan=4, padx=10, pady=5, sticky='w')
+        ctk.CTkLabel(frame, text='vDPA devices', font=CTK_FONT_BOLD, text_color='#4caf50').grid(
+            row=0, column=0, columnspan=4, padx=10, pady=5, sticky='w'
+        )
 
         # vDPA Device ID
         ctk.CTkLabel(frame, text='Device ID:', font=CTK_FONT_MAIN, width=100, anchor='w').grid(
@@ -52,5 +52,5 @@ class VDPADevicesTab(BaseConfigTab):
             'type': 'network',
             'source': 'vdpa',
             'device_id': self.device_id.get().strip(),
-            'mac': self.mac_address.get().strip()
+            'mac': self.mac_address.get().strip(),
         }

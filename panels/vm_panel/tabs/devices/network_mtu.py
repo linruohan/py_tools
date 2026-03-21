@@ -30,9 +30,7 @@ class NetworkMTUTab(BaseConfigTab):
         ctk.CTkLabel(frame, text='MTU:', font=CTK_FONT_MAIN, width=100, anchor='w').grid(
             row=1, column=0, padx=10, pady=5, sticky='w'
         )
-        self.mtu = ctk.CTkEntry(
-            frame, placeholder_text='1500', width=100, font=CTK_FONT_SMALL
-        )
+        self.mtu = ctk.CTkEntry(frame, placeholder_text='1500', width=100, font=CTK_FONT_SMALL)
         self.mtu.grid(row=1, column=1, padx=5, pady=5, sticky='w')
         self.mtu.bind('<KeyRelease>', lambda e: self._trigger_change())
 
@@ -50,5 +48,5 @@ class NetworkMTUTab(BaseConfigTab):
         return {
             'type': 'network',
             'mtu': self.mtu.get().strip() or '1500',
-            'jumbo_frames': self.jumbo_frames.get()
+            'jumbo_frames': self.jumbo_frames.get(),
         }

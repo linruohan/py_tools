@@ -264,7 +264,7 @@ start_idx = content.find(start_marker)
 end_idx = content.find(end_marker)
 
 if start_idx == -1 or end_idx == -1:
-    print(f"Error: Could not find markers. start={start_idx}, end={end_idx}")
+    print(f'Error: Could not find markers. start={start_idx}, end={end_idx}')
     exit(1)
 
 # 构建新内容
@@ -273,4 +273,4 @@ new_content = content[:start_idx] + new_code + '\n\n' + content[end_idx:]
 with open('panels/vm_panel/tabs/cpu_model_topology_tab.py', 'w', encoding='utf-8') as f:
     f.write(new_content)
 
-print("Successfully updated CPUFeatureSubTab")
+print('Successfully updated CPUFeatureSubTab')

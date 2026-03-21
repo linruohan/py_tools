@@ -23,7 +23,10 @@ class NetworkBackendOptionsTab(BaseConfigTab):
         frame.grid_columnconfigure(1, weight=1)
 
         ctk.CTkLabel(
-            frame, text='Setting network backend-specific options', font=CTK_FONT_BOLD, text_color='#9c27b0'
+            frame,
+            text='Setting network backend-specific options',
+            font=CTK_FONT_BOLD,
+            text_color='#9c27b0',
         ).grid(row=0, column=0, columnspan=4, padx=10, pady=5, sticky='w')
 
         # Backend Type
@@ -35,15 +38,15 @@ class NetworkBackendOptionsTab(BaseConfigTab):
             values=['bridge', 'network', 'user', 'direct'],
             width=150,
             font=CTK_FONT_SMALL,
-            command=self._trigger_change
+            command=self._trigger_change,
         )
         self.backend_type.set('bridge')
         self.backend_type.grid(row=1, column=1, padx=5, pady=5, sticky='w')
 
         # Backend Options
-        ctk.CTkLabel(frame, text='Backend Options:', font=CTK_FONT_MAIN, width=120, anchor='w').grid(
-            row=2, column=0, padx=10, pady=5, sticky='w'
-        )
+        ctk.CTkLabel(
+            frame, text='Backend Options:', font=CTK_FONT_MAIN, width=120, anchor='w'
+        ).grid(row=2, column=0, padx=10, pady=5, sticky='w')
         self.backend_options = ctk.CTkTextbox(
             frame, placeholder_text='hello=world', height=100, font=CTK_FONT_SMALL
         )
@@ -55,5 +58,5 @@ class NetworkBackendOptionsTab(BaseConfigTab):
         return {
             'type': 'network',
             'backend_type': self.backend_type.get(),
-            'backend_options': self.backend_options.get('1.0', 'end').strip()
+            'backend_options': self.backend_options.get('1.0', 'end').strip(),
         }

@@ -27,11 +27,11 @@ class NetworkInterfacesTab(BaseConfigTab):
         ).grid(row=0, column=0, padx=10, pady=5, sticky='w')
 
         ctk.CTkLabel(
-            frame, 
+            frame,
             text='网络接口配置允许为虚拟机设置各种网络连接类型。\n'
-                 '支持虚拟网络、桥接、用户空间连接等多种网络类型。',
-            font=CTK_FONT_SMALL, 
-            text_color='#666666'
+            '支持虚拟网络、桥接、用户空间连接等多种网络类型。',
+            font=CTK_FONT_SMALL,
+            text_color='#666666',
         ).grid(row=1, column=0, padx=10, pady=5, sticky='w')
 
 
@@ -51,9 +51,9 @@ class VirtualNetworkTab(BaseConfigTab):
         frame.grid(row=0, column=0, sticky='nsew', padx=5, pady=5)
         frame.grid_columnconfigure(1, weight=1)
 
-        ctk.CTkLabel(
-            frame, text='Virtual Network', font=CTK_FONT_BOLD, text_color='#2196f3'
-        ).grid(row=0, column=0, columnspan=4, padx=10, pady=5, sticky='w')
+        ctk.CTkLabel(frame, text='Virtual Network', font=CTK_FONT_BOLD, text_color='#2196f3').grid(
+            row=0, column=0, columnspan=4, padx=10, pady=5, sticky='w'
+        )
 
         # Network Name
         ctk.CTkLabel(frame, text='Network Name:', font=CTK_FONT_MAIN, width=100, anchor='w').grid(
@@ -81,7 +81,7 @@ class VirtualNetworkTab(BaseConfigTab):
             'type': 'network',
             'source': 'network',
             'network': self.network_name.get().strip() or 'default',
-            'mac': self.mac_address.get().strip()
+            'mac': self.mac_address.get().strip(),
         }
 
 
@@ -101,9 +101,9 @@ class BridgeToLANTab(BaseConfigTab):
         frame.grid(row=0, column=0, sticky='nsew', padx=5, pady=5)
         frame.grid_columnconfigure(1, weight=1)
 
-        ctk.CTkLabel(
-            frame, text='Bridge to LAN', font=CTK_FONT_BOLD, text_color='#4caf50'
-        ).grid(row=0, column=0, columnspan=4, padx=10, pady=5, sticky='w')
+        ctk.CTkLabel(frame, text='Bridge to LAN', font=CTK_FONT_BOLD, text_color='#4caf50').grid(
+            row=0, column=0, columnspan=4, padx=10, pady=5, sticky='w'
+        )
 
         # Bridge Name
         ctk.CTkLabel(frame, text='Bridge Name:', font=CTK_FONT_MAIN, width=100, anchor='w').grid(
@@ -131,7 +131,7 @@ class BridgeToLANTab(BaseConfigTab):
             'type': 'network',
             'source': 'bridge',
             'bridge': self.bridge_name.get().strip() or 'br0',
-            'mac': self.mac_address.get().strip()
+            'mac': self.mac_address.get().strip(),
         }
 
 
@@ -169,9 +169,7 @@ class SLIRPConnectionTab(BaseConfigTab):
         ctk.CTkLabel(frame, text='MTU:', font=CTK_FONT_MAIN, width=100, anchor='w').grid(
             row=2, column=0, padx=10, pady=5, sticky='w'
         )
-        self.mtu = ctk.CTkEntry(
-            frame, placeholder_text='1500', width=100, font=CTK_FONT_SMALL
-        )
+        self.mtu = ctk.CTkEntry(frame, placeholder_text='1500', width=100, font=CTK_FONT_SMALL)
         self.mtu.grid(row=2, column=1, padx=5, pady=5, sticky='w')
         self.mtu.bind('<KeyRelease>', lambda e: self._trigger_change())
 
@@ -181,7 +179,7 @@ class SLIRPConnectionTab(BaseConfigTab):
             'type': 'network',
             'source': 'user',
             'mac': self.mac_address.get().strip(),
-            'mtu': self.mtu.get().strip() or '1500'
+            'mtu': self.mtu.get().strip() or '1500',
         }
 
 
@@ -231,7 +229,7 @@ class PasstConnectionTab(BaseConfigTab):
             'type': 'network',
             'source': 'passt',
             'mac': self.mac_address.get().strip(),
-            'passt_args': self.passt_args.get().strip()
+            'passt_args': self.passt_args.get().strip(),
         }
 
 
@@ -252,7 +250,10 @@ class DirectAttachmentTab(BaseConfigTab):
         frame.grid_columnconfigure(1, weight=1)
 
         ctk.CTkLabel(
-            frame, text='Direct attachment to physical interface', font=CTK_FONT_BOLD, text_color='#ff5722'
+            frame,
+            text='Direct attachment to physical interface',
+            font=CTK_FONT_BOLD,
+            text_color='#ff5722',
         ).grid(row=0, column=0, columnspan=4, padx=10, pady=5, sticky='w')
 
         # Interface Name
@@ -281,7 +282,7 @@ class DirectAttachmentTab(BaseConfigTab):
             'type': 'network',
             'source': 'direct',
             'dev': self.interface.get().strip() or 'eth0',
-            'mac': self.mac_address.get().strip()
+            'mac': self.mac_address.get().strip(),
         }
 
 
@@ -301,9 +302,9 @@ class PCIPassthroughTab(BaseConfigTab):
         frame.grid(row=0, column=0, sticky='nsew', padx=5, pady=5)
         frame.grid_columnconfigure(1, weight=1)
 
-        ctk.CTkLabel(
-            frame, text='PCI Passthrough', font=CTK_FONT_BOLD, text_color='#795548'
-        ).grid(row=0, column=0, columnspan=4, padx=10, pady=5, sticky='w')
+        ctk.CTkLabel(frame, text='PCI Passthrough', font=CTK_FONT_BOLD, text_color='#795548').grid(
+            row=0, column=0, columnspan=4, padx=10, pady=5, sticky='w'
+        )
 
         # PCI Address
         ctk.CTkLabel(frame, text='PCI Address:', font=CTK_FONT_MAIN, width=100, anchor='w').grid(
@@ -324,7 +325,7 @@ class PCIPassthroughTab(BaseConfigTab):
             values=['on', 'off'],
             width=100,
             font=CTK_FONT_SMALL,
-            command=self._trigger_change
+            command=self._trigger_change,
         )
         self.rom_bar.set('off')
         self.rom_bar.grid(row=2, column=1, padx=5, pady=5, sticky='w')
@@ -335,7 +336,7 @@ class PCIPassthroughTab(BaseConfigTab):
             'type': 'network',
             'source': 'hostdev',
             'pci_address': self.pci_address.get().strip(),
-            'rom_bar': self.rom_bar.get()
+            'rom_bar': self.rom_bar.get(),
         }
 
 
@@ -360,9 +361,9 @@ class NetworkQoSTab(BaseConfigTab):
         ).grid(row=0, column=0, columnspan=4, padx=10, pady=5, sticky='w')
 
         # Bandwidth Limit
-        ctk.CTkLabel(frame, text='Bandwidth Limit:', font=CTK_FONT_MAIN, width=100, anchor='w').grid(
-            row=1, column=0, padx=10, pady=5, sticky='w'
-        )
+        ctk.CTkLabel(
+            frame, text='Bandwidth Limit:', font=CTK_FONT_MAIN, width=100, anchor='w'
+        ).grid(row=1, column=0, padx=10, pady=5, sticky='w')
         self.bandwidth = ctk.CTkEntry(
             frame, placeholder_text='1024', width=100, font=CTK_FONT_SMALL
         )
@@ -378,7 +379,7 @@ class NetworkQoSTab(BaseConfigTab):
             values=['kbps', 'mbps', 'gbps'],
             width=80,
             font=CTK_FONT_SMALL,
-            command=self._trigger_change
+            command=self._trigger_change,
         )
         self.bandwidth_unit.set('mbps')
         self.bandwidth_unit.grid(row=1, column=3, padx=5, pady=5, sticky='w')
@@ -388,5 +389,5 @@ class NetworkQoSTab(BaseConfigTab):
         return {
             'type': 'qos',
             'bandwidth': self.bandwidth.get().strip(),
-            'unit': self.bandwidth_unit.get()
+            'unit': self.bandwidth_unit.get(),
         }

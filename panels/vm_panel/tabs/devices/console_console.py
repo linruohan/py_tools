@@ -22,9 +22,9 @@ class ConsoleTab(BaseConfigTab):
         frame.grid(row=0, column=0, sticky='nsew', padx=5, pady=5)
         frame.grid_columnconfigure(1, weight=1)
 
-        ctk.CTkLabel(
-            frame, text='Console', font=CTK_FONT_BOLD, text_color='#ff9800'
-        ).grid(row=0, column=0, columnspan=4, padx=10, pady=5, sticky='w')
+        ctk.CTkLabel(frame, text='Console', font=CTK_FONT_BOLD, text_color='#ff9800').grid(
+            row=0, column=0, columnspan=4, padx=10, pady=5, sticky='w'
+        )
 
         # Console Type
         ctk.CTkLabel(frame, text='Type:', font=CTK_FONT_MAIN, width=100, anchor='w').grid(
@@ -35,7 +35,7 @@ class ConsoleTab(BaseConfigTab):
             values=['pty', 'tty', 'file', 'null', 'tcp', 'udp', 'unix'],
             width=100,
             font=CTK_FONT_SMALL,
-            command=self._trigger_change
+            command=self._trigger_change,
         )
         self.console_type.set('pty')
         self.console_type.grid(row=1, column=1, padx=5, pady=5, sticky='w')
@@ -55,5 +55,5 @@ class ConsoleTab(BaseConfigTab):
         return {
             'type': 'console',
             'console_type': self.console_type.get(),
-            'target': self.target.get().strip()
+            'target': self.target.get().strip(),
         }

@@ -20,6 +20,7 @@ class CPUAllocationConfig:
     match: str = 'exact'  # exact, minimum, strict
     check: str = 'none'  # none, partial, full
     migratable: str = 'on'  # on, off
+    deprecated_features: str = 'on'  # on, off (S390 专用，Since 11.0.0)
     model: str = ''  # CPU 模型名称
     fallback: str = 'allow'  # allow, forbid
     vendor: str = ''  # 厂商名称
@@ -35,6 +36,7 @@ class CPUAllocationConfig:
         self.match = 'exact'
         self.check = 'none'
         self.migratable = 'on'
+        self.deprecated_features = 'on'
         self.model = ''
         self.fallback = 'allow'
         self.vendor = ''
@@ -47,7 +49,7 @@ class CPUAllocationConfig:
         if 'cpu' in data:
             cpu_data = data['cpu']
             # 处理 CPU 属性
-            for key in ['mode', 'match', 'check', 'migratable']:
+            for key in ['mode', 'match', 'check', 'migratable', 'deprecated_features']:
                 if key in cpu_data:
                     setattr(self, key, cpu_data[key])
             # 处理 CPU 子元素
@@ -80,7 +82,17 @@ class CPUAllocationConfig:
                 setattr(self, key, data[key])
 
         # 处理 CPU 模型和拓扑相关配置
-        for key in ['mode', 'match', 'check', 'migratable', 'model', 'fallback', 'vendor', 'vendor_id']:
+        for key in [
+            'mode',
+            'match',
+            'check',
+            'migratable',
+            'deprecated_features',
+            'model',
+            'fallback',
+            'vendor',
+            'vendor_id',
+        ]:
             if key in data:
                 setattr(self, key, data[key])
         if 'topology' in data:

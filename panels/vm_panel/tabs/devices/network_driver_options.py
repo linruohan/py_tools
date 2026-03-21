@@ -23,7 +23,10 @@ class NICDriverOptionsTab(BaseConfigTab):
         frame.grid_columnconfigure(1, weight=1)
 
         ctk.CTkLabel(
-            frame, text='Setting NIC driver-specific options', font=CTK_FONT_BOLD, text_color='#ff9800'
+            frame,
+            text='Setting NIC driver-specific options',
+            font=CTK_FONT_BOLD,
+            text_color='#ff9800',
         ).grid(row=0, column=0, columnspan=4, padx=10, pady=5, sticky='w')
 
         # Driver Name
@@ -51,5 +54,5 @@ class NICDriverOptionsTab(BaseConfigTab):
         return {
             'type': 'network',
             'driver_name': self.driver_name.get().strip(),
-            'driver_options': self.driver_options.get('1.0', 'end').strip()
+            'driver_options': self.driver_options.get('1.0', 'end').strip(),
         }

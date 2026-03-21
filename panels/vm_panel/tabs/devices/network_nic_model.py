@@ -35,7 +35,7 @@ class NICModelTab(BaseConfigTab):
             values=['e1000', 'e1000e', 'virtio', 'rtl8139', 'pcnet', 'ne2k_pci'],
             width=150,
             font=CTK_FONT_SMALL,
-            command=self._trigger_change
+            command=self._trigger_change,
         )
         self.nic_model.set('virtio')
         self.nic_model.grid(row=1, column=1, padx=5, pady=5, sticky='w')
@@ -44,9 +44,7 @@ class NICModelTab(BaseConfigTab):
         ctk.CTkLabel(frame, text='VLAN Tag:', font=CTK_FONT_MAIN, width=100, anchor='w').grid(
             row=2, column=0, padx=10, pady=5, sticky='w'
         )
-        self.vlan_tag = ctk.CTkEntry(
-            frame, placeholder_text='1', width=100, font=CTK_FONT_SMALL
-        )
+        self.vlan_tag = ctk.CTkEntry(frame, placeholder_text='1', width=100, font=CTK_FONT_SMALL)
         self.vlan_tag.grid(row=2, column=1, padx=5, pady=5, sticky='w')
         self.vlan_tag.bind('<KeyRelease>', lambda e: self._trigger_change())
 
@@ -55,5 +53,5 @@ class NICModelTab(BaseConfigTab):
         return {
             'type': 'network',
             'nic_model': self.nic_model.get(),
-            'vlan_tag': self.vlan_tag.get().strip()
+            'vlan_tag': self.vlan_tag.get().strip(),
         }

@@ -22,17 +22,15 @@ class ParallelPortTab(BaseConfigTab):
         frame.grid(row=0, column=0, sticky='nsew', padx=5, pady=5)
         frame.grid_columnconfigure(1, weight=1)
 
-        ctk.CTkLabel(
-            frame, text='Parallel port', font=CTK_FONT_BOLD, text_color='#2196f3'
-        ).grid(row=0, column=0, columnspan=4, padx=10, pady=5, sticky='w')
+        ctk.CTkLabel(frame, text='Parallel port', font=CTK_FONT_BOLD, text_color='#2196f3').grid(
+            row=0, column=0, columnspan=4, padx=10, pady=5, sticky='w'
+        )
 
         # Parallel Port Number
         ctk.CTkLabel(frame, text='Port Number:', font=CTK_FONT_MAIN, width=100, anchor='w').grid(
             row=1, column=0, padx=10, pady=5, sticky='w'
         )
-        self.port_number = ctk.CTkEntry(
-            frame, placeholder_text='0', width=100, font=CTK_FONT_SMALL
-        )
+        self.port_number = ctk.CTkEntry(frame, placeholder_text='0', width=100, font=CTK_FONT_SMALL)
         self.port_number.grid(row=1, column=1, padx=5, pady=5, sticky='w')
         self.port_number.bind('<KeyRelease>', lambda e: self._trigger_change())
 
@@ -51,5 +49,5 @@ class ParallelPortTab(BaseConfigTab):
         return {
             'type': 'parallel',
             'port_number': self.port_number.get().strip() or '0',
-            'target': self.target.get().strip()
+            'target': self.target.get().strip(),
         }

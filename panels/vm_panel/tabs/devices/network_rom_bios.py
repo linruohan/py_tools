@@ -35,7 +35,7 @@ class NetworkROMBIOSConfigTab(BaseConfigTab):
             values=['on', 'off'],
             width=100,
             font=CTK_FONT_SMALL,
-            command=self._trigger_change
+            command=self._trigger_change,
         )
         self.rom_bar.set('off')
         self.rom_bar.grid(row=1, column=1, padx=5, pady=5, sticky='w')
@@ -55,5 +55,5 @@ class NetworkROMBIOSConfigTab(BaseConfigTab):
         return {
             'type': 'network',
             'rom_bar': self.rom_bar.get(),
-            'rom_file': self.rom_file.get().strip()
+            'rom_file': self.rom_file.get().strip(),
         }

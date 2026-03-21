@@ -35,7 +35,7 @@ class SmartcardDevicesTab(BaseConfigTab):
             values=['passthrough', 'emulated', 'spice'],
             width=120,
             font=CTK_FONT_SMALL,
-            command=self._trigger_change
+            command=self._trigger_change,
         )
         self.smartcard_type.set('passthrough')
         self.smartcard_type.grid(row=1, column=1, padx=5, pady=5, sticky='w')
@@ -55,5 +55,5 @@ class SmartcardDevicesTab(BaseConfigTab):
         return {
             'type': 'smartcard',
             'smartcard_type': self.smartcard_type.get(),
-            'device_path': self.device_path.get().strip()
+            'device_path': self.device_path.get().strip(),
         }

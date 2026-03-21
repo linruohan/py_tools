@@ -27,11 +27,11 @@ class HostDeviceAssignmentTab(BaseConfigTab):
         ).grid(row=0, column=0, padx=10, pady=5, sticky='w')
 
         ctk.CTkLabel(
-            frame, 
+            frame,
             text='主机设备分配允许将物理设备直接分配给虚拟机使用。\n'
-                 '支持USB、PCI、SCSI设备，以及ACPI Generic Initiators和Block/character devices。',
-            font=CTK_FONT_SMALL, 
-            text_color='#666666'
+            '支持USB、PCI、SCSI设备，以及ACPI Generic Initiators和Block/character devices。',
+            font=CTK_FONT_SMALL,
+            text_color='#666666',
         ).grid(row=1, column=0, padx=10, pady=5, sticky='w')
 
 
@@ -59,15 +59,15 @@ class USBPCISCSIDevicesTab(BaseConfigTab):
         type_frame = ctk.CTkFrame(frame, fg_color='transparent')
         type_frame.grid(row=1, column=0, padx=10, pady=5, sticky='w')
 
-        ctk.CTkLabel(type_frame, text='Device Type:', font=CTK_FONT_MAIN, width=100, anchor='w').grid(
-            row=0, column=0, padx=5, pady=5, sticky='w'
-        )
+        ctk.CTkLabel(
+            type_frame, text='Device Type:', font=CTK_FONT_MAIN, width=100, anchor='w'
+        ).grid(row=0, column=0, padx=5, pady=5, sticky='w')
         self.device_type = ctk.CTkOptionMenu(
             type_frame,
             values=['USB', 'PCI', 'SCSI'],
             width=100,
             font=CTK_FONT_SMALL,
-            command=self._on_device_type_change
+            command=self._on_device_type_change,
         )
         self.device_type.set('USB')
         self.device_type.grid(row=0, column=1, padx=5, pady=5, sticky='w')
@@ -100,14 +100,14 @@ class USBPCISCSIDevicesTab(BaseConfigTab):
         usb_frame.grid(row=0, column=0, sticky='nsew')
         usb_frame.grid_columnconfigure(1, weight=1)
 
-        ctk.CTkLabel(usb_frame, text='USB Device Configuration', font=CTK_FONT_MAIN, text_color='#2196f3').grid(
-            row=0, column=0, columnspan=4, padx=10, pady=5, sticky='w'
-        )
+        ctk.CTkLabel(
+            usb_frame, text='USB Device Configuration', font=CTK_FONT_MAIN, text_color='#2196f3'
+        ).grid(row=0, column=0, columnspan=4, padx=10, pady=5, sticky='w')
 
         # Vendor:Product
-        ctk.CTkLabel(usb_frame, text='Vendor:Product:', font=CTK_FONT_MAIN, width=100, anchor='w').grid(
-            row=1, column=0, padx=10, pady=5, sticky='w'
-        )
+        ctk.CTkLabel(
+            usb_frame, text='Vendor:Product:', font=CTK_FONT_MAIN, width=100, anchor='w'
+        ).grid(row=1, column=0, padx=10, pady=5, sticky='w')
         self.usb_id = ctk.CTkEntry(
             usb_frame, placeholder_text='8087:8008', width=150, font=CTK_FONT_SMALL
         )
@@ -115,15 +115,15 @@ class USBPCISCSIDevicesTab(BaseConfigTab):
         self.usb_id.bind('<KeyRelease>', lambda e: self._trigger_change())
 
         # Startup Policy
-        ctk.CTkLabel(usb_frame, text='Startup Policy:', font=CTK_FONT_MAIN, width=100, anchor='w').grid(
-            row=2, column=0, padx=10, pady=5, sticky='w'
-        )
+        ctk.CTkLabel(
+            usb_frame, text='Startup Policy:', font=CTK_FONT_MAIN, width=100, anchor='w'
+        ).grid(row=2, column=0, padx=10, pady=5, sticky='w')
         self.usb_startup = ctk.CTkOptionMenu(
             usb_frame,
             values=['required', 'optional'],
             width=100,
             font=CTK_FONT_SMALL,
-            command=self._trigger_change
+            command=self._trigger_change,
         )
         self.usb_startup.set('optional')
         self.usb_startup.grid(row=2, column=1, padx=5, pady=5, sticky='w')
@@ -138,14 +138,14 @@ class USBPCISCSIDevicesTab(BaseConfigTab):
         pci_frame.grid(row=0, column=0, sticky='nsew')
         pci_frame.grid_columnconfigure(1, weight=1)
 
-        ctk.CTkLabel(pci_frame, text='PCI Device Configuration', font=CTK_FONT_MAIN, text_color='#4caf50').grid(
-            row=0, column=0, columnspan=4, padx=10, pady=5, sticky='w'
-        )
+        ctk.CTkLabel(
+            pci_frame, text='PCI Device Configuration', font=CTK_FONT_MAIN, text_color='#4caf50'
+        ).grid(row=0, column=0, columnspan=4, padx=10, pady=5, sticky='w')
 
         # PCI Address
-        ctk.CTkLabel(pci_frame, text='PCI Address:', font=CTK_FONT_MAIN, width=100, anchor='w').grid(
-            row=1, column=0, padx=10, pady=5, sticky='w'
-        )
+        ctk.CTkLabel(
+            pci_frame, text='PCI Address:', font=CTK_FONT_MAIN, width=100, anchor='w'
+        ).grid(row=1, column=0, padx=10, pady=5, sticky='w')
         self.pci_address = ctk.CTkEntry(
             pci_frame, placeholder_text='0000:00:00.0', width=150, font=CTK_FONT_SMALL
         )
@@ -161,7 +161,7 @@ class USBPCISCSIDevicesTab(BaseConfigTab):
             values=['on', 'off'],
             width=100,
             font=CTK_FONT_SMALL,
-            command=self._trigger_change
+            command=self._trigger_change,
         )
         self.pci_rom.set('off')
         self.pci_rom.grid(row=2, column=1, padx=5, pady=5, sticky='w')
@@ -176,9 +176,9 @@ class USBPCISCSIDevicesTab(BaseConfigTab):
         scsi_frame.grid(row=0, column=0, sticky='nsew')
         scsi_frame.grid_columnconfigure(1, weight=1)
 
-        ctk.CTkLabel(scsi_frame, text='SCSI Device Configuration', font=CTK_FONT_MAIN, text_color='#ff9800').grid(
-            row=0, column=0, columnspan=4, padx=10, pady=5, sticky='w'
-        )
+        ctk.CTkLabel(
+            scsi_frame, text='SCSI Device Configuration', font=CTK_FONT_MAIN, text_color='#ff9800'
+        ).grid(row=0, column=0, columnspan=4, padx=10, pady=5, sticky='w')
 
         # SCSI Type
         ctk.CTkLabel(scsi_frame, text='SCSI Type:', font=CTK_FONT_MAIN, width=100, anchor='w').grid(
@@ -189,15 +189,15 @@ class USBPCISCSIDevicesTab(BaseConfigTab):
             values=['scsi', 'scsi_host'],
             width=100,
             font=CTK_FONT_SMALL,
-            command=self._trigger_change
+            command=self._trigger_change,
         )
         self.scsi_type.set('scsi')
         self.scsi_type.grid(row=1, column=1, padx=5, pady=5, sticky='w')
 
         # Bus:Target:Unit
-        ctk.CTkLabel(scsi_frame, text='Bus:Target:Unit:', font=CTK_FONT_MAIN, width=100, anchor='w').grid(
-            row=2, column=0, padx=10, pady=5, sticky='w'
-        )
+        ctk.CTkLabel(
+            scsi_frame, text='Bus:Target:Unit:', font=CTK_FONT_MAIN, width=100, anchor='w'
+        ).grid(row=2, column=0, padx=10, pady=5, sticky='w')
         self.scsi_address = ctk.CTkEntry(
             scsi_frame, placeholder_text='0:0:0', width=150, font=CTK_FONT_SMALL
         )
@@ -267,7 +267,7 @@ class ACPIInitiatorsTab(BaseConfigTab):
         return {
             'type': 'acpi',
             'device_id': self.acpi_id.get().strip(),
-            'path': self.acpi_path.get().strip()
+            'path': self.acpi_path.get().strip(),
         }
 
 
@@ -300,7 +300,7 @@ class BlockCharDevicesTab(BaseConfigTab):
             values=['block', 'char'],
             width=100,
             font=CTK_FONT_SMALL,
-            command=self._trigger_change
+            command=self._trigger_change,
         )
         self.dev_type.set('block')
         self.dev_type.grid(row=1, column=1, padx=5, pady=5, sticky='w')
@@ -319,7 +319,9 @@ class BlockCharDevicesTab(BaseConfigTab):
         ctk.CTkLabel(frame, text='Mode:', font=CTK_FONT_MAIN, width=100, anchor='w').grid(
             row=3, column=0, padx=10, pady=5, sticky='w'
         )
-        self.readonly = ctk.CTkCheckBox(frame, text='Read-only', font=CTK_FONT_SMALL, command=self._trigger_change)
+        self.readonly = ctk.CTkCheckBox(
+            frame, text='Read-only', font=CTK_FONT_SMALL, command=self._trigger_change
+        )
         self.readonly.grid(row=3, column=1, padx=5, pady=5, sticky='w')
 
     def get_config(self) -> dict:
@@ -327,5 +329,5 @@ class BlockCharDevicesTab(BaseConfigTab):
         return {
             'type': self.dev_type.get(),
             'path': self.dev_path.get().strip(),
-            'readonly': self.readonly.get()
+            'readonly': self.readonly.get(),
         }

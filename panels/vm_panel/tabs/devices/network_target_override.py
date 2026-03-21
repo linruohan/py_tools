@@ -45,7 +45,7 @@ class NetworkTargetOverrideTab(BaseConfigTab):
             values=['virtio', 'e1000', 'pcnet', 'rtl8139'],
             width=100,
             font=CTK_FONT_SMALL,
-            command=self._trigger_change
+            command=self._trigger_change,
         )
         self.target_bus.set('virtio')
         self.target_bus.grid(row=2, column=1, padx=5, pady=5, sticky='w')
@@ -55,5 +55,5 @@ class NetworkTargetOverrideTab(BaseConfigTab):
         return {
             'type': 'network',
             'target_dev': self.target_dev.get().strip() or 'eth0',
-            'target_bus': self.target_bus.get()
+            'target_bus': self.target_bus.get(),
         }

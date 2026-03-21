@@ -22,14 +22,14 @@ class MulticastTunnelTab(BaseConfigTab):
         frame.grid(row=0, column=0, sticky='nsew', padx=5, pady=5)
         frame.grid_columnconfigure(1, weight=1)
 
-        ctk.CTkLabel(
-            frame, text='Multicast tunnel', font=CTK_FONT_BOLD, text_color='#9c27b0'
-        ).grid(row=0, column=0, columnspan=4, padx=10, pady=5, sticky='w')
+        ctk.CTkLabel(frame, text='Multicast tunnel', font=CTK_FONT_BOLD, text_color='#9c27b0').grid(
+            row=0, column=0, columnspan=4, padx=10, pady=5, sticky='w'
+        )
 
         # Multicast Address
-        ctk.CTkLabel(frame, text='Multicast Address:', font=CTK_FONT_MAIN, width=120, anchor='w').grid(
-            row=1, column=0, padx=10, pady=5, sticky='w'
-        )
+        ctk.CTkLabel(
+            frame, text='Multicast Address:', font=CTK_FONT_MAIN, width=120, anchor='w'
+        ).grid(row=1, column=0, padx=10, pady=5, sticky='w')
         self.multicast_address = ctk.CTkEntry(
             frame, placeholder_text='239.0.0.1', width=150, font=CTK_FONT_SMALL
         )
@@ -40,9 +40,7 @@ class MulticastTunnelTab(BaseConfigTab):
         ctk.CTkLabel(frame, text='Port:', font=CTK_FONT_MAIN, width=100, anchor='w').grid(
             row=2, column=0, padx=10, pady=5, sticky='w'
         )
-        self.port = ctk.CTkEntry(
-            frame, placeholder_text='1234', width=100, font=CTK_FONT_SMALL
-        )
+        self.port = ctk.CTkEntry(frame, placeholder_text='1234', width=100, font=CTK_FONT_SMALL)
         self.port.grid(row=2, column=1, padx=5, pady=5, sticky='w')
         self.port.bind('<KeyRelease>', lambda e: self._trigger_change())
 
@@ -52,5 +50,5 @@ class MulticastTunnelTab(BaseConfigTab):
             'type': 'network',
             'source': 'multicast',
             'multicast_address': self.multicast_address.get().strip(),
-            'port': self.port.get().strip() or '1234'
+            'port': self.port.get().strip() or '1234',
         }

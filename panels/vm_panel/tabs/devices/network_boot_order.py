@@ -30,9 +30,7 @@ class NetworkBootOrderTab(BaseConfigTab):
         ctk.CTkLabel(frame, text='Boot Order:', font=CTK_FONT_MAIN, width=100, anchor='w').grid(
             row=1, column=0, padx=10, pady=5, sticky='w'
         )
-        self.boot_order = ctk.CTkEntry(
-            frame, placeholder_text='1', width=100, font=CTK_FONT_SMALL
-        )
+        self.boot_order = ctk.CTkEntry(frame, placeholder_text='1', width=100, font=CTK_FONT_SMALL)
         self.boot_order.grid(row=1, column=1, padx=5, pady=5, sticky='w')
         self.boot_order.bind('<KeyRelease>', lambda e: self._trigger_change())
 
@@ -45,7 +43,7 @@ class NetworkBootOrderTab(BaseConfigTab):
             values=['none', 'pXE', 'ipv4', 'ipv6'],
             width=100,
             font=CTK_FONT_SMALL,
-            command=self._trigger_change
+            command=self._trigger_change,
         )
         self.boot_protocol.set('none')
         self.boot_protocol.grid(row=2, column=1, padx=5, pady=5, sticky='w')
@@ -55,5 +53,5 @@ class NetworkBootOrderTab(BaseConfigTab):
         return {
             'type': 'network',
             'boot_order': self.boot_order.get().strip() or '1',
-            'boot_protocol': self.boot_protocol.get()
+            'boot_protocol': self.boot_protocol.get(),
         }

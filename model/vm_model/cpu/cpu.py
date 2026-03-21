@@ -48,10 +48,11 @@ class CPU:
         topology: CPU 拓扑结构
         features: CPU 特性列表
         mode: CPU 模式 (custom, host-model, host-passthrough, maximum)
-        match: 匹配模式 (exact, minimum, strict)
+        match: 匹配模式 (exact, minimum, strict) - host-model 模式下无效
         check: 检查模式 (none, partial, full)
-        migratable: 可迁移性 (on, off)
+        migratable: 可迁移性 (on, off) - Since 6.5.0
         vendor_id: CPU 厂商标识符 (12 字符)
+        deprecated_features: 废弃特性开关 (on, off) - Since 11.0.0, S390 专用
         cache: 缓存配置
         maxphysaddr: 物理地址配置
     """
@@ -64,6 +65,7 @@ class CPU:
     check: str | None = None  # none, partial, full
     migratable: str | None = None  # on, off
     vendor_id: str | None = None
+    deprecated_features: str | None = None  # on, off (S390 专用)
     cache: dict | None = None
     maxphysaddr: dict | None = None
     placeholder: bool | None = None

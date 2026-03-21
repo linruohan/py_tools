@@ -11,9 +11,33 @@ from .device_addresses import DeviceAddressesTab, DeviceAddressConfigDialog
 from .virtio import VirtioOptionsTab, VirtioDeviceModelsTab
 from .controllers import ControllersTab, ControllerConfigDialog
 from .device_leases import DeviceLeasesTab, DeviceLeaseConfigDialog
-from .host_device_assignment import HostDeviceAssignmentTab, USBPCISCSIDevicesTab, ACPIInitiatorsTab, BlockCharDevicesTab
-from .network_interfaces import NetworkInterfacesTab, VirtualNetworkTab, BridgeToLANTab, SLIRPConnectionTab, PasstConnectionTab, DirectAttachmentTab, PCIPassthroughTab, NetworkQoSTab
-from .other_devices import InputDevicesTab, HubDevicesTab, GraphicalFramebuffersTab, VideoDevicesTab, ConsolesDevicesTab, SoundDevicesTab, WatchdogDevicesTab, MemoryBalloonTab, TPMDeviceTab
+from .host_device_assignment import (
+    HostDeviceAssignmentTab,
+    USBPCISCSIDevicesTab,
+    ACPIInitiatorsTab,
+    BlockCharDevicesTab,
+)
+from .network_interfaces import (
+    NetworkInterfacesTab,
+    VirtualNetworkTab,
+    BridgeToLANTab,
+    SLIRPConnectionTab,
+    PasstConnectionTab,
+    DirectAttachmentTab,
+    PCIPassthroughTab,
+    NetworkQoSTab,
+)
+from .other_devices import (
+    InputDevicesTab,
+    HubDevicesTab,
+    GraphicalFramebuffersTab,
+    VideoDevicesTab,
+    ConsolesDevicesTab,
+    SoundDevicesTab,
+    WatchdogDevicesTab,
+    MemoryBalloonTab,
+    TPMDeviceTab,
+)
 from .audio_backends import AudioBackendsTab
 from .random_number_generator import RandomNumberGeneratorTab
 from .nvram_device import NVRAMDeviceTab

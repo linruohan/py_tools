@@ -179,10 +179,7 @@ class FilesystemConfigDialog:
             row=1, column=0, padx=5, pady=5, sticky='w'
         )
         self.source_entry = ctk.CTkEntry(
-            info_frame,
-            placeholder_text='/path/to/filesystem',
-            width=300,
-            font=CTK_FONT_SMALL
+            info_frame, placeholder_text='/path/to/filesystem', width=300, font=CTK_FONT_SMALL
         )
         self.source_entry.grid(row=1, column=1, padx=5, pady=5, sticky='w')
 
@@ -191,10 +188,7 @@ class FilesystemConfigDialog:
             row=2, column=0, padx=5, pady=5, sticky='w'
         )
         self.target_entry = ctk.CTkEntry(
-            info_frame,
-            placeholder_text='/mnt/filesystem',
-            width=300,
-            font=CTK_FONT_SMALL
+            info_frame, placeholder_text='/mnt/filesystem', width=300, font=CTK_FONT_SMALL
         )
         self.target_entry.grid(row=2, column=1, padx=5, pady=5, sticky='w')
 
@@ -203,17 +197,14 @@ class FilesystemConfigDialog:
             row=3, column=0, padx=5, pady=5, sticky='w'
         )
         self.format_entry = ctk.CTkEntry(
-            info_frame,
-            placeholder_text='ext4',
-            width=100,
-            font=CTK_FONT_SMALL
+            info_frame, placeholder_text='ext4', width=100, font=CTK_FONT_SMALL
         )
         self.format_entry.grid(row=3, column=1, padx=5, pady=5, sticky='w')
 
         # Access Mode
-        ctk.CTkLabel(info_frame, text='Access Mode:', font=CTK_FONT_MAIN, width=80, anchor='w').grid(
-            row=4, column=0, padx=5, pady=5, sticky='w'
-        )
+        ctk.CTkLabel(
+            info_frame, text='Access Mode:', font=CTK_FONT_MAIN, width=80, anchor='w'
+        ).grid(row=4, column=0, padx=5, pady=5, sticky='w')
         self.access_mode_menu = ctk.CTkOptionMenu(
             info_frame,
             values=['passthrough', 'mapped', 'squash'],

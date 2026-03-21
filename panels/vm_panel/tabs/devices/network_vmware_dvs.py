@@ -52,5 +52,5 @@ class VMwareDVSTab(BaseConfigTab):
             'type': 'network',
             'source': 'vmware',
             'switch_name': self.switch_name.get().strip(),
-            'port_group': self.port_group.get().strip()
+            'port_group': self.port_group.get().strip(),
         }

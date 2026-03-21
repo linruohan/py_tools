@@ -45,7 +45,7 @@ class NetworkVhostUserTab(BaseConfigTab):
             values=['client', 'server'],
             width=100,
             font=CTK_FONT_SMALL,
-            command=self._trigger_change
+            command=self._trigger_change,
         )
         self.mode.set('client')
         self.mode.grid(row=2, column=1, padx=5, pady=5, sticky='w')
@@ -56,5 +56,5 @@ class NetworkVhostUserTab(BaseConfigTab):
             'type': 'network',
             'source': 'vhostuser',
             'socket_path': self.socket_path.get().strip(),
-            'mode': self.mode.get()
+            'mode': self.mode.get(),
         }

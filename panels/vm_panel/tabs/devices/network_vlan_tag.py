@@ -23,16 +23,17 @@ class NetworkVLANTagTab(BaseConfigTab):
         frame.grid_columnconfigure(1, weight=1)
 
         ctk.CTkLabel(
-            frame, text='Setting VLAN tag (on supported network types only)', font=CTK_FONT_BOLD, text_color='#2196f3'
+            frame,
+            text='Setting VLAN tag (on supported network types only)',
+            font=CTK_FONT_BOLD,
+            text_color='#2196f3',
         ).grid(row=0, column=0, columnspan=4, padx=10, pady=5, sticky='w')
 
         # VLAN Tag
         ctk.CTkLabel(frame, text='VLAN Tag:', font=CTK_FONT_MAIN, width=100, anchor='w').grid(
             row=1, column=0, padx=10, pady=5, sticky='w'
         )
-        self.vlan_tag = ctk.CTkEntry(
-            frame, placeholder_text='1', width=100, font=CTK_FONT_SMALL
-        )
+        self.vlan_tag = ctk.CTkEntry(frame, placeholder_text='1', width=100, font=CTK_FONT_SMALL)
         self.vlan_tag.grid(row=1, column=1, padx=5, pady=5, sticky='w')
         self.vlan_tag.bind('<KeyRelease>', lambda e: self._trigger_change())
 
@@ -50,5 +51,5 @@ class NetworkVLANTagTab(BaseConfigTab):
         return {
             'type': 'network',
             'vlan_tag': self.vlan_tag.get().strip(),
-            'native_vlan': self.native_vlan.get()
+            'native_vlan': self.native_vlan.get(),
         }
