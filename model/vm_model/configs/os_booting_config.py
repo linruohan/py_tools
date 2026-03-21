@@ -54,6 +54,11 @@ class Nvram:
     templateFormat: str = ''
     type: str = 'file'  # file, block, network
     format: str = ''
+    source: dict = None  # source 配置 (file/block 类型: {'file': path}, network 类型: {'protocol': xxx, ...})
+
+    def __post_init__(self):
+        if self.source is None:
+            self.source = {}
 
 
 @dataclass
@@ -165,12 +170,6 @@ class OSBootingConfig:
         if 'nvram' in data:
             nvram_data = data['nvram']
             if isinstance(nvram_data, dict):
-                # 处理 source 字段（来自 OS Tab 的 nvram.source）
-                if 'source' in nvram_data:
-                    source = nvram_data['source']
-                    if isinstance(source, dict) and 'file' in source:
-                        # 将 source.file 设置为 nvram.path
-                        nvram_data['path'] = source['file']
                 for key, value in nvram_data.items():
                     if hasattr(self.nvram, key):
                         setattr(self.nvram, key, value)
@@ -273,7 +272,16 @@ class OSBootingConfig:
         if 'acpi' in data:
             acpi_data = data['acpi']
             if isinstance(acpi_data, dict):
-                if 'table' in acpi_data:
+                if 'tables' in acpi_data:
+                    tables = acpi_data['tables']
+                    if isinstance(tables, list):
+                        self.acpi_tables = [
+                            AcpiTable(type=t.get('type', 'raw'), path=t.get('path', ''))
+                            if isinstance(t, dict)
+                            else t
+                            for t in tables
+                        ]
+                elif 'table' in acpi_data:
                     table = acpi_data['table']
                     if isinstance(table, dict):
                         self.acpi_tables = [
@@ -321,8 +329,9 @@ class OSBootingConfig:
             'templateFormat': self.nvram.templateFormat,
             'type': self.nvram.type,
             'format': self.nvram.format,
+            'source': self.nvram.source,
         }
-        if nvram_dict.get('path') or nvram_dict.get('template'):
+        if nvram_dict.get('path') or nvram_dict.get('template') or nvram_dict.get('source'):
             result['nvram'] = nvram_dict
 
         # Varstore 配置

@@ -149,13 +149,31 @@ class OSTab(StandardConfigTab):
         boot_row += 3
 
         # === ACPI 表配置 ===
-        ctk.CTkLabel(boot_frame, text='ACPI 表配置', font=('', 11), text_color='#FFD93D').grid(
-            row=boot_row, column=0, columnspan=2, padx=10, pady=3, sticky='w'
-        )
+        acpi_header_frame = ctk.CTkFrame(boot_frame, fg_color='transparent')
+        acpi_header_frame.grid(row=boot_row, column=0, columnspan=2, padx=10, pady=3, sticky='w')
+
+        ctk.CTkLabel(
+            acpi_header_frame, text='ACPI 表配置', font=('', 11), text_color='#FFD93D'
+        ).pack(side='left', padx=0)
+
+        # 加减号按钮
+        ctk.CTkButton(
+            acpi_header_frame, text='+', width=5, height=10, command=self._add_acpi_table
+        ).pack(side='left', padx=(10, 2))
+        ctk.CTkButton(
+            acpi_header_frame, text='-', width=5, height=10, command=self._remove_acpi_table
+        ).pack(side='left', padx=2)
+
         boot_row += 1
 
-        # type 和 path 放一行
-        self._create_acpi_row(boot_frame, boot_row)
+        # ACPI 表列表
+        self.acpi_tables_frame = ctk.CTkFrame(boot_frame, fg_color='transparent')
+        self.acpi_tables_frame.grid(
+            row=boot_row, column=0, columnspan=2, padx=10, pady=3, sticky='w'
+        )
+        self.acpi_tables = []
+        self._add_acpi_table()
+
         boot_row += 1
 
         self.section_rows['boot'] = boot_row
@@ -456,30 +474,6 @@ class OSTab(StandardConfigTab):
         )
         self.dtb_entry.pack(side='left', padx=5)
         self.dtb_entry.bind('<KeyRelease>', lambda e: self._trigger_change())
-
-    def _create_acpi_row(self, parent: ctk.CTkFrame, row: int) -> None:
-        """创建 ACPI 表行: type 和 path 放一行."""
-        frame = ctk.CTkFrame(parent, fg_color='transparent')
-        frame.grid(row=row, column=0, columnspan=2, padx=10, pady=3, sticky='w')
-
-        ctk.CTkLabel(frame, text='type:', font=('', 11), width=30, anchor='w').pack(
-            side='left', padx=(0, 5)
-        )
-        self.acpi_type_option = ctk.CTkOptionMenu(
-            frame, values=['raw', 'rawset', 'slic', 'msdm'], width=100, font=('', 11)
-        )
-        self.acpi_type_option.set('slic')
-        self.acpi_type_option.pack(side='left', padx=5)
-        self.acpi_type_option.configure(command=self._trigger_change)
-
-        ctk.CTkLabel(frame, text='path:', font=('', 11), width=50, anchor='w').pack(
-            side='left', padx=(15, 5)
-        )
-        self.acpi_path_entry = ctk.CTkEntry(
-            frame, placeholder_text='/path/to/slic.dat', width=200, font=('', 11)
-        )
-        self.acpi_path_entry.pack(side='left', padx=5)
-        self.acpi_path_entry.bind('<KeyRelease>', lambda e: self._trigger_change())
 
     # === 固件部分辅助方法 ===
 
@@ -971,6 +965,54 @@ class OSTab(StandardConfigTab):
             value.destroy()
             self._trigger_change()
 
+    def _add_acpi_table(self) -> None:
+        """添加 ACPI 表配置."""
+        index = len(self.acpi_tables) if hasattr(self, 'acpi_tables') else 0
+        if not hasattr(self, 'acpi_tables'):
+            self.acpi_tables = []
+
+        frame = ctk.CTkFrame(self.acpi_tables_frame, fg_color='transparent')
+        frame.pack(side='left', padx=2, pady=1)
+
+        type_label = ctk.CTkLabel(frame, text='type:', font=('', 10), width=30, anchor='w')
+        type_label.pack(side='left', padx=(0, 2))
+        acpi_type = ctk.CTkOptionMenu(
+            frame, values=['raw', 'rawset', 'slic', 'msdm'], width=80, font=('', 10)
+        )
+        acpi_type.set('slic')
+        acpi_type.pack(side='left', padx=2)
+        acpi_type.configure(command=self._trigger_change)
+
+        path_label = ctk.CTkLabel(frame, text='path:', font=('', 10), width=35, anchor='w')
+        path_label.pack(side='left', padx=(5, 2))
+        acpi_path = ctk.CTkEntry(
+            frame, placeholder_text='/path/to/table.dat', width=150, font=('', 10)
+        )
+        acpi_path.pack(side='left', padx=2)
+        acpi_path.bind('<KeyRelease>', lambda e: self._trigger_change())
+
+        self.acpi_tables.append(
+            {
+                'frame': frame,
+                'type_label': type_label,
+                'type': acpi_type,
+                'path_label': path_label,
+                'path': acpi_path,
+            }
+        )
+        self._trigger_change()
+
+    def _remove_acpi_table(self) -> None:
+        """删除最后一个 ACPI 表配置."""
+        if self.acpi_tables:
+            table = self.acpi_tables.pop()
+            table['type'].destroy()
+            table['path'].destroy()
+            table['type_label'].destroy()
+            table['path_label'].destroy()
+            table['frame'].destroy()
+            self._trigger_change()
+
     def get_config(self) -> dict:
         """获取 OS 配置."""
         # 获取固件配置
@@ -986,10 +1028,12 @@ class OSTab(StandardConfigTab):
                 if dev:
                     boot_devices.append(dev)
 
-        # 获取 initarg/initenv
-        initargs = [arg.get().strip() for arg in self.initargs]
+        # 获取 initarg/initenv (过滤空值)
+        initargs = [arg.get().strip() for arg in self.initargs if arg.get().strip()]
         initenvs = [
-            {'name': env[0].get().strip(), 'value': env[1].get().strip()} for env in self.initenvs
+            {'name': env[0].get().strip(), 'value': env[1].get().strip()}
+            for env in self.initenvs
+            if env[0].get().strip() or env[1].get().strip()
         ]
 
         return {
@@ -1032,8 +1076,12 @@ class OSTab(StandardConfigTab):
             'cmdline': self.cmdline_entry.get(),
             'shim': self.shim_entry.get(),
             'dtb': self.dtb_entry.get(),
-            'acpi_type': self.acpi_type_option.get(),
-            'acpi_path': self.acpi_path_entry.get(),
+            'acpi_tables': [
+                {'type': table['type'].get(), 'path': table['path'].get()}
+                for table in self.acpi_tables
+            ]
+            if hasattr(self, 'acpi_tables')
+            else [],
             'init': self.init_entry.get(),
             'initargs': initargs,
             'initenvs': initenvs,
@@ -1131,9 +1179,15 @@ class OSTab(StandardConfigTab):
 
         # bootmenu
         if config.get('bootmenu'):
+            timeout_raw = config.get('bootmenu_timeout', '')
+            # 处理空字符串或无效值
+            try:
+                timeout = int(timeout_raw) if timeout_raw else 3000
+            except (ValueError, TypeError):
+                timeout = 3000
             os_booting_config['bootmenu'] = {
                 'enable': True,
-                'timeout': int(config.get('bootmenu_timeout', 3000)),
+                'timeout': timeout,
             }
 
         # smbios
@@ -1146,8 +1200,12 @@ class OSTab(StandardConfigTab):
         if config.get('bios_useserial'):
             bios_attrs['useserial'] = 'yes'
         reboot = config.get('bios_reboot', '-1')
-        if reboot and reboot != '-1' and int(reboot) >= 0:
-            bios_attrs['rebootTimeout'] = reboot
+        if reboot and reboot != '-1':
+            try:
+                if int(reboot) >= 0:
+                    bios_attrs['rebootTimeout'] = reboot
+            except (ValueError, TypeError):
+                pass
         if bios_attrs:
             os_booting_config['bios'] = bios_attrs
 
@@ -1200,13 +1258,9 @@ class OSTab(StandardConfigTab):
                 os_booting_config['idmap'] = idmap_config
 
         # acpi
-        if config.get('acpi_path'):
-            os_booting_config['acpi'] = {
-                'table': {
-                    'type': config.get('acpi_type', 'slic'),
-                    'path': config['acpi_path'],
-                }
-            }
+        acpi_tables = config.get('acpi_tables', [])
+        if acpi_tables:
+            os_booting_config['acpi'] = {'tables': acpi_tables}
 
         return {'os_booting': os_booting_config}
 
@@ -1415,7 +1469,22 @@ class OSTab(StandardConfigTab):
         # 加载 ACPI 配置
         if 'acpi' in config and isinstance(config['acpi'], dict):
             acpi = config['acpi']
-            if 'table' in acpi and isinstance(acpi['table'], dict):
-                self.acpi_type_option.set(acpi['table'].get('type', 'slic'))
-                self.acpi_path_entry.delete(0, ctk.END)
-                self.acpi_path_entry.insert(0, acpi['table'].get('path', ''))
+            if 'tables' in acpi and isinstance(acpi['tables'], list):
+                # 清空现有表
+                if hasattr(self, 'acpi_tables'):
+                    for table in self.acpi_tables:
+                        table['type'].destroy()
+                        table['path'].destroy()
+                        table['type_label'].destroy()
+                        table['path_label'].destroy()
+                        table['frame'].destroy()
+                    self.acpi_tables = []
+
+                # 加载表
+                for table_data in acpi['tables']:
+                    self._add_acpi_table()
+                    if self.acpi_tables:
+                        last_table = self.acpi_tables[-1]
+                        last_table['type'].set(table_data.get('type', 'slic'))
+                        last_table['path'].delete(0, ctk.END)
+                        last_table['path'].insert(0, table_data.get('path', ''))

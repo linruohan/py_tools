@@ -302,10 +302,10 @@ class LibvirtXMLGenerator:
             if nvram.get('format'):
                 nvram_attrs['format'] = nvram['format']
             nvram_elem = ET.SubElement(os_elem, 'nvram', **nvram_attrs)
-            if nvram.get('path'):
-                nvram_elem.text = nvram['path']
-            # NVRAM source (for network/block backed)
+            # NVRAM source (for network/block backed) - 有 source 时 path 不作为文本内容
             nvram_source = nvram.get('source')
+            if not nvram_source and nvram.get('path'):
+                nvram_elem.text = nvram['path']
             if nvram_source:
                 source_elem = ET.SubElement(nvram_elem, 'source')
                 if nvram_source.get('protocol'):
@@ -415,33 +415,53 @@ class LibvirtXMLGenerator:
 
         # Host bootloader
         bootloader = os_booting.get('bootloader')
-        if bootloader:
+        host_bootloader = os_booting.get('host_bootloader')
+        if host_bootloader and isinstance(host_bootloader, dict):
+            bootloader_path = host_bootloader.get('path')
+            if bootloader_path:
+                ET.SubElement(self.domain, 'bootloader').text = bootloader_path
+            bootloader_args = host_bootloader.get('args')
+            if bootloader_args:
+                ET.SubElement(self.domain, 'bootloader_args').text = bootloader_args
+        elif bootloader:
             ET.SubElement(self.domain, 'bootloader').text = bootloader
-        bootloader_args = os_booting.get('bootloader_args')
-        if bootloader_args:
-            ET.SubElement(self.domain, 'bootloader_args').text = bootloader_args
+            bootloader_args = os_booting.get('bootloader_args')
+            if bootloader_args:
+                ET.SubElement(self.domain, 'bootloader_args').text = bootloader_args
 
-        # Container boot
-        container_init = os_booting.get('init')
+        # Container boot - 支持嵌套的 container 子字典和顶层字段两种格式
+        container = os_booting.get('container', {})
+        if isinstance(container, dict):
+            # 优先从 container 子字典读取
+            container_init = container.get('init')
+            initargs = container.get('initargs', [])
+            initenvs = container.get('initenvs', []) or container.get('initenv', [])
+            initdir = container.get('initdir')
+            inituser = container.get('inituser')
+            initgroup = container.get('initgroup')
+        else:
+            # 兼容顶层字段格式
+            container_init = os_booting.get('init')
+            initargs = os_booting.get('initargs', [])
+            initenvs = os_booting.get('initenv', [])
+            initdir = os_booting.get('initdir')
+            inituser = os_booting.get('inituser')
+            initgroup = os_booting.get('initgroup')
+
         if container_init:
             ET.SubElement(os_elem, 'init').text = container_init
-        initargs = os_booting.get('initargs', [])
         if initargs:
             for arg in initargs:
                 ET.SubElement(os_elem, 'initarg').text = arg
-        initenv = os_booting.get('initenv', [])
-        if initenv:
-            for env in initenv:
+        if initenvs:
+            for env in initenvs:
                 ET.SubElement(os_elem, 'initenv', name=env.get('name', '')).text = env.get(
                     'value', ''
                 )
-        initdir = os_booting.get('initdir')
         if initdir:
             ET.SubElement(os_elem, 'initdir').text = initdir
-        inituser = os_booting.get('inituser')
         if inituser:
             ET.SubElement(os_elem, 'inituser').text = inituser
-        initgroup = os_booting.get('initgroup')
         if initgroup:
             ET.SubElement(os_elem, 'initgroup').text = initgroup
 
