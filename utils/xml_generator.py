@@ -233,9 +233,16 @@ class LibvirtXMLGenerator:
 
         # OS type, arch, machine
         os_type = os_booting.get('type', 'hvm')
-        arch = os_booting.get('arch', 'x86_64')
-        machine = os_booting.get('machine', 'q35')
-        type_elem = ET.SubElement(os_elem, 'type', arch=arch, machine=machine)
+        arch = os_booting.get('arch')
+        machine = os_booting.get('machine')
+
+        # 只在有值时才添加 arch 和 machine 属性（空字符串或 None 都不添加）
+        type_attrs = {}
+        if arch:
+            type_attrs['arch'] = arch
+        if machine:
+            type_attrs['machine'] = machine
+        type_elem = ET.SubElement(os_elem, 'type', **type_attrs)
         type_elem.text = os_type
 
         # Firmware auto-selection
@@ -356,8 +363,14 @@ class LibvirtXMLGenerator:
         if isinstance(bootmenu, dict) and bootmenu.get('enable'):
             bootmenu_attrs = {'enable': 'yes'}
             timeout = bootmenu.get('timeout')
-            if timeout is not None and timeout >= 0:
-                bootmenu_attrs['timeout'] = str(timeout)
+            if timeout is not None:
+                # 转换为整数（可能是字符串）
+                try:
+                    timeout_val = int(timeout)
+                    if timeout_val >= 0:
+                        bootmenu_attrs['timeout'] = str(timeout_val)
+                except (ValueError, TypeError):
+                    pass
             ET.SubElement(os_elem, 'bootmenu', **bootmenu_attrs)
 
         # BIOS configuration
@@ -367,8 +380,14 @@ class LibvirtXMLGenerator:
             if bios.get('useserial'):
                 bios_attrs['useserial'] = 'yes'
             reboot_timeout = bios.get('rebootTimeout')
-            if reboot_timeout is not None and reboot_timeout >= 0:
-                bios_attrs['rebootTimeout'] = str(reboot_timeout)
+            if reboot_timeout is not None:
+                # 转换为整数（可能是字符串）
+                try:
+                    timeout_val = int(reboot_timeout)
+                    if timeout_val >= 0:
+                        bios_attrs['rebootTimeout'] = str(timeout_val)
+                except (ValueError, TypeError):
+                    pass
             if bios_attrs:
                 ET.SubElement(os_elem, 'bios', **bios_attrs)
 

@@ -514,17 +514,29 @@ class OSTab(StandardConfigTab):
         ctk.CTkLabel(frame, text='arch:', font=('', 11), width=40, anchor='w').pack(
             side='left', padx=(10, 3)
         )
-        self.arch_entry = ctk.CTkEntry(frame, placeholder_text='x86_64', width=70, font=('', 11))
-        self.arch_entry.pack(side='left', padx=3)
-        self.arch_entry.bind('<KeyRelease>', lambda e: self._trigger_change())
+        self.arch_option = ctk.CTkOptionMenu(
+            frame,
+            values=['None', 'x86_64', 'i686', 'aarch64', 'armv7l', 'ppc64', 'ppc64le', 's390x'],
+            width=70,
+            font=('', 11),
+        )
+        self.arch_option.set('None')
+        self.arch_option.pack(side='left', padx=3)
+        self.arch_option.configure(command=self._trigger_change)
 
         # machine
         ctk.CTkLabel(frame, text='machine:', font=('', 11), width=50, anchor='w').pack(
             side='left', padx=(10, 3)
         )
-        self.machine_entry = ctk.CTkEntry(frame, placeholder_text='q35', width=70, font=('', 11))
-        self.machine_entry.pack(side='left', padx=3)
-        self.machine_entry.bind('<KeyRelease>', lambda e: self._trigger_change())
+        self.machine_option = ctk.CTkOptionMenu(
+            frame,
+            values=['None', 'q35', 'pc', 'isapc', 'vexpress', 'virt', 'peium'],
+            width=70,
+            font=('', 11),
+        )
+        self.machine_option.set('None')
+        self.machine_option.pack(side='left', padx=3)
+        self.machine_option.configure(command=self._trigger_change)
 
     def _create_loader_row(self, parent: ctk.CTkFrame, row: int) -> None:
         """创建 Loader 配置行: loader、format、readonly、secure、stateless 全部放一行."""
@@ -983,8 +995,8 @@ class OSTab(StandardConfigTab):
         return {
             'firmware': firmware,
             'type': self.type_option.get(),
-            'arch': self.arch_entry.get(),
-            'machine': self.machine_entry.get(),
+            'arch': self.arch_option.get() if self.arch_option.get() != 'None' else None,
+            'machine': self.machine_option.get() if self.machine_option.get() != 'None' else None,
             'loader': self.loader_entry.get(),
             'loader_readonly': self.loader_readonly_checkbox.get(),
             'loader_secure': self.loader_secure_checkbox.get(),
@@ -1206,11 +1218,9 @@ class OSTab(StandardConfigTab):
         if 'type' in config:
             self.type_option.set(config['type'])
         if 'arch' in config:
-            self.arch_entry.delete(0, ctk.END)
-            self.arch_entry.insert(0, config['arch'])
+            self.arch_option.set(config['arch'])
         if 'machine' in config:
-            self.machine_entry.delete(0, ctk.END)
-            self.machine_entry.insert(0, config['machine'])
+            self.machine_option.set(config['machine'])
         if 'loader' in config:
             self.loader_entry.delete(0, ctk.END)
             self.loader_entry.insert(0, config['loader'])
