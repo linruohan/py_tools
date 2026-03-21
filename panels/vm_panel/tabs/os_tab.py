@@ -1103,10 +1103,17 @@ class OSTab(StandardConfigTab):
 
         os_booting_config = {
             'type': config.get('type', 'hvm'),
-            'arch': config.get('arch', 'x86_64'),
-            'machine': config.get('machine', 'q35'),
             'boot_devices': config['boot_devices'],
         }
+
+        # arch 和 machine 只在非 None 时才添加（用户选择 None 时不输出）
+        arch = config.get('arch')
+        if arch:
+            os_booting_config['arch'] = arch
+
+        machine = config.get('machine')
+        if machine:
+            os_booting_config['machine'] = machine
 
         if config['firmware']:
             os_booting_config['firmware'] = config['firmware']

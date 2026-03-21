@@ -17,7 +17,6 @@ class ResourcePartitioningTab(BaseConfigTab):
     def _init_ui(self) -> None:
         """初始化界面."""
         self.grid_columnconfigure(0, weight=1)
-        self.grid_columnconfigure(1, weight=1)
 
         left_frame = ctk.CTkFrame(self, fg_color=BG_COLOR_CONTENT, corner_radius=6)
         left_frame.grid(row=0, column=0, sticky='nsew', padx=5, pady=5)
@@ -36,41 +35,44 @@ class ResourcePartitioningTab(BaseConfigTab):
         self.partition.grid(row=1, column=1, padx=5, pady=5, sticky='w')
         self.partition.bind('<KeyRelease>', lambda e: self._trigger_change())
 
-        right_frame = ctk.CTkFrame(self, fg_color=BG_COLOR_CONTENT, corner_radius=6)
-        right_frame.grid(row=0, column=1, sticky='nsew', padx=5, pady=5)
+        info_frame = ctk.CTkFrame(left_frame, fg_color='transparent')
+        info_frame.grid(row=2, column=0, columnspan=2, padx=10, pady=5, sticky='w')
+
+        info_text = """说明:
+• 资源分区支持嵌套，可设置绝对路径（如：/parent/child）
+• 如不设置分区，domain 将放置在默认分区中
+• 仅默认分区可假设已存在，其他分区需管理员预先创建
+• 启动 guest 前请确保分区路径已存在
+• 当前支持：QEMU 和 LXC 驱动（映射到 cgroups 目录）
+• 自 libvirt 1.0.5 版本起支持"""
 
         ctk.CTkLabel(
-            right_frame, text='光纤通道 VMID', font=CTK_FONT_BOLD, text_color='#4caf50'
-        ).grid(row=0, column=0, columnspan=2, padx=10, pady=5, sticky='w')
-
-        ctk.CTkLabel(right_frame, text='App ID:', font=CTK_FONT_MAIN, width=80, anchor='w').grid(
-            row=1, column=0, padx=10, pady=5, sticky='w'
-        )
-        self.fibrechannel_appid = ctk.CTkEntry(
-            right_frame, placeholder_text='最大128字节', width=150
-        )
-        self.fibrechannel_appid.grid(row=1, column=1, padx=5, pady=5, sticky='w')
-        self.fibrechannel_appid.bind('<KeyRelease>', lambda e: self._trigger_change())
-
-        info_label = ctk.CTkLabel(
-            right_frame,
-            text='FC SAN 可根据 VMID 提供\n不同 QoS 级别和访问控制,\n也可收集遥测数据.',
+            info_frame,
+            text=info_text,
             font=CTK_FONT_SMALL,
             text_color='#888888',
             justify='left',
-        )
-        info_label.grid(row=2, column=0, columnspan=2, padx=10, pady=5, sticky='w')
+            anchor='nw',
+        ).pack(side='left')
 
     def get_config(self) -> dict:
         """获取配置数据."""
         return {
             'partition': self.partition.get().strip(),
-            'fibrechannel_appid': self.fibrechannel_appid.get().strip(),
         }
 
     def to_xml(self) -> dict:
-        """生成XML配置字典."""
+        """生成 XML 配置字典."""
+        partition_value = self.partition.get().strip()
+
+        # 如果没有设置分区路径，返回空的 resource 元素
+        # 表示使用默认分区
+        if not partition_value:
+            return {
+                'resource_partitioning': {},
+            }
+
+        # 如果设置了分区路径，包含 partition 子元素
         return {
-            'resource_partitioning': {'partition': self.partition.get().strip()},
-            'fibre_channel_vmid': {'appid': self.fibrechannel_appid.get().strip()},
+            'resource_partitioning': {'partition': partition_value},
         }

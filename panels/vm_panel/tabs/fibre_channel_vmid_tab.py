@@ -11,71 +11,88 @@ class FibreChannelVMIDTab(BaseConfigTab):
 
     def __init__(self, master, on_change_callback=None, **kwargs):
         super().__init__(master, on_change_callback, **kwargs)
-
-        self._init_ui()
+        self._changing_option = False  # 防止递归触发
 
     def _init_ui(self) -> None:
         """初始化界面."""
-        self.grid_columnconfigure(0, weight=1)
-        self.grid_columnconfigure(1, weight=1)
+        # 主配置框
+        main_frame = ctk.CTkFrame(self, fg_color=BG_COLOR_CONTENT, corner_radius=6)
+        main_frame.pack(fill='both', expand=True, padx=5, pady=5)
 
-        left_frame = ctk.CTkFrame(self, fg_color=BG_COLOR_CONTENT, corner_radius=6)
-        left_frame.grid(row=0, column=0, sticky='nsew', padx=5, pady=5)
-        left_frame.grid_columnconfigure(1, weight=1)
-
+        # 标题
         ctk.CTkLabel(
-            left_frame, text='FC VMID 配置', font=CTK_FONT_BOLD, text_color='#64b5f6'
-        ).grid(row=0, column=0, columnspan=2, padx=10, pady=5, sticky='w')
+            main_frame, text='FC VMID 配置', font=CTK_FONT_BOLD, text_color='#64b5f6'
+        ).pack(anchor='w', padx=10, pady=5)
 
-        ctk.CTkLabel(left_frame, text='App ID:', font=CTK_FONT_MAIN, width=100, anchor='w').grid(
-            row=1, column=0, padx=10, pady=5, sticky='w'
+        # 配置行：FC VMID 启用状态 + App ID 输入
+        config_frame = ctk.CTkFrame(main_frame, fg_color='transparent')
+        config_frame.pack(anchor='w', padx=10, pady=5)
+
+        ctk.CTkLabel(config_frame, text='FC VMID:', font=CTK_FONT_MAIN, width=80, anchor='w').pack(
+            side='left', padx=(0, 5)
         )
-        self.appid = ctk.CTkEntry(left_frame, placeholder_text='最大128字节', width=200)
-        self.appid.grid(row=1, column=1, padx=5, pady=5, sticky='w')
+        self.enabled_var = ctk.StringVar(value='none')
+        self.enabled_combo = ctk.CTkComboBox(
+            config_frame,
+            values=['none', 'enabled'],
+            variable=self.enabled_var,
+            width=120,
+            command=self._on_enabled_changed,
+        )
+        self.enabled_combo.pack(side='left', padx=5)
+
+        ctk.CTkLabel(config_frame, text='App ID:', font=CTK_FONT_MAIN, width=60, anchor='w').pack(
+            side='left', padx=(10, 5)
+        )
+        self.appid = ctk.CTkEntry(config_frame, placeholder_text='最大 128 字节', width=200)
+        self.appid.pack(side='left', padx=5)
         self.appid.bind('<KeyRelease>', lambda e: self._trigger_change())
+        # 初始禁用 App ID 输入框
+        self.appid.configure(state='disabled')
 
-        right_frame = ctk.CTkFrame(self, fg_color=BG_COLOR_CONTENT, corner_radius=6)
-        right_frame.grid(row=0, column=1, sticky='nsew', padx=5, pady=5)
+        # 功能说明
+        info_frame = ctk.CTkFrame(main_frame, fg_color='transparent')
+        info_frame.pack(anchor='w', padx=10, pady=10)
 
-        ctk.CTkLabel(right_frame, text='功能说明', font=CTK_FONT_BOLD, text_color='#4caf50').grid(
-            row=0, column=0, columnspan=2, padx=10, pady=5, sticky='w'
+        info_title = ctk.CTkLabel(
+            info_frame, text='功能说明:', font=CTK_FONT_BOLD, text_color='#4caf50'
         )
+        info_title.pack(anchor='w')
 
         info_text = (
-            'FC SAN 可以根据 VMID 提供:\n\n'
-            '• 不同的 QoS 级别\n'
-            '• 访问控制\n'
-            '• 收集遥测数据\n'
-            '• 增强 IO 性能\n\n'
-            '使用此功能需要:\n'
-            '• 支持 Fibre Channel 的硬件\n'
-            '• 内核编译选项 CONFIG_BLK_CGROUP_FC_APPID\n'
-            '• 加载 nvme_fc 内核模块'
+            'FC SAN 可以根据 VMID 提供：不同的 QoS 级别、访问控制、收集每 VM 级别的遥测数据\n'
+            'App ID 说明：单个字符串，最大 128 字节，由内核用于创建 VMID\n'
+            '使用此功能需要：支持 Fibre Channel 的硬件、CONFIG_BLK_CGROUP_FC_APPID\n'
+            '自 libvirt 7.7.0 版本起支持'
         )
         info_label = ctk.CTkLabel(
-            right_frame,
+            info_frame,
             text=info_text,
             font=CTK_FONT_SMALL,
             text_color='#888888',
             justify='left',
+            anchor='w',
         )
-        info_label.grid(row=1, column=0, columnspan=2, padx=10, pady=5, sticky='nw')
+        info_label.pack(anchor='w', fill='x')
 
-        example_frame = ctk.CTkFrame(self, fg_color=BG_COLOR_CONTENT, corner_radius=6)
-        example_frame.grid(row=1, column=0, columnspan=2, sticky='nsew', padx=5, pady=5)
-
-        ctk.CTkLabel(example_frame, text='XML 示例', font=CTK_FONT_BOLD, text_color='#9c27b0').grid(
-            row=0, column=0, padx=10, pady=5, sticky='w'
-        )
-
-        example_text = "<resource>\n  <fibrechannel appid='userProvidedID'/>\n</resource>"
-        ctk.CTkLabel(
-            example_frame,
-            text=example_text,
-            font=CTK_FONT_SMALL,
-            text_color='#aaaaaa',
-            justify='left',
-        ).grid(row=1, column=0, padx=10, pady=5, sticky='w')
+    def _on_enabled_changed(self, value: str) -> None:
+        """启用状态改变时的处理."""
+        if self._changing_option:
+            return
+        self._changing_option = True
+        try:
+            if value == 'enabled':
+                # 启用时允许输入 App ID
+                self.appid.configure(state='normal')
+                self.appid.focus_set()
+            else:
+                # 禁用时清空并禁用 App ID 输入框
+                self.appid.delete(0, 'end')
+                self.appid.configure(state='disabled')
+            # 触发 XML 更新
+            self._trigger_change()
+        finally:
+            self._changing_option = False
 
     def get_config(self) -> dict:
         """获取配置数据."""
@@ -84,5 +101,19 @@ class FibreChannelVMIDTab(BaseConfigTab):
         }
 
     def to_xml(self) -> dict:
-        """生成XML配置字典."""
-        return {'fibre_channel_vmid': self.get_config()}
+        """生成 XML 配置字典."""
+        appid_value = self.appid.get().strip()
+
+        # 如果没有设置 App ID 或处于禁用状态，返回空字典
+        # 这样 vm_config.update_from_tab 不会更新配置
+        # 最终 xml_generator._add_resource 不会生成 fibrechannel 元素
+        if not appid_value or self.enabled_var.get() == 'none':
+            return {
+                'fibre_channel_vmid': {'appid': ''},
+            }
+
+        # 如果设置了 App ID，生成 fibre_channel_vmid 配置
+        # 格式：{'fibre_channel_vmid': {'appid': 'xxx'}}
+        return {
+            'fibre_channel_vmid': {'appid': appid_value},
+        }

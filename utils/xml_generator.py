@@ -41,6 +41,9 @@ class LibvirtXMLGenerator:
         self._add_resource(config)
         self._add_security(config)
         self._add_launch_security(config)
+        self._add_key_wrap(config)
+        self._add_perf(config)
+        self._add_throttlegroups(config)
 
         return self._pretty_print()
 
@@ -132,21 +135,29 @@ class LibvirtXMLGenerator:
                 ET.SubElement(vcpus_elem, 'vcpu', **vcpu_attrs)
 
         # 检查是否需要创建 cpu 元素
-        topology = cpu_alloc.get('topology', {})
+        # 注意：topology 现在是 cpu_model 的顶层键，不是嵌套在 model 里
+        topology = cpu_model.get('topology', {})
+        # mode, match, check, migratable, deprecated_features 是 cpu_model 的顶层键
+        cpu_mode = cpu_model.get('mode')
+        cpu_match = cpu_model.get('match')
+        cpu_check = cpu_model.get('check')
+        cpu_migratable = cpu_model.get('migratable')
+        cpu_deprecated_features = cpu_model.get('deprecated_features')
+        # model_config 包含 model、vendor、vendor_id
         model_config = cpu_model.get('model', {})
 
         # 判断是否需要创建 <cpu> 元素
         need_cpu_elem = (
             topology
-            or model_config.get('mode')
-            or model_config.get('match')
-            or model_config.get('check')
-            or model_config.get('migratable')
-            or model_config.get('deprecated_features')
+            or cpu_mode
+            or cpu_match
+            or cpu_check
+            or cpu_migratable
+            or cpu_deprecated_features
             or model_config.get('model')
             or model_config.get('vendor')
             or model_config.get('vendor_id')
-            or cpu_model.get('feature', {}).get('features')
+            or cpu_model.get('feature', [])  # feature 现在是列表
             or cpu_model.get('cache', {}).get('mode')
             or cpu_model.get('maxphysaddr', {}).get('mode')
         )
@@ -157,16 +168,16 @@ class LibvirtXMLGenerator:
         cpu_elem = ET.SubElement(self.domain, 'cpu')
 
         # 设置 cpu 元素的属性 (mode, match, check, migratable, deprecated_features)
-        if model_config.get('mode'):
-            cpu_elem.set('mode', model_config['mode'])
-        if model_config.get('match'):
-            cpu_elem.set('match', model_config['match'])
-        if model_config.get('check'):
-            cpu_elem.set('check', model_config['check'])
-        if model_config.get('migratable'):
-            cpu_elem.set('migratable', model_config['migratable'])
-        if model_config.get('deprecated_features'):
-            cpu_elem.set('deprecated_features', model_config['deprecated_features'])
+        if cpu_mode:
+            cpu_elem.set('mode', cpu_mode)
+        if cpu_match:
+            cpu_elem.set('match', cpu_match)
+        if cpu_check:
+            cpu_elem.set('check', cpu_check)
+        if cpu_migratable:
+            cpu_elem.set('migratable', cpu_migratable)
+        if cpu_deprecated_features:
+            cpu_elem.set('deprecated_features', cpu_deprecated_features)
 
         # 添加 topology 子元素
         if topology:
@@ -187,13 +198,12 @@ class LibvirtXMLGenerator:
             )
 
         # 添加 model 子元素
-        if model_config.get('model'):
+        if model_config.get('name'):
             model = ET.SubElement(cpu_elem, 'model')
-            model.text = model_config['model']
+            model.text = model_config['name']
             if model_config.get('fallback'):
                 model.set('fallback', model_config['fallback'])
-
-        # 添加 vendor 子元素
+        # vendor 和 vendor_id 也移到 model_config 外层处理
         if model_config.get('vendor'):
             vendor = ET.SubElement(cpu_elem, 'vendor')
             vendor.text = model_config['vendor']
@@ -204,11 +214,13 @@ class LibvirtXMLGenerator:
             ET.SubElement(cpu_elem, 'vendor', id=model_config['vendor_id'])
 
         # 添加 feature 子元素
-        features = cpu_model.get('feature', {}).get('features', [])
+        # feature 现在直接是一个列表
+        features = cpu_model.get('feature', [])
         for feat in features:
-            ET.SubElement(
-                cpu_elem, 'feature', policy=feat.get('policy', 'require'), name=feat['name']
-            )
+            feat_attrs = {'name': feat['name']}
+            if feat.get('policy'):
+                feat_attrs['policy'] = feat['policy']
+            ET.SubElement(cpu_elem, 'feature', **feat_attrs)
 
         # 添加 cache 子元素
         cache_config = cpu_model.get('cache', {})
@@ -502,153 +514,396 @@ class LibvirtXMLGenerator:
                     ).text = table.get('path', '')
 
     def _add_features(self, config: dict) -> None:
-        """添加虚拟化特性."""
-        features_config = config.get('hypervisor_features', {})
+        """添加虚拟化特性.
 
+        支持以下特性组:
+        - general: 通用特性 (pae, acpi, apic, hap, viridian, privnet, etc.)
+        - hyperv: Hyper-V enlightenment 特性
+        - kvm: KVM 特性
+        - xen: Xen 特性
+        - tcg: TCG 加速器特性
+        """
+        features_config = config.get('hypervisor_features', {})
+        features_elem = None  # <features> 元素，按需创建
+
+        def get_features_elem():
+            """获取或创建 features 元素."""
+            nonlocal features_elem
+            if features_elem is None:
+                features_elem = self.domain.find('features')
+                if features_elem is None:
+                    features_elem = ET.SubElement(self.domain, 'features')
+            return features_elem
+
+        # ========== 通用特性 ==========
         general = features_config.get('general', {})
         if any(general.values()):
-            features = ET.SubElement(self.domain, 'features')
+            features = get_features_elem()
 
-            if general.get('pae'):
-                ET.SubElement(features, 'pae')
-            if general.get('acpi'):
-                ET.SubElement(features, 'acpi')
-            if general.get('apic'):
-                ET.SubElement(features, 'apic')
-            if general.get('hap'):
-                ET.SubElement(features, 'hap')
-            if general.get('viridian'):
-                ET.SubElement(features, 'viridian')
-            if general.get('privnet'):
-                ET.SubElement(features, 'privnet')
-            if general.get('pvspinlock'):
-                ET.SubElement(features, 'pvspinlock')
-            if general.get('pmu'):
-                ET.SubElement(features, 'pmu')
-            if general.get('vmport'):
-                ET.SubElement(features, 'vmport')
-            if general.get('smm'):
-                ET.SubElement(features, 'smm')
-            if general.get('vmcoreinfo'):
-                ET.SubElement(features, 'vmcoreinfo')
-            if general.get('ras'):
-                ET.SubElement(features, 'ras')
+            # Boolean 特性 (on/off -> 生成元素，None/False -> 不生成)
+            bool_features = [
+                'pae',
+                'acpi',
+                'apic',
+                'hap',
+                'viridian',
+                'privnet',
+                'pvspinlock',
+                'pmu',
+                'vmport',
+                'vmcoreinfo',
+                'ras',
+                'ioapic',
+                'hpt',
+                'htm',
+                'nested-hv',
+                'ccf-assist',
+                'cfpc',
+                'sbbc',
+                'ibs',
+                'ps2',
+                'aia',
+                'virtualization',
+            ]
+            for feat_name in bool_features:
+                # 支持 boolean 和字符串 'on'/'off'
+                val = general.get(feat_name)
+                if val is True or val == 'on':
+                    ET.SubElement(features, feat_name)
 
+            # SMM 特性 (可能带 tseg 子元素)
+            if general.get('smm') is True or general.get('smm') == 'on':
+                smm_elem = ET.SubElement(features, 'smm', state='on')
+                smm_tseg = general.get('smm_tseg')
+                if smm_tseg:
+                    tseg_elem = ET.SubElement(smm_elem, 'tseg', unit='MiB')
+                    tseg_elem.text = smm_tseg
+
+            # GIC (带 version 属性)
+            gic_version = general.get('gic_version')
+            if gic_version and gic_version != 'None':
+                ET.SubElement(features, 'gic', version=gic_version)
+
+            # IOAPIC (带 driver 属性)
+            ioapic_driver = general.get('ioapic_driver')
+            if ioapic_driver and ioapic_driver != 'None':
+                ET.SubElement(features, 'ioapic', driver=ioapic_driver)
+
+            # HPT (带 resizing 属性和 maxpagesize 子元素)
+            hpt_resizing = general.get('hpt_resizing')
+            hpt_maxpagesize = general.get('hpt_maxpagesize')
+            if hpt_resizing or hpt_maxpagesize:
+                hpt_attrs = {}
+                if hpt_resizing and hpt_resizing != 'None':
+                    hpt_attrs['resizing'] = hpt_resizing
+                hpt_elem = ET.SubElement(features, 'hpt', **hpt_attrs)
+                if hpt_maxpagesize and hpt_maxpagesize != 'None':
+                    # 解析单位
+                    if 'GiB' in hpt_maxpagesize:
+                        maxps_elem = ET.SubElement(hpt_elem, 'maxpagesize', unit='GiB')
+                        maxps_elem.text = hpt_maxpagesize.split()[0]
+                    elif 'MiB' in hpt_maxpagesize:
+                        maxps_elem = ET.SubElement(hpt_elem, 'maxpagesize', unit='MiB')
+                        maxps_elem.text = hpt_maxpagesize.split()[0]
+                    elif 'KiB' in hpt_maxpagesize:
+                        maxps_elem = ET.SubElement(hpt_elem, 'maxpagesize', unit='KiB')
+                        maxps_elem.text = hpt_maxpagesize.split()[0]
+                    else:
+                        maxps_elem = ET.SubElement(hpt_elem, 'maxpagesize', unit='KiB')
+                        maxps_elem.text = hpt_maxpagesize
+
+            # MSRs (bhyve, 带 unknown 属性)
+            msrs_unknown = general.get('msrs_unknown')
+            if msrs_unknown and msrs_unknown != 'None':
+                ET.SubElement(features, 'msrs', unknown=msrs_unknown)
+
+            # Async teardown (带 enabled 属性)
+            async_teardown = general.get('async_teardown')
+            if async_teardown and async_teardown != 'None':
+                ET.SubElement(features, 'async-teardown', enabled=async_teardown)
+
+            # TCG (带 tb-cache 子元素)
+            tcg_tb_cache = general.get('tcg_tb_cache')
+            if tcg_tb_cache:
+                tcg_elem = ET.SubElement(features, 'tcg')
+                tb_cache_elem = ET.SubElement(tcg_elem, 'tb-cache', unit='MiB')
+                tb_cache_elem.text = tcg_tb_cache
+
+        # ========== Hyper-V 特性 ==========
         hyperv = features_config.get('hyperv', {})
-        if any(v for k, v in hyperv.items() if k != 'mode'):
-            if 'features' not in self.domain.find('.'):
-                features = ET.SubElement(self.domain, 'features')
-            else:
-                features = self.domain.find('features')
+        hyperv_features_list = [
+            'relaxed',
+            'vapic',
+            'spinlocks',
+            'vpindex',
+            'runtime',
+            'synic',
+            'stimer',
+            'reset',
+            'frequencies',
+            'reenlightenment',
+            'tlbflush',
+            'ipi',
+            'evmcs',
+            'avic',
+            'emsr_bitmap',
+            'xmm_input',
+        ]
+        has_hyperv = any(hyperv.get(f) == 'on' for f in hyperv_features_list)
+        has_hyperv = has_hyperv or bool(hyperv.get('vendor_id'))
 
+        if has_hyperv:
+            features = get_features_elem()
             hyperv_elem = ET.SubElement(features, 'hyperv')
-            if hyperv.get('mode'):
+
+            # 模式属性
+            if hyperv.get('mode') and hyperv.get('mode') != 'None':
                 hyperv_elem.set('mode', hyperv['mode'])
 
-            hyperv_features = [
-                'relaxed',
-                'vapic',
-                'spinlocks',
-                'vpindex',
-                'runtime',
-                'synic',
-                'stimer',
-                'reset',
-                'frequencies',
-                'reenlightenment',
-                'tlbflush',
-                'ipi',
-                'evmcs',
-            ]
-            for feat in hyperv_features:
-                if hyperv.get(feat):
-                    ET.SubElement(hyperv_elem, feat, state='on')
+            # 标准特性 (state='on')
+            for feat_name in hyperv_features_list:
+                if hyperv.get(feat_name) == 'on':
+                    ET.SubElement(hyperv_elem, feat_name, state='on')
 
+            # Vendor ID (带 value 属性)
+            vendor_id = hyperv.get('vendor_id')
+            if vendor_id:
+                ET.SubElement(hyperv_elem, 'vendor_id', state='on', value=vendor_id)
+
+            # Spinlocks (带 retries 属性)
+            if hyperv.get('spinlocks') == 'on':
+                retries = hyperv.get('spinlocks_retries', '4096')
+                # 找到刚创建的 spinlocks 元素并添加属性
+                for elem in hyperv_elem:
+                    if elem.tag == 'spinlocks':
+                        elem.set('retries', retries)
+                        break
+
+            # TLBflush 子特性 (direct, extended)
+            if hyperv.get('tlbflush') == 'on':
+                for elem in hyperv_elem:
+                    if elem.tag == 'tlbflush':
+                        tlbflush_direct = hyperv.get('tlbflush_direct')
+                        if tlbflush_direct and tlbflush_direct != 'None':
+                            ET.SubElement(elem, 'direct', state=tlbflush_direct)
+                        tlbflush_extended = hyperv.get('tlbflush_extended')
+                        if tlbflush_extended and tlbflush_extended != 'None':
+                            ET.SubElement(elem, 'extended', state=tlbflush_extended)
+                        break
+
+            # Stimer 子特性 (direct)
+            if hyperv.get('stimer') == 'on':
+                for elem in hyperv_elem:
+                    if elem.tag == 'stimer':
+                        stimer_direct = hyperv.get('stimer_direct')
+                        if stimer_direct and stimer_direct != 'None':
+                            ET.SubElement(elem, 'direct', state=stimer_direct)
+                        break
+
+        # ========== KVM 特性 ==========
         kvm = features_config.get('kvm', {})
-        if any(v for k, v in kvm.items() if not k.endswith('_size')):
-            if self.domain.find('features') is None:
-                features = ET.SubElement(self.domain, 'features')
-            else:
-                features = self.domain.find('features')
+        kvm_features_list = ['hidden', 'hint_dedicated', 'poll_control', 'pv_ipi', 'dirty_ring']
+        has_kvm = any(kvm.get(f) == 'on' for f in kvm_features_list)
 
+        if has_kvm:
+            features = get_features_elem()
             kvm_elem = ET.SubElement(features, 'kvm')
 
-            if kvm.get('hidden'):
-                ET.SubElement(kvm_elem, 'hidden', state='on')
-            if kvm.get('hint_dedicated'):
-                ET.SubElement(kvm_elem, 'hint-dedicated', state='on')
-            if kvm.get('poll_control'):
-                ET.SubElement(kvm_elem, 'poll-control', state='on')
-            if kvm.get('pv_ipi'):
-                ET.SubElement(kvm_elem, 'pv-ipi', state='on')
-            if kvm.get('dirty_ring'):
+            # KVM 特性 (state='on'/'off')
+            for feat_name in ['hidden', 'hint_dedicated', 'poll_control', 'pv_ipi']:
+                val = kvm.get(feat_name)
+                if val and val != 'None':
+                    ET.SubElement(kvm_elem, feat_name.replace('_', '-'), state=val)
+
+            # Dirty ring (带 size 属性)
+            if kvm.get('dirty_ring') == 'on':
                 size = kvm.get('dirty_ring_size', '4096')
                 ET.SubElement(kvm_elem, 'dirty-ring', state='on', size=size)
 
+        # ========== Xen 特性 ==========
+        xen = features_config.get('xen', {})
+        xen_features_list = ['e820_host', 'passthrough']
+        has_xen = any(xen.get(f) == 'on' for f in xen_features_list)
+
+        if has_xen:
+            features = get_features_elem()
+            xen_elem = ET.SubElement(features, 'xen')
+
+            # e820_host
+            if xen.get('e820_host') == 'on':
+                ET.SubElement(xen_elem, 'e820_host', state='on')
+
+            # passthrough (带 mode 属性)
+            if xen.get('passthrough') == 'on':
+                passthrough_mode = xen.get('passthrough_mode')
+                if passthrough_mode and passthrough_mode != 'None':
+                    ET.SubElement(xen_elem, 'passthrough', state='on', mode=passthrough_mode)
+                else:
+                    ET.SubElement(xen_elem, 'passthrough', state='on')
+
     def _add_clock(self, config: dict) -> None:
-        """添加时钟配置."""
+        """添加时钟配置.
+
+        支持以下配置:
+        - offset: utc, localtime, timezone, variable, absolute
+        - timers: rtc, pit, tsc, hpet, kvmclock
+        """
         time_config = config.get('time_keeping', {})
         if not time_config:
             return
 
-        offset = time_config.get('offset', 'utc')
+        offset = time_config.get('offset')
+        if not offset:
+            # offset 为 None 时不生成 clock 元素
+            return
+
         clock_attrs = {'offset': offset}
 
         if offset == 'timezone' and time_config.get('timezone'):
             clock_attrs['timezone'] = time_config['timezone']
         elif offset == 'variable':
-            if time_config.get('adjustment'):
-                clock_attrs['adjustment'] = time_config['adjustment']
-            if time_config.get('basis'):
-                clock_attrs['basis'] = time_config['basis']
-        elif offset == 'absolute' and time_config.get('start'):
-            clock_attrs['start'] = time_config['start']
+            adjustment = time_config.get('adjustment')
+            if adjustment:
+                clock_attrs['adjustment'] = adjustment
+            basis = time_config.get('basis')
+            if basis:
+                clock_attrs['basis'] = basis
+        elif offset == 'absolute':
+            start = time_config.get('start')
+            if start:
+                clock_attrs['start'] = start
 
         clock = ET.SubElement(self.domain, 'clock', **clock_attrs)
 
         timers = time_config.get('timers', {})
-        if timers.get('rtc_tickpolicy'):
-            ET.SubElement(clock, 'timer', name='rtc', tickpolicy=timers['rtc_tickpolicy'])
-        if timers.get('pit_tickpolicy'):
-            ET.SubElement(clock, 'timer', name='pit', tickpolicy=timers['pit_tickpolicy'])
-        if timers.get('tsc_mode'):
-            ET.SubElement(clock, 'timer', name='tsc', mode=timers['tsc_mode'])
-        if timers.get('hpet_present') == 'yes':
+
+        # RTC timer
+        rtc = timers.get('rtc', {})
+        rtc_present = rtc.get('present')
+        rtc_tickpolicy = rtc.get('tickpolicy')
+        rtc_track = rtc.get('track')
+
+        if rtc_present == 'yes' or rtc_tickpolicy or rtc_track:
+            rtc_attrs = {'name': 'rtc'}
+            if rtc_tickpolicy:
+                rtc_attrs['tickpolicy'] = rtc_tickpolicy
+            if rtc_track:
+                rtc_attrs['track'] = rtc_track
+            if rtc_present == 'no':
+                rtc_attrs['present'] = 'no'
+
+            rtc_elem = ET.SubElement(clock, 'timer', **rtc_attrs)
+
+            # 添加 catchup 子元素 (仅当 tickpolicy=catchup 时)
+            if rtc_tickpolicy == 'catchup':
+                catchup_threshold = rtc.get('catchup_threshold')
+                catchup_slew = rtc.get('catchup_slew')
+                catchup_limit = rtc.get('catchup_limit')
+
+                if catchup_threshold or catchup_slew or catchup_limit:
+                    catchup_attrs = {}
+                    if catchup_threshold:
+                        catchup_attrs['threshold'] = catchup_threshold
+                    if catchup_slew:
+                        catchup_attrs['slew'] = catchup_slew
+                    if catchup_limit:
+                        catchup_attrs['limit'] = catchup_limit
+
+                    ET.SubElement(rtc_elem, 'catchup', **catchup_attrs)
+
+        # PIT timer
+        pit = timers.get('pit', {})
+        pit_present = pit.get('present')
+        pit_tickpolicy = pit.get('tickpolicy')
+
+        if pit_present == 'yes' or pit_tickpolicy:
+            pit_attrs = {'name': 'pit'}
+            if pit_tickpolicy:
+                pit_attrs['tickpolicy'] = pit_tickpolicy
+            if pit_present == 'no':
+                pit_attrs['present'] = 'no'
+
+            ET.SubElement(clock, 'timer', **pit_attrs)
+
+        # TSC timer
+        tsc = timers.get('tsc', {})
+        tsc_present = tsc.get('present')
+        tsc_mode = tsc.get('mode')
+        tsc_frequency = tsc.get('frequency')
+
+        if tsc_present == 'yes' or tsc_mode or tsc_frequency:
+            tsc_attrs = {'name': 'tsc'}
+            if tsc_mode:
+                tsc_attrs['mode'] = tsc_mode
+            if tsc_frequency:
+                tsc_attrs['frequency'] = tsc_frequency
+            if tsc_present == 'no':
+                tsc_attrs['present'] = 'no'
+
+            ET.SubElement(clock, 'timer', **tsc_attrs)
+
+        # HPET timer
+        hpet = timers.get('hpet', {})
+        hpet_present = hpet.get('present')
+
+        if hpet_present == 'yes':
             ET.SubElement(clock, 'timer', name='hpet', present='yes')
-        if timers.get('kvmclock_present') == 'yes':
+        elif hpet_present == 'no':
+            ET.SubElement(clock, 'timer', name='hpet', present='no')
+
+        # kvmclock timer
+        kvmclock = timers.get('kvmclock', {})
+        kvmclock_present = kvmclock.get('present')
+
+        if kvmclock_present == 'yes':
             ET.SubElement(clock, 'timer', name='kvmclock', present='yes')
+        elif kvmclock_present == 'no':
+            ET.SubElement(clock, 'timer', name='kvmclock', present='no')
 
     def _add_pm(self, config: dict) -> None:
-        """添加电源管理配置."""
+        """添加电源管理配置.
+
+        None 值表示不生成对应的 XML 元素。
+        """
         pm_config = config.get('power_management', {})
         if not pm_config:
             return
 
         pm = ET.SubElement(self.domain, 'pm')
 
-        suspend_mem = pm_config.get('suspend_to_mem', 'yes')
-        ET.SubElement(pm, 'suspend-to-mem', enabled=suspend_mem)
+        # 只有配置了值才生成 suspend-to-mem 元素
+        if 'suspend_to_mem' in pm_config:
+            suspend_mem = pm_config.get('suspend_to_mem', 'yes')
+            ET.SubElement(pm, 'suspend-to-mem', enabled=suspend_mem)
 
-        suspend_disk = pm_config.get('suspend_to_disk', 'yes')
-        ET.SubElement(pm, 'suspend-to-disk', enabled=suspend_disk)
+        # 只有配置了值才生成 suspend-to-disk 元素
+        if 'suspend_to_disk' in pm_config:
+            suspend_disk = pm_config.get('suspend_to_disk', 'yes')
+            ET.SubElement(pm, 'suspend-to-disk', enabled=suspend_disk)
 
     def _add_events(self, config: dict) -> None:
-        """添加事件配置."""
+        """添加事件配置.
+
+        None 值表示不生成对应的 XML 元素。
+        """
         events_config = config.get('events_configuration', {})
         if not events_config:
             return
 
-        on_poweroff = events_config.get('on_poweroff', 'destroy')
-        ET.SubElement(self.domain, 'on_poweroff').text = on_poweroff
+        on_poweroff = events_config.get('on_poweroff')
+        if on_poweroff and on_poweroff != 'None':
+            ET.SubElement(self.domain, 'on_poweroff').text = on_poweroff
 
-        on_reboot = events_config.get('on_reboot', 'restart')
-        ET.SubElement(self.domain, 'on_reboot').text = on_reboot
+        on_reboot = events_config.get('on_reboot')
+        if on_reboot and on_reboot != 'None':
+            ET.SubElement(self.domain, 'on_reboot').text = on_reboot
 
-        on_crash = events_config.get('on_crash', 'destroy')
-        ET.SubElement(self.domain, 'on_crash').text = on_crash
+        on_crash = events_config.get('on_crash')
+        if on_crash and on_crash != 'None':
+            ET.SubElement(self.domain, 'on_crash').text = on_crash
 
         on_lockfailure = events_config.get('on_lockfailure')
-        if on_lockfailure:
+        if on_lockfailure and on_lockfailure != 'None':
             ET.SubElement(self.domain, 'on_lockfailure').text = on_lockfailure
 
     def _add_devices(self, config: dict) -> None:
@@ -1119,7 +1374,29 @@ class LibvirtXMLGenerator:
     def _add_memory_backing(self, config: dict) -> None:
         """添加内存后端配置."""
         backing_config = config.get('memory_backing', {})
-        if not backing_config or not backing_config.get('hugepages'):
+        if not backing_config:
+            return
+
+        # 检查是否有任何非默认配置
+        has_config = (
+            backing_config.get('hugepages')
+            or backing_config.get('nosharepages')
+            or backing_config.get('locked')
+            or backing_config.get('discard')
+            or (
+                backing_config.get('source_type')
+                and backing_config.get('source_type') != 'anonymous'
+            )
+            or (
+                backing_config.get('access_mode') and backing_config.get('access_mode') != 'private'
+            )
+            or (
+                backing_config.get('allocation_mode')
+                and backing_config.get('allocation_mode') != 'ondemand'
+            )
+            or backing_config.get('allocation_threads')
+        )
+        if not has_config:
             return
 
         backing = ET.SubElement(self.domain, 'memoryBacking')
@@ -1146,11 +1423,11 @@ class LibvirtXMLGenerator:
             ET.SubElement(backing, 'source', type=source_type)
 
         access_mode = backing_config.get('access_mode')
-        if access_mode:
+        if access_mode and access_mode != 'private':
             ET.SubElement(backing, 'access', mode=access_mode)
 
         allocation_mode = backing_config.get('allocation_mode')
-        if allocation_mode:
+        if allocation_mode and allocation_mode != 'ondemand':
             alloc_attrs = {'mode': allocation_mode}
             threads = backing_config.get('allocation_threads')
             if threads:
@@ -1160,107 +1437,348 @@ class LibvirtXMLGenerator:
     def _add_memory_tuning(self, config: dict) -> None:
         """添加内存优化配置."""
         tuning_config = config.get('memory_tuning', {})
-        if not any(tuning_config.values()):
+        if not tuning_config:
+            return
+
+        # 检查是否有有效配置（排除 None 和空值）
+        has_valid_config = False
+        for key in ['hard_limit', 'soft_limit', 'swap_hard_limit', 'min_guarantee']:
+            item = tuning_config.get(key)
+            if isinstance(item, dict) and item.get('value') and item.get('value') != '':
+                has_valid_config = True
+                break
+
+        if not has_valid_config:
             return
 
         memtune = ET.SubElement(self.domain, 'memtune')
 
-        if tuning_config.get('hard_limit'):
-            ET.SubElement(memtune, 'hard_limit', unit='KiB').text = tuning_config['hard_limit']
-        if tuning_config.get('soft_limit'):
-            ET.SubElement(memtune, 'soft_limit', unit='KiB').text = tuning_config['soft_limit']
-        if tuning_config.get('swap_hard_limit'):
-            ET.SubElement(memtune, 'swap_hard_limit', unit='KiB').text = tuning_config[
-                'swap_hard_limit'
-            ]
-        if tuning_config.get('min_guarantee'):
-            ET.SubElement(memtune, 'min_guarantee', unit='KiB').text = tuning_config[
-                'min_guarantee'
-            ]
+        # hard_limit
+        hard_limit = tuning_config.get('hard_limit', {})
+        if (
+            isinstance(hard_limit, dict)
+            and hard_limit.get('value')
+            and hard_limit.get('value') != ''
+        ):
+            value = hard_limit['value']
+            unit = hard_limit.get('unit', 'KiB')
+            ET.SubElement(memtune, 'hard_limit', unit=unit).text = str(value)
+
+        # soft_limit
+        soft_limit = tuning_config.get('soft_limit', {})
+        if (
+            isinstance(soft_limit, dict)
+            and soft_limit.get('value')
+            and soft_limit.get('value') != ''
+        ):
+            value = soft_limit['value']
+            unit = soft_limit.get('unit', 'KiB')
+            ET.SubElement(memtune, 'soft_limit', unit=unit).text = str(value)
+
+        # swap_hard_limit
+        swap_hard_limit = tuning_config.get('swap_hard_limit', {})
+        if (
+            isinstance(swap_hard_limit, dict)
+            and swap_hard_limit.get('value')
+            and swap_hard_limit.get('value') != ''
+        ):
+            value = swap_hard_limit['value']
+            unit = swap_hard_limit.get('unit', 'KiB')
+            ET.SubElement(memtune, 'swap_hard_limit', unit=unit).text = str(value)
+
+        # min_guarantee
+        min_guarantee = tuning_config.get('min_guarantee', {})
+        if (
+            isinstance(min_guarantee, dict)
+            and min_guarantee.get('value')
+            and min_guarantee.get('value') != ''
+        ):
+            value = min_guarantee['value']
+            unit = min_guarantee.get('unit', 'KiB')
+            ET.SubElement(memtune, 'min_guarantee', unit=unit).text = str(value)
 
     def _add_cpu_tuning(self, config: dict) -> None:
-        """添加CPU优化配置."""
+        """添加 CPU 优化配置 (cputune).
+
+        支持以下配置:
+        - vcpupin: vCPU 亲和性绑定 (列表)
+        - emulatorpin: 模拟器线程亲和性
+        - iothreadpin: IOThread 亲和性 (列表)
+        - shares: CPU 份额
+        - period/quota: 每 vCPU 带宽控制
+        - global_period/global_quota: 全局带宽控制
+        - emulator_period/emulator_quota: 模拟器带宽控制
+        - iothread_period/iothread_quota: IOThread 带宽控制
+        - vcpusched/iothreadsched/emulatorsched: 调度器配置
+        - cachetune: 缓存分配 (resctrl)
+        - memorytune: 内存带宽分配 (resctrl)
+        """
         tuning_config = config.get('cpu_tuning', {})
-        if not any(tuning_config.values()):
+        if not tuning_config:
+            return
+
+        # 检查是否有任何有效配置
+        has_config = False
+        for key in [
+            'vcpupin',
+            'emulatorpin',
+            'iothreadpin',
+            'shares',
+            'period',
+            'quota',
+            'global_period',
+            'global_quota',
+            'emulator_period',
+            'emulator_quota',
+            'iothread_period',
+            'iothread_quota',
+            'vcpusched',
+            'iothreadsched',
+            'emulatorsched',
+            'cachetune',
+            'memorytune',
+        ]:
+            if key in tuning_config:
+                has_config = True
+                break
+
+        if not has_config:
             return
 
         cputune = ET.SubElement(self.domain, 'cputune')
 
-        if tuning_config.get('vcpupin'):
-            pins = tuning_config['vcpupin'].split(',')
-            for pin in pins:
-                if '=' in pin:
-                    vcpu, cpuset = pin.split('=')
-                    ET.SubElement(cputune, 'vcpupin', vcpu=vcpu.strip(), cpuset=cpuset.strip())
+        # ========== vcpupin (列表) ==========
+        vcpupins = tuning_config.get('vcpupin', [])
+        for pin in vcpupins:
+            if isinstance(pin, dict):
+                vcpu = pin.get('vcpu')
+                cpuset = pin.get('cpuset')
+                if vcpu is not None and cpuset:
+                    ET.SubElement(cputune, 'vcpupin', vcpu=str(vcpu), cpuset=cpuset)
 
-        if tuning_config.get('emulatorpin'):
-            ET.SubElement(cputune, 'emulatorpin', cpuset=tuning_config['emulatorpin'])
+        # ========== emulatorpin ==========
+        emulatorpin = tuning_config.get('emulatorpin')
+        if emulatorpin:
+            ET.SubElement(cputune, 'emulatorpin', cpuset=emulatorpin)
 
-        if tuning_config.get('shares'):
-            ET.SubElement(cputune, 'shares').text = tuning_config['shares']
-        if tuning_config.get('period'):
-            ET.SubElement(cputune, 'period').text = tuning_config['period']
-        if tuning_config.get('quota'):
-            ET.SubElement(cputune, 'quota').text = tuning_config['quota']
+        # ========== iothreadpin (列表) ==========
+        iothreadpins = tuning_config.get('iothreadpin', [])
+        for pin in iothreadpins:
+            if isinstance(pin, dict):
+                iothread = pin.get('iothread')
+                cpuset = pin.get('cpuset')
+                if iothread is not None and cpuset:
+                    ET.SubElement(cputune, 'iothreadpin', iothread=str(iothread), cpuset=cpuset)
 
-        if tuning_config.get('scheduler'):
-            sched_attrs = {'scheduler': tuning_config['scheduler']}
-            if tuning_config.get('priority'):
-                sched_attrs['priority'] = tuning_config['priority']
+        # ========== 带宽控制 ==========
+        shares = tuning_config.get('shares')
+        if shares is not None:
+            ET.SubElement(cputune, 'shares').text = str(shares)
+        period = tuning_config.get('period')
+        if period is not None:
+            ET.SubElement(cputune, 'period').text = str(period)
+        quota = tuning_config.get('quota')
+        if quota is not None:
+            ET.SubElement(cputune, 'quota').text = str(quota)
+
+        global_period = tuning_config.get('global_period')
+        if global_period is not None:
+            ET.SubElement(cputune, 'global_period').text = str(global_period)
+        global_quota = tuning_config.get('global_quota')
+        if global_quota is not None:
+            ET.SubElement(cputune, 'global_quota').text = str(global_quota)
+
+        emulator_period = tuning_config.get('emulator_period')
+        if emulator_period is not None:
+            ET.SubElement(cputune, 'emulator_period').text = str(emulator_period)
+        emulator_quota = tuning_config.get('emulator_quota')
+        if emulator_quota is not None:
+            ET.SubElement(cputune, 'emulator_quota').text = str(emulator_quota)
+
+        iothread_period = tuning_config.get('iothread_period')
+        if iothread_period is not None:
+            ET.SubElement(cputune, 'iothread_period').text = str(iothread_period)
+        iothread_quota = tuning_config.get('iothread_quota')
+        if iothread_quota is not None:
+            ET.SubElement(cputune, 'iothread_quota').text = str(iothread_quota)
+
+        # ========== 调度器配置 ==========
+        vcpusched = tuning_config.get('vcpusched')
+        if vcpusched and isinstance(vcpusched, dict):
+            sched_attrs = {'scheduler': vcpusched.get('scheduler', 'batch')}
+            if vcpusched.get('vcpus'):
+                sched_attrs['vcpus'] = vcpusched['vcpus']
+            priority = vcpusched.get('priority')
+            if priority is not None and vcpusched.get('scheduler') in ('fifo', 'rr'):
+                sched_attrs['priority'] = str(priority)
             ET.SubElement(cputune, 'vcpusched', **sched_attrs)
 
+        iothreadsched = tuning_config.get('iothreadsched')
+        if iothreadsched and isinstance(iothreadsched, dict):
+            sched_attrs = {'scheduler': iothreadsched.get('scheduler', 'batch')}
+            if iothreadsched.get('iothreads'):
+                sched_attrs['iothreads'] = iothreadsched['iothreads']
+            priority = iothreadsched.get('priority')
+            if priority is not None and iothreadsched.get('scheduler') in ('fifo', 'rr'):
+                sched_attrs['priority'] = str(priority)
+            ET.SubElement(cputune, 'iothreadsched', **sched_attrs)
+
+        emulatorsched = tuning_config.get('emulatorsched')
+        if emulatorsched and isinstance(emulatorsched, dict):
+            sched_attrs = {'scheduler': emulatorsched.get('scheduler', 'batch')}
+            priority = emulatorsched.get('priority')
+            if priority is not None and emulatorsched.get('scheduler') in ('fifo', 'rr'):
+                sched_attrs['priority'] = str(priority)
+            ET.SubElement(cputune, 'emulatorsched', **sched_attrs)
+
+        # ========== 缓存调优 (cachetune) ==========
+        cachetunes = tuning_config.get('cachetune', [])
+        if cachetunes and isinstance(cachetunes, list):
+            for ct in cachetunes:
+                if not isinstance(ct, dict):
+                    continue
+                vcpus = ct.get('vcpus')
+                if not vcpus:
+                    continue
+                cachetune_elem = ET.SubElement(cputune, 'cachetune', vcpus=vcpus)
+                cache = ct.get('cache')
+                if cache and isinstance(cache, dict):
+                    cache_attrs = {
+                        'level': str(cache.get('level', 3)),
+                        'type': cache.get('type', 'both'),
+                    }
+                    if cache.get('id') is not None:
+                        cache_attrs['id'] = str(cache['id'])
+                    if cache.get('size'):
+                        cache_attrs['size'] = str(cache['size'])
+                    if cache.get('unit'):
+                        cache_attrs['unit'] = cache['unit']
+                    ET.SubElement(cachetune_elem, 'cache', **cache_attrs)
+                monitor = ct.get('monitor')
+                if monitor and isinstance(monitor, dict):
+                    monitor_attrs = {
+                        'level': str(monitor.get('level', 3)),
+                        'vcpus': monitor.get('vcpus', vcpus),
+                    }
+                    ET.SubElement(cachetune_elem, 'monitor', **monitor_attrs)
+
+        # ========== 内存带宽调优 (memorytune) ==========
+        memorytunes = tuning_config.get('memorytune', [])
+        if memorytunes and isinstance(memorytunes, list):
+            for mt in memorytunes:
+                if not isinstance(mt, dict):
+                    continue
+                vcpus = mt.get('vcpus')
+                if not vcpus:
+                    continue
+                memorytune_elem = ET.SubElement(cputune, 'memorytune', vcpus=vcpus)
+                node = mt.get('node')
+                if node and isinstance(node, dict):
+                    node_attrs = {
+                        'id': str(node.get('id', 0)),
+                    }
+                    if node.get('bandwidth') is not None:
+                        node_attrs['bandwidth'] = str(node['bandwidth'])
+                    ET.SubElement(memorytune_elem, 'node', **node_attrs)
+
     def _add_numa_tuning(self, config: dict) -> None:
-        """添加NUMA优化配置."""
+        """添加 NUMA 优化配置."""
         numa_config = config.get('numa_node_tuning', {})
         if not numa_config:
             return
 
+        # 检查是否有有效配置
+        memory_mode = numa_config.get('memory_mode')
+        memory_nodeset = numa_config.get('memory_nodeset')
+        memory_placement = numa_config.get('memory_placement')
+        memnodes_list = numa_config.get('memnodes', [])
+
+        has_memory_config = (
+            (memory_mode and memory_mode != 'None')
+            or memory_nodeset
+            or (memory_placement and memory_placement != 'None')
+        )
+        has_memnodes = any(node.get('cellid') for node in memnodes_list)
+
+        if not has_memory_config and not has_memnodes:
+            return
+
         numatune = ET.SubElement(self.domain, 'numatune')
 
-        mode = numa_config.get('mode', 'strict')
-        nodeset = numa_config.get('nodeset')
-        placement = numa_config.get('placement')
+        # 添加 memory 元素
+        if has_memory_config:
+            memory_attrs = {}
+            if memory_mode and memory_mode != 'None':
+                memory_attrs['mode'] = memory_mode
+            if memory_nodeset:
+                memory_attrs['nodeset'] = memory_nodeset
+            if memory_placement and memory_placement != 'None':
+                memory_attrs['placement'] = memory_placement
+            ET.SubElement(numatune, 'memory', **memory_attrs)
 
-        attrs = {'mode': mode}
-        if nodeset:
-            attrs['nodeset'] = nodeset
-        if placement:
-            attrs['placement'] = placement
-        ET.SubElement(numatune, 'memory', **attrs)
+        # 添加 memnode 元素
+        for node in memnodes_list:
+            cellid = node.get('cellid')
+            if not cellid:
+                continue
 
-        cellid = numa_config.get('cellid')
-        cpus = numa_config.get('cpus')
-        memory = numa_config.get('memory')
+            node_mode = node.get('mode')
+            node_nodeset = node.get('nodeset')
 
-        if cellid and cpus and memory:
-            memnode = ET.SubElement(numatune, 'memnode', cellid=cellid, mode=mode)
-            if nodeset:
-                memnode.set('nodeset', nodeset)
+            memnode_attrs = {'cellid': str(cellid)}
+            if node_mode and node_mode != 'None':
+                memnode_attrs['mode'] = node_mode
+            if node_nodeset:
+                memnode_attrs['nodeset'] = node_nodeset
+
+            ET.SubElement(numatune, 'memnode', **memnode_attrs)
 
     def _add_block_io_tuning(self, config: dict) -> None:
-        """添加块IO优化配置."""
+        """添加块 IO 优化配置."""
         io_config = config.get('block_io_tuning', {})
-        if not any(io_config.values()):
+        if not io_config:
+            return
+
+        # 检查是否有有效配置
+        has_weight = io_config.get('weight')
+        has_devices = io_config.get('devices', [])
+
+        if not has_weight and not has_devices:
             return
 
         blkiotune = ET.SubElement(self.domain, 'blkiotune')
 
-        if io_config.get('weight'):
-            ET.SubElement(blkiotune, 'weight').text = io_config['weight']
+        # 全局权重
+        if has_weight:
+            ET.SubElement(blkiotune, 'weight').text = str(has_weight)
 
-        if io_config.get('device_path') and io_config.get('device_weight'):
-            device = ET.SubElement(blkiotune, 'device')
-            ET.SubElement(device, 'path').text = io_config['device_path']
-            ET.SubElement(device, 'weight').text = io_config['device_weight']
+        # 支持多个设备条目
+        for device in has_devices:
+            if not device.get('path'):
+                continue
 
-            if io_config.get('read_bytes_sec'):
-                ET.SubElement(device, 'read_bytes_sec').text = io_config['read_bytes_sec']
-            if io_config.get('write_bytes_sec'):
-                ET.SubElement(device, 'write_bytes_sec').text = io_config['write_bytes_sec']
-            if io_config.get('read_iops_sec'):
-                ET.SubElement(device, 'read_iops_sec').text = io_config['read_iops_sec']
-            if io_config.get('write_iops_sec'):
-                ET.SubElement(device, 'write_iops_sec').text = io_config['write_iops_sec']
+            device_elem = ET.SubElement(blkiotune, 'device')
+            ET.SubElement(device_elem, 'path').text = device['path']
+
+            # 设备权重
+            if device.get('weight'):
+                ET.SubElement(device_elem, 'weight').text = str(device['weight'])
+
+            # 读吞吐量
+            if device.get('read_bytes_sec'):
+                ET.SubElement(device_elem, 'read_bytes_sec').text = str(device['read_bytes_sec'])
+
+            # 写吞吐量
+            if device.get('write_bytes_sec'):
+                ET.SubElement(device_elem, 'write_bytes_sec').text = str(device['write_bytes_sec'])
+
+            # 读 IOPS
+            if device.get('read_iops_sec'):
+                ET.SubElement(device_elem, 'read_iops_sec').text = str(device['read_iops_sec'])
+
+            # 写 IOPS
+            if device.get('write_iops_sec'):
+                ET.SubElement(device_elem, 'write_iops_sec').text = str(device['write_iops_sec'])
 
     def _add_iothreads(self, config: dict) -> None:
         """添加IO线程配置."""
@@ -1299,25 +1817,55 @@ class LibvirtXMLGenerator:
             ET.SubElement(resource, 'fibrechannel', appid=fc_config['appid'])
 
     def _add_security(self, config: dict) -> None:
-        """添加安全配置."""
-        security_config = config.get('security_label', {})
-        if not security_config or security_config.get('type') == 'none':
+        """添加安全配置.
+
+        参考：https://www.libvirt.org/formatdomain.html#security-label
+
+        支持三种类型:
+        - none: <seclabel type='none'/>
+        - dynamic: libvirt 自动生成标签，relabel 固定为 yes
+        - static: 手动指定标签，relabel 默认为 no
+        """
+        security_config = config.get('security_label') or config.get('seclabel', {})
+        if not security_config:
             return
 
-        attrs = {'type': security_config.get('type', 'dynamic')}
+        sec_type = security_config.get('type', 'dynamic')
+
+        # none 类型：生成 <seclabel type='none'/>
+        if sec_type == 'none':
+            ET.SubElement(self.domain, 'seclabel', type='none')
+            return
+        attrs = {'type': sec_type}
         if security_config.get('model'):
             attrs['model'] = security_config['model']
-        if security_config.get('relabel'):
-            attrs['relabel'] = 'yes'
+        # relabel 属性：dynamic 类型默认为 yes，static 类型默认为 no
+        relabel = security_config.get('relabel')
+        if sec_type == 'dynamic':
+            # dynamic 类型 relabel 默认为 yes (复选框返回 0/1)
+            if relabel == 0 or relabel is False:
+                attrs['relabel'] = 'no'
+            else:
+                attrs['relabel'] = 'yes'
+        elif sec_type == 'static':
+            # static 类型 relabel 默认为 no (复选框返回 0/1)
+            if relabel == 1 or relabel is True:
+                attrs['relabel'] = 'yes'
+            else:
+                attrs['relabel'] = 'no'
 
         seclabel = ET.SubElement(self.domain, 'seclabel', **attrs)
 
+        # label: static 类型必需，dynamic 类型可选
         if security_config.get('label'):
             ET.SubElement(seclabel, 'label').text = security_config['label']
+        # imagelabel: 输出only 元素，但也可以指定
         if security_config.get('imagelabel'):
             ET.SubElement(seclabel, 'imagelabel').text = security_config['imagelabel']
-        if security_config.get('baselabel_value'):
-            ET.SubElement(seclabel, 'baselabel').text = security_config['baselabel_value']
+        # baselabel: dynamic 类型的基础标签
+        baselabel_value = security_config.get('baselabel') or security_config.get('baselabel_value')
+        if baselabel_value:
+            ET.SubElement(seclabel, 'baselabel').text = baselabel_value
 
         key_wrap_config = config.get('key_wrap', {})
         if key_wrap_config and key_wrap_config.get('key_name'):
@@ -1346,26 +1894,244 @@ class LibvirtXMLGenerator:
                 ET.SubElement(key, 'cipher', **cipher_attrs)
 
     def _add_launch_security(self, config: dict) -> None:
-        """添加启动安全配置."""
+        """添加启动安全配置.
+
+        支持 AMD SEV/SEV-SNP, Intel TDX, IBM s390-pv 四种类型。
+        参考：https://www.libvirt.org/formatdomain.html#launch-security
+        """
         launch_config = config.get('launch_security', {})
         if not launch_config:
             return
 
-        attrs = {'type': launch_config.get('type', 'sev')}
+        sec_type = launch_config.get('type', 'sev')
+        attrs = {'type': sec_type}
 
-        if launch_config.get('policy'):
-            attrs['policy'] = launch_config['policy']
-        if launch_config.get('cbitpos') and launch_config.get('cbitpos_value'):
-            attrs['cbitpos'] = launch_config['cbitpos_value']
-        if launch_config.get('reduced_phys_bits') and launch_config.get('reduced_phys_bits_value'):
-            attrs['reducedPhysBits'] = launch_config['reduced_phys_bits_value']
+        # ========== 仅作为属性的配置 ==========
+        # 内核哈希 (仅 SEV/SEV-SNP 直接内核引导时有效) - 这是属性
+        if launch_config.get('kernel_hashes'):
+            attrs['kernelHashes'] = 'yes'
 
+        # ========== 类型特有属性 ==========
+        # SEV-SNP 特有属性
+        if sec_type == 'sev-snp':
+            if launch_config.get('author_key'):
+                attrs['authorKey'] = 'yes'
+            if launch_config.get('vcek') is False:
+                attrs['vcek'] = 'no'
+
+        # 创建 launchSecurity 元素
         launch_security = ET.SubElement(self.domain, 'launchSecurity', **attrs)
 
-        if launch_config.get('dh_cert'):
-            ET.SubElement(launch_security, 'dhCert').text = launch_config['dh_cert']
-        if launch_config.get('session'):
-            ET.SubElement(launch_security, 'session').text = launch_config['session']
+        # ========== 通用子元素 (SEV/SEV-SNP/TDX) ==========
+        # policy - Guest 策略 (十六进制字符串)
+        policy = launch_config.get('policy')
+        if policy:
+            ET.SubElement(launch_security, 'policy').text = policy
+
+        # C-bit 位置 (加密位在页表条目中的位置)
+        # 支持两种字段名：cbitpos_enabled/cbitpos_value (新) 或 cbitpos (旧)
+        cbitpos_enabled = launch_config.get('cbitpos_enabled')
+        cbitpos_value = launch_config.get('cbitpos_value')
+        # 兼容旧格式
+        if not cbitpos_enabled and 'cbitpos' in launch_config:
+            cbitpos_val = launch_config.get('cbitpos')
+            if cbitpos_val is not None and cbitpos_val != '':
+                cbitpos_enabled = True
+                cbitpos_value = str(cbitpos_val)
+
+        if cbitpos_enabled and cbitpos_value:
+            ET.SubElement(launch_security, 'cbitpos').text = cbitpos_value
+
+        # 物理地址位减少量
+        # 支持两种字段名：reduced_phys_bits_enabled/reduced_phys_bits_value (新) 或 reduced_phys_bits (旧)
+        reduced_phys_bits_enabled = launch_config.get('reduced_phys_bits_enabled')
+        reduced_phys_bits_value = launch_config.get('reduced_phys_bits_value')
+        # 兼容旧格式
+        if not reduced_phys_bits_enabled and 'reduced_phys_bits' in launch_config:
+            rpb_val = launch_config.get('reduced_phys_bits')
+            if rpb_val is not None and rpb_val != '':
+                reduced_phys_bits_enabled = True
+                reduced_phys_bits_value = str(rpb_val)
+
+        if reduced_phys_bits_enabled and reduced_phys_bits_value:
+            ET.SubElement(launch_security, 'reducedPhysBits').text = reduced_phys_bits_value
+
+        # ========== SEV 特有子元素 ==========
+        if sec_type == 'sev':
+            # dhCert - Diffie-Hellman 密钥 (Base64 编码)
+            dh_cert = launch_config.get('dh_cert')
+            if dh_cert:
+                ET.SubElement(launch_security, 'dhCert').text = dh_cert
+
+            # session - 会话数据 (Base64 编码)
+            session = launch_config.get('session')
+            if session:
+                ET.SubElement(launch_security, 'session').text = session
+
+        # ========== SEV-SNP 特有子元素 ==========
+        if sec_type == 'sev-snp':
+            # guestVisibleWorkarounds - 16 字节 Base64 编码
+            guest_visible_workarounds = launch_config.get('guest_visible_workarounds')
+            if guest_visible_workarounds:
+                ET.SubElement(
+                    launch_security, 'guestVisibleWorkarounds'
+                ).text = guest_visible_workarounds
+
+            # idBlock - 96 字节 Base64 编码
+            id_block = launch_config.get('id_block')
+            if id_block:
+                ET.SubElement(launch_security, 'idBlock').text = id_block
+
+            # idAuth - 4096 字节 Base64 编码
+            id_auth = launch_config.get('id_auth')
+            if id_auth:
+                ET.SubElement(launch_security, 'idAuth').text = id_auth
+
+            # hostData - 32 字节 Base64 编码
+            host_data = launch_config.get('host_data')
+            if host_data:
+                ET.SubElement(launch_security, 'hostData').text = host_data
+
+        # ========== Intel TDX 特有子元素 ==========
+        if sec_type == 'tdx':
+            # mrConfigId - SHA384 Base64 摘要
+            mr_config_id = launch_config.get('mr_config_id')
+            if mr_config_id:
+                ET.SubElement(launch_security, 'mrConfigId').text = mr_config_id
+
+            # mrOwner - SHA384 Base64 摘要
+            mr_owner = launch_config.get('mr_owner')
+            if mr_owner:
+                ET.SubElement(launch_security, 'mrOwner').text = mr_owner
+
+            # mrOwnerConfig - SHA384 Base64 摘要
+            mr_owner_config = launch_config.get('mr_owner_config')
+            if mr_owner_config:
+                ET.SubElement(launch_security, 'mrOwnerConfig').text = mr_owner_config
+
+            # quoteGenerationService - QGS 守护进程套接字路径
+            quote_generation_service = launch_config.get('quote_generation_service')
+            if quote_generation_service:
+                qgs_elem = ET.SubElement(launch_security, 'quoteGenerationService')
+                qgs_elem.set('path', quote_generation_service)
+
+        # ========== s390-pv ==========
+        # IBM s390-pv 不需要额外的子元素，只需要 type='s390-pv'
+
+    def _add_key_wrap(self, config: dict) -> None:
+        """添加密钥包装配置 (S390 Platform).
+
+        参考：https://www.libvirt.org/formatdomain.html#key-wrap
+        """
+        key_wrap_config = config.get('key_wrap', {})
+        if not key_wrap_config:
+            return
+
+        cipher_list = key_wrap_config.get('cipher', [])
+        if not cipher_list:
+            return
+
+        # 创建 keywrap 元素
+        keywrap = ET.SubElement(self.domain, 'keywrap')
+
+        # 添加 cipher 子元素
+        for cipher in cipher_list:
+            if isinstance(cipher, dict):
+                cipher_attrs = {
+                    'name': cipher.get('name', 'aes'),
+                    'state': cipher.get('state', 'on'),
+                }
+                ET.SubElement(keywrap, 'cipher', **cipher_attrs)
+
+    def _add_perf(self, config: dict) -> None:
+        """添加性能监控配置.
+
+        参考：https://www.libvirt.org/formatdomain.html#perf
+        """
+        perf_config = config.get('performance_monitoring', {})
+        if not perf_config or not perf_config.get('enabled'):
+            return
+
+        events = perf_config.get('events', {})
+        if not events:
+            return
+
+        # 创建 perf 元素
+        perf = ET.SubElement(self.domain, 'perf')
+
+        # 添加启用的事件 (events 字典的值现在是 'yes' 或 'no')
+        for event_name, enabled_value in events.items():
+            ET.SubElement(perf, 'event', name=event_name, enabled=enabled_value)
+
+    def _add_throttlegroups(self, config: dict) -> None:
+        """添加节流组配置.
+
+        参考：https://www.libvirt.org/formatdomain.html#throttle-groups
+        """
+        throttlegroups_config = config.get('throttlegroups', {})
+        if not throttlegroups_config:
+            return
+
+        # 支持 throttlegroups 和 throttle_groups 两种键名
+        groups_list = throttlegroups_config.get('throttlegroups', [])
+        if not groups_list:
+            groups_list = throttlegroups_config.get('throttle_groups', [])
+        if not groups_list:
+            return
+
+        # 创建 throttlegroups 元素
+        throttlegroups_elem = ET.SubElement(self.domain, 'throttlegroups')
+
+        # 添加每个节流组
+        for group in groups_list:
+            if not isinstance(group, dict):
+                continue
+
+            group_name = group.get('name')
+            if not group_name:
+                continue
+
+            group_elem = ET.SubElement(throttlegroups_elem, 'throttlegroup')
+
+            # 组名称
+            name_elem = ET.SubElement(group_elem, 'group_name')
+            name_elem.text = group_name
+
+            # 总字节/秒
+            total_bytes = group.get('total_bytes_sec')
+            if total_bytes is not None and total_bytes != '':
+                tb_elem = ET.SubElement(group_elem, 'total_bytes_sec')
+                tb_elem.text = str(total_bytes)
+
+            # 读字节/秒
+            read_bytes = group.get('read_bytes_sec')
+            if read_bytes is not None and read_bytes != '':
+                rb_elem = ET.SubElement(group_elem, 'read_bytes_sec')
+                rb_elem.text = str(read_bytes)
+
+            # 写字节/秒
+            write_bytes = group.get('write_bytes_sec')
+            if write_bytes is not None and write_bytes != '':
+                wb_elem = ET.SubElement(group_elem, 'write_bytes_sec')
+                wb_elem.text = str(write_bytes)
+
+            # 总 IOPS
+            total_iops = group.get('total_iops_sec')
+            if total_iops is not None and total_iops != '':
+                ti_elem = ET.SubElement(group_elem, 'total_iops_sec')
+                ti_elem.text = str(total_iops)
+
+            # 读 IOPS
+            read_iops = group.get('read_iops_sec')
+            if read_iops is not None and read_iops != '':
+                ri_elem = ET.SubElement(group_elem, 'read_iops_sec')
+                ri_elem.text = str(read_iops)
+
+            # 写 IOPS
+            write_iops = group.get('write_iops_sec')
+            if write_iops is not None and write_iops != '':
+                wi_elem = ET.SubElement(group_elem, 'write_iops_sec')
+                wi_elem.text = str(write_iops)
 
     def _pretty_print(self) -> str:
         """格式化输出XML."""

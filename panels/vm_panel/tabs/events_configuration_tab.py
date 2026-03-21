@@ -17,48 +17,54 @@ class EventsConfigurationTab(BaseConfigTab):
     def _init_ui(self) -> None:
         """初始化界面."""
         self.grid_columnconfigure(0, weight=1)
-        self.grid_columnconfigure(1, weight=1)
 
         left_frame = ctk.CTkFrame(self, fg_color=BG_COLOR_CONTENT, corner_radius=6)
         left_frame.grid(row=0, column=0, sticky='nsew', padx=5, pady=5)
-        left_frame.grid_columnconfigure(1, weight=1)
 
-        ctk.CTkLabel(
-            left_frame, text='生命周期事件', font=CTK_FONT_BOLD, text_color='#64b5f6'
-        ).grid(row=0, column=0, columnspan=2, padx=10, pady=5, sticky='w')
+        ctk.CTkLabel(left_frame, text='事件配置', font=CTK_FONT_BOLD, text_color='#64b5f6').pack(
+            anchor='w', padx=10, pady=5
+        )
 
-        ctk.CTkLabel(left_frame, text='关机时:', font=CTK_FONT_MAIN, width=100, anchor='w').grid(
-            row=1, column=0, padx=10, pady=5, sticky='w'
+        # 第一行：关机时、重启时、崩溃时、锁失败时（使用 pack 左对齐）
+        events_frame = ctk.CTkFrame(left_frame, fg_color='transparent')
+        events_frame.pack(anchor='w', padx=10, pady=5)
+
+        # 关机时
+        ctk.CTkLabel(events_frame, text='关机时:', font=CTK_FONT_MAIN, width=60, anchor='w').pack(
+            side='left', padx=(0, 5)
         )
         self.on_poweroff = ctk.CTkOptionMenu(
-            left_frame,
-            values=['destroy', 'restart', 'preserve', 'rename-restart'],
-            width=140,
+            events_frame,
+            values=['None', 'destroy', 'restart', 'preserve', 'rename-restart'],
+            width=100,
             font=CTK_FONT_SMALL,
+            command=self._on_poweroff_changed,
         )
-        self.on_poweroff.set('destroy')
-        self.on_poweroff.grid(row=1, column=1, padx=5, pady=5, sticky='w')
-        self.on_poweroff.configure(command=self._trigger_change)
+        self.on_poweroff.set('None')
+        self.on_poweroff.pack(side='left', padx=(0, 15))
 
-        ctk.CTkLabel(left_frame, text='重启时:', font=CTK_FONT_MAIN, width=100, anchor='w').grid(
-            row=2, column=0, padx=10, pady=5, sticky='w'
+        # 重启时
+        ctk.CTkLabel(events_frame, text='重启时:', font=CTK_FONT_MAIN, width=60, anchor='w').pack(
+            side='left', padx=(0, 5)
         )
         self.on_reboot = ctk.CTkOptionMenu(
-            left_frame,
-            values=['destroy', 'restart', 'preserve', 'rename-restart'],
-            width=140,
+            events_frame,
+            values=['None', 'destroy', 'restart', 'preserve', 'rename-restart'],
+            width=100,
             font=CTK_FONT_SMALL,
+            command=self._on_reboot_changed,
         )
-        self.on_reboot.set('restart')
-        self.on_reboot.grid(row=2, column=1, padx=5, pady=5, sticky='w')
-        self.on_reboot.configure(command=self._trigger_change)
+        self.on_reboot.set('None')
+        self.on_reboot.pack(side='left', padx=(0, 15))
 
-        ctk.CTkLabel(left_frame, text='崩溃时:', font=CTK_FONT_MAIN, width=100, anchor='w').grid(
-            row=3, column=0, padx=10, pady=5, sticky='w'
+        # 崩溃时
+        ctk.CTkLabel(events_frame, text='崩溃时:', font=CTK_FONT_MAIN, width=60, anchor='w').pack(
+            side='left', padx=(0, 5)
         )
         self.on_crash = ctk.CTkOptionMenu(
-            left_frame,
+            events_frame,
             values=[
+                'None',
                 'destroy',
                 'restart',
                 'preserve',
@@ -66,46 +72,69 @@ class EventsConfigurationTab(BaseConfigTab):
                 'coredump-destroy',
                 'coredump-restart',
             ],
-            width=140,
-            font=CTK_FONT_SMALL,
-        )
-        self.on_crash.set('destroy')
-        self.on_crash.grid(row=3, column=1, padx=5, pady=5, sticky='w')
-        self.on_crash.configure(command=self._trigger_change)
-
-        right_frame = ctk.CTkFrame(self, fg_color=BG_COLOR_CONTENT, corner_radius=6)
-        right_frame.grid(row=0, column=1, sticky='nsew', padx=5, pady=5)
-        right_frame.grid_columnconfigure(1, weight=1)
-
-        ctk.CTkLabel(right_frame, text='锁失败事件', font=CTK_FONT_BOLD, text_color='#ff9800').grid(
-            row=0, column=0, columnspan=2, padx=10, pady=5, sticky='w'
-        )
-
-        ctk.CTkLabel(right_frame, text='锁失败时:', font=CTK_FONT_MAIN, width=100, anchor='w').grid(
-            row=1, column=0, padx=10, pady=5, sticky='w'
-        )
-        self.on_lockfailure = ctk.CTkOptionMenu(
-            right_frame,
-            values=['poweroff', 'restart', 'pause', 'ignore'],
             width=100,
             font=CTK_FONT_SMALL,
         )
-        self.on_lockfailure.set('poweroff')
-        self.on_lockfailure.grid(row=1, column=1, padx=5, pady=5, sticky='w')
+        self.on_crash.set('None')
+        self.on_crash.pack(side='left', padx=(0, 15))
+        self.on_crash.configure(command=self._trigger_change)
+
+        # 锁失败时
+        ctk.CTkLabel(events_frame, text='锁失败时:', font=CTK_FONT_MAIN, width=60, anchor='w').pack(
+            side='left', padx=(0, 5)
+        )
+        self.on_lockfailure = ctk.CTkOptionMenu(
+            events_frame,
+            values=['None', 'poweroff', 'restart', 'pause', 'ignore'],
+            width=100,
+            font=CTK_FONT_SMALL,
+        )
+        self.on_lockfailure.set('None')
+        self.on_lockfailure.pack(side='left')
         self.on_lockfailure.configure(command=self._trigger_change)
 
+        # 说明文本区域
         info_label = ctk.CTkLabel(
-            right_frame,
-            text='说明:\n'
-            'destroy: 终止并释放资源\n'
-            'restart: 重启虚拟机\n'
-            'preserve: 保留资源供分析\n'
-            'coredump: 生成核心转储',
+            left_frame,
+            text='动作说明:\n'
+            '• destroy: 终止并释放所有资源  • restart: 终止后以相同配置重启\t'
+            '• preserve: 终止并保留资源供分析 \t• rename-restart: 终止后以新名称重启 (仅 libxl)\n'
+            '• coredump-destroy: 生成核心转储后终止 (since 0.8.4)\t'
+            '• coredump-restart: 生成核心转储后重启 (since 0.8.4)\n\n'
+            '锁失败动作 (on_lockfailure, since 1.0.0):\n'
+            '• poweroff: 强制关闭电源  \t• restart: 重启以重新获取锁\t'
+            '• pause: 暂停等待手动恢复  \t• ignore: 忽略并继续运行\n\n'
+            '注意:\n'
+            '• 并非所有管理程序都支持所有事件和动作\n'
+            '• QEMU/KVM/HVF: on_poweroff=restart 与 on_reboot=destroy 互斥\n'
+            '• 可通过 virDomainSetLifecycleAction API 配置 (since 3.9.0)',
             font=CTK_FONT_SMALL,
             text_color='#888888',
             justify='left',
         )
-        info_label.grid(row=2, column=0, columnspan=2, padx=10, pady=10, sticky='w')
+        info_label.pack(anchor='w', padx=10, pady=5)
+
+    def _on_poweroff_changed(self, value: str) -> None:
+        """关机时选项变化回调，处理互斥关系.
+
+        Args:
+            value: 新选择的值
+        """
+        if value == 'restart':
+            if self.on_reboot.get() == 'destroy':
+                self.on_reboot.set('None')
+        self._trigger_change(value)
+
+    def _on_reboot_changed(self, value: str) -> None:
+        """重启时选项变化回调，处理互斥关系.
+
+        Args:
+            value: 新选择的值
+        """
+        if value == 'destroy':
+            if self.on_poweroff.get() == 'restart':
+                self.on_poweroff.set('None')
+        self._trigger_change(value)
 
     def get_config(self) -> dict:
         """获取配置数据."""
@@ -117,5 +146,26 @@ class EventsConfigurationTab(BaseConfigTab):
         }
 
     def to_xml(self) -> dict:
-        """生成XML配置字典."""
-        return {'events_configuration': self.get_config()}
+        """生成 XML 配置字典.
+
+        None 选项表示不生成对应的 XML 元素。
+        """
+        config = {}
+
+        on_poweroff = self.on_poweroff.get()
+        if on_poweroff and on_poweroff != 'None':
+            config['on_poweroff'] = on_poweroff
+
+        on_reboot = self.on_reboot.get()
+        if on_reboot and on_reboot != 'None':
+            config['on_reboot'] = on_reboot
+
+        on_crash = self.on_crash.get()
+        if on_crash and on_crash != 'None':
+            config['on_crash'] = on_crash
+
+        on_lockfailure = self.on_lockfailure.get()
+        if on_lockfailure and on_lockfailure != 'None':
+            config['on_lockfailure'] = on_lockfailure
+
+        return {'events_configuration': config}

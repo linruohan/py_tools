@@ -486,46 +486,47 @@ class CPUModelTopologyTab(StandardConfigTab):
             )
 
     def get_config(self) -> dict:
-        """获取配置数据，过滤掉值为None的选项."""
-        model_config = {}
+        """获取配置数据，过滤掉值为 None 的选项."""
+        result = {}
 
-        # 处理model字段，包含name、fallback、vendor、vendor_id
+        # 处理 model 字段，包含 name、fallback、vendor、vendor_id
         model_name = self.cpu_model.get().strip()
+        model_dict = {}
         if model_name:
-            model_dict = {'name': model_name}
+            model_dict['name'] = model_name
             fallback_value = self.model_fallback.get()
             # 只有用户明确选择了 forbid 时才添加 fallback（默认 allow 不输出）
             if fallback_value and fallback_value == 'forbid':
                 model_dict['fallback'] = fallback_value
-            vendor_value = self.cpu_vendor.get().strip()
-            if vendor_value:
-                model_dict['vendor'] = vendor_value
-            vendor_id_value = self.vendor_id.get().strip()
-            if vendor_id_value:
-                model_dict['vendor_id'] = vendor_id_value
-            model_config['model'] = model_dict
+        # vendor 和 vendor_id 可以独立于 model_name 添加
+        vendor_value = self.cpu_vendor.get().strip()
+        if vendor_value:
+            model_dict['vendor'] = vendor_value
+        vendor_id_value = self.vendor_id.get().strip()
+        if vendor_id_value:
+            model_dict['vendor_id'] = vendor_id_value
 
-        # 只添加非None值的mode、match、check、migratable
+        # mode/match/check/migratable/deprecated_features 放在顶层
         mode_value = self.cpu_mode.get()
         if mode_value != 'None':
-            model_config['mode'] = mode_value
+            result['mode'] = mode_value
 
         match_value = self.cpu_match.get()
         if match_value != 'None':
-            model_config['match'] = match_value
+            result['match'] = match_value
 
         check_value = self.cpu_check.get()
         if check_value != 'None':
-            model_config['check'] = check_value
+            result['check'] = check_value
 
         migratable_value = self.cpu_migratable.get()
         if migratable_value != 'None':
-            model_config['migratable'] = migratable_value
+            result['migratable'] = migratable_value
 
         deprecated_features_value = self.deprecated_features.get()
         # deprecated_features 默认值为 'on'，只有用户明确选择了'off'时才添加
         if deprecated_features_value == 'off':
-            model_config['deprecated_features'] = 'off'
+            result['deprecated_features'] = 'off'
 
         # 构建 topology，只有填写了至少一个字段的值才添加
         topology_data = {}
@@ -572,8 +573,9 @@ class CPUModelTopologyTab(StandardConfigTab):
         if physaddr_limit:
             maxphysaddr_data['limit'] = physaddr_limit
 
-        # 只返回有实际值的配置
-        result = {'model': model_config}
+        # 添加 model 字典（如果有内容）
+        if model_dict:
+            result['model'] = model_dict
         if topology_data:
             result['topology'] = topology_data
         if feature_list:
