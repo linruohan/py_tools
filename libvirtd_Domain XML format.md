@@ -3,10 +3,13 @@
 本节介绍了用于表示域的 XML 格式，该格式会根据所运行的域类型以及启动这些域所使用的选项而有所变化。有关特定于虚拟机管理程序的详细信息，请参阅[驱动程序文档](https://www.libvirt.org/drivers.html)。
 
 ## 1 domain: **元素与属性概述**
+
 所有虚拟机所需的基础元素名为“域”。它有两个属性，其中“类型”指定了用于运行该“域”的虚拟机管理程序。允许的值取决于具体的驱动程序，但包括“xen”、“kvm”、“hvf”（自 8.1.0 版本及 QEMU 2.12 版本起）、“qemu”和“lxc”。第二个属性是“id”，它是一个用于运行中的客户机机器的唯一整数标识符。未激活的机器没有“id”值。
+
 ```xml
 <domain type='kvm' id='1'></domain>
 ```
+
 ## 2 General metadata
 
 ```xml
@@ -21,9 +24,13 @@
     <app2:bar xmlns:app2="http://app1.org/app2/">..</app2:bar>
   </metadata>
 ```
+
 ### 2.1 name
+
 The content of the name element provides a short name for the virtual machine. This name should consist only of alphanumeric characters and is required to be unique within the scope of a single host. It is often used to form the filename for storing the persistent configuration file. Since 0.0.1
+
 ### 2.2 uuid
+
 The content of the uuid element provides a globally unique identifier for the virtual machine. The format must be RFC 4122 compliant, eg 3e3fce45-4f53-4fa7-bb32-11f34168b82b. If omitted when defining/creating a new machine, a random UUID is generated. Since 0.0.1
 
 Since 0.8.7, it is also possible to provide the UUID via a [SMBIOS System Information](https://www.libvirt.org/formatdomain.html#smbios-system-information) specification.
@@ -60,9 +67,11 @@ The metadata node can be used by applications to store custom metadata in the fo
 ## 3 Operating system booting
 
 有多种启动虚拟机的方法，每种方法都有其自身的优点和缺点。
+
 ### 3.1 Guest firmware
 
 Booting via a guest firmware is available for hypervisors supporting full virtualization. In this case the firmware has a boot order priority (floppy, harddisk, cdrom, network) determining where to obtain/find the boot image.
+
 ```xml
 <!-- Xen with fullvirt loader -->
 <os>
@@ -71,7 +80,6 @@ Booting via a guest firmware is available for hypervisors supporting full virtua
   <boot dev='hd'/>
 </os>
 ```
-
 
 ```xml
 <!-- QEMU with default firmware, serial console and SMBIOS -->
@@ -84,7 +92,6 @@ Booting via a guest firmware is available for hypervisors supporting full virtua
 </os>
 ```
 
-
 ```xml
 <!-- QEMU with UEFI manual firmware and secure boot -->
 <os>
@@ -96,6 +103,7 @@ Booting via a guest firmware is available for hypervisors supporting full virtua
 ```
 
 <!-- QEMU with UEFI manual firmware, secure boot and with NVRAM type 'file'-->
+
 ```
 <os>
   <type>hvm</type>
@@ -108,6 +116,7 @@ Booting via a guest firmware is available for hypervisors supporting full virtua
 ```
 
 <!-- QEMU with UEFI manual firmware, secure boot and with network backed NVRAM'-->
+
 ```
 <os>
   <type>hvm</type>
@@ -125,6 +134,7 @@ Booting via a guest firmware is available for hypervisors supporting full virtua
 ```
 
 <!-- QEMU with automatic UEFI firmware and secure boot -->
+
 ```
 <os firmware='efi'>
   <type>hvm</type>
@@ -134,6 +144,7 @@ Booting via a guest firmware is available for hypervisors supporting full virtua
 ```
 
 <!-- QEMU with automatic UEFI stateless firmware for AMD SEV -->
+
 ```
 <os firmware='efi'>
   <type>hvm</type>
@@ -141,14 +152,15 @@ Booting via a guest firmware is available for hypervisors supporting full virtua
   <boot dev='hd'/>
 </os>
 ```
+
 #### 3.1.1 firmware 固件
 
 该固件属性使管理应用程序能够自动填充 <加载器loader/> 和 <非易失性存储器nvram/> 或 <变量存储器varstore/> 元素，并可能启用某些由选定固件所需的特性。可接受的值为“bios”和“efi”。选择过程会扫描指定位置中描述已安装固件映像的文件，并使用满足域要求的最具体的一个。
 按优先顺序排列的存放位置（从通用到最具体的一个）为：
+
 - /usr/share/qemu/firmware
 - /etc/qemu/firmware
 - $XDG_CONFIG_HOME/qemu/firmware
-    
 
 For more information refer to firmware metadata specification as described in docs/interop/firmware.json in QEMU repository. Regular users do not need to bother. Since 5.2.0 (QEMU and KVM only) For VMware guests, this is set to efi when the guest uses UEFI, and it is not set when using BIOS. Since 5.3.0 (VMware ESX and Workstation/Player)
 
@@ -167,13 +179,9 @@ When using firmware auto-selection there are different features enabled in the f
 The list of mandatory attributes:
 
 - enabled (accepted values are yes and no) is used to tell libvirt if the feature must be enabled or not in the automatically selected firmware
-    
 - name the name of the feature, the list of the features:
-    
-    - enrolled-keys whether the selected nvram template has default certificate enrolled. Firmware with Secure Boot feature but without enrolled keys will successfully boot non-signed binaries as well. Valid only for firmwares with Secure Boot feature.
-        
-    - secure-boot whether the firmware implements UEFI Secure boot feature.
-        
+  - enrolled-keys whether the selected nvram template has default certificate enrolled. Firmware with Secure Boot feature but without enrolled keys will successfully boot non-signed binaries as well. Valid only for firmwares with Secure Boot feature.
+  - secure-boot whether the firmware implements UEFI Secure boot feature.
 
 #### 3.1.4 loader
 
@@ -215,7 +223,7 @@ Up till here the BIOS/UEFI configuration knobs are generic enough to be implemen
 
 #### 3.1.9 bootmenu
 
-Whether or not to enable an interactive boot menu prompt on guest startup. The enable attribute can be either "yes" or "no". If not specified, the hypervisor default is used. Since 0.8.3 Additional attribute timeout takes the number of milliseconds the boot menu should wait until it times out. Allowed values are numbers in range [0, 65535] inclusive and it is ignored unless enable is set to "yes". Since 1.2.8
+Whether or not to enable an interactive boot menu prompt on guest startup. The enable attribute can be either "yes" or "no". If not specified, the hypervisor default is used. Since 0.8.3 Additional attribute timeout takes the number of milliseconds the boot menu should wait until it times out. Allowed values are numbers in range \[0, 65535] inclusive and it is ignored unless enable is set to "yes". Since 1.2.8
 
 #### 3.1.10 bios
 
@@ -333,11 +341,12 @@ count: How many users in container are allowed to map to host's user.
 #### 3.5.1 acpi
 
 该“表”元素包含了 ACPI 表的完整路径，而“类型”属性则决定了该文件中必须包含哪些数据：
+
 - raw：一个包含头部和数据的单个 ACPI 表，该表的 ACPI 标识符由头部自动检测得出（自 11.2.0 版（QEMU）起）。
 - rawset：多个包含头部和数据的 ACPI 表的串联组合，每个表都有任意的 ACPI 标识符，该标识符由头部自动检测得出（自 11.2.0 版（Xen）起）。
 - slic：一个包含头部和数据的单个 ACPI 表，提供软件许可信息。表头部中的 ACPI 表标识符将强制设置为 SLIC（自 1.3.5 版（QEMU）起，曾被误识别为 rawset；自 5.9.0 版（Xen）起）。
 - msdm：一个包含头部和数据的单个 ACPI 表，提供微软数据管理信息。表头部中的 ACPI 表标识符将强制设置为 MSDM（自 11.2.0 版（QEMU）起）。
-每种类型只能使用一次，但 raw 除外，它可以多次出现。
+  每种类型只能使用一次，但 raw 除外，它可以多次出现。
 
 ## 4 SMBIOS System Information:SMBIOS 系统信息
 
@@ -346,7 +355,8 @@ count: How many users in container are allowed to map to host's user.
 ```xml
 <os>
   <smbios mode='sysinfo'/>
-  ```
+```
+
 </os>
 <sysinfo type='smbios'>
   <bios>
@@ -391,7 +401,7 @@ Sub-elements call out specific SMBIOS values, which will affect the guest if use
 
 This is block 0 of SMBIOS, with entry names drawn from:
 
-1.  vendor :BIOS Vendor's Name
+1. vendor :BIOS Vendor's Name
 2. version: BIOS Version
 3. date: BIOS release date. If supplied, is in either mm/dd/yy or mm/dd/yyyy format. If the year portion of the string is two digits, the year is assumed to be 19yy.
 4. release: System BIOS Major and Minor release number values concatenated together as one string separated by a period, for example, 10.22.
@@ -411,12 +421,13 @@ This is block 1 of SMBIOS, with entry names drawn from:
 #### 4.1.3 baseBoard
 
 This is block 2 of SMBIOS. This element can be repeated multiple times to describe all the base boards; however, not all hypervisors necessarily support the repetition. The element can have the following children:
+
 1. manufacturer: Manufacturer of BIOS
 2. product :Product Name
 3. version :Version of the product
 4. serial :Serial number
-5. asset  :Asset tag
-6. location:  Location in chassis
+5. asset :Asset tag
+6. location: Location in chassis
 
 NB: Incorrectly supplied entries for the bios, system or baseBoard blocks will be ignored without error. Other than uuid validation and date format checking, all values are passed as strings to the hypervisor driver.
 
@@ -454,7 +465,7 @@ Some hypervisors provide unified way to tweak how firmware configures itself, or
 
 It even allows users to define their own config blobs. In case of QEMU, these then appear under domain's sysfs (if the guest kernel has FW_CFG_SYSFS config option enabled), under /sys/firmware/qemu_fw_cfg. Note, that these values apply regardless the <smbios/> mode under <os/>. Since 6.5.0
 
-**Please note that because of limited number of data slots use of fwcfg is strongly discouraged and <oemStrings/> should be used instead**.
+**Please note that because of limited number of data slots use of fwcfg is strongly discouraged and** **<oemStrings/>** **should be used instead**.
 
 <sysinfo type='fwcfg'>
   <entry name='opt/com.example/name'>example value</entry>
@@ -575,6 +586,7 @@ This element represents the default event loop within hypervisor, where I/O requ
 ### 7.1 cputune
 
 The optional cputune element provides details regarding the CPU tunable parameters for the domain. Note: for the qemu driver, the optional vcpupin and emulatorpin pinning settings are honored after the emulator is launched and NUMA constraints considered. This means that it is expected that other physical CPUs of the host will be used during this time by the domain, which will be reflected by the output of virsh cpu-stats. Since 0.9.0
+
 ### 7.2 vcpupin
 
 The optional vcpupin element specifies which of host's physical CPUs the domain vCPU will be pinned to. If this is omitted, and attribute cpuset of element vcpu is not specified, the vCPU is pinned to all the physical CPUs by default. It contains two required attributes, the attribute vcpu specifies vCPU id, and the attribute cpuset is same as attribute cpuset of element vcpu. QEMU driver support since 0.9.0, Xen driver support since 0.9.1
@@ -589,14 +601,15 @@ The optional iothreadpin element specifies which of host physical CPUs the IOThr
 
 ### 7.5 shares
 
-The optional shares element specifies the proportional weighted share for the domain. If this is omitted, it defaults to the OS provided defaults. NB, There is no unit for the value, it's a relative measure based on the setting of other VM, e.g. A VM configured with value 2048 will get twice as much CPU time as a VM configured with value 1024. The value should be in range [2, 262144] using cgroups v1, [1, 10000] using cgroups v2. Since 0.9.0
+The optional shares element specifies the proportional weighted share for the domain. If this is omitted, it defaults to the OS provided defaults. NB, There is no unit for the value, it's a relative measure based on the setting of other VM, e.g. A VM configured with value 2048 will get twice as much CPU time as a VM configured with value 1024. The value should be in range \[2, 262144] using cgroups v1, \[1, 10000] using cgroups v2. Since 0.9.0
 
 ### 7.6 period
-The optional period element specifies the enforcement interval (unit: microseconds). Within period, each vCPU of the domain will not be allowed to consume more than quota worth of runtime. The value should be in range [1000, 1000000]. A period with value 0 means no value. Only QEMU driver support since 0.9.4, LXC since 0.9.10
+
+The optional period element specifies the enforcement interval (unit: microseconds). Within period, each vCPU of the domain will not be allowed to consume more than quota worth of runtime. The value should be in range \[1000, 1000000]. A period with value 0 means no value. Only QEMU driver support since 0.9.4, LXC since 0.9.10
 
 ### 7.7 quota
 
-The optional quota element specifies the maximum allowed bandwidth (unit: microseconds). A domain with quota as any negative value indicates that the domain has infinite bandwidth for vCPU threads, which means that it is not bandwidth controlled. The value should be in range [1000, 17592186044415] or less than 0. A quota with value 0 means no value. You can use this feature to ensure that all vCPUs run at the same speed. Only QEMU driver support since 0.9.4, LXC since 0.9.10
+The optional quota element specifies the maximum allowed bandwidth (unit: microseconds). A domain with quota as any negative value indicates that the domain has infinite bandwidth for vCPU threads, which means that it is not bandwidth controlled. The value should be in range \[1000, 17592186044415] or less than 0. A quota with value 0 means no value. You can use this feature to ensure that all vCPUs run at the same speed. Only QEMU driver support since 0.9.4, LXC since 0.9.10
 
 ### 7.8 global_period
 
@@ -604,23 +617,23 @@ The optional global_period element specifies the enforcement CFS scheduler inter
 
 ### 7.9 global_quota
 
-The optional global_quota element specifies the maximum allowed bandwidth (unit: microseconds) within a period for the whole domain. A domain with global_quota as any negative value indicates that the domain has infinite bandwidth, which means that it is not bandwidth controlled. The value should be in range [1000, 17592186044415] or less than 0. A global_quota with value 0 means no value. Only QEMU driver support since 1.3.3
+The optional global_quota element specifies the maximum allowed bandwidth (unit: microseconds) within a period for the whole domain. A domain with global_quota as any negative value indicates that the domain has infinite bandwidth, which means that it is not bandwidth controlled. The value should be in range \[1000, 17592186044415] or less than 0. A global_quota with value 0 means no value. Only QEMU driver support since 1.3.3
 
 ### 7.10 emulator_period
 
-The optional emulator_period element specifies the enforcement interval (unit: microseconds). Within emulator_period, emulator threads (those excluding vCPUs) of the domain will not be allowed to consume more than emulator_quota worth of runtime. The value should be in range [1000, 1000000]. A period with value 0 means no value. Only QEMU driver support since 0.10.0
+The optional emulator_period element specifies the enforcement interval (unit: microseconds). Within emulator_period, emulator threads (those excluding vCPUs) of the domain will not be allowed to consume more than emulator_quota worth of runtime. The value should be in range \[1000, 1000000]. A period with value 0 means no value. Only QEMU driver support since 0.10.0
 
 ### 7.11 emulator_quota
 
-The optional emulator_quota element specifies the maximum allowed bandwidth (unit: microseconds) for domain's emulator threads (those excluding vCPUs). A domain with emulator_quota as any negative value indicates that the domain has infinite bandwidth for emulator threads (those excluding vCPUs), which means that it is not bandwidth controlled. The value should be in range [1000, 17592186044415] or less than 0. A quota with value 0 means no value. Only QEMU driver support since 0.10.0
+The optional emulator_quota element specifies the maximum allowed bandwidth (unit: microseconds) for domain's emulator threads (those excluding vCPUs). A domain with emulator_quota as any negative value indicates that the domain has infinite bandwidth for emulator threads (those excluding vCPUs), which means that it is not bandwidth controlled. The value should be in range \[1000, 17592186044415] or less than 0. A quota with value 0 means no value. Only QEMU driver support since 0.10.0
 
 ### 7.12 iothread_period
 
-The optional iothread_period element specifies the enforcement interval (unit: microseconds) for IOThreads. Within iothread_period, each IOThread of the domain will not be allowed to consume more than iothread_quota worth of runtime. The value should be in range [1000, 1000000]. An iothread_period with value 0 means no value. Only QEMU driver support since 2.1.0
+The optional iothread_period element specifies the enforcement interval (unit: microseconds) for IOThreads. Within iothread_period, each IOThread of the domain will not be allowed to consume more than iothread_quota worth of runtime. The value should be in range \[1000, 1000000]. An iothread_period with value 0 means no value. Only QEMU driver support since 2.1.0
 
 ### 7.13 iothread_quota
 
-The optional iothread_quota element specifies the maximum allowed bandwidth (unit: microseconds) for IOThreads. A domain with iothread_quota as any negative value indicates that the domain IOThreads have infinite bandwidth, which means that it is not bandwidth controlled. The value should be in range [1000, 17592186044415] or less than 0. An iothread_quota with value 0 means no value. You can use this feature to ensure that all IOThreads run at the same speed. Only QEMU driver support since 2.1.0
+The optional iothread_quota element specifies the maximum allowed bandwidth (unit: microseconds) for IOThreads. A domain with iothread_quota as any negative value indicates that the domain IOThreads have infinite bandwidth, which means that it is not bandwidth controlled. The value should be in range \[1000, 17592186044415] or less than 0. An iothread_quota with value 0 means no value. You can use this feature to ensure that all IOThreads run at the same speed. Only QEMU driver support since 2.1.0
 
 ### 7.14 vcpusched, iothreadsched and emulatorsched
 
@@ -763,7 +776,7 @@ When set and supported by hypervisor the memory content is discarded just before
 
 ### 10.1 memtune
 
-The optional memtune element provides details regarding the memory tunable parameters for the domain. If this is omitted, it defaults to the OS provided defaults. For QEMU/KVM, the parameters are applied to the QEMU process as a whole. Thus, when counting them, one needs to add up guest RAM, guest video RAM, and some memory overhead of QEMU itself. The last piece is hard to determine so one needs guess and try. For each tunable, it is possible to designate which unit the number is in on input, using the same values as for `<memory>`. For backwards compatibility, output is always in KiB. unit since 0.9.11 Possible values for all *_limit parameters are in range from 0 to VIR_DOMAIN_MEMORY_PARAM_UNLIMITED.
+The optional memtune element provides details regarding the memory tunable parameters for the domain. If this is omitted, it defaults to the OS provided defaults. For QEMU/KVM, the parameters are applied to the QEMU process as a whole. Thus, when counting them, one needs to add up guest RAM, guest video RAM, and some memory overhead of QEMU itself. The last piece is hard to determine so one needs guess and try. For each tunable, it is possible to designate which unit the number is in on input, using the same values as for `<memory>`. For backwards compatibility, output is always in KiB. unit since 0.9.11 Possible values for all \*\_limit parameters are in range from 0 to VIR_DOMAIN_MEMORY_PARAM_UNLIMITED.
 
 ### 10.2 hard_limit
 
@@ -835,11 +848,11 @@ The optional blkiotune element provides the ability to tune Blkio cgroup tunable
 
 ### 12.2 weight
 
-The optional weight element is the overall I/O weight of the guest. The value should be in the range [100, 1000]. After kernel 2.6.39, the value could be in the range [10, 1000].
+The optional weight element is the overall I/O weight of the guest. The value should be in the range \[100, 1000]. After kernel 2.6.39, the value could be in the range \[10, 1000].
 
 ### 12.3 device
 
-The domain may have multiple device elements that further tune the weights for each host block device in use by the domain. Note that multiple disks (See [Hard drives, floppy disks, CDROMs](https://www.libvirt.org/formatdomain.html#hard-drives-floppy-disks-cdroms)) can share a single host block device, if they are backed by files within the same host file system, which is why this tuning parameter is at the global domain level rather than associated with each guest disk device (contrast this to the `<iotune>` element of a disk definition (See [Hard drives, floppy disks, CDROMs](https://www.libvirt.org/formatdomain.html#hard-drives-floppy-disks-cdroms)) which can applies to an individual disk). Each device element has two mandatory sub-elements, path describing the absolute path of the device, and weight giving the relative weight of that device, in the range [100, 1000]. After kernel 2.6.39, the value could be in the range [10, 1000]. Since 0.9.8 Additionally, the following optional sub-elements can be used:
+The domain may have multiple device elements that further tune the weights for each host block device in use by the domain. Note that multiple disks (See [Hard drives, floppy disks, CDROMs](https://www.libvirt.org/formatdomain.html#hard-drives-floppy-disks-cdroms)) can share a single host block device, if they are backed by files within the same host file system, which is why this tuning parameter is at the global domain level rather than associated with each guest disk device (contrast this to the `<iotune>` element of a disk definition (See [Hard drives, floppy disks, CDROMs](https://www.libvirt.org/formatdomain.html#hard-drives-floppy-disks-cdroms)) which can applies to an individual disk). Each device element has two mandatory sub-elements, path describing the absolute path of the device, and weight giving the relative weight of that device, in the range \[100, 1000]. After kernel 2.6.39, the value could be in the range \[10, 1000]. Since 0.9.8 Additionally, the following optional sub-elements can be used:
 
 #### 12.3.1 read_bytes_sec
 
@@ -995,7 +1008,7 @@ The content of the model element specifies CPU model requested by the guest. The
 
 ### 15.3 vendor
 
-Since 0.8.3 the content of the vendor element specifies CPU vendor requested by the guest. If this element is missing, the guest can be run on a CPU matching given features regardless on its vendor. The list of supported vendors can be found in cpu_map/*_vendors.xml.
+Since 0.8.3 the content of the vendor element specifies CPU vendor requested by the guest. If this element is missing, the guest can be run on a CPU matching given features regardless on its vendor. The list of supported vendors can be found in cpu_map/\*\_vendors.xml.
 
 ### 15.4 topology
 
@@ -1080,7 +1093,8 @@ The limit attribute can be used to restrict the maximum value of address bits fo
 
 ```xml
 <cpu>
-  ```
+```
+
   <numa>
     <cell id='0' cpus='0-3' memory='512000' unit='KiB' discard='yes'/>
     <cell id='1' cpus='4-7' memory='512000' unit='KiB' memAccess='shared'/>
@@ -1153,7 +1167,8 @@ Describing distances between NUMA cells is currently only supported by Xen and Q
       <bandwidth initiator='0' target='0' type='access' value='204800' unit='KiB'/>
     </interconnects>
   </numa>
-  ```
+```
+
 </cpu>
 ```
 
@@ -1289,7 +1304,7 @@ These elements enable ('yes') or disable ('no') BIOS support for S3 (suspend-to-
 
 ## 18 Disk Throttle Group Management
 
-Since 11.2.0 it is possible to create multiple named throttle groups and then reference them within throttlefilters``(sub-element of ``disk element) to form filter chain in QEMU for specific disk. The limits(throttlegroups) are shared within domain, hence the same group can be referenced by different filters.
+Since 11.2.0 it is possible to create multiple named throttle groups and then reference them within throttlefilters`(sub-element of ` disk element) to form filter chain in QEMU for specific disk. The limits(throttlegroups) are shared within domain, hence the same group can be referenced by different filters.
 
 ```xml
 <domain>
@@ -1306,7 +1321,7 @@ Since 11.2.0 it is possible to create multiple named throttle groups and then re
 
 throttlegroup
 
-It has the same sub-elements as iotune (See [Hard drives, floppy disks, CDROMs](https://www.libvirt.org/formatdomain.html#hard-drives-floppy-disks-cdroms)), The difference is that <group_name> is required.
+It has the same sub-elements as iotune (See [Hard drives, floppy disks, CDROMs](https://www.libvirt.org/formatdomain.html#hard-drives-floppy-disks-cdroms)), The difference is that `<group_name>` is required.
 
 ## 19 Hypervisor features
 
@@ -1409,26 +1424,25 @@ Always create a private network namespace. This is automatically set if any inte
 
 Enable various features improving behavior of guests running Microsoft Windows. Since 11.3.0 some of these flags are also available for Xen domains running Microsoft Windows.
 
-   
-|Feature|Description|Value|Since|
-|---|---|---|---|
-|relaxed|Relax constraints on timers|on, off|1.0.0 (QEMU 2.0), 11.3.0 (Xen, always on)|
-|vapic|Enable virtual APIC|on, off|1.1.0 (QEMU 2.0), 11.3.0 (Xen)|
-|spinlocks|Enable spinlock support - retries attribute defines after how many failed acquisition attempts to notify the hypervisor|on, off; retries - between 4095 and 4294967295, the special value 4294967295 means to never notify the hypervisor (default if omitted)|1.1.0 (QEMU 2.0), never-notify mode 11.9.0 (QEMU 2.0)|
-|vpindex|Virtual processor index|on, off|1.3.3 (QEMU 2.5), 11.3.0 (Xen, always on)|
-|runtime|Processor time spent on running guest code and on behalf of guest code|on, off|1.3.3 (QEMU 2.5)|
-|synic|Enable Synthetic Interrupt Controller (SynIC)|on, off|1.3.3 (QEMU 2.6), 11.3.0 (Xen)|
-|stimer|Enable SynIC timers, optionally with Direct Mode support|on, off; direct - on,off|1.3.3 (QEMU 2.6), direct mode 5.7.0 (QEMU 4.1), 11.3.0 (Xen, on/off only)|
-|reset|Enable hypervisor reset|on, off|1.3.3 (QEMU 2.5)|
-|vendor_id|Set hypervisor vendor id|on, off; value - string, up to 12 characters|1.3.3 (QEMU 2.5)|
-|frequencies|Expose frequency MSRs|on, off|4.7.0 (QEMU 2.12), 11.3.0 (Xen)|
-|reenlightenment|Enable re-enlightenment notification on migration|on, off|4.7.0 (QEMU 3.0)|
-|tlbflush|Enable PV TLB flush support|on, off; direct - on,off; extended - on,off|4.7.0 (QEMU 3.0), direct and extended modes 11.0.0 (QEMU 7.1.0), 11.3.0 (Xen, on/off only)|
-|ipi|Enable PV IPI support|on, off|4.10.0 (QEMU 3.1), 11.3.0 (Xen)|
-|evmcs|Enable Enlightened VMCS|on, off|4.10.0 (QEMU 3.1)|
-|avic|Enable use Hyper-V SynIC with hardware APICv/AVIC|on, off|8.10.0 (QEMU 6.2)|
-|emsr_bitmap|Avoid unnecessary updates to L2 MSR Bitmap upon vmexits.|on, off|10.7.0 (QEMU 7.1)|
-|xmm_input|Enable XMM Fast Hypercall Input|on, off|10.7.0 (QEMU 7.1)|
+| Feature         | Description                                                                                                             | Value                                                                                                                                  | Since                                                                                      |
+| --------------- | ----------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------ |
+| relaxed         | Relax constraints on timers                                                                                             | on, off                                                                                                                                | 1.0.0 (QEMU 2.0), 11.3.0 (Xen, always on)                                                  |
+| vapic           | Enable virtual APIC                                                                                                     | on, off                                                                                                                                | 1.1.0 (QEMU 2.0), 11.3.0 (Xen)                                                             |
+| spinlocks       | Enable spinlock support - retries attribute defines after how many failed acquisition attempts to notify the hypervisor | on, off; retries - between 4095 and 4294967295, the special value 4294967295 means to never notify the hypervisor (default if omitted) | 1.1.0 (QEMU 2.0), never-notify mode 11.9.0 (QEMU 2.0)                                      |
+| vpindex         | Virtual processor index                                                                                                 | on, off                                                                                                                                | 1.3.3 (QEMU 2.5), 11.3.0 (Xen, always on)                                                  |
+| runtime         | Processor time spent on running guest code and on behalf of guest code                                                  | on, off                                                                                                                                | 1.3.3 (QEMU 2.5)                                                                           |
+| synic           | Enable Synthetic Interrupt Controller (SynIC)                                                                           | on, off                                                                                                                                | 1.3.3 (QEMU 2.6), 11.3.0 (Xen)                                                             |
+| stimer          | Enable SynIC timers, optionally with Direct Mode support                                                                | on, off; direct - on,off                                                                                                               | 1.3.3 (QEMU 2.6), direct mode 5.7.0 (QEMU 4.1), 11.3.0 (Xen, on/off only)                  |
+| reset           | Enable hypervisor reset                                                                                                 | on, off                                                                                                                                | 1.3.3 (QEMU 2.5)                                                                           |
+| vendor_id       | Set hypervisor vendor id                                                                                                | on, off; value - string, up to 12 characters                                                                                           | 1.3.3 (QEMU 2.5)                                                                           |
+| frequencies     | Expose frequency MSRs                                                                                                   | on, off                                                                                                                                | 4.7.0 (QEMU 2.12), 11.3.0 (Xen)                                                            |
+| reenlightenment | Enable re-enlightenment notification on migration                                                                       | on, off                                                                                                                                | 4.7.0 (QEMU 3.0)                                                                           |
+| tlbflush        | Enable PV TLB flush support                                                                                             | on, off; direct - on,off; extended - on,off                                                                                            | 4.7.0 (QEMU 3.0), direct and extended modes 11.0.0 (QEMU 7.1.0), 11.3.0 (Xen, on/off only) |
+| ipi             | Enable PV IPI support                                                                                                   | on, off                                                                                                                                | 4.10.0 (QEMU 3.1), 11.3.0 (Xen)                                                            |
+| evmcs           | Enable Enlightened VMCS                                                                                                 | on, off                                                                                                                                | 4.10.0 (QEMU 3.1)                                                                          |
+| avic            | Enable use Hyper-V SynIC with hardware APICv/AVIC                                                                       | on, off                                                                                                                                | 8.10.0 (QEMU 6.2)                                                                          |
+| emsr_bitmap     | Avoid unnecessary updates to L2 MSR Bitmap upon vmexits.                                                                | on, off                                                                                                                                | 10.7.0 (QEMU 7.1)                                                                          |
+| xmm_input       | Enable XMM Fast Hypercall Input                                                                                         | on, off                                                                                                                                | 10.7.0 (QEMU 7.1)                                                                          |
 
 Since 8.0.0 (QEMU) Since 11.3.0 (Xen), the hypervisor can be configured further by setting the mode attribute to one of the following values:
 
@@ -1436,11 +1450,11 @@ Since 8.0.0 (QEMU) Since 11.3.0 (Xen), the hypervisor can be configured further 
 
 Set exactly the specified features.
 
-2. passthrough
+1. passthrough
 
 Enable all features currently supported by the hypervisor, even those that libvirt does not understand. Migration of a guest using passthrough is dangerous if the source and destination hosts are not identical in both hardware, QEMU version, microcode version and configuration. If such a migration is attempted then the guest may hang or crash upon resuming execution on the destination host. Depending on hypervisor version the virtual CPU may or may not contain features which may block migration even to an identical host.
 
-3. host-model
+1. host-model
 
 Similar to the passthrough mode, except libvirt detects which enlightenments are supported by hypervisor and expands them on domain startup into the live XML. In a sense, this is similar to host-model CPU mode (See [CPU model and topology](https://www.libvirt.org/formatdomain.html#cpu-model-and-topology)). Since 11.9.0 It is also possible to set features, like in custom mode. These are then left untouched and no expansion is done for them. Since 12.1.0
 
@@ -1454,24 +1468,22 @@ Notify the guest that the host supports paravirtual spinlocks for example by exp
 
 Various features to change the behavior of the KVM hypervisor.
 
-   
-|Feature|Description|Value|Since|
-|---|---|---|---|
-|hidden|Hide the KVM hypervisor from standard MSR based discovery|on, off|1.2.8 (QEMU 2.1.0)|
-|hint-dedicated|Allows a guest to enable optimizations when running on dedicated vCPUs|on, off|5.7.0 (QEMU 2.12.0)|
-|poll-control|Decrease IO completion latency by introducing a grace period of busy waiting|on, off|6.10.0 (QEMU 4.2)|
-|pv-ipi|Paravirtualized send IPIs|on, off|7.10.0 (QEMU 3.1)|
-|dirty-ring|Enable dirty ring feature|on, off; size - must be power of 2, range [1024,65536]|8.0.0 (QEMU 6.1)|
+| Feature        | Description                                                                  | Value                                                   | Since               |
+| -------------- | ---------------------------------------------------------------------------- | ------------------------------------------------------- | ------------------- |
+| hidden         | Hide the KVM hypervisor from standard MSR based discovery                    | on, off                                                 | 1.2.8 (QEMU 2.1.0)  |
+| hint-dedicated | Allows a guest to enable optimizations when running on dedicated vCPUs       | on, off                                                 | 5.7.0 (QEMU 2.12.0) |
+| poll-control   | Decrease IO completion latency by introducing a grace period of busy waiting | on, off                                                 | 6.10.0 (QEMU 4.2)   |
+| pv-ipi         | Paravirtualized send IPIs                                                    | on, off                                                 | 7.10.0 (QEMU 3.1)   |
+| dirty-ring     | Enable dirty ring feature                                                    | on, off; size - must be power of 2, range \[1024,65536] | 8.0.0 (QEMU 6.1)    |
 
 ### 19.10 xen
 
 Various features to change the behavior of the Xen hypervisor.
 
-   
-|Feature|Description|Value|Since|
-|---|---|---|---|
-|e820_host|Expose the host e820 to the guest (PV only)|on, off|6.3.0|
-|passthrough|Enable IOMMU mappings allowing PCI passthrough|on, off; mode - optional string sync_pt or share_pt|6.3.0|
+| Feature     | Description                                    | Value                                               | Since |
+| ----------- | ---------------------------------------------- | --------------------------------------------------- | ----- |
+| e820_host   | Expose the host e820 to the guest (PV only)    | on, off                                             | 6.3.0 |
+| passthrough | Enable IOMMU mappings allowing PCI passthrough | on, off; mode - optional string sync_pt or share_pt | 6.3.0 |
 
 ### 19.11 pmu
 
@@ -1547,10 +1559,9 @@ Configure ibs (Indirect Branch Speculation) availability for pSeries guests. Pos
 
 Various features to change the behavior of the TCG accelerator.
 
-   
-|Feature|Description|Value|Since|
-|---|---|---|---|
-|tb-cache|The size of translation block cache size|an integer (a multiple of MiB)|8.0.0|
+| Feature  | Description                              | Value                          | Since |
+| -------- | ---------------------------------------- | ------------------------------ | ----- |
+| tb-cache | The size of translation block cache size | an integer (a multiple of MiB) | 8.0.0 |
 
 ### 19.26 async-teardown
 
@@ -1631,21 +1642,21 @@ The tickpolicy attribute determines what happens when QEMU misses a deadline for
 
 Continue to deliver ticks at the normal rate. The guest OS will not notice anything is amiss, as from its point of view time will have continued to flow normally. The time in the guest should now be behind the time in the host by exactly the amount of time during which ticks have been missed.
 
-2. catchup
+1. catchup
 
 Deliver ticks at a higher rate to catch up with the missed ticks. The guest OS will not notice anything is amiss, as from its point of view time will have continued to flow normally. Once the timer has managed to catch up with all the missing ticks, the time in the guest and in the host should match.
 
-3. merge
+1. merge
 
 Merge the missed tick(s) into one tick and inject. The guest time may be delayed, depending on how the OS reacts to the merging of ticks
 
-4. discard
+1. discard
 
 Throw away the missed ticks and continue with future injection normally. The guest OS will see the timer jump ahead by a potentially quite significant amount all at once, as if the intervening chunk of time had simply not existed; needless to say, such a sudden jump can easily confuse a guest OS which is not specifically prepared to deal with it. Assuming the guest OS can deal correctly with the time jump, the time in the guest and in the host should now match.
 
 If the policy is "catchup", there can be further details in the catchup sub-element.
 
-5. catchup
+1. catchup
 
 The catchup element has three optional attributes, each a positive integer. The attributes are threshold, slew, and limit.
 
@@ -1694,31 +1705,30 @@ The present attribute can be "yes" or "no" to specify whether a particular timer
 </perf>
 ```
 
-  
-|event name|Description|stats parameter name|
-|---|---|---|
-|cmt|usage of l3 cache in bytes by applications running on the platform|perf.cmt|
-|mbmt|total system bandwidth from one level of cache|perf.mbmt|
-|mbml|bandwidth of memory traffic for a memory controller|perf.mbml|
-|cpu_cycles|the count of CPU cycles (total/elapsed)|perf.cpu_cycles|
-|instructions|the count of instructions by applications running on the platform|perf.instructions|
-|cache_references|the count of cache hits by applications running on the platform|perf.cache_references|
-|cache_misses|the count of cache misses by applications running on the platform|perf.cache_misses|
-|branch_instructions|the count of branch instructions by applications running on the platform|perf.branch_instructions|
-|branch_misses|the count of branch misses by applications running on the platform|perf.branch_misses|
-|bus_cycles|the count of bus cycles by applications running on the platform|perf.bus_cycles|
-|stalled_cycles_frontend|the count of stalled CPU cycles in the frontend of the instruction processor pipeline by applications running on the platform|perf.stalled_cycles_frontend|
-|stalled_cycles_backend|the count of stalled CPU cycles in the backend of the instruction processor pipeline by applications running on the platform|perf.stalled_cycles_backend|
-|ref_cpu_cycles|the count of total CPU cycles not affected by CPU frequency scaling by applications running on the platform|perf.ref_cpu_cycles|
-|cpu_clock|the count of CPU clock time, as measured by a monotonic high-resolution per-CPU timer, by applications running on the platform|perf.cpu_clock|
-|task_clock|the count of task clock time, as measured by a monotonic high-resolution CPU timer, specific to the task that is run by applications running on the platform|perf.task_clock|
-|page_faults|the count of page faults by applications running on the platform. This includes minor, major, invalid and other types of page faults|perf.page_faults|
-|context_switches|the count of context switches by applications running on the platform|perf.context_switches|
-|cpu_migrations|the count of CPU migrations, that is, where the process moved from one logical processor to another, by applications running on the platform|perf.cpu_migrations|
-|page_faults_min|the count of minor page faults, that is, where the page was present in the page cache, and therefore the fault avoided loading it from storage, by applications running on the platform|perf.page_faults_min|
-|page_faults_maj|the count of major page faults, that is, where the page was not present in the page cache, and therefore had to be fetched from storage, by applications running on the platform|perf.page_faults_maj|
-|alignment_faults|the count of alignment faults, that is when the load or store is not aligned properly, by applications running on the platform|perf.alignment_faults|
-|emulation_faults|the count of emulation faults, that is when the kernel traps on unimplemented instructions and emulates them for user space, by applications running on the platform|perf.emulation_faults|
+| event name              | Description                                                                                                                                                                             | stats parameter name         |
+| ----------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------- |
+| cmt                     | usage of l3 cache in bytes by applications running on the platform                                                                                                                      | perf.cmt                     |
+| mbmt                    | total system bandwidth from one level of cache                                                                                                                                          | perf.mbmt                    |
+| mbml                    | bandwidth of memory traffic for a memory controller                                                                                                                                     | perf.mbml                    |
+| cpu_cycles              | the count of CPU cycles (total/elapsed)                                                                                                                                                 | perf.cpu_cycles              |
+| instructions            | the count of instructions by applications running on the platform                                                                                                                       | perf.instructions            |
+| cache_references        | the count of cache hits by applications running on the platform                                                                                                                         | perf.cache_references        |
+| cache_misses            | the count of cache misses by applications running on the platform                                                                                                                       | perf.cache_misses            |
+| branch_instructions     | the count of branch instructions by applications running on the platform                                                                                                                | perf.branch_instructions     |
+| branch_misses           | the count of branch misses by applications running on the platform                                                                                                                      | perf.branch_misses           |
+| bus_cycles              | the count of bus cycles by applications running on the platform                                                                                                                         | perf.bus_cycles              |
+| stalled_cycles_frontend | the count of stalled CPU cycles in the frontend of the instruction processor pipeline by applications running on the platform                                                           | perf.stalled_cycles_frontend |
+| stalled_cycles_backend  | the count of stalled CPU cycles in the backend of the instruction processor pipeline by applications running on the platform                                                            | perf.stalled_cycles_backend  |
+| ref_cpu_cycles          | the count of total CPU cycles not affected by CPU frequency scaling by applications running on the platform                                                                             | perf.ref_cpu_cycles          |
+| cpu_clock               | the count of CPU clock time, as measured by a monotonic high-resolution per-CPU timer, by applications running on the platform                                                          | perf.cpu_clock               |
+| task_clock              | the count of task clock time, as measured by a monotonic high-resolution CPU timer, specific to the task that is run by applications running on the platform                            | perf.task_clock              |
+| page_faults             | the count of page faults by applications running on the platform. This includes minor, major, invalid and other types of page faults                                                    | perf.page_faults             |
+| context_switches        | the count of context switches by applications running on the platform                                                                                                                   | perf.context_switches        |
+| cpu_migrations          | the count of CPU migrations, that is, where the process moved from one logical processor to another, by applications running on the platform                                            | perf.cpu_migrations          |
+| page_faults_min         | the count of minor page faults, that is, where the page was present in the page cache, and therefore the fault avoided loading it from storage, by applications running on the platform | perf.page_faults_min         |
+| page_faults_maj         | the count of major page faults, that is, where the page was not present in the page cache, and therefore had to be fetched from storage, by applications running on the platform        | perf.page_faults_maj         |
+| alignment_faults        | the count of alignment faults, that is when the load or store is not aligned properly, by applications running on the platform                                                          | perf.alignment_faults        |
+| emulation_faults        | the count of emulation faults, that is when the kernel traps on unimplemented instructions and emulates them for user space, by applications running on the platform                    | perf.emulation_faults        |
 
 ## 22 Devices
 
@@ -1730,10 +1740,13 @@ The present attribute can be "yes" or "no" to specify whether a particular timer
 </devices>
 ```
 
-	1. emulator
+```
+1. emulator
+```
+
 “emulator”元素的内容指明了设备模型模拟器二进制文件的完整路径。而“capabilities”XML 则指定了针对每个特定的领域类型/架构组合所推荐使用的默认模拟器。
 
-为了帮助用户识别他们所关心的设备，每个设备都可以有一个直接的子别名元素，该元素具有名称属性，用户可以在此存储设备的标识符。该标识符必须带有“ua-”前缀，并且在该域内必须是唯一的。此外，该标识符只能由以下字符组成：[a-zA-Z0-9_-]。自 3.9.0 版本起
+为了帮助用户识别他们所关心的设备，每个设备都可以有一个直接的子别名元素，该元素具有名称属性，用户可以在此存储设备的标识符。该标识符必须带有“ua-”前缀，并且在该域内必须是唯一的。此外，该标识符只能由以下字符组成：\[a-zA-Z0-9\_-]。自 3.9.0 版本起
 
 ```xml
 <devices>
@@ -1743,7 +1756,8 @@ The present attribute can be "yes" or "no" to specify whether a particular timer
   <interface type='network' trustGuestRxFilters='yes'>
     <alias name='ua-myNIC'/>
   </interface>
-  ```
+```
+
 </devices>
 ```
 
@@ -1769,10 +1783,10 @@ The present attribute can be "yes" or "no" to specify whether a particular timer
     </encryption>
     <shareable/>
     <serial>
-      
+
     </serial>
   </disk>
-    
+
   <disk type='network'>
     <driver name="qemu" type="raw" io="threads" ioeventfd="on" event_idx="off"/>
     <source protocol="sheepdog" name="image_name">
@@ -2000,6 +2014,7 @@ The disk element is the main container for describing disks and supports the fol
 ##### 22.1.1.1 type
 
 Valid values are "file", "block", "dir" ( since 0.7.5 ), "network" ( since 0.8.7 ), or "volume" ( since 1.0.5 ), or "nvme" ( since 6.0.0 ), or "vhostuser" ( since 7.1.0 ), or "vhostvdpa" ( since 9.8.0 (QEMU 8.1.0)), or "ctl" ( since 12.0.0 ) and refer to the underlying source for the disk. Since 0.0.3
+
 ##### 22.1.1.2 device
 
 Indicates how the disk is to be exposed to the guest OS. Possible values for this attribute are "floppy", "disk", "cdrom", and "lun", defaulting to "disk".
@@ -2070,7 +2085,7 @@ Since 0.8.7
 
 ##### 22.1.2.5 volume
 
-The underlying disk source is represented by attributes pool and volume. Attribute pool specifies the name of the [storage pool](https://www.libvirt.org/formatstorage.html) (managed by libvirt) where the disk source resides. Attribute volume specifies the name of storage volume (managed by libvirt) used as the disk source. The value for the volume attribute will be the output from the "Name" column of a virsh vol-list [pool-name] command.
+The underlying disk source is represented by attributes pool and volume. Attribute pool specifies the name of the [storage pool](https://www.libvirt.org/formatstorage.html) (managed by libvirt) where the disk source resides. Attribute volume specifies the name of storage volume (managed by libvirt) used as the disk source. The value for the volume attribute will be the output from the "Name" column of a virsh vol-list \[pool-name] command.
 
 Use the attribute mode ( since 1.1.1 ) to indicate how to represent the LUN as the disk source. Valid values are "direct" and "host". If mode is not specified, the default is to use "host". Using "direct" as the mode value indicates to use the [storage pool's](https://www.libvirt.org/formatstorage.html) source element host attribute as the disk source to generate the libiscsi URI (e.g. 'file=iscsi://example.com:3260/iqn.2013-07.com.example:iscsi-pool/1'). Using "host" as the mode value indicates to use the LUN's path as it shows up on host (e.g. 'file=/dev/disk/by-path/ip-example.com:3260-iscsi-iqn.2013-07.com.example:iscsi-pool-lun-1'). Using a LUN from an iSCSI source pool provides the same features as a disk configured using type 'block' or 'network' and device of 'lun' with respect to how the LUN is presented to and may be used by the guest. Since 1.0.5
 
@@ -2082,11 +2097,11 @@ To specify disk source for NVMe disk the source element has the following attrib
 
 The type of address specified in address sub-element. Currently, only pci value is accepted.
 
-2. managed
+1. managed
 
 This attribute instructs libvirt to detach NVMe controller automatically on domain startup (yes) or expect the controller to be detached by system administrator (no).
 
-3. namespace
+1. namespace
 
 The namespace ID which should be assigned to the domain. According to NVMe standard, namespace numbers start from 1, including.
 
@@ -2129,18 +2144,15 @@ The source element has a mandatory attribute dev that specifies the fully-qualif
 
 When the disk type is "network", the source may have zero or more host sub-elements used to specify the hosts to connect. The host element supports 4 attributes, viz. "name", "port", "transport" and "socket", which specify the hostname, the port number, transport type and path to socket, respectively. The meaning of this element and the number of the elements depend on the protocol attribute.
 
-
-  
-| Protocol | Meaning | Number of hosts | Default port |
-| --- | --- | --- | --- |
-|nbd|a server running nbd-server|only one|10809|
-|iscsi|an iSCSI server|only one|3260|
-|rbd|monitor servers of RBD|one or more|librados default|
-|sheepdog|one of the sheepdog servers (default is localhost:7000)|zero or one|7000|
-|gluster|a server running glusterd daemon|one or more ( Since 2.1.0 ), just one prior to that|24007|
-|vxhs|a server running Veritas HyperScale daemon|only one|9999|
-|nfs|a server running Network File System|only one ( Since 7.0.0 )|must be omitted|
-
+| Protocol | Meaning                                                 | Number of hosts                                     | Default port     |
+| -------- | ------------------------------------------------------- | --------------------------------------------------- | ---------------- |
+| nbd      | a server running nbd-server                             | only one                                            | 10809            |
+| iscsi    | an iSCSI server                                         | only one                                            | 3260             |
+| rbd      | monitor servers of RBD                                  | one or more                                         | librados default |
+| sheepdog | one of the sheepdog servers (default is localhost:7000) | zero or one                                         | 7000             |
+| gluster  | a server running glusterd daemon                        | one or more ( Since 2.1.0 ), just one prior to that | 24007            |
+| vxhs     | a server running Veritas HyperScale daemon              | only one                                            | 9999             |
+| nfs      | a server running Network File System                    | only one ( Since 7.0.0 )                            | must be omitted  |
 
 gluster supports "tcp", "rdma", "unix" as valid values for the transport attribute. nbd supports "tcp" and "unix". Others only support "tcp". If nothing is specified, "tcp" is assumed. If the transport is "unix", the socket attribute specifies the path to an AF_UNIX socket. nfs only supports the use of a "tcp" transport, and does not support using a port at all so it must be omitted.
 
@@ -2148,93 +2160,93 @@ gluster supports "tcp", "rdma", "unix" as valid values for the transport attribu
 
 The name attribute of snapshot element can optionally specify an internal snapshot name to be used as the source for storage protocols. Supported for 'rbd' since 1.2.11 (QEMU only).
 
-2. config
+1. config
 
 The file attribute for the config element provides a fully qualified path to a configuration file to be provided as a parameter to the client of a networked storage protocol. Supported for 'rbd' since 1.2.11 (QEMU only).
 
-3. auth
+1. auth
 
 Since 3.9.0, the auth element is supported for a disk type "network" that is using a source element with the protocol attributes "rbd", "iscsi", or "ssh". If present, the auth element provides the authentication credentials needed to access the source. It includes a mandatory attribute username, which identifies the username to use during authentication, as well as a sub-element secret with mandatory attribute type, to tie back to a [libvirt secret object](https://www.libvirt.org/formatsecret.html) that holds the actual password or other credentials (the domain XML intentionally does not expose the password, only the reference to the object that does manage the password). Known secret types are "ceph" for Ceph RBD network sources and "iscsi" for CHAP authentication of iSCSI targets. Both will require either a uuid attribute with the UUID of the secret object or a usage attribute matching the key that was specified in the secret object.
 
-4. encryption
+1. encryption
 
 Since 3.9.0, the encryption can be a sub-element of the source element for encrypted storage sources. If present, specifies how the storage source is encrypted See the [Storage Encryption](https://www.libvirt.org/formatstorageencryption.html) page for more information. Note that the 'qcow' format of encryption is broken and thus is no longer supported for use with disk images. ( Since 4.5.0 )
 
-5. reservations
+1. reservations
 
 Since 4.4.0, the reservations can be a sub-element of the source element for storage sources (QEMU driver only). If present it enables persistent reservations for SCSI based disks. The element has one mandatory attribute managed with accepted values yes and no. If managed is enabled libvirt prepares and manages any resources needed. When the persistent reservations are unmanaged, then the hypervisor acts as a client and the path to the server socket must be provided in the child element source, which currently accepts only the following attributes: type with one value unix, path path to the socket, and finally mode which accepts one value client specifying the role of hypervisor. It's recommended to allow libvirt manage the persistent reservations. Since 12.1.0 the migration (values yes, no) controls whether the hypervisor should attempt to migrate persistent reservations during migration.
 
-6. initiator
+1. initiator
 
 Since 4.7.0, the initiator element is supported for a disk type "network" that is using a source element with the protocol attribute "iscsi". If present, the initiator element provides the initiator IQN needed to access the source via mandatory attribute name.
 
-7. address
+1. address
 
 For disk of type nvme this element specifies the PCI address of the host NVMe controller. Since 6.0.0
 
-8. slices
+1. slices
 
 The slices element using its slice sub-elements allows configuring offset and size of either the location of the image format (slice type='storage') inside the storage source or the guest data inside the image format container (future expansion). The offset and size values are in bytes. Since 6.1.0
 
-9. ssl
+1. ssl
 
 For https and ftps accessed storage it's possible to tweak the SSL transport parameters with this element. The verify attribute allows to turn on or off SSL certificate validation. Supported values are yes and no. Since 6.2.0
 
-10. cookies
+1. cookies
 
 For http and https accessed storage it's possible to pass one or more cookies. The cookie name and value must conform to the HTTP specification. Since 6.2.0
 
-11. readahead
+1. readahead
 
 The readahead element has a size attribute which specifies the size of the readahead buffer in bytes for protocols which support it. Note that '0' is considered as if the value is not provided. Since 6.2.0
 
-12. timeout
+1. timeout
 
 The timeout element has a seconds attribute which specifies the connection timeout in seconds for protocols which support it. Note that '0' is considered as if the value is not provided. Since 6.2.0
 
-13. identity
+1. identity
 
 When using an nfs protocol, this is used to provide information on the configuration of the user and group. The element has two attributes, user and group. The user can provide these elements as user or group strings, or as user and group ID numbers directly if the string is formatted using a "+" at the beginning of the ID number. If either of these attributes is omitted, then that field is assumed to be the default value for the current system. If both user and group are intended to be default, then the entire element may be omitted.
 
 When using an ssh protocol, this element is used to enable authentication via ssh keys. In this configuration, the element has three possible attributes. The username attribute is required and specifies the name of the user on the remote server. ssh keys can be specified in one of two ways. The first way is by adding them to an ssh-agent and providing the path to the ssh-agent socket in the agentsock attribute. This method works for ssh keys with or without password protection. Alternatively, for ssh keys without a password, the ssh key can be specified directly by setting the keyfile attribute.
 
-14. reconnect
+1. reconnect
 
 For disk type vhostuser configures reconnect timeout if the connection is lost. This is set with the two mandatory attributes enabled and timeout. For disk type network and protocol nbd the QEMU NBD reconnect delay can be set via attribute delay:
 
-1) enabled
+1. enabled
 
 If the reconnect feature is enabled, accepts yes and no
 
-2) timeout
+1. timeout
 
 The amount of seconds after which hypervisor tries to reconnect.
 
-3) delay
+1. delay
 
 Only for NBD hosts. The amount of seconds during which all requests are paused and will be rerun after a successful reconnect. After that time, any delayed requests and all future requests before a successful reconnect will immediately fail. If not set the default QEMU value is 0.
 
-15. knownHosts
+1. knownHosts
 
 For storage accessed via the ssh protocol, this element configures a path to a file that will be used to verify the remote host. This file must contain the expected host key for the remote host or the connection will fail. The location of the file is specified via the path attribute. Since 9.8.0
 
-16. dataStore
+1. dataStore
 
 This element describes external data store, which is storage holding the actual data blocks of the given storage image. In such case the disk source image holds only the metadata. This feature is currently supported only by the qcow2 format. Since 10.10.0
 
 The following attribute is supported in dataStore:
 
-1) type
+1. type
 
 The type attribute represents the type of storage used by the data store, see disk type attribute above for more details and possible values.
 
 Moreover, dataStore supports the following sub-elements:
 
-2) format
+1. format
 
 The format element contains type attribute which specifies the internal format of the data store. Only raw value is supported.
 
-3) source
+1. source
 
 This element has the same structure as the source element in disk. It specifies which file, device, or network location contains the data of the described data store.
 
@@ -2242,12 +2254,11 @@ This element has the same structure as the source element in disk. It specifies 
 
 For a "file" or "volume" disk type which represents a cdrom or floppy (the device attribute), it is possible to define policy what to do with the disk if the source file is not accessible. (NB, startupPolicy is not valid for "volume" disk unless the specified storage volume is of "file" type). This is done by the startupPolicy attribute ( since 0.9.7 ), accepting these values:
 
-|     |     |
-| --- | --- |
-| mandatory | fail if missing for any reason (the default) |
+| <br />    | <br />                                                                |
+| --------- | --------------------------------------------------------------------- |
+| mandatory | fail if missing for any reason (the default)                          |
 | requisite | fail if missing on boot up, drop if missing on migrate/restore/revert |
-| optional | drop if missing at any start attempt |
-
+| optional  | drop if missing at any start attempt                                  |
 
 Since 1.1.2 the startupPolicy is extended to support hard disks besides cdrom and floppy. On guest cold bootup, if a certain disk is not accessible or its disk chain is broken, with startupPolicy 'optional' the guest will drop this disk. This feature doesn't support migration currently.
 
@@ -2259,23 +2270,23 @@ This element describes the backing store used by the disk specified by sibling s
 
 The type attribute represents the type of disk used by the backing store, see disk type attribute above for more details and possible values.
 
-2. index
+1. index
 
-This attribute is only valid in output (and ignored on input) and it can be used to refer to a specific part of the disk chain when doing block operations (such as via the virDomainBlockRebase API). For example, vda[2] refers to the backing store with index='2' of the disk with vda target.
+This attribute is only valid in output (and ignored on input) and it can be used to refer to a specific part of the disk chain when doing block operations (such as via the virDomainBlockRebase API). For example, vda\[2] refers to the backing store with index='2' of the disk with vda target.
 
 Moreover, backingStore supports the following sub-elements:
 
-3. format
+1. format
 
 The format element contains type attribute which specifies the internal format of the backing store, such as raw or qcow2.
 
 The format element can contain metadata_cache subelement, which has identical semantics to the identically named subelement of driver of a disk.
 
-4. source
+1. source
 
 This element has the same structure as the source element in disk. It specifies which file, device, or network location contains the data of the described backing store.
 
-5. backingStore
+1. backingStore
 
 If the backing store is not self-contained, the next element in the chain is described by nested backingStore element.
 
@@ -2390,37 +2401,27 @@ Throughput length since 2.4.0 and QEMU 2.6
 The optional driver element allows specifying further details related to the hypervisor driver used to provide the disk. Since 0.1.8
 
 - If the hypervisor supports multiple backend drivers, then the name attribute selects the primary backend driver name, while the optional type attribute provides the sub-type. For example, xen supports a name of "tap", "tap2", "phy", or "file", with a type of "aio", while qemu only supports a name of "qemu", but multiple types including "raw", "bochs", "qcow2", and "qed".
-    
 - The optional cache attribute controls the cache mechanism, possible values are "default", "none", "writethrough", "writeback", "directsync" (since 0.9.5; like "writethrough", but it bypasses the host page cache) and "unsafe" (since 0.9.7; host may cache all disk io, and sync requests from guest are ignored). Since 0.6.0
-    
 - The optional error_policy attribute controls how the hypervisor will behave on a disk read or write error, possible values are stop (suspend/pause the domain on error), report (report the error to the guest OS; since 0.9.7), ignore (ignore the error and try to continue), and enospace (suspend/pause the domain only if host storage is full; report the error to the guest OS otherwise).
-    
-    The default is left to the discretion of the hypervisor. Since 0.8.0.
-    
+
+  The default is left to the discretion of the hypervisor. Since 0.8.0.
+
 - The optional rerror_policy attribute controls behavior for read errors only. If no rerror_policy is given, error_policy is used for both read and write errors. If rerror_policy is given, it overrides the error_policy for read errors. Also note that "enospace" is not a valid policy for read errors, so if error_policy is set to "enospace" and no rerror_policy is given, the read error policy will be left at its default. Since 0.9.7
-    
 - The optional io attribute controls specific policies on I/O; qemu guests support "threads" and "native" Since 0.8.8, io_uring Since 6.3.0 (QEMU 5.0).
-    
 - The optional ioeventfd attribute allows users to set [domain I/O asynchronous handling](https://patchwork.kernel.org/patch/43390/) for disk device. The default is left to the discretion of the hypervisor. Accepted values are "on" and "off". Enabling this allows qemu to execute VM while a separate thread handles I/O. Typically guests experiencing high system CPU utilization during I/O will benefit from this. On the other hand, on overloaded host it could increase guest I/O latency. Since 0.9.3 (QEMU and KVM only) **In general you should leave this option alone, unless you are very certain you know what you are doing.**
-    
 - The optional event_idx attribute controls some aspects of device event processing. The value can be either 'on' or 'off' - if it is on, it will reduce the number of interrupts and exits for the guest. The default is determined by QEMU; usually if the feature is supported, default is on. In case there is a situation where this behavior is suboptimal, this attribute provides a way to force the feature off. Since 0.9.5 (QEMU and KVM only) **In general you should leave this option alone, unless you are very certain you know what you are doing.**
-    
 - The optional copy_on_read attribute controls whether to copy read backing file into the image file. The value can be either "on" or "off". Copy-on-read avoids accessing the same backing file sectors repeatedly and is useful when the backing file is over a slow network. By default copy-on-read is off. Since 0.9.10 (QEMU and KVM only)
-    
 - The optional discard attribute controls whether discard requests (also known as "trim" or "unmap") are ignored or passed to the filesystem. The value can be either "unmap" (allow the discard request to be passed) or "ignore" (ignore the discard request). Since 1.0.6 (QEMU and KVM only)
-    
 - The optional detect_zeroes attribute controls whether to detect zero write requests. The value can be "off", "on" or "unmap". First two values turn the detection off and on, respectively. The third value ("unmap") turns the detection on and additionally tries to discard such areas from the image based on the value of discard above (it will act as "on" if discard is set to "ignore"). NB enabling the detection is a compute intensive operation, but can save file space and/or time on slow media. Since 2.0.0
-    
 - The optional iothread attribute assigns the disk to an IOThread as defined by the range for the domain iothreads value. (See [IOThreads Allocation](https://www.libvirt.org/formatdomain.html#iothreads-allocation)). Multiple disks may be assigned to the same IOThread and are numbered from 1 to the domain iothreads value. Available for a disk device target configured to use "virtio" bus and "pci" or "ccw" address types. Since 1.2.8 (QEMU 2.1) _Note:_ iothread is mutually exclusive with iothreads.
-    
 - The optional iothreads sub-element allows specifying multiple IOThreads via the iothread sub-element with attribute id the disk will use for I/O operations. The virt queues (see queues attribute below) are automatically distributed among the configured iothreads.
-    
-    Optionally the iothread element can have multiple queue subelements with mandatory id attribute specifying that the iothread should be used to handle given virt queue. If queue mapping is present the queues attribute of driver must be configured and all configured virt queues must be included in the mapping. The virtio-blk device exposes request virt queues 0 to N-1 where N is the number of queues configured for the device.
-    
-    Since 10.0.0 (QEMU 9.0, virtio disks only).
-    
-    Examples:
-    
+
+  Optionally the iothread element can have multiple queue subelements with mandatory id attribute specifying that the iothread should be used to handle given virt queue. If queue mapping is present the queues attribute of driver must be configured and all configured virt queues must be included in the mapping. The virtio-blk device exposes request virt queues 0 to N-1 where N is the number of queues configured for the device.
+
+  Since 10.0.0 (QEMU 9.0, virtio disks only).
+
+  Examples:
+
 ```xml
     <driver name='qemu' queues='4'>
       <iothreads>
@@ -2428,7 +2429,7 @@ The optional driver element allows specifying further details related to the hyp
         <iothread id='3'/>
       </iothreads>
     </driver>
-    
+
     <driver name='qemu' queues='3'>
       <iothreads>
         <iothread id='2'>
@@ -2441,97 +2442,96 @@ The optional driver element allows specifying further details related to the hyp
       </iothreads>
     </driver>
 ```
+
 - The optional statistics sub-element allows configuring various optional statistics collection.
-    
-    Statistic values returned under [VIR_DOMAIN_STATS_BLOCK_SUFFIX_TIMED_GROUP_PREFIX](https://www.libvirt.org/html/libvirt-libvirt-domain.html#VIR_DOMAIN_STATS_BLOCK_SUFFIX_TIMED_GROUP_PREFIX) typed parameter prefix returned by the [virConnectGetAllDomainStats](https://www.libvirt.org/html/libvirt-libvirt-domain.html#virConnectGetAllDomainStats) API are collected based on one or more configurable intervals. An interval of collection is configured by `<statistic>` sub-elements with interval attribute configuring the collection window duration in seconds.
-    
-    Example:
-    
-	```xml
-	    <driver name='qemu'>
-	      <statistics>
-	        <statistic interval='1'/>
-	        <statistic interval='10'/>
-	      </statistics>
-	    </driver>
-	```
-    
-    Since 11.9.0 (QEMU 10.2, virtio, ide, scsi disks only).
-    
-    Block operation latency histogram collection can be configured using` <latency-histogram>` sub-element. The histogram is collected for the whole runtime of the VM, but can be re-started or reconfigured using the [virDomainUpdateDeviceFlags](https://www.libvirt.org/html/libvirt-libvirt-domain.html#virDomainUpdateDeviceFlags) API. Using the same config re-starts histogram collection.
-    
-    The optional type attribute configures specific operation to collect the histogram for. Supported types are read, write, zone, and flush. If the type attribute is omitted the histogram collection bins bins apply to all of the aforementioned types, which can be overriden with specific config.
-    
-    The `<latency-histogram>` has multiple mandatory` <bin>` sub-elements with mandatory start attribute configuring the starting boundary of the histogram bin configured in nanosecods of the operation duration and the intervals must be properly ordered and non-duplicate.
-    
-    Example:
-	    
-	```xml
-		<driver name='qemu'>
-		  <statistics>
-		
-			<latency-histogram>
-			  <bin start='0'/>
-			  <bin start='1000'/>
-			  <bin start='100000'/>
-			</latency-histogram>
-		
-		 [or for specific operation types]
-		
-			<latency-histogram type='read'>
-			  <bin start='0'/>
-			  <bin start='1000'/>
-			  <bin start='100000'/>
-			</latency-histogram>
-		
-		  </statistics>
-		</driver>
-	```
-	    
-    Since 12.1.0.
-    
+
+  Statistic values returned under [VIR_DOMAIN_STATS_BLOCK_SUFFIX_TIMED_GROUP_PREFIX](https://www.libvirt.org/html/libvirt-libvirt-domain.html#VIR_DOMAIN_STATS_BLOCK_SUFFIX_TIMED_GROUP_PREFIX) typed parameter prefix returned by the [virConnectGetAllDomainStats](https://www.libvirt.org/html/libvirt-libvirt-domain.html#virConnectGetAllDomainStats) API are collected based on one or more configurable intervals. An interval of collection is configured by `<statistic>` sub-elements with interval attribute configuring the collection window duration in seconds.
+
+  Example:
+
+  ```xml
+      <driver name='qemu'>
+        <statistics>
+          <statistic interval='1'/>
+          <statistic interval='10'/>
+        </statistics>
+      </driver>
+  ```
+
+  Since 11.9.0 (QEMU 10.2, virtio, ide, scsi disks only).
+
+  Block operation latency histogram collection can be configured using ` <latency-histogram>` sub-element. The histogram is collected for the whole runtime of the VM, but can be re-started or reconfigured using the [virDomainUpdateDeviceFlags](https://www.libvirt.org/html/libvirt-libvirt-domain.html#virDomainUpdateDeviceFlags) API. Using the same config re-starts histogram collection.
+
+  The optional type attribute configures specific operation to collect the histogram for. Supported types are read, write, zone, and flush. If the type attribute is omitted the histogram collection bins bins apply to all of the aforementioned types, which can be overriden with specific config.
+
+  The `<latency-histogram>` has multiple mandatory ` <bin>` sub-elements with mandatory start attribute configuring the starting boundary of the histogram bin configured in nanosecods of the operation duration and the intervals must be properly ordered and non-duplicate.
+
+  Example:
+
+  ```xml
+  	<driver name='qemu'>
+  	  <statistics>
+
+  		<latency-histogram>
+  		  <bin start='0'/>
+  		  <bin start='1000'/>
+  		  <bin start='100000'/>
+  		</latency-histogram>
+
+  	 [or for specific operation types]
+
+  		<latency-histogram type='read'>
+  		  <bin start='0'/>
+  		  <bin start='1000'/>
+  		  <bin start='100000'/>
+  		</latency-histogram>
+
+  	  </statistics>
+  	</driver>
+  ```
+
+  Since 12.1.0.
+
 - The optional queues attribute specifies the number of virt queues for virtio-blk ( Since 3.9.0 ) or vhost-user-blk ( Since 7.1.0 )
-    
 - The optional queue_size attribute specifies the size of each virt queue for virtio-blk or vhost-user-blk. ( Since 7.8.0 )
-    
 - For virtio disks, [Virtio-related options](https://www.libvirt.org/formatdomain.html#virtio-related-options) can also be set. ( Since 3.5.0 )
-    
 - The optional metadata_cache subelement controls aspects related to the format specific caching of storage image metadata. Note that this setting applies only on the top level image; the identically named subelement of backingStore's format element can be used to specify cache settings for the backing image.
-    
-    Since 7.0.0 the maximum size of the metadata cache of qcow2 format driver of the qemu hypervisor can be controlled via the max_size subelement (see example below).
-    
-    The optional discard_no_unref attribute can be set to control the way the qemu hypervisor handles guest discard commands inside the qcow2 image. When enabled, a discard request from within the guest will mark the qcow2 cluster as zero, but will keep the reference/offset of that cluster. But it will still pass the discard further to the lower layer. This will resolve fragmentation within the qcow2 image. Since 9.5.0 (QEMU 8.1)
-    
-    In the majority of cases the default configuration used by the hypervisor is sufficient so modifying this setting should not be necessary. For specifics on how the metadata cache of qcow2 in qemu behaves refer to the qemu [qcow2 cache docs](https://git.qemu.org/?p=qemu.git;a=blob;f=docs/qcow2-cache.txt)
-    
-    **Example**:
-    ```xml
-    <disk type='file' device='disk'>
-      <driver name='qemu' type='qcow2'>
+
+  Since 7.0.0 the maximum size of the metadata cache of qcow2 format driver of the qemu hypervisor can be controlled via the max_size subelement (see example below).
+
+  The optional discard_no_unref attribute can be set to control the way the qemu hypervisor handles guest discard commands inside the qcow2 image. When enabled, a discard request from within the guest will mark the qcow2 cluster as zero, but will keep the reference/offset of that cluster. But it will still pass the discard further to the lower layer. This will resolve fragmentation within the qcow2 image. Since 9.5.0 (QEMU 8.1)
+
+  In the majority of cases the default configuration used by the hypervisor is sufficient so modifying this setting should not be necessary. For specifics on how the metadata cache of qcow2 in qemu behaves refer to the qemu [qcow2 cache docs](https://git.qemu.org/?p=qemu.git;a=blob;f=docs/qcow2-cache.txt)
+
+  **Example**:
+
+  ```xml
+  <disk type='file' device='disk'>
+    <driver name='qemu' type='qcow2'>
+      <metadata_cache>
+        <max_size unit='bytes'>1234</max_size>
+      </metadata_cache>
+    </driver>
+    <source file='/var/lib/libvirt/images/domain.qcow'/>
+    <backingStore type='file'>
+      <format type='qcow2'>
         <metadata_cache>
           <max_size unit='bytes'>1234</max_size>
         </metadata_cache>
-      </driver>
-      <source file='/var/lib/libvirt/images/domain.qcow'/>
-      <backingStore type='file'>
-        <format type='qcow2'>
-          <metadata_cache>
-            <max_size unit='bytes'>1234</max_size>
-          </metadata_cache>
-        </format>
-        <source file='/var/lib/libvirt/images/snapshot.qcow'/>
-        <backingStore/>
-      </backingStore>
-      <target dev='vdd' bus='virtio'/>
-    </disk>
-    ```
-    
+      </format>
+      <source file='/var/lib/libvirt/images/snapshot.qcow'/>
+      <backingStore/>
+    </backingStore>
+    <target dev='vdd' bus='virtio'/>
+  </disk>
+  ```
 
 #### 22.1.10 backenddomain
 
 The optional backenddomain element allows specifying a backend domain (aka driver domain) hosting the disk. Use the name attribute to specify the backend domain name. Since 1.2.13 (Xen only)
 
 #### 22.1.11 boot
+
 Specifies that the disk is bootable. The order attribute determines the order in which devices will be tried during boot sequence. On the S390 architecture only the first boot device is used. The optional loadparm attribute is an 8 character string which can be queried by guests on S390 via sclp or diag 308. Linux guests on S390 can use loadparm to select a boot entry. Since 3.5.0 The per-device boot elements cannot be used together with general boot elements in [guest firmware](https://www.libvirt.org/formatdomain.html#guest-firmware) section. Since 0.8.8
 
 #### 22.1.12 encryption
@@ -2590,15 +2590,15 @@ The optional geometry element provides the ability to override geometry settings
 
 The cyls attribute is the number of cylinders.
 
-2. heads
+1. heads
 
 The heads attribute is the number of heads.
 
-3. secs
+1. secs
 
 The secs attribute is the number of sectors per track.
 
-4. trans
+1. trans
 
 The optional trans attribute is the BIOS-Translation-Modus (none, lba or auto)
 
@@ -2610,11 +2610,11 @@ If present, the blockio element allows to override any of the block device prope
 
 The logical block size the disk will report to the guest OS. For Linux this would be the value returned by the BLKSSZGET ioctl and describes the smallest units for disk I/O.
 
-2. physical_block_size
+1. physical_block_size
 
 The physical block size the disk will report to the guest OS. For Linux this would be the value returned by the BLKPBSZGET ioctl and describes the disk's hardware sector size which can be relevant for the alignment of disk data.
 
-3. discard_granularity
+1. discard_granularity
 
 The smallest amount of data that can be discarded in a single operation. It impacts the unmap operations and it must be a multiple of a logical_block_size. This is usually properly configured by the hypervisor.
 
@@ -2671,7 +2671,8 @@ A directory on the host that can be accessed directly from the guest. since 0.3.
       <source dir='/export/to/guest'/>
       <target dir='mtptag'/>
   </filesystem>
-  ```
+```
+
 </devices>
 ```
 
@@ -2746,13 +2747,9 @@ This setting resembles the behaviour of 9pfs prior to QEMU 4.2, that is no actio
 The optional driver element allows specifying further details related to the hypervisor driver used to provide the filesystem. Since 1.0.6
 
 - If the hypervisor supports multiple backend drivers, then the type attribute selects the primary backend driver name, while the format attribute provides the format type. For example, LXC supports a type of "loop", with a format of "raw" or "nbd" with any format. QEMU supports a type of "path" or "handle", but no formats. Virtuozzo driver supports a type of "ploop" with a format of "ploop".
-    
 - For virtio-backed devices, [Virtio-related options](https://www.libvirt.org/formatdomain.html#virtio-related-options) can also be set. ( Since 3.5.0 )
-    
 - For virtiofs, the queue attribute can be used to specify the queue size (i.e. how many requests can the queue fit). ( Since 6.2.0 )
-    
 - QEMU supports mtp which exposes a virtual USB MTP device to the guest. ( Since 10.2.0 )
-    
 
 #### 22.2.3 binary
 
@@ -2857,9 +2854,7 @@ This device can only work with virtio 1.0 guest drivers, and it's the recommende
 While the information outlined above applies to most virtio devices, there are a few exceptions:
 
 - for SCSI controllers, there is no virtio model available due to historical reasons: use virtio-scsi instead, which behaves the same as virtio does for other devices. Both virtio-transitional and virtio-non-transitional work with SCSI controllers;
-    
 - some devices, such as GPUs and input devices (keyboard, tablet and mouse), are only defined in the virtio 1.0 spec and as such don't have a transitional variant: the only accepted model is virtio, which will result in a non-transitional device.
-    
 
 For more details see the [qemu patch posting](https://lists.gnu.org/archive/html/qemu-devel/2018-12/msg00923.html) and the [virtio-1.0 spec](https://docs.oasis-open.org/virtio/virtio/v1.0/virtio-v1.0.html).
 
@@ -2867,7 +2862,7 @@ For more details see the [qemu patch posting](https://lists.gnu.org/archive/html
 
 Depending on the guest architecture, some device buses can appear more than once, with a group of virtual devices tied to a virtual controller. Normally, libvirt can automatically infer such controllers without requiring explicit XML markup, but sometimes it is necessary to provide an explicit controller element, notably when planning the [PCI topology](https://www.libvirt.org/pci-hotplug.html) for guests where device hotplug is expected.
 
-```xml
+````xml
 <devices>
   <controller type='ide' index='0'/>
   <controller type='virtio-serial' index='0' ports='16' vectors='4'/>
@@ -2883,11 +2878,12 @@ Depending on the guest architecture, some device buses can appear more than once
     <serial>
     ```
     </serial>
-  ```
+````
+
 </devices>
 ```
 
-Each controller has a mandatory attribute type, which must be one of 'ide', 'fdc', 'scsi', 'sata', 'usb', 'ccid', 'virtio-serial' or 'pci', and a mandatory attribute index which is the decimal integer describing in which order the bus controller is encountered (for use in controller attributes of `<address> `elements). Since 1.3.5 the index is optional; if not specified, it will be auto-assigned to be the lowest unused index for the given controller type. Some controller types have additional attributes that control specific features, such as:
+Each controller has a mandatory attribute type, which must be one of 'ide', 'fdc', 'scsi', 'sata', 'usb', 'ccid', 'virtio-serial' or 'pci', and a mandatory attribute index which is the decimal integer describing in which order the bus controller is encountered (for use in controller attributes of `<address> ` elements). Since 1.3.5 the index is optional; if not specified, it will be auto-assigned to be the lowest unused index for the given controller type. Some controller types have additional attributes that control specific features, such as:
 
 #### 22.6.1 virtio-serial
 
@@ -2915,7 +2911,7 @@ Supported Since 11.5.0, the nvme controller can be used to support NVMe disks. I
 
 Note: The PowerPC64 "spapr-vio" addresses do not have an associated controller.
 
-For controllers that are themselves devices on a PCI or USB bus, an optional sub-element `<address> `can specify the exact relationship of the controller to its master bus, with semantics described in the [Device Addresses](https://www.libvirt.org/formatdomain.html#device-addresses) section.
+For controllers that are themselves devices on a PCI or USB bus, an optional sub-element `<address> ` can specify the exact relationship of the controller to its master bus, with semantics described in the [Device Addresses](https://www.libvirt.org/formatdomain.html#device-addresses) section.
 
 An optional sub-element driver can specify the driver specific options:
 
@@ -2948,6 +2944,7 @@ The optional iothreads sub-element allows specifying multiple IOThreads via the 
 Optionally the iothread element can have multiple queue subelements with mandatory id atribute specifying that the iothread should be used to handle given virt queue. If queue mapping is present the queues attribute of driver must be configured and all configured virt queues must be included in the mapping. The virtio-scsi device exposes request virt queues 0 to N-1 where N is the number of queues configured for the device.
 
 > Example:
+
 ```xml
  <driver queues='4>
    <iothreads>
@@ -2955,7 +2952,7 @@ Optionally the iothread element can have multiple queue subelements with mandato
      <iothread id='3'/>
    </iothreads>
  </driver>
- 
+
  <driver queues='3'>
    <iothreads>
      <iothread id='2'>
@@ -2968,14 +2965,14 @@ Optionally the iothread element can have multiple queue subelements with mandato
    </iothreads>
  </driver>
 ```
+
 #### 22.6.13 virtio options
 
 For virtio controllers, [Virtio-related options](https://www.libvirt.org/formatdomain.html#virtio-related-options) can also be set. ( Since 3.5.0 )
 
 ---
 
-
-<mark style="background-color: yellow；color: black">USB 从机控制器</mark>有一个可选的子元素 `<主控制器>` ，用于明确指定从机与主控制器之间的具体关系。从机控制器与主控制器位于同一总线上，因此从机索引值应相同。并非所有控制器型号都能用作从机控制器，而 libvirt 可能会为某些特定型号提供一些合理的默认设置（主控制器的起始端口和地址的功能设置）。首选的从机控制器是 ich-uhci[123]。
+<mark style="background-color: yellow；color: black">USB 从机控制器</mark>有一个可选的子元素 `<主控制器>` ，用于明确指定从机与主控制器之间的具体关系。从机控制器与主控制器位于同一总线上，因此从机索引值应相同。并非所有控制器型号都能用作从机控制器，而 libvirt 可能会为某些特定型号提供一些合理的默认设置（主控制器的起始端口和地址的功能设置）。首选的从机控制器是 ich-uhci\[123]。
 
 ```xml
 <devices>
@@ -2986,26 +2983,22 @@ For virtio controllers, [Virtio-related options](https://www.libvirt.org/formatd
     <master startport='0'/>
     <address type='pci' domain='0' bus='0' slot='4' function='0' multifunction='on'/>
   </controller>
-  ```
+```
+
 </devices>
 ```
 
 <mark style="background-color: yellow；color: black">PCI controllers </mark>have an optional model attribute; possible values for this attribute are
 
 - pci-root, pci-bridge ( since 1.0.5 )
-    
 - pcie-root, dmi-to-pci-bridge ( since 1.1.2 )
-    
 - pcie-root-port, pcie-switch-upstream-port, pcie-switch-downstream-port ( since 1.2.19 )
-    
 - pci-expander-bus, pcie-expander-bus ( since 1.3.4 )
-    
 - pcie-to-pci-bridge ( since 4.3.0 )
-    
 
 The root controllers (pci-root and pcie-root) have an optional pcihole64 element specifying how big (in kiB, or in the unit specified by pcihole64's unit attribute) the 64-bit PCI hole should be. Some guests (like Windows XP or Windows Server 2003) might crash when QEMU and Seabios are recent enough to support 64-bit PCI holes, unless this is disabled (set to 0). Since 1.1.2 (QEMU only)
 
-PCI controllers also have an optional subelement `<model>` with an attribute name. The name attribute holds the name of the specific device that qemu is emulating (e.g. "i82801b11-bridge") rather than simply the class of device ("pcie-to-pci-bridge", "pci-bridge"), which is set in the controller element's model **attribute**. In almost all cases, you should not manually add a 
+PCI controllers also have an optional subelement `<model>` with an attribute name. The name attribute holds the name of the specific device that qemu is emulating (e.g. "i82801b11-bridge") rather than simply the class of device ("pcie-to-pci-bridge", "pci-bridge"), which is set in the controller element's model **attribute**. In almost all cases, you should not manually add a
 `<model>` subelement to a controller, nor should you modify one that is automatically generated by libvirt. Since 1.2.19 (QEMU only).
 
 PCI controllers also have an optional subelement `<target>` with the attributes and subelements listed below. These are configurable items that 1) are visible to the guest OS so must be preserved for guest ABI compatibility, and 2) are usually left to default values or derived automatically by libvirt. In almost all cases, you should not manually add a `<target>` subelement to a controller, nor should you modify the values in the those that are automatically generated by libvirt. Since 1.2.19 (QEMU only).
@@ -3081,7 +3074,8 @@ pcie-switch-upstream-port is a more flexible (but also more complex) device that
 
 ```xml
 <devices>
-  ```
+```
+
   <lease>
     <lockspace>somearea</lockspace>
     <key>somekey</key>
@@ -3239,7 +3233,7 @@ The USB device can either be addressed by vendor / product id using the vendor a
 
 Since 1.0.0, the source element of USB devices may contain startupPolicy attribute which can be used to define policy what to do if the specified host USB device is not found. The attribute accepts the following values:
 
-|           |                                                                       |
+| <br />    | <br />                                                                |
 | --------- | --------------------------------------------------------------------- |
 | mandatory | fail if missing for any reason (the default)                          |
 | requisite | fail if missing on boot up, drop if missing on migrate/restore/revert |
@@ -3247,7 +3241,7 @@ Since 1.0.0, the source element of USB devices may contain startupPolicy attribu
 
 Since 8.6.0, the source element can contain guestReset attribute with the following value:
 
-|               |                                                                                  |
+| <br />        | <br />                                                                           |
 | ------------- | -------------------------------------------------------------------------------- |
 | off           | all guest initiated device reset requests are ignored                            |
 | uninitialized | device request is ignored if device is initialized, otherwise reset is performed |
@@ -3479,7 +3473,7 @@ Since 6.6.0, one can force libvirt to keep the provided MAC address when it's in
 
 Since 11.2.0, the <mac/> element can optionally contain currentAddress attribute (output only), which contains new MAC address if the guest changed it. This is currently implemented only for the model type virtio in QEMU/KVM and requires setting trustGuestRxFilters to yes.
 
-Since 7.3.0, one can set the ACPI index against network interfaces. With some operating systems (eg Linux with systemd), the ACPI index is used to provide network interface device naming, that is stable across changes in PCI addresses assigned to the device. This value is required to be unique across all devices and be between 1 and (16*1024-1).
+Since 7.3.0, one can set the ACPI index against network interfaces. With some operating systems (eg Linux with systemd), the ACPI index is used to provide network interface device naming, that is stable across changes in PCI addresses assigned to the device. This value is required to be unique across all devices and be between 1 and (16\*1024-1).
 
 #### 22.11.1 Virtual network
 
@@ -3487,7 +3481,7 @@ Since 7.3.0, one can set the ACPI index against network interfaces. With some op
 
 Provides a connection whose details are described by the named network definition. Depending on the virtual network's "forward mode" configuration, the network may be totally isolated (no `<forward>` element given), NAT'ing to an explicit network device or to the default route (`<forward mode='nat'>`), routed with no NAT (`<forward mode='route'/>`), or connected directly to one of the host's network interfaces (via macvtap) or bridge devices (`<forward mode='bridge|private|vepa|passthrough'/>` Since 0.9.4)
 
-For networks with a forward mode of bridge, private, vepa, and passthrough, it is assumed that the host has any necessary DNS and DHCP services already setup outside the scope of libvirt. In the case of isolated, nat, and routed networks, DHCP and DNS are provided on the virtual network by libvirt, and the IP range can be determined by examining the virtual network config with 'virsh net-dumpxml [networkname]'. There is one virtual network called 'default' setup out of the box which does NAT'ing to the default route and has an IP range of 192.168.122.0/255.255.255.0. Each guest will have an associated tun device created with a name of vnetN, which can also be overridden with the `<target>` element (see [Overriding the target element](https://www.libvirt.org/formatdomain.html#overriding-the-target-element)).
+For networks with a forward mode of bridge, private, vepa, and passthrough, it is assumed that the host has any necessary DNS and DHCP services already setup outside the scope of libvirt. In the case of isolated, nat, and routed networks, DHCP and DNS are provided on the virtual network by libvirt, and the IP range can be determined by examining the virtual network config with 'virsh net-dumpxml \[networkname]'. There is one virtual network called 'default' setup out of the box which does NAT'ing to the default route and has an IP range of 192.168.122.0/255.255.255.0. Each guest will have an associated tun device created with a name of vnetN, which can also be overridden with the `<target>` element (see [Overriding the target element](https://www.libvirt.org/formatdomain.html#overriding-the-target-element)).
 
 When the source of an interface is a network, a portgroup can be specified along with the name of the network; one network may have multiple portgroups defined, with each portgroup containing slightly different configuration information for different classes of network connections. Since 0.9.4.
 
@@ -3502,7 +3496,8 @@ Since the actual type of switch may vary depending on the configuration in the `
   <interface type='network'>
     <source network='default'/>
   </interface>
-  ```
+```
+
   <interface type='network'>
     <source network='default' portgroup='engineering'/>
     <target dev='vnet7'/>
@@ -3524,7 +3519,8 @@ On Linux systems, the bridge device is normally a standard Linux host bridge. On
 
 ```xml
 <devices>
-  ```
+```
+
   <interface type='bridge'>
     <source bridge='br0'/>
   </interface>
@@ -3547,7 +3543,8 @@ On hosts that support Open vSwitch on the kernel side and have the Midonet Host 
 
 ```xml
 <devices>
-  ```
+```
+
   <interface type='bridge'>
     <source bridge='br0'/>
   </interface>
@@ -3577,7 +3574,8 @@ Since 3.8.0 it is possible to override the guest's default network address by in
 ```xml
 <devices>
   <interface type='user'/>
-  ```
+```
+
   <interface type='user'>
     <mac address="00:11:22:33:44:55"/>
     <ip family='ipv4' address='172.17.1.1' prefix='16'/>
@@ -3586,38 +3584,37 @@ Since 3.8.0 it is possible to override the guest's default network address by in
 </devices>
 ```
 
-These settings are surprisingly **not** used by SLIRP to set the exact IP address; instead they are used to determine what **network/subnet** the guest's IP address should be on, and the guest will be given an address in that subnet, but the host portion of the address will still be the host portion of "10.0.2.15" (based on the configured prefix (or a prefix of 24 if no prefix is specified). The DNS and default gateway addresses given to the guest will be similarly based on the network portion of the configuration-provided `<ip>` combined with the host portion of SLIRPs default settings for DNS/gateway (10.0.2.3/10.0.2.2). To help resolve the confusion of the previous sentences, the table below shows examples of the settings that will be provided to the guest (via a DHCP response) to use for its interface config (ip/prefix, DNS, default gateway) for various settings of `<ip>` element address and prefix in libvirt's `<interface type='user'> `config:
+These settings are surprisingly **not** used by SLIRP to set the exact IP address; instead they are used to determine what **network/subnet** the guest's IP address should be on, and the guest will be given an address in that subnet, but the host portion of the address will still be the host portion of "10.0.2.15" (based on the configured prefix (or a prefix of 24 if no prefix is specified). The DNS and default gateway addresses given to the guest will be similarly based on the network portion of the configuration-provided `<ip>` combined with the host portion of SLIRPs default settings for DNS/gateway (10.0.2.3/10.0.2.2). To help resolve the confusion of the previous sentences, the table below shows examples of the settings that will be provided to the guest (via a DHCP response) to use for its interface config (ip/prefix, DNS, default gateway) for various settings of `<ip>` element address and prefix in libvirt's `<interface type='user'> ` config:
 
-   
-|libvirt `<ip>` element|guest ip/prefix|guest DNS|guest default gateway|
-|---|---|---|---|
-|(unspecified)|10.0.2.15/24|10.0.2.3|10.0.2.2|
-|address='172.17.1.1' prefix='16'|172.17.2.15/16|172.17.2.3|172.17.2.2|
-|address='172.17.1.1' prefix='24'|172.17.1.15/24|172.17.1.3|172.17.1.2|
-|address='172.17.1.1' prefix='8'|172.0.2.15/16|172.0.2.3|172.0.2.2|
-|address='172.17.1.1' prefix='23'|172.17.0.15/23|172.17.0.3|172.17.0.2|
+| libvirt `<ip>` element           | guest ip/prefix | guest DNS  | guest default gateway |
+| -------------------------------- | --------------- | ---------- | --------------------- |
+| (unspecified)                    | 10.0.2.15/24    | 10.0.2.3   | 10.0.2.2              |
+| address='172.17.1.1' prefix='16' | 172.17.2.15/16  | 172.17.2.3 | 172.17.2.2            |
+| address='172.17.1.1' prefix='24' | 172.17.1.15/24  | 172.17.1.3 | 172.17.1.2            |
+| address='172.17.1.1' prefix='8'  | 172.0.2.15/16   | 172.0.2.3  | 172.0.2.2             |
+| address='172.17.1.1' prefix='23' | 172.17.0.15/23  | 172.17.0.3 | 172.17.0.2            |
 
 #### 22.11.4 Userspace connection using passt
 
-Since 9.0.0 (QEMU and KVM only) an alternate backend implementation of the user interface type can be selected by setting the interface's` <backend>` subelement type attribute to passt. In this case, the passt transport [(details here)](https://passt.top) is used. passt is run as a separate process from QEMU - the passt process handles the details of forwarding network traffic back and forth to the physical network (using userspace proxies and a separate network namespace to provide outgoing UDP/TCP/ICMP sessions, and optionally redirecting incoming traffic destined for the host toward the guest instead), and a socket between passt and QEMU forwards that traffic on to the guest (and back out, of course).
+Since 9.0.0 (QEMU and KVM only) an alternate backend implementation of the user interface type can be selected by setting the interface's ` <backend>` subelement type attribute to passt. In this case, the passt transport [(details here)](https://passt.top) is used. passt is run as a separate process from QEMU - the passt process handles the details of forwarding network traffic back and forth to the physical network (using userspace proxies and a separate network namespace to provide outgoing UDP/TCP/ICMP sessions, and optionally redirecting incoming traffic destined for the host toward the guest instead), and a socket between passt and QEMU forwards that traffic on to the guest (and back out, of course).
 
 Since 11.1.0 (QEMU and KVM only) you may prefer to use the passt backend with the more efficient and performant type='vhostuser' rather than type='user'. All the options related to passt in the paragraphs below here also apply when using the passt backend with type='vhostuser'; any other details specific to vhostuser are described [here](https://www.libvirt.org/formatdomain.html#vhost-user-connection-with-passt-backend).
 
 Similar to SLIRP, passt has an internal DHCP server that provides a requesting guest with one ipv4 and one ipv6 address. There are default values for both of these, or you can use the `<ip>` element (described above, with behavioral differences as outlined below) to configure one IPv4 and one IPv6 address that passt's DHCP server can provide to the guest.
 
-Unlike SLIRP, when no `<ip> `address is specified, passt will by default provide the guest with an IP address, DNS server, etc. that are identical to those settings on the host itself (through the magic of the proxies and a separate network namespace, this doesn't create any conflict).
+Unlike SLIRP, when no `<ip> ` address is specified, passt will by default provide the guest with an IP address, DNS server, etc. that are identical to those settings on the host itself (through the magic of the proxies and a separate network namespace, this doesn't create any conflict).
 
-Also different from SLIRP's behavior: if you do specify IP address(es), the exact address and netmask/prefix you specify will be provided to the guest (i.e. passt doesn't interpret the` <ip> `settings as a network address like SLIRP does, but as a host address). In the table of examples given above, the guest IP would be set to exactly 172.17.1.1 in all cases (the DNS and default gateway will be set the same as they are on the host).
+Also different from SLIRP's behavior: if you do specify IP address(es), the exact address and netmask/prefix you specify will be provided to the guest (i.e. passt doesn't interpret the`<ip>`settings as a network address like SLIRP does, but as a host address). In the table of examples given above, the guest IP would be set to exactly 172.17.1.1 in all cases (the DNS and default gateway will be set the same as they are on the host).
 
 Just as with SLIRP, though, once traffic from the guest leaves the host towards the rest of the network, it will always appear as if it came from the host's IP.
 
-There are a few other options that are configurable only for the passt backend. For example, the `<backend>` subelement's attribute logFile can be used to tell the passt process for this interface where to write its message log (since 9.0.0)[*], while the hostname attribute is used to set the hostname sent to the guest in a DHCPv4 response (using option 12) (since 11.8.0), and fqdn sets the "fully qualified domain name" sent to the guest in DHCPv4 response option 81 and DHCPv6 response option 39 (since 11.8.0). Also, the `<source>` subelement attribute dev can tell passt a particular host interface to use when deriving the routes given to the guest for forwarding traffic upstream.
+There are a few other options that are configurable only for the passt backend. For example, the `<backend>` subelement's attribute logFile can be used to tell the passt process for this interface where to write its message log (since 9.0.0)\[\*], while the hostname attribute is used to set the hostname sent to the guest in a DHCPv4 response (using option 12) (since 11.8.0), and fqdn sets the "fully qualified domain name" sent to the guest in DHCPv4 response option 81 and DHCPv6 response option 39 (since 11.8.0). Also, the `<source>` subelement attribute dev can tell passt a particular host interface to use when deriving the routes given to the guest for forwarding traffic upstream.
 
-[*] _Due to the design decisions of passt, when using SELinux on the host, it is recommended that the log file reside in the runtime directory of the user under which the passt process will run, most probably ``/run/user/$UID`` (where ``$UID`` is the UID of that user), e.g. ``/run/user/1000``. Be aware that libvirt does not create this directory if it does not already exist to avoid possible, however unlikely, issues with orphaned directories or permissions, etc. The logfile attribute is meant mostly for debugging, so it shouldn't be set under normal circumstances._
+\[\*] _Due to the design decisions of passt, when using SELinux on the host, it is recommended that the log file reside in the runtime directory of the user under which the passt process will run, most probably_ _`/run/user/$UID`_ _(where_ _`$UID`_ _is the UID of that user), e.g._ _`/run/user/1000`. Be aware that libvirt does not create this directory if it does not already exist to avoid possible, however unlikely, issues with orphaned directories or permissions, etc. The logfile attribute is meant mostly for debugging, so it shouldn't be set under normal circumstances._
 
 Additionally, when passt is used, multiple `<portForward>` elements can be added to forward incoming network traffic for the host to this guest interface. Each `<portForward>` must have a proto attribute (set to tcp or udp), optional original address (if not specified, then all incoming sessions to any host IP for the given proto/port(s) will be forwarded to the guest), and an optional dev attribute to limit the forwarded traffic to a specific host interface.
 
-The decision of which ports to forward is described with zero or more `<range>` subelements of `<portForward> `(if there is no `<range>` then **all** ports for the given proto/address will be forwarded). Each `<range>` has a start and optional end attribute. If end is omitted then a single port will be forwarded, otherwise all ports between start and end (inclusive) will be forwarded. If the port number(s) should remain unmodified as the session is forwarded, no further options are needed, but if the guest is expecting the sessions on a different port, then this should be specified with the to attribute of `<range>` - the port number of each forwarded session in the range will be offeset by "to - start". A `<range>` element can also be used to specify a range of ports that should **not** be forwarded. This is done by setting the range's exclude attribute to yes. This may not seem very useful, but can be when it is desirable to forward a long range of ports **with the exception of some subset**.
+The decision of which ports to forward is described with zero or more `<range>` subelements of `<portForward> ` (if there is no `<range>` then **all** ports for the given proto/address will be forwarded). Each `<range>` has a start and optional end attribute. If end is omitted then a single port will be forwarded, otherwise all ports between start and end (inclusive) will be forwarded. If the port number(s) should remain unmodified as the session is forwarded, no further options are needed, but if the guest is expecting the sessions on a different port, then this should be specified with the to attribute of `<range>` - the port number of each forwarded session in the range will be offeset by "to - start". A `<range>` element can also be used to specify a range of ports that should **not** be forwarded. This is done by setting the range's exclude attribute to yes. This may not seem very useful, but can be when it is desirable to forward a long range of ports **with the exception of some subset**.
 
 ```xml
 <devices>
@@ -3689,7 +3686,8 @@ This feature attaches a virtual function of a SRIOV capable NIC directly to a VM
 
 ```xml
 <devices>
-  ```
+```
+
   <interface type='direct' trustGuestRxFilters='no'>
     <source dev='eth0' mode='vepa'/>
   </interface>
@@ -3820,7 +3818,7 @@ The `<teaming>` element required attribute type will be set to either persistent
 
 In the particular case of QEMU, libvirt's `<teaming>` element is used to setup a virtio-net "failover" device pair. For this setup, the persistent device must be an interface with `<model type="virtio"/>`, and the transient device must be `<interface type='hostdev'/>` (or <interface type='network'/> where the referenced network defines a pool of SRIOV VFs). The guest will then have a simple network team/bond device made of the virtio NIC + hostdev NIC pair. In this configuration, the higher-performing hostdev NIC will normally be preferred for all network traffic, but when the domain is migrated, QEMU will automatically unplug the VF from the guest, and then hotplug a similar device once migration is completed; while migration is taking place, network traffic will use the virtio NIC. (Of course the emulated virtio NIC and the hostdev NIC must be connected to the same subnet for bonding to work properly).
 
-Since 7.1.0 The` <teaming>` element can also be added to a plain `<hostdev>` device.
+Since 7.1.0 The ` <teaming>` element can also be added to a plain `<hostdev>` device.
 
 ```xml
   <hostdev mode='subsystem' type='pci' managed='no'>
@@ -3864,7 +3862,8 @@ A TCP client/server architecture provides a virtual network. One VM provides the
     <mac address='52:54:00:22:c9:42'/>
     <source address='192.168.0.1' port='5558'/>
   </interface>
-  ```
+```
+
   <interface type='client'>
     <mac address='52:54:00:8b:c9:51'/>
     <source address='192.168.0.1' port='5558'/>
@@ -3974,11 +3973,11 @@ The optional queues attribute controls the number of queues to be used for eithe
 
 rx_queue_size
 
-The optional rx_queue_size attribute controls the size of virtio ring for each queue as described above. The default value is hypervisor dependent and may change across its releases. Moreover, some hypervisors may pose some restrictions on actual value. For instance, latest QEMU (as of 2016-09-01) requires value to be a power of two from [256, 1024] range. Since 2.3.0 (QEMU and KVM only) **In general you should leave this option alone, unless you are very certain you know what you are doing.**
+The optional rx_queue_size attribute controls the size of virtio ring for each queue as described above. The default value is hypervisor dependent and may change across its releases. Moreover, some hypervisors may pose some restrictions on actual value. For instance, latest QEMU (as of 2016-09-01) requires value to be a power of two from \[256, 1024] range. Since 2.3.0 (QEMU and KVM only) **In general you should leave this option alone, unless you are very certain you know what you are doing.**
 
 tx_queue_size
 
-The optional tx_queue_size attribute controls the size of virtio ring for each queue as described above. The default value is hypervisor dependent and may change across its releases. Moreover, some hypervisors may pose some restrictions on actual value. For instance, QEMU v2.9 requires value to be a power of two from [256, 1024] range. In addition to that, this may work only for a subset of interface types, e.g. aforementioned QEMU enables this option only for vhostuser type. Since 3.7.0 (QEMU and KVM only) **In general you should leave this option alone, unless you are very certain you know what you are doing.**
+The optional tx_queue_size attribute controls the size of virtio ring for each queue as described above. The default value is hypervisor dependent and may change across its releases. Moreover, some hypervisors may pose some restrictions on actual value. For instance, QEMU v2.9 requires value to be a power of two from \[256, 1024] range. In addition to that, this may work only for a subset of interface types, e.g. aforementioned QEMU enables this option only for vhostuser type. Since 3.7.0 (QEMU and KVM only) **In general you should leave this option alone, unless you are very certain you know what you are doing.**
 
 rss
 
@@ -4079,7 +4078,8 @@ For hypervisors which support this, you can change how a PCI Network device's RO
 
 ```
 <devices>
-  ```
+```
+
   <interface type='bridge'>
     <source bridge='br0'/>
     <backenddomain name='netvm'/>
@@ -4109,7 +4109,7 @@ This part of interface XML provides setting quality of service. Incoming and out
 
 #### 22.11.23 Setting VLAN tag (on supported network types only)
 
-```
+````
 <devices>
   <interface type='bridge'>
     <vlan>
@@ -4128,13 +4128,13 @@ This part of interface XML provides setting quality of service. Incoming and out
     ```
   </interface>
 </devices>
-```
+````
 
 If (and only if) the network connection used by the guest supports VLAN tagging transparent to the guest, an optional `<vlan>` element can specify one or more VLAN tags to apply to the guest's network traffic Since 0.10.0.
 
 Network connections that support guest-transparent VLAN tagging include type='bridge' interfaces connected to an Open vSwitch bridge, SRIOV Virtual Functions (VF) used via type='hostdev' (direct device assignment), since 1.3.5, SRIOV VFs used via type='direct' with mode='passthrough' (macvtap "passthru" mode) and, since 11.0.0 standard linux bridges. Other connection types, including libvirt's own virtual networks, **do not** support it. 802.1Qbh (vn-link) and 802.1Qbg (VEPA) switches provide their own way (outside of libvirt) to tag guest traffic onto a specific VLAN. Each tag is given in a separate `<tag>` subelement of `<vlan>` (for example: `<tag id='42'/>`). For VLAN trunking of multiple tags (which is supported on Open vSwitch connections and standard linux bridges), multiple `<tag>` subelements can be specified, which implies that the user wants to do VLAN trunking on the interface for all the specified tags. In the case that VLAN trunking of a single tag is desired, the optional attribute trunk='yes' can be added to the toplevel `<vlan>` element to differentiate trunking of a single tag from normal tagging.
 
-For network connections using Open vSwitch and standard linux bridges it is also possible to configure 'native-tagged' and 'native-untagged' VLAN modes Since 1.1.0. This is done with the optional nativeMode attribute on the `<tag>` subelement: nativeMode may be set to 'tagged' or 'untagged'. The id attribute of the` <tag>` subelement containing nativeMode sets which VLAN is considered to be the "native" VLAN for this interface, and the nativeMode attribute determines whether or not traffic for that VLAN will be tagged.
+For network connections using Open vSwitch and standard linux bridges it is also possible to configure 'native-tagged' and 'native-untagged' VLAN modes Since 1.1.0. This is done with the optional nativeMode attribute on the `<tag>` subelement: nativeMode may be set to 'tagged' or 'untagged'. The id attribute of the ` <tag>` subelement containing nativeMode sets which VLAN is considered to be the "native" VLAN for this interface, and the nativeMode attribute determines whether or not traffic for that VLAN will be tagged.
 
 #### 22.11.24 Isolating guests' network traffic from each other
 
@@ -4207,7 +4207,8 @@ This element provides means of setting coalesce settings for some interface devi
     <route family='ipv4' address='192.168.122.0' prefix='24' gateway='192.168.122.1'/>
     <route family='ipv4' address='192.168.122.8' gateway='192.168.122.1'/>
   </interface>
-  ```
+```
+
   <hostdev mode='capabilities' type='net'>
     <source>
       <interface>eth0</interface>
@@ -4224,7 +4225,7 @@ Since 1.2.12 network devices and hostdev devices with network capabilities can o
 
 Since 1.2.12 route elements can also be added to define IP routes to add in the guest. The attributes of this element are described in the documentation for the route element in [network definitions](https://www.libvirt.org/formatnetwork.html#static-routes). This is used by the LXC driver for adding general routes within the container. :since: 'Since 12.2.0' route elements are also user by the QEMU driver only in the case of a passt-based interface (<backend type='passt'/>) and only for default routes (done by specifying just the gateway).
 
-```xml
+````xml
 <devices>
   <interface type='ethernet'>
     <source/>
@@ -4234,7 +4235,8 @@ Since 1.2.12 route elements can also be added to define IP routes to add in the 
     <source/>
     ```
   </interface>
-  ```
+````
+
 </devices>
 ```
 
@@ -4288,7 +4290,7 @@ Since 11.1.0 (QEMU and KVM only) passt can be used as the other end of the vhost
 
 Since 0.8.0 (QEMU), 0.9.3 (LXC), 10.1.0 (Cloud Hypervisor) an nwfilter profile can be assigned to a domain interface, which allows configuring network traffic filter rules for the virtual machine. See the [nwfilter](https://www.libvirt.org/formatnwfilter.html) documentation for more complete details.
 
-```xml
+````xml
 <devices>
   <interface ```>
     ```
@@ -4304,7 +4306,7 @@ Since 0.8.0 (QEMU), 0.9.3 (LXC), 10.1.0 (Cloud Hypervisor) an nwfilter profile c
     </filterref>
   </interface>
 </devices>
-```
+````
 
 The filter attribute specifies the name of the nwfilter to use. Optional `<parameter>` elements may be specified for passing additional info to the nwfilter via the name and value attributes. See the [nwfilter](https://www.libvirt.org/formatnwfilter.html#usage-of-variables-in-filters) docs for info on parameters.
 
@@ -4395,11 +4397,12 @@ For VNC, the powerControl attribute can be used to enable VM shutdown, reboot an
 Although VNC doesn't support OpenGL natively, it can be paired with graphics type egl-headless (see below) which will instruct QEMU to open and use drm nodes for OpenGL rendering.
 
 A VNC server could be optionally mapped to the specific host audio backend using the `<audio>` sub-element:
-```xml
+
+````xml
 <graphics type='vnc' ```>
   <audio id='1'/>
 </graphics>
-```
+````
 
 Where 1 is an id of the audio device (See [Audio backends](https://www.libvirt.org/formatdomain.html#audio-backends)). If no ID is specified, then the default audio backend will be used. Since 7.2.0, qemu.
 
@@ -4414,6 +4417,7 @@ The connected attribute allows control of connected client during password chang
 The defaultMode attribute sets the default channel security policy, valid values are secure, insecure and the default any (which is secure if possible, but falls back to insecure rather than erroring out if no secure path is available). Since 0.9.12
 
 When SPICE has both a normal and TLS secured TCP port configured, it can be desirable to restrict what channels can be run on each port. This is achieved by adding one or more `<channel>` elements inside the main `<graphics>` element and setting the mode attribute to either secure or insecure. Setting the mode attribute overrides the default value as set by the defaultMode attribute. (Note that specifying any as mode discards the entry as the channel would inherit the default mode anyways.) Valid channel names include main, display, inputs, cursor, playback, record (all since 0.8.6 ); smartcard ( since 0.8.8 ); and usbredir ( since 0.9.12 ).
+
 ```xml
 <graphics type='spice' port='-1' tlsPort='-1' autoport='yes'>
   <channel name='main' mode='secure'/>
@@ -4482,15 +4486,15 @@ Copy & Paste functionality is provided thanks to the QEMU clipboard manager and 
 
 D-Bus can export an audio backend using the `<audio>` sub-element:
 
-```xml
+````xml
 <graphics type='dbus' ```>
   <audio id='1'/>
 </graphics>
-```
+````
 
 Where 1 is an id of the audio device (See [Audio backends](https://www.libvirt.org/formatdomain.html#audio-backends)).
 
-Graphics device uses a `<listen>` to set up where the device should listen for clients. It has a mandatory attribute type which specifies the listen type. Only vnc, spice and rdp supports `<listen> `element. Since 0.9.4. Available types are:
+Graphics device uses a `<listen>` to set up where the device should listen for clients. It has a mandatory attribute type which specifies the listen type. Only vnc, spice and rdp supports `<listen> ` element. Since 0.9.4. Available types are:
 
 address
 
@@ -4724,7 +4728,7 @@ A target subelement is supported and works the same way as with the serial eleme
 
 Of the target types listed above, serial is special in that it doesn't represents a separate device, but rather the same device as the first serial element. Due to this, there can only be a single console element with target type serial per guest.
 
-Virtio consoles are usually accessible as /dev/hvc[0-7] from inside the guest; for more information, see [https://fedoraproject.org/wiki/Features/VirtioSerial](https://fedoraproject.org/wiki/Features/VirtioSerial). Since 0.8.3
+Virtio consoles are usually accessible as /dev/hvc\[0-7] from inside the guest; for more information, see <https://fedoraproject.org/wiki/Features/VirtioSerial>. Since 0.8.3
 
 For the relationship between serial ports and consoles, refer to the [Relationship between serial ports and consoles](https://www.libvirt.org/formatdomain.html#relationship-between-serial-ports-and-consoles) section.
 
@@ -4737,9 +4741,7 @@ In general, both elements are used to configure one or more serial consoles to b
 Both emulated and paravirtualized serial consoles have advantages and disadvantages:
 
 - emulated serial consoles are usually initialized much earlier than paravirtualized ones, so they can be used to control the bootloader and display both firmware and early boot messages;
-    
 - on several platforms, there can only be a single emulated serial console per guest but paravirtualized consoles don't suffer from the same limitation.
-    
 
 A configuration such as:
 
@@ -4812,7 +4814,7 @@ TCP traffic sent by the guest to a given IP address and port is forwarded to the
 
 virtio
 
-Paravirtualized virtio channel. Channel is exposed in the guest under /dev/vport*, and if the optional element name is specified, /dev/virtio-ports/$name (for more info, please see [https://fedoraproject.org/wiki/Features/VirtioSerial](https://fedoraproject.org/wiki/Features/VirtioSerial)). The optional element address can tie the channel to a particular type='virtio-serial' controller, as documented in the [Device Addresses](https://www.libvirt.org/formatdomain.html#device-addresses) section. With qemu, if name is "org.qemu.guest_agent.0", then libvirt can interact with a guest agent installed in the guest, for actions such as guest shutdown or file system quiescing. Since 0.7.7, guest agent interaction since 0.9.10 Moreover, since 1.0.6 it is possible to have source path auto generated for virtio unix channels. This is very useful in case of a qemu guest agent, where users don't usually care about the source path since it's libvirt who talks to the guest agent. In case users want to utilize this feature, they should leave <source> element out. Since 1.2.11 the active XML for a virtio channel may contain an optional state attribute that reflects whether a process in the guest is active on the channel. This is an output-only attribute. Possible values for the state attribute are connected and disconnected.
+Paravirtualized virtio channel. Channel is exposed in the guest under /dev/vport\*, and if the optional element name is specified, /dev/virtio-ports/$name (for more info, please see <https://fedoraproject.org/wiki/Features/VirtioSerial>). The optional element address can tie the channel to a particular type='virtio-serial' controller, as documented in the [Device Addresses](https://www.libvirt.org/formatdomain.html#device-addresses) section. With qemu, if name is "org.qemu.guest_agent.0", then libvirt can interact with a guest agent installed in the guest, for actions such as guest shutdown or file system quiescing. Since 0.7.7, guest agent interaction since 0.9.10 Moreover, since 1.0.6 it is possible to have source path auto generated for virtio unix channels. This is very useful in case of a qemu guest agent, where users don't usually care about the source path since it's libvirt who talks to the guest agent. In case users want to utilize this feature, they should leave <source> element out. Since 1.2.11 the active XML for a virtio channel may contain an optional state attribute that reflects whether a process in the guest is active on the channel. This is an output-only attribute. Possible values for the state attribute are connected and disconnected.
 
 xen
 
@@ -4959,7 +4961,8 @@ Since 0.8.5, some hypervisors support use of either telnets (secure telnet) or t
     <protocol type="telnet"/>
     <target port="1"/>
   </serial>
-  ```
+```
+
   <serial type="tcp">
     <source mode="bind" host="127.0.0.1" service="2445"/>
     <protocol type="telnet"/>
@@ -5063,11 +5066,8 @@ Since 0.9.13, a sound element with ich6 or ich9 models can have optional sub-ele
 Valid values are:
 
 - duplex - advertise a line-in and a line-out
-    
 - micro - advertise a speaker and a microphone
-    
 - output - advertise a line-out Since 4.4.0
-    
 
 ```xml
 <devices>
@@ -5133,49 +5133,46 @@ All the backends support child element for configuring input and output properti
 The input and output elements support the same set of attributes and elements
 
 - mixingEngine
-    
-    Control whether the host mixing engine is used to convert between different audio formats and sampling rates. When the mixing engine is disabled it is possible to make use of improved audio formats such as 5.1/7.1. If not specified, a hypervisor default applies.
-    
+
+  Control whether the host mixing engine is used to convert between different audio formats and sampling rates. When the mixing engine is disabled it is possible to make use of improved audio formats such as 5.1/7.1. If not specified, a hypervisor default applies.
+
 - fixedSettings
-    
-    Control whether the mixing engine can dynamically choose settings to minimize format conversion. This is only valid when the mixing engine is explicitly enabled.
-    
+
+  Control whether the mixing engine can dynamically choose settings to minimize format conversion. This is only valid when the mixing engine is explicitly enabled.
+
 - voices
-    
-    The number of voices voices to use, usually defaults to 1
-    
+
+  The number of voices voices to use, usually defaults to 1
+
 - bufferLength
-    
-    The length of the audio buffer in microseconds. Default is backend specific.
-    
+
+  The length of the audio buffer in microseconds. Default is backend specific.
 
 The `<input>` and `<output>` elements may also permit backend specific options.
 
 When fixed settings are enabled, the `<settings>` child element is permitted with the following attributes.
 
 - frequency
-    
-    The frequency in HZ, usually defaulting to 44100
-    
+
+  The frequency in HZ, usually defaulting to 44100
+
 - channels
-    
-    The number of channels, usually defaulting to 2. The permitted max number of channels is hypervisor specific.
-    
+
+  The number of channels, usually defaulting to 2. The permitted max number of channels is hypervisor specific.
+
 - format
-    
-    The audio format, one of s8, u8, s16, u16, s32, u32, f32. The default is hypervisor specific.
-    
+
+  The audio format, one of s8, u8, s16, u16, s32, u32, f32. The default is hypervisor specific.
 
 Note: If no <audio/> element is defined, and the graphics element is set to either vnc or sdl, the libvirtd or virtqemud process will honor the following environment variables:
 
 - SDL_AUDIODRIVER
-    
-    Valid values are pulseaudio, esd, alsa or arts.
-    
+
+  Valid values are pulseaudio, esd, alsa or arts.
+
 - QEMU_AUDIO_DRV
-    
-    Valid values are pa, none, alsa, coreaudio, jack, oss, pipewire, sdl, spice or wav.
-    
+
+  Valid values are pa, none, alsa, coreaudio, jack, oss, pipewire, sdl, spice or wav.
 
 #### 22.18.1 None audio backend
 
@@ -5190,9 +5187,8 @@ The alsa audio type uses the ALSA host audio device framework.
 The following additional attributes are permitted on the `<input>` and `<output>` elements
 
 - dev
-    
-    Path to the host device node to connect the backend to. A hypervisor specific default applies if not specified.
-    
+
+  Path to the host device node to connect the backend to. A hypervisor specific default applies if not specified.
 
 ```xml
 <audio id="1" type="alsa">
@@ -5210,9 +5206,8 @@ The coreaudio audio backend delegates to a CoreAudio host audio framework for in
 The following additional attributes are permitted on the `<input>` and `<output>` elements
 
 - bufferCount
-    
-    The number of buffers. It is recommended to set the bufferLength attribute at the same time.
-    
+
+  The number of buffers. It is recommended to set the bufferLength attribute at the same time.
 
 ```xml
 <audio id="1" type="coreaudio">
@@ -5236,21 +5231,20 @@ The jack audio backend delegates to a Jack daemon for audio input and output.
 The following additional attributes are permitted on the `<input>` and `<output>` elements
 
 - serverName
-    
-    Select the Jack server instance to connect to.
-    
+
+  Select the Jack server instance to connect to.
+
 - clientName
-    
-    The client name to identify as. The server may modify this to ensure uniqueness unless exactName is enabled
-    
+
+  The client name to identify as. The server may modify this to ensure uniqueness unless exactName is enabled
+
 - connectPorts
-    
-    A regular expression of Jack client port names to monitor and connect to.
-    
+
+  A regular expression of Jack client port names to monitor and connect to.
+
 - exactName
-    
-    Use the exact clientName requested
-    
+
+  Use the exact clientName requested
 
 <audio id="1" type="jack">
   <input serverName="fish" clientName="food" connectPorts="system:capture_[13]" exactName="yes"/>
@@ -5266,32 +5260,30 @@ The oss audio type uses the OSS host audio device framework.
 The following additional attributes are permitted on the `<audio>` element
 
 - tryMMap
-    
-    Attempt to use mmap for data transfer
-    
+
+  Attempt to use mmap for data transfer
+
 - exclusive
-    
-    Enforce exclusive access to the host device
-    
+
+  Enforce exclusive access to the host device
+
 - dspPolicy
-    
-    Set the timing policy of the device, values between -1 and 10. Smaller numbers result in lower latency but higher CPU usage. A negative value requests use of fragment mode.
-    
+
+  Set the timing policy of the device, values between -1 and 10. Smaller numbers result in lower latency but higher CPU usage. A negative value requests use of fragment mode.
 
 The following additional attributes are permitted on the `<input>` and `<output>` elements
 
 - dev
-    
-    Path to the host device node to connect the backend to. A hypervisor specific default applies if not specified.
-    
+
+  Path to the host device node to connect the backend to. A hypervisor specific default applies if not specified.
+
 - bufferCount
-    
-    The number of buffers. It is recommended to set the bufferLength attribute at the same time.
-    
+
+  The number of buffers. It is recommended to set the bufferLength attribute at the same time.
+
 - tryPoll
-    
-    Attempt to use polling mode
-    
+
+  Attempt to use polling mode
 
 <audio type='oss' id='1' tryMMap='yes' exclusive='yes' dspPolicy='4'>
   <input dev='/dev/dsp0' bufferCount='40' tryPoll='yes'/>
@@ -5307,17 +5299,16 @@ The pipewire audio backend delegates to a PipeWire daemon audio input and output
 The following additional attributes are permitted on the <input/> and <output/> elements:
 
 - name
-    
-    The sink/source name to use
-    
+
+  The sink/source name to use
+
 - streamName
-    
-    The name to identify the stream associated with the VM
-    
+
+  The name to identify the stream associated with the VM
+
 - latency
-    
-    Desired latency for the server to target in microseconds
-    
+
+  Desired latency for the server to target in microseconds
 
 <audio id="1" type="pipewire">
   <input name="fish" streamName="food" latency="100"/>
@@ -5340,24 +5331,22 @@ The pulseaudio audio backend delegates to a PulseAudio daemon audio input and ou
 The following additional attributes are permitted on the `<audio>` element
 
 - serverName
-    
-    Hostname of the PulseAudio server
-    
+
+  Hostname of the PulseAudio server
 
 The following additional attributes are permitted on the `<input>` and `<output>` elements
 
 - name
-    
-    The sink/source name to use
-    
+
+  The sink/source name to use
+
 - streamName
-    
-    The name to identify the stream associated with the VM
-    
+
+  The name to identify the stream associated with the VM
+
 - latency
-    
-    Desired latency for the server to target in microseconds
-    
+
+  Desired latency for the server to target in microseconds
 
 <audio id="1" type="pulseaudio" serverName="acme.example.org">
   <input name="fish" streamName="food" latency="100"/>
@@ -5373,16 +5362,14 @@ The sdl audio backend delegates to the SDL library for audio input and output.
 The following additional attributes are permitted on the <audio> element
 
 - driver
-    
-    SDL audio driver. The name attribute specifies SDL driver name, one of esd, alsa, arts, pulseaudio.
-    
+
+  SDL audio driver. The name attribute specifies SDL driver name, one of esd, alsa, arts, pulseaudio.
 
 The following additional attributes are permitted on the <input> and <output> elements
 
 - bufferCount
-    
-    The number of buffers. It is recommended to set the bufferLength attribute at the same time.
-    
+
+  The number of buffers. It is recommended to set the bufferLength attribute at the same time.
 
 <audio type='sdl' id='1' driver='pulseaudio'>
   <input bufferCount='40'/>
@@ -5423,10 +5410,10 @@ Having multiple watchdogs is usually not something very common, but be aware tha
 </devices>
 ```
 
-  ```
-  <devices>
-    <watchdog model='i6300esb' action='poweroff'/>
-  </devices>
+```
+<devices>
+  <watchdog model='i6300esb' action='poweroff'/>
+</devices>
 </domain>
 
 model
@@ -5436,13 +5423,13 @@ The required model attribute specifies what real watchdog device is emulated. Va
 QEMU and KVM support:
 
 - 'itco' - included by default with q35 machine type Since 9.1.0
-    
+
 - 'i6300esb' - the recommended device, emulating a PCI Intel 6300ESB
-    
+
 - 'ib700' - emulating an ISA iBase IB700
-    
+
 - 'diag288' - emulating an S390 DIAG288 device Since 1.2.17
-    
+
 
 action
 
@@ -5451,19 +5438,19 @@ The optional action attribute describes what action to take when the watchdog ex
 QEMU and KVM support:
 
 - 'reset' - default, forcefully reset the guest
-    
+
 - 'shutdown' - gracefully shutdown the guest (not recommended)
-    
+
 - 'poweroff' - forcefully power off the guest
-    
+
 - 'pause' - pause the guest
-    
+
 - 'none' - do nothing
-    
+
 - 'dump' - automatically dump the guest, beware that after the dump the guest will be resumed Since 0.8.7
-    
+
 - 'inject-nmi' - inject a non-maskable interrupt into the guest Since 1.2.17
-    
+
 
 Note 1: the 'shutdown' action requires that the guest is responsive to ACPI signals. In the sort of situations where the watchdog has expired, guests are usually unable to respond to ACPI signals. Therefore using 'shutdown' is not recommended.
 
@@ -5476,6 +5463,7 @@ A virtual memory balloon device is added to all Xen and KVM/QEMU guests. It will
 Example: automatically added device with KVM
 
 ```
+
 <devices>
   <memballoon model='virtio'/>
 </devices>
@@ -5483,14 +5471,14 @@ Example: automatically added device with KVM
 
 Example: manually added device with static PCI slot 2 requested
 
-  ```
-  <devices>
-    <memballoon model='virtio'>
-      <address type='pci' domain='0x0000' bus='0x00' slot='0x02' function='0x0'/>
-      <stats period='10'/>
-      <driver iommu='on' ats='on'/>
-    </memballoon>
-  </devices>
+````
+<devices>
+  <memballoon model='virtio'>
+    <address type='pci' domain='0x0000' bus='0x00' slot='0x02' function='0x0'/>
+    <stats period='10'/>
+    <driver iommu='on' ats='on'/>
+  </memballoon>
+</devices>
 </domain>
 
 model
@@ -5498,13 +5486,13 @@ model
 The required model attribute specifies what type of balloon device is provided. Valid values are specific to the virtualization platform
 
 - 'virtio' - default with QEMU/KVM
-    
+
 - 'virtio-transitional' Since 5.2.0
-    
+
 - 'virtio-non-transitional' Since 5.2.0
-    
+
 - 'xen' - default with Xen
-    
+
 
 See [virtio device models](https://www.libvirt.org/formatdomain.html#virtio-device-models) for more details.
 
@@ -5532,30 +5520,27 @@ Example: usage of the RNG device:
 
 ```xml
 <devices>
-  <rng model='virtio'>
-    <rate period="2000" bytes="1234"/>
-    <backend model='random'>/dev/random</backend>
-    <!-- OR -->
-    <backend model='egd' type='udp'>
-      <source mode='bind' service='1234'/>
-      <source mode='connect' host='1.2.3.4' service='1234'/>
-    </backend>
-    <!-- OR -->
-    <backend model='builtin'/>
-  </rng>
+<rng model='virtio'>
+  <rate period="2000" bytes="1234"/>
+  <backend model='random'>/dev/random</backend>
+  <!-- OR -->
+  <backend model='egd' type='udp'>
+    <source mode='bind' service='1234'/>
+    <source mode='connect' host='1.2.3.4' service='1234'/>
+  </backend>
+  <!-- OR -->
+  <backend model='builtin'/>
+</rng>
 </devices>
-```
+````
 
 model
 
 The required model attribute specifies what type of RNG device is provided. Valid values are specific to the virtualization platform:
 
 - 'virtio' - supported by qemu and virtio-rng kernel module
-    
 - 'virtio-transitional' Since 5.2.0
-    
 - 'virtio-non-transitional' Since 5.2.0
-    
 
 See [virtio device models](https://www.libvirt.org/formatdomain.html#virtio-device-models) for more details.
 
@@ -5664,9 +5649,7 @@ version
 The version attribute indicates the version of the TPM. This attribute only works with the emulator backend. The following versions are supported:
 
 - '1.2' : creates a TPM 1.2
-    
 - '2.0' : creates a TPM 2.0
-    
 
 The default version used depends on the combination of hypervisor, guest architecture, TPM model and backend.
 
@@ -5747,9 +5730,7 @@ panic device enables libvirt to receive panic notification from a QEMU guest. Si
 This feature is always enabled for:
 
 - pSeries guests, since it's implemented by the guest firmware
-    
 - S390 guests, since it's an integral part of the S390 architecture
-    
 
 For the guest types listed above, libvirt automatically adds a panic element to the domain XML.
 
@@ -5769,15 +5750,10 @@ model
 The optional model attribute specifies what type of panic device is provided. The panic model used when this attribute is missing depends on the hypervisor and guest arch.
 
 - 'isa' - for ISA pvpanic device
-    
 - 'pseries' - default and valid only for pSeries guests.
-    
 - 'hyperv' - for Hyper-V crash CPU feature. Since 1.3.0, QEMU and KVM only
-    
 - 's390' - default for S390 guests. Since 1.3.5
-    
 - 'pvpanic' - for PCI pvpanic device Since 9.1.0, QEMU only
-    
 
 address
 
@@ -5984,9 +5960,7 @@ label
 For NVDIMM type devices one can use label and its subelement size to configure the size of namespaces label storage within the NVDIMM module. The size element has usual meaning described in the [Memory Allocation](https://www.libvirt.org/formatdomain.html#memory-allocation) section. label is mandatory for pSeries guests and optional for all other architectures. For QEMU domains the following restrictions apply:
 
 1. the minimum label size is 128KiB,
-    
 2. the remaining size (total-size - label-size), also called guest area, will be aligned to 4KiB as default. For pSeries guests, the guest area will be aligned down to 256MiB, and the minimum size of the guest area must be at least 256MiB.
-    
 
 readonly
 
@@ -6021,7 +5995,6 @@ Examples:
   </iommu>
 </devices>
 ```
-
 
 ```xml
 <devices>
@@ -6086,6 +6059,7 @@ In case of virtio IOMMU device, the driver element can optionally contain granul
   </driver>
 </iommu>
 ```
+
 ```xml
 <iommu model='virtio'>
   <driver>
@@ -6093,6 +6067,7 @@ In case of virtio IOMMU device, the driver element can optionally contain granul
   </driver>
 </iommu>
 ```
+
 The mode='host' case matches the host page size, the other sets desired granule size. Please note that hypervisor might support only some selected values. For instance, QEMU supports only 4KiB, 8KiB, 16KiB and 64KiB large granules.
 
 The virtio IOMMU devices can further have address element as described in [Device addresses](https://www.libvirt.org/formatdomain.html#device-addresses) (address has to by type of pci).
@@ -6166,6 +6141,7 @@ Valid input XML configurations for the top-level security label are:
   <label>system_u:system_r:svirt_t:s0:c392,c662</label>
 </seclabel>
 ```
+
 <seclabel type='none'/>
 
 If no 'type' attribute is provided in the input XML, then the security driver default setting will be used, which may be either 'none' or 'dynamic'. If a 'baselabel' is set but no 'type' is set, then the type is presumed to be 'dynamic'
@@ -6189,11 +6165,8 @@ label
 If static labelling is used, this must specify the full security label to assign to the virtual domain. The format of the content depends on the security driver in use:
 
 - SELinux: a SELinux context.
-    
 - AppArmor: an AppArmor profile.
-    
 - DAC: owner and group separated by colon. They can be defined both as user/group names or uid/gid. The driver will first try to parse these values as names, but a leading plus sign can used to force the driver to parse them as uid or gid.
-    
 
 baselabel
 
@@ -6208,9 +6181,11 @@ When relabeling is in effect, it is also possible to fine-tune the labeling done
 ## 24 Key Wrap
 
 The content of the optional keywrap element specifies whether the guest will be allowed to perform the S390 cryptographic key management operations. A clear key can be protected by encrypting it under a unique wrapping key that is generated for each guest VM running on the host. Two variations of wrapping keys are generated: one version for encrypting protected keys using the DEA/TDEA algorithm, and another version for keys encrypted using the AES algorithm. If a keywrap element is not included, the guest will be granted access to both AES and DEA/TDEA key wrapping by default.
+
 ```xml
 <domain>
-  ```
+```
+
   <keywrap>
     <cipher name='aes' state='off'/>
   </keywrap>
@@ -6260,17 +6235,16 @@ policy
 
 The required policy element provides the guest policy which must be maintained by the SEV firmware. This policy is enforced by the firmware and restricts what configuration and operational commands can be performed on this guest by the hypervisor. The guest policy provided during guest launch is bound to the guest and cannot be changed throughout the lifetime of the guest. The policy is also transmitted during snapshot and migration flows and enforced on the destination platform. The guest policy is a 4 unsigned byte with the fields shown in Table:
 
- 
-|Bit(s)|Description|
-|---|---|
-|0|Debugging of the guest is disallowed when set|
-|1|Sharing keys with other guests is disallowed when set|
-|2|SEV-ES is required when set|
-|3|Sending the guest to another platform is disallowed when set|
-|4|The guest must not be transmitted to another platform that is not in the domain when set.|
-|5|The guest must not be transmitted to another platform that is not SEV capable when set.|
-|6:15|reserved|
-|16:32|The guest must not be transmitted to another platform with a lower firmware version.|
+| Bit(s) | Description                                                                               |
+| ------ | ----------------------------------------------------------------------------------------- |
+| 0      | Debugging of the guest is disallowed when set                                             |
+| 1      | Sharing keys with other guests is disallowed when set                                     |
+| 2      | SEV-ES is required when set                                                               |
+| 3      | Sending the guest to another platform is disallowed when set                              |
+| 4      | The guest must not be transmitted to another platform that is not in the domain when set. |
+| 5      | The guest must not be transmitted to another platform that is not SEV capable when set.   |
+| 6:15   | reserved                                                                                  |
+| 16:32  | The guest must not be transmitted to another platform with a lower firmware version.      |
 
 dhCert
 
@@ -6280,9 +6254,9 @@ session
 
 The optional session element provides the guest owners base64 encoded session blob defined in the SEV API spec. See SEV spec LAUNCH_START section for the session blob format.
 
-Some modern AMD processors support Secure Encrypted Virtualization with Secure Nested Paging enhancement, also known as SEV-SNP. Since 10.5.0 To enable it` <launchSecurity type='sev-snp'>` should be used. It shares some attributes and elements with type='sev' but differs in others. Example configuration:
+Some modern AMD processors support Secure Encrypted Virtualization with Secure Nested Paging enhancement, also known as SEV-SNP. Since 10.5.0 To enable it ` <launchSecurity type='sev-snp'>` should be used. It shares some attributes and elements with type='sev' but differs in others. Example configuration:
 
-```xml
+````xml
 <domain>
   <launchSecurity type='sev-snp' authorKey='yes' vcek='no'>
     <cbitpos>47</cbitpos>
@@ -6294,7 +6268,7 @@ Some modern AMD processors support Secure Encrypted Virtualization with Secure N
     <hostData>```</hostData>
   </launchSecurity>
 </domain>
-```
+````
 
 The `<launchSecurity/>` element accepts the following attributes:
 
@@ -6310,7 +6284,7 @@ vcek
 
 The optional vcek attribute indicates whether the guest is allowed to chose between VLEK (Versioned Loaded Endorsement Key) or VCEK (Versioned Chip Endorsement Key) when requesting attestation reports from firmware. Set this to no to disable the use of VCEK.
 
-Aforementioned SEV-SNP firmware ABI can be found here: [https://www.amd.com/system/files/TechDocs/56860.pdf](https://www.amd.com/system/files/TechDocs/56860.pdf)
+Aforementioned SEV-SNP firmware ABI can be found here: <https://www.amd.com/system/files/TechDocs/56860.pdf>
 
 The <launchSecurity/> element then accepts the following child elements:
 
@@ -6326,21 +6300,20 @@ policy
 
 The required policy element provides the guest policy which must be maintained by the SEV-SNP firmware. This policy is enforced by the firmware and restricts what configuration and operational commands can be performed on this guest by the hypervisor. The guest policy provided during guest launch is bound to the guest and cannot be changed throughout the lifetime of the guest. The policy is also transmitted during snapshot and migration flows and enforced on the destination platform. The guest policy is a 64bit unsigned number with the fields shown in table (See section 4.3 Guest Policy in aforementioned firmware ABI specification):
 
- 
-|Bit(s)|Description|
-|---|---|
-|63:25|Reserved. Must be zero.|
-|24|Ciphertext hiding must be enabled when set, otherwise may be enabled or disabled.|
-|23|Running Average Power Limit (RAPL) must be disabled when set.|
-|22|Require AES 256 XTS for memory encryption when set, otherwise AES 128 XEX may be allowed.|
-|21|CXL can be populated with devices or memory when set.|
-|20|Guest can be activated only on one socket when set.|
-|19|Debugging is allowed when set.|
-|18|Association with a migration agent is allowed when set.|
-|17|Reserved. Must be set.|
-|16|SMT is allowed.|
-|15:8|The minimum ABI major version required for this guest to run.|
-|7:0|The minimum ABI minor version required for this guest to run.|
+| Bit(s) | Description                                                                               |
+| ------ | ----------------------------------------------------------------------------------------- |
+| 63:25  | Reserved. Must be zero.                                                                   |
+| 24     | Ciphertext hiding must be enabled when set, otherwise may be enabled or disabled.         |
+| 23     | Running Average Power Limit (RAPL) must be disabled when set.                             |
+| 22     | Require AES 256 XTS for memory encryption when set, otherwise AES 128 XEX may be allowed. |
+| 21     | CXL can be populated with devices or memory when set.                                     |
+| 20     | Guest can be activated only on one socket when set.                                       |
+| 19     | Debugging is allowed when set.                                                            |
+| 18     | Association with a migration agent is allowed when set.                                   |
+| 17     | Reserved. Must be set.                                                                    |
+| 16     | SMT is allowed.                                                                           |
+| 15:8   | The minimum ABI major version required for this guest to run.                             |
+| 7:0    | The minimum ABI minor version required for this guest to run.                             |
 
 The default value is hypervisor dependant and QEMU defaults to value 0x30000 meaning no minimum ABI major/minor version is required and SMT is allowed.
 
@@ -6378,13 +6351,12 @@ policy
 
 The optional policy element provides the guest TD attributes which is passed by the host VMM as a guest TD initialization parameter as part of TD_PARAMS, it exactly matches the definition of TD_PARAMS.ATTRIBUTES in (Intel TDX Module Spec Table 22.2: ATTRIBUTES Definition). It is reported to the guest TD by TDG.VP.INFO and as part of TDREPORT_STRUCT returned by TDG.MR.REPORT. The guest policy is 64bit unsigned with the fields shown in Table:
 
- 
-|Bit(s)|Description|
-|---|---|
-|0|Guest TD runs in off-TD debug mode when set|
-|1:27|reserved|
-|28|Disable EPT violation conversion to #VE on guest TD access of PENDING pages when set|
-|29:63|reserved|
+| Bit(s) | Description                                                                          |
+| ------ | ------------------------------------------------------------------------------------ |
+| 0      | Guest TD runs in off-TD debug mode when set                                          |
+| 1:27   | reserved                                                                             |
+| 28     | Disable EPT violation conversion to #VE on guest TD access of PENDING pages when set |
+| 29:63  | reserved                                                                             |
 
 mrConfigId
 
@@ -6405,5 +6377,6 @@ The optional quoteGenerationService subelement provides Quote Generation Service
 # Example configs
 
 Example configurations for each driver are provide on the driver specific pages listed below
+
 - [Xen examples](https://www.libvirt.org/drvxen.html#example-domain-xml-config)
 - [QEMU/KVM examples](https://www.libvirt.org/drvqemu.html#example-domain-xml-config)

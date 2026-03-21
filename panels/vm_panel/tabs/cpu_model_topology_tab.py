@@ -1,229 +1,380 @@
-"""CPU 模型与拓扑配置 Tab - CPU 模型、特性、缓存配置."""
+"""CPU 模型与拓扑配置 Tab - 参考系统启动 Tab 布局重构."""
 
 from typing import ClassVar
 
 import customtkinter as ctk
 
-from components.base_tab import BaseConfigTab
-from components.inner_tab_panel import InnerTabPanel
-from utils.styles import BG_COLOR_CONTENT, CTK_FONT_BOLD, CTK_FONT_MAIN, CTK_FONT_SMALL
+from components.base_tab import SectionConfig, StandardConfigTab
 
 
-class CPUModelSubTab(BaseConfigTab):
-    """CPU 模型子 Tab."""
+class CPUModelTopologyTab(StandardConfigTab):
+    """CPU 模型与拓扑配置 Tab - 使用紧凑布局."""
 
-    def __init__(self, master, on_change_callback=None, **kwargs):
-        super().__init__(master, on_change_callback, **kwargs)
-        self._pending_config = {}  # 保存尚未加载的配置
-
-        self._init_ui()
-
-    def _init_ui(self) -> None:
-        """初始化界面."""
-        self.grid_columnconfigure(0, weight=1)
-        self.grid_columnconfigure(1, weight=1)
-
-        left_frame = ctk.CTkFrame(self, fg_color=BG_COLOR_CONTENT, corner_radius=6)
-        left_frame.grid(row=0, column=0, sticky='nsew', padx=5, pady=5)
-        left_frame.grid_columnconfigure(1, weight=1)
-
-        ctk.CTkLabel(left_frame, text='CPU 模型', font=CTK_FONT_BOLD, text_color='#64b5f6').grid(
-            row=0, column=0, columnspan=2, padx=10, pady=5, sticky='w'
-        )
-
-        ctk.CTkLabel(left_frame, text='模式:', font=CTK_FONT_MAIN, width=100, anchor='w').grid(
-            row=1, column=0, padx=10, pady=5, sticky='w'
-        )
-        self.cpu_mode = ctk.CTkOptionMenu(
-            left_frame,
-            values=['custom', 'host-model', 'host-passthrough', 'maximum'],
-            width=140,
-            font=CTK_FONT_SMALL,
-        )
-        self.cpu_mode.set('host-model')
-        self.cpu_mode.grid(row=1, column=1, padx=5, pady=5, sticky='w')
-        self.cpu_mode.configure(command=self._trigger_change)
-
-        ctk.CTkLabel(left_frame, text='匹配:', font=CTK_FONT_MAIN, width=100, anchor='w').grid(
-            row=2, column=0, padx=10, pady=5, sticky='w'
-        )
-        self.cpu_match = ctk.CTkOptionMenu(
-            left_frame,
-            values=['exact', 'minimum', 'strict'],
-            width=100,
-            font=CTK_FONT_SMALL,
-        )
-        self.cpu_match.set('exact')
-        self.cpu_match.grid(row=2, column=1, padx=5, pady=5, sticky='w')
-        self.cpu_match.configure(command=self._trigger_change)
-
-        ctk.CTkLabel(left_frame, text='模型:', font=CTK_FONT_MAIN, width=100, anchor='w').grid(
-            row=3, column=0, padx=10, pady=5, sticky='w'
-        )
-        self.cpu_model = ctk.CTkEntry(left_frame, placeholder_text='core2duo, qemu64...', width=150)
-        self.cpu_model.grid(row=3, column=1, padx=5, pady=5, sticky='w')
-        self.cpu_model.bind('<KeyRelease>', lambda e: self._trigger_change())
-
-        ctk.CTkLabel(left_frame, text='厂商:', font=CTK_FONT_MAIN, width=100, anchor='w').grid(
-            row=4, column=0, padx=10, pady=5, sticky='w'
-        )
-        self.cpu_vendor = ctk.CTkEntry(left_frame, placeholder_text='Intel, AMD...', width=150)
-        self.cpu_vendor.grid(row=4, column=1, padx=5, pady=5, sticky='w')
-        self.cpu_vendor.bind('<KeyRelease>', lambda e: self._trigger_change())
-
-        ctk.CTkLabel(left_frame, text='Vendor ID:', font=CTK_FONT_MAIN, width=100, anchor='w').grid(
-            row=5, column=0, padx=10, pady=5, sticky='w'
-        )
-        self.vendor_id = ctk.CTkEntry(left_frame, placeholder_text='12字符', width=150)
-        self.vendor_id.grid(row=5, column=1, padx=5, pady=5, sticky='w')
-        self.vendor_id.bind('<KeyRelease>', lambda e: self._trigger_change())
-
-        right_frame = ctk.CTkFrame(self, fg_color=BG_COLOR_CONTENT, corner_radius=6)
-        right_frame.grid(row=0, column=1, sticky='nsew', padx=5, pady=5)
-        right_frame.grid_columnconfigure(1, weight=1)
-
-        ctk.CTkLabel(right_frame, text='迁移选项', font=CTK_FONT_BOLD, text_color='#4caf50').grid(
-            row=0, column=0, columnspan=2, padx=10, pady=5, sticky='w'
-        )
-
-        ctk.CTkLabel(right_frame, text='Fallback:', font=CTK_FONT_MAIN, width=100, anchor='w').grid(
-            row=1, column=0, padx=10, pady=5, sticky='w'
-        )
-        self.fallback = ctk.CTkOptionMenu(
-            right_frame,
-            values=['allow', 'forbid'],
-            width=100,
-            font=CTK_FONT_SMALL,
-        )
-        self.fallback.set('allow')
-        self.fallback.grid(row=1, column=1, padx=5, pady=5, sticky='w')
-        self.fallback.configure(command=self._trigger_change)
-
-        ctk.CTkLabel(
-            right_frame, text='Migratable:', font=CTK_FONT_MAIN, width=100, anchor='w'
-        ).grid(row=2, column=0, padx=10, pady=5, sticky='w')
-        self.migratable = ctk.CTkOptionMenu(
-            right_frame,
-            values=['on', 'off'],
-            width=80,
-            font=CTK_FONT_SMALL,
-        )
-        self.migratable.set('on')
-        self.migratable.grid(row=2, column=1, padx=5, pady=5, sticky='w')
-        self.migratable.configure(command=self._trigger_change)
-
-        ctk.CTkLabel(right_frame, text='检查:', font=CTK_FONT_MAIN, width=100, anchor='w').grid(
-            row=3, column=0, padx=10, pady=5, sticky='w'
-        )
-        self.check = ctk.CTkOptionMenu(
-            right_frame,
-            values=['none', 'partial', 'full'],
-            width=100,
-            font=CTK_FONT_SMALL,
-        )
-        self.check.set('partial')
-        self.check.grid(row=3, column=1, padx=5, pady=5, sticky='w')
-        self.check.configure(command=self._trigger_change)
-
-    def get_config(self) -> dict:
-        """获取配置数据."""
-        return {
-            'mode': self.cpu_mode.get(),
-            'match': self.cpu_match.get(),
-            'model': self.cpu_model.get().strip(),
-            'vendor': self.cpu_vendor.get().strip(),
-            'vendor_id': self.vendor_id.get().strip(),
-            'fallback': self.fallback.get(),
-            'migratable': self.migratable.get(),
-            'check': self.check.get(),
-        }
-
-    def load_config(self, config: dict) -> None:
-        """加载配置数据."""
-        if 'mode' in config:
-            self.cpu_mode.set(config['mode'])
-        if 'match' in config:
-            self.cpu_match.set(config['match'])
-        if 'model' in config:
-            self.cpu_model.delete(0, 'end')
-            self.cpu_model.insert(0, config['model'])
-        if 'vendor' in config:
-            self.cpu_vendor.delete(0, 'end')
-            self.cpu_vendor.insert(0, config['vendor'])
-        if 'vendor_id' in config:
-            self.vendor_id.delete(0, 'end')
-            self.vendor_id.insert(0, config['vendor_id'])
-        if 'fallback' in config:
-            self.fallback.set(config['fallback'])
-        if 'migratable' in config:
-            self.migratable.set(config['migratable'])
-        if 'check' in config:
-            self.check.set(config['check'])
-
-
-class CPUFeatureSubTab(BaseConfigTab):
-    """CPU 特性子 Tab."""
+    SECTIONS: ClassVar[dict] = {
+        'cpu_model': SectionConfig(
+            title='CPU 模型',
+            fields=[],  # 通过自定义代码创建 UI
+            color='#64b5f6',
+        ),
+        'topology': SectionConfig(
+            title='CPU 拓扑',
+            fields=[],  # 通过自定义代码创建 UI
+            color='#4caf50',
+        ),
+        'features': SectionConfig(
+            title='CPU 特性',
+            fields=[],  # 通过自定义代码创建 UI
+            color='#ff9800',
+        ),
+        'cache': SectionConfig(
+            title='CPU 缓存',
+            fields=[],  # 通过自定义代码创建 UI
+            color='#9c27b0',
+        ),
+    }
 
     def __init__(self, master, on_change_callback=None, **kwargs):
         self.features_list = []
-        self.feature_widgets = {}
         super().__init__(master, on_change_callback, **kwargs)
 
-    def _init_ui(self) -> None:
-        """初始化界面."""
-        self.grid_columnconfigure(0, weight=1)
-        self.grid_rowconfigure(1, weight=1)
+    def _init_sections_ui(self) -> None:
+        """初始化基于 Sections 的 UI，添加自定义布局."""
+        super()._init_sections_ui()
 
-        # 顶部框架:添加新 feature
-        top_frame = ctk.CTkFrame(self, fg_color=BG_COLOR_CONTENT, corner_radius=6)
-        top_frame.grid(row=0, column=0, sticky='ew', padx=5, pady=5)
-        top_frame.grid_columnconfigure(1, weight=1)
+        # === CPU 模型部分 ===
+        model_frame = self.section_frames['cpu_model']
+        model_row = 1
 
-        ctk.CTkLabel(top_frame, text='CPU 特性', font=CTK_FONT_BOLD, text_color='#ff9800').grid(
-            row=0, column=0, columnspan=5, padx=10, pady=5, sticky='w'
+        # 基本信息行
+        ctk.CTkLabel(model_frame, text='基本信息', font=('', 11), text_color='#FFD93D').grid(
+            row=model_row, column=0, columnspan=2, padx=10, pady=3, sticky='w'
         )
+        model_row += 1
 
-        ctk.CTkLabel(top_frame, text='特性名:', font=CTK_FONT_MAIN, width=80, anchor='w').grid(
-            row=1, column=0, padx=10, pady=5, sticky='w'
+        # mode、match、check、migratable 放一行
+        self._create_cpu_model_basic_row(model_frame, model_row)
+        model_row += 1
+
+        # model、fallback、vendor、vendor_id 放一行
+        self._create_model_vendor_row(model_frame, model_row)
+        model_row += 1
+
+        self.section_rows['cpu_model'] = model_row
+
+        # === CPU 拓扑部分 ===
+        topology_frame = self.section_frames['topology']
+        topology_row = 1
+
+        ctk.CTkLabel(topology_frame, text='拓扑结构', font=('', 11), text_color='#FFD93D').grid(
+            row=topology_row, column=0, columnspan=2, padx=10, pady=3, sticky='w'
         )
-        self.feature_name = ctk.CTkEntry(top_frame, placeholder_text='lahf_lm, pcid...', width=150)
-        self.feature_name.grid(row=1, column=1, padx=5, pady=5, sticky='w')
+        topology_row += 1
+
+        # sockets、dies、clusters、cores 放一行
+        self._create_topology_row1(topology_frame, topology_row)
+        topology_row += 1
+
+        # threads 单独一行（带说明）
+        self._create_threads_row(topology_frame, topology_row)
+        topology_row += 1
+
+        self.section_rows['topology'] = topology_row
+
+        # === CPU 特性部分 ===
+        features_frame = self.section_frames['features']
+        features_row = 1
+
+        # 添加新 feature 的行
+        self._create_feature_add_row(features_frame, features_row)
+        features_row += 1
+
+        # feature 列表显示区域
+        self.features_display_frame = ctk.CTkFrame(features_frame, fg_color='transparent')
+        self.features_display_frame.grid(
+            row=features_row, column=0, columnspan=2, padx=10, pady=3, sticky='ew'
+        )
+        features_row += 1
+
+        self.section_rows['features'] = features_row
+
+        # === CPU 缓存部分 ===
+        cache_frame = self.section_frames['cache']
+        cache_row = 1
+
+        ctk.CTkLabel(cache_frame, text='缓存配置', font=('', 11), text_color='#FFD93D').grid(
+            row=cache_row, column=0, columnspan=2, padx=10, pady=3, sticky='w'
+        )
+        cache_row += 1
+
+        # cache_level、cache_mode 放一行
+        self._create_cache_basic_row(cache_frame, cache_row)
+        cache_row += 1
+
+        ctk.CTkLabel(cache_frame, text='物理地址', font=('', 11), text_color='#FFD93D').grid(
+            row=cache_row, column=0, columnspan=2, padx=10, pady=3, sticky='w'
+        )
+        cache_row += 1
+
+        # physaddr_mode、physaddr_bits、physaddr_limit 放一行
+        self._create_physaddr_row(cache_frame, cache_row)
+        cache_row += 1
+
+        self.section_rows['cache'] = cache_row
+
+    def _create_cpu_model_basic_row(self, parent: ctk.CTkFrame, row: int) -> None:
+        """创建 CPU 模型基本信息行：mode、match、check、migratable."""
+        frame = ctk.CTkFrame(parent, fg_color='transparent')
+        frame.grid(row=row, column=0, columnspan=2, padx=10, pady=3, sticky='w')
+
+        # mode
+        ctk.CTkLabel(frame, text='mode:', font=('', 10), width=45, anchor='w').pack(
+            side='left', padx=(0, 2)
+        )
+        self.cpu_mode = ctk.CTkOptionMenu(
+            frame,
+            values=['custom', 'host-model', 'host-passthrough', 'maximum'],
+            width=110,
+            font=('', 10),
+            command=self._on_mode_change,
+        )
+        self.cpu_mode.set('host-model')
+        self.cpu_mode.pack(side='left', padx=2)
+
+        # match
+        ctk.CTkLabel(frame, text='match:', font=('', 10), width=45, anchor='w').pack(
+            side='left', padx=(10, 2)
+        )
+        self.cpu_match = ctk.CTkOptionMenu(
+            frame, values=['exact', 'minimum', 'strict'], width=70, font=('', 10)
+        )
+        self.cpu_match.set('exact')
+        self.cpu_match.pack(side='left', padx=2)
+        self.cpu_match.configure(command=self._trigger_change)
+
+        # check
+        ctk.CTkLabel(frame, text='check:', font=('', 10), width=40, anchor='w').pack(
+            side='left', padx=(10, 2)
+        )
+        self.cpu_check = ctk.CTkOptionMenu(
+            frame, values=['none', 'partial', 'full'], width=65, font=('', 10)
+        )
+        self.cpu_check.set('none')
+        self.cpu_check.pack(side='left', padx=2)
+        self.cpu_check.configure(command=self._trigger_change)
+
+        # migratable
+        ctk.CTkLabel(frame, text='migratable:', font=('', 10), width=60, anchor='w').pack(
+            side='left', padx=(10, 2)
+        )
+        self.cpu_migratable = ctk.CTkOptionMenu(
+            frame, values=['on', 'off'], width=50, font=('', 10)
+        )
+        self.cpu_migratable.set('on')
+        self.cpu_migratable.pack(side='left', padx=2)
+        self.cpu_migratable.configure(command=self._trigger_change)
+
+    def _on_mode_change(self, value: str) -> None:
+        """根据 mode 自动调整 match 和 migratable 默认值.
+
+        根据 libvirt 文档:
+        - host-model 模式下，match 属性无效（不应设置）
+        - host-passthrough 和 maximum 模式通常搭配 migratable 属性
+        - custom 模式下 match 默认为 exact
+        """
+        # 可以在这里根据 mode 自动调整其他设置
+        # 但目前保持用户设置不变
+        self._trigger_change(value)
+
+    def _create_model_vendor_row(self, parent: ctk.CTkFrame, row: int) -> None:
+        """创建 model、fallback、vendor、vendor_id 行."""
+        frame = ctk.CTkFrame(parent, fg_color='transparent')
+        frame.grid(row=row, column=0, columnspan=2, padx=10, pady=3, sticky='w')
+
+        # model
+        ctk.CTkLabel(frame, text='model:', font=('', 10), width=45, anchor='w').pack(
+            side='left', padx=(0, 2)
+        )
+        self.cpu_model = ctk.CTkEntry(
+            frame, placeholder_text='core2duo', width=100, font=('', 10)
+        )
+        self.cpu_model.pack(side='left', padx=2)
+        self.cpu_model.bind('<KeyRelease>', lambda e: self._trigger_change())
+
+        # fallback
+        ctk.CTkLabel(frame, text='fallback:', font=('', 10), width=55, anchor='w').pack(
+            side='left', padx=(10, 2)
+        )
+        self.model_fallback = ctk.CTkOptionMenu(
+            frame, values=['allow', 'forbid'], width=70, font=('', 10)
+        )
+        self.model_fallback.set('allow')
+        self.model_fallback.pack(side='left', padx=2)
+        self.model_fallback.configure(command=self._trigger_change)
+
+        # vendor
+        ctk.CTkLabel(frame, text='vendor:', font=('', 10), width=50, anchor='w').pack(
+            side='left', padx=(10, 2)
+        )
+        self.cpu_vendor = ctk.CTkEntry(
+            frame, placeholder_text='Intel', width=80, font=('', 10)
+        )
+        self.cpu_vendor.pack(side='left', padx=2)
+        self.cpu_vendor.bind('<KeyRelease>', lambda e: self._trigger_change())
+
+        # vendor_id
+        ctk.CTkLabel(frame, text='vendor_id:', font=('', 10), width=55, anchor='w').pack(
+            side='left', padx=(10, 2)
+        )
+        self.vendor_id = ctk.CTkEntry(
+            frame, placeholder_text='AuthenticAMD', width=120, font=('', 10)
+        )
+        self.vendor_id.pack(side='left', padx=2)
+        self.vendor_id.bind('<KeyRelease>', lambda e: self._trigger_change())
+
+
+    def _create_topology_row1(self, parent: ctk.CTkFrame, row: int) -> None:
+        """创建拓扑结构第一行：sockets、dies、clusters、cores."""
+        frame = ctk.CTkFrame(parent, fg_color='transparent')
+        frame.grid(row=row, column=0, columnspan=2, padx=10, pady=3, sticky='w')
+
+        # sockets
+        ctk.CTkLabel(frame, text='sockets:', font=('', 10), width=50, anchor='w').pack(
+            side='left', padx=(0, 2)
+        )
+        self.sockets = ctk.CTkEntry(frame, placeholder_text='1', width=50, font=('', 10))
+        self.sockets.pack(side='left', padx=2)
+        self.sockets.bind('<KeyRelease>', lambda e: self._trigger_change())
+
+        # dies
+        ctk.CTkLabel(frame, text='dies:', font=('', 10), width=35, anchor='w').pack(
+            side='left', padx=(10, 2)
+        )
+        self.dies = ctk.CTkEntry(frame, placeholder_text='1', width=40, font=('', 10))
+        self.dies.pack(side='left', padx=2)
+        self.dies.bind('<KeyRelease>', lambda e: self._trigger_change())
+
+        # clusters
+        ctk.CTkLabel(frame, text='clusters:', font=('', 10), width=50, anchor='w').pack(
+            side='left', padx=(10, 2)
+        )
+        self.clusters = ctk.CTkEntry(frame, placeholder_text='1', width=40, font=('', 10))
+        self.clusters.pack(side='left', padx=2)
+        self.clusters.bind('<KeyRelease>', lambda e: self._trigger_change())
+
+        # cores
+        ctk.CTkLabel(frame, text='cores:', font=('', 10), width=45, anchor='w').pack(
+            side='left', padx=(10, 2)
+        )
+        self.cores = ctk.CTkEntry(frame, placeholder_text='2', width=50, font=('', 10))
+        self.cores.pack(side='left', padx=2)
+        self.cores.bind('<KeyRelease>', lambda e: self._trigger_change())
+
+    def _create_threads_row(self, parent: ctk.CTkFrame, row: int) -> None:
+        """创建 threads 行."""
+        frame = ctk.CTkFrame(parent, fg_color='transparent')
+        frame.grid(row=row, column=0, columnspan=2, padx=10, pady=3, sticky='w')
+
+        ctk.CTkLabel(frame, text='threads:', font=('', 10), width=50, anchor='w').pack(
+            side='left', padx=(0, 2)
+        )
+        self.threads = ctk.CTkEntry(frame, placeholder_text='1', width=50, font=('', 10))
+        self.threads.pack(side='left', padx=2)
+        self.threads.bind('<KeyRelease>', lambda e: self._trigger_change())
+
+        # 说明文本
+        ctk.CTkLabel(
+            frame, text='(vCPU = sockets × dies × clusters × cores × threads)', font=('', 9), text_color='#888888'
+        ).pack(side='left', padx=10)
+
+    def _create_feature_add_row(self, parent: ctk.CTkFrame, row: int) -> None:
+        """创建添加 feature 的行."""
+        frame = ctk.CTkFrame(parent, fg_color='transparent')
+        frame.grid(row=row, column=0, columnspan=2, padx=10, pady=3, sticky='w')
+
+        ctk.CTkLabel(frame, text='feature:', font=('', 10), width=55, anchor='w').pack(
+            side='left', padx=(0, 2)
+        )
+        self.feature_name = ctk.CTkEntry(frame, placeholder_text='lahf_lm, pcid...', width=120, font=('', 10))
+        self.feature_name.pack(side='left', padx=2)
         self.feature_name.bind('<KeyRelease>', lambda e: self._on_enter_key(e))
 
-        ctk.CTkLabel(top_frame, text='策略:', font=CTK_FONT_MAIN, width=60, anchor='w').grid(
-            row=1, column=2, padx=10, pady=5, sticky='w'
+        ctk.CTkLabel(frame, text='policy:', font=('', 10), width=45, anchor='w').pack(
+            side='left', padx=(10, 2)
         )
         self.feature_policy = ctk.CTkOptionMenu(
-            top_frame,
-            values=['require', 'optional', 'force', 'disable', 'forbid'],
-            width=100,
-            font=CTK_FONT_SMALL,
+            frame, values=['require', 'optional', 'force', 'disable', 'forbid'], width=80, font=('', 10)
         )
         self.feature_policy.set('require')
-        self.feature_policy.grid(row=1, column=3, padx=5, pady=5, sticky='w')
+        self.feature_policy.pack(side='left', padx=2)
 
         add_btn = ctk.CTkButton(
-            top_frame,
-            text='添加',
-            command=self._add_feature,
-            fg_color='#00bcd4',
-            hover_color='#0097a7',
-            width=70,
-            font=CTK_FONT_SMALL,
+            frame, text='+', width=25, height=20, command=self._add_feature, font=('', 10)
         )
-        add_btn.grid(row=1, column=4, padx=5, pady=5)
+        add_btn.pack(side='left', padx=5)
 
-        # 底部框架:显示已添加的 feature 列表
-        bottom_frame = ctk.CTkFrame(self, fg_color=BG_COLOR_CONTENT, corner_radius=6)
-        bottom_frame.grid(row=1, column=0, sticky='nsew', padx=5, pady=5)
-        bottom_frame.grid_columnconfigure(0, weight=1)
-        bottom_frame.grid_rowconfigure(0, weight=1)
+        remove_btn = ctk.CTkButton(
+            frame, text='-', width=25, height=20, command=self._remove_feature, font=('', 10)
+        )
+        remove_btn.pack(side='left', padx=2)
 
-        self.list_frame = ctk.CTkScrollableFrame(bottom_frame, fg_color='transparent')
-        self.list_frame.grid(row=0, column=0, sticky='nsew', padx=5, pady=5)
-        self.list_frame.grid_columnconfigure(0, weight=1)
+    def _create_cache_basic_row(self, parent: ctk.CTkFrame, row: int) -> None:
+        """创建缓存配置行：cache_level、cache_mode."""
+        frame = ctk.CTkFrame(parent, fg_color='transparent')
+        frame.grid(row=row, column=0, columnspan=2, padx=10, pady=3, sticky='w')
 
-        self._refresh_feature_list()
+        # cache level
+        ctk.CTkLabel(frame, text='level:', font=('', 10), width=40, anchor='w').pack(
+            side='left', padx=(0, 2)
+        )
+        self.cache_level = ctk.CTkOptionMenu(
+            frame, values=['1', '2', '3'], width=50, font=('', 10)
+        )
+        self.cache_level.set('3')
+        self.cache_level.pack(side='left', padx=2)
+        self.cache_level.configure(command=self._trigger_change)
+
+        # cache mode
+        ctk.CTkLabel(frame, text='mode:', font=('', 10), width=40, anchor='w').pack(
+            side='left', padx=(10, 2)
+        )
+        self.cache_mode = ctk.CTkOptionMenu(
+            frame, values=['emulate', 'passthrough', 'disable'], width=80, font=('', 10)
+        )
+        self.cache_mode.set('emulate')
+        self.cache_mode.pack(side='left', padx=2)
+        self.cache_mode.configure(command=self._trigger_change)
+
+    def _create_physaddr_row(self, parent: ctk.CTkFrame, row: int) -> None:
+        """创建物理地址配置行."""
+        frame = ctk.CTkFrame(parent, fg_color='transparent')
+        frame.grid(row=row, column=0, columnspan=2, padx=10, pady=3, sticky='w')
+
+        # physaddr mode
+        ctk.CTkLabel(frame, text='mode:', font=('', 10), width=40, anchor='w').pack(
+            side='left', padx=(0, 2)
+        )
+        self.physaddr_mode = ctk.CTkOptionMenu(
+            frame, values=['passthrough', 'emulate'], width=80, font=('', 10)
+        )
+        self.physaddr_mode.set('passthrough')
+        self.physaddr_mode.pack(side='left', padx=2)
+        self.physaddr_mode.configure(command=self._trigger_change)
+
+        # physaddr bits
+        ctk.CTkLabel(frame, text='bits:', font=('', 10), width=35, anchor='w').pack(
+            side='left', padx=(10, 2)
+        )
+        self.physaddr_bits = ctk.CTkEntry(frame, placeholder_text='42', width=50, font=('', 10))
+        self.physaddr_bits.pack(side='left', padx=2)
+        self.physaddr_bits.bind('<KeyRelease>', lambda e: self._trigger_change())
+
+        # physaddr limit
+        ctk.CTkLabel(frame, text='limit:', font=('', 10), width=35, anchor='w').pack(
+            side='left', padx=(10, 2)
+        )
+        self.physaddr_limit = ctk.CTkEntry(frame, placeholder_text='39', width=50, font=('', 10))
+        self.physaddr_limit.pack(side='left', padx=2)
+        self.physaddr_limit.bind('<KeyRelease>', lambda e: self._trigger_change())
 
     def _on_enter_key(self, event):
         """按回车键添加 feature."""
@@ -249,164 +400,61 @@ class CPUFeatureSubTab(BaseConfigTab):
             }
         )
         self.feature_name.delete(0, 'end')
-        self._refresh_feature_list()
+        self._refresh_feature_display()
         self._trigger_change()
 
-    def _remove_feature(self, index: int):
-        """删除指定索引的 CPU 特性."""
-        if 0 <= index < len(self.features_list):
-            del self.features_list[index]
-            self._refresh_feature_list()
+    def _remove_feature(self):
+        """删除最后一个 CPU 特性."""
+        if self.features_list:
+            self.features_list.pop()
+            self._refresh_feature_display()
             self._trigger_change()
 
-    def _refresh_feature_list(self):
-        """刷新 feature 列表显示."""
+    def _refresh_feature_display(self):
+        """刷新 feature 显示."""
         # 清除所有现有控件
-        for widget in self.list_frame.winfo_children():
+        for widget in self.features_display_frame.winfo_children():
             widget.destroy()
 
         if not self.features_list:
             ctk.CTkLabel(
-                self.list_frame,
-                text='暂无已添加的特性',
-                font=CTK_FONT_SMALL,
-                text_color='#888888'
-            ).grid(row=0, column=0, padx=10, pady=10, sticky='w')
+                self.features_display_frame, text='暂无已添加特性', font=('', 10), text_color='#888888'
+            ).grid(row=0, column=0, padx=10, pady=5, sticky='w')
             return
 
-        # 显示每个 feature 及其删除按钮
+        # 横向排列所有特性
         for i, feat in enumerate(self.features_list):
-            row = i // 3  # 每行 3 个
-            col = (i % 3) * 3  # 每个 feature 占 3 列
+            feat_frame = ctk.CTkFrame(self.features_display_frame, fg_color='#2a2a2a', corner_radius=4)
+            feat_frame.grid(row=0, column=i, padx=3, pady=3, sticky='w')
 
-            # 创建 frame 包裹单个 feature
-            feat_frame = ctk.CTkFrame(self.list_frame, fg_color='#2a2a2a', corner_radius=4)
-            feat_frame.grid(row=row, column=col, padx=5, pady=5, sticky='ew')
-            self.list_frame.grid_columnconfigure(col, weight=1)
-
-            # 显示 feature 名和策略
-            feat_text = f"{feat['name']} ({feat['policy']})"
+            feat_text = f'{feat["name"]} ({feat["policy"]})'
             ctk.CTkLabel(
-                feat_frame,
-                text=feat_text,
-                font=CTK_FONT_SMALL,
-                text_color='#64b5f6'
+                feat_frame, text=feat_text, font=('', 9), text_color='#64b5f6'
             ).pack(side='left', padx=5, pady=2)
 
-            # 删除按钮
-            def make_remove_handler(idx):
-                return lambda idx=idx: self._remove_feature(idx)
-
-            del_btn = ctk.CTkButton(
-                feat_frame,
-                text='X',
-                width=24,
-                height=20,
-                fg_color='#f44336',
-                hover_color='#d32f2f',
-                font=CTK_FONT_SMALL,
-                command=make_remove_handler(i)
-            )
-            del_btn.pack(side='right', padx=2, pady=2)
-
     def get_config(self) -> dict:
         """获取配置数据."""
         return {
+            'model': {
+                'mode': self.cpu_mode.get(),
+                'match': self.cpu_match.get(),
+                'check': self.cpu_check.get(),
+                'migratable': self.cpu_migratable.get(),
+                'model': self.cpu_model.get().strip(),
+                'fallback': self.model_fallback.get(),
+                'vendor': self.cpu_vendor.get().strip(),
+                'vendor_id': self.vendor_id.get().strip(),
+            },
+            'topology': {
+                'sockets': self.sockets.get().strip(),
+                'dies': self.dies.get().strip(),
+                'clusters': self.clusters.get().strip(),
+                'cores': self.cores.get().strip(),
+                'threads': self.threads.get().strip(),
+            },
             'features': self.features_list.copy(),
-        }
-
-    def load_config(self, config: dict) -> None:
-        """加载配置数据."""
-        self.features_list = config.get('features', []).copy()
-        self._refresh_feature_list()
-
-class CPUCacheSubTab(BaseConfigTab):
-    """CPU 缓存子 Tab."""
-
-    def __init__(self, master, on_change_callback=None, **kwargs):
-        super().__init__(master, on_change_callback, **kwargs)
-
-        self._init_ui()
-
-    def _init_ui(self) -> None:
-        """初始化界面."""
-        self.grid_columnconfigure(0, weight=1)
-        self.grid_columnconfigure(1, weight=1)
-
-        left_frame = ctk.CTkFrame(self, fg_color=BG_COLOR_CONTENT, corner_radius=6)
-        left_frame.grid(row=0, column=0, sticky='nsew', padx=5, pady=5)
-        left_frame.grid_columnconfigure(1, weight=1)
-
-        ctk.CTkLabel(left_frame, text='CPU 缓存', font=CTK_FONT_BOLD, text_color='#9c27b0').grid(
-            row=0, column=0, columnspan=2, padx=10, pady=5, sticky='w'
-        )
-
-        ctk.CTkLabel(left_frame, text='缓存级别:', font=CTK_FONT_MAIN, width=100, anchor='w').grid(
-            row=1, column=0, padx=10, pady=5, sticky='w'
-        )
-        self.cache_level = ctk.CTkOptionMenu(
-            left_frame,
-            values=['1', '2', '3'],
-            width=80,
-            font=CTK_FONT_SMALL,
-        )
-        self.cache_level.set('3')
-        self.cache_level.grid(row=1, column=1, padx=5, pady=5, sticky='w')
-        self.cache_level.configure(command=self._trigger_change)
-
-        ctk.CTkLabel(left_frame, text='模式:', font=CTK_FONT_MAIN, width=100, anchor='w').grid(
-            row=2, column=0, padx=10, pady=5, sticky='w'
-        )
-        self.cache_mode = ctk.CTkOptionMenu(
-            left_frame,
-            values=['emulate', 'passthrough', 'disable'],
-            width=120,
-            font=CTK_FONT_SMALL,
-        )
-        self.cache_mode.set('emulate')
-        self.cache_mode.grid(row=2, column=1, padx=5, pady=5, sticky='w')
-        self.cache_mode.configure(command=self._trigger_change)
-
-        right_frame = ctk.CTkFrame(self, fg_color=BG_COLOR_CONTENT, corner_radius=6)
-        right_frame.grid(row=0, column=1, sticky='nsew', padx=5, pady=5)
-        right_frame.grid_columnconfigure(1, weight=1)
-
-        ctk.CTkLabel(right_frame, text='物理地址', font=CTK_FONT_BOLD, text_color='#7986cb').grid(
-            row=0, column=0, columnspan=2, padx=10, pady=5, sticky='w'
-        )
-
-        ctk.CTkLabel(right_frame, text='模式:', font=CTK_FONT_MAIN, width=100, anchor='w').grid(
-            row=1, column=0, padx=10, pady=5, sticky='w'
-        )
-        self.physaddr_mode = ctk.CTkOptionMenu(
-            right_frame,
-            values=['passthrough', 'emulate'],
-            width=120,
-            font=CTK_FONT_SMALL,
-        )
-        self.physaddr_mode.set('passthrough')
-        self.physaddr_mode.grid(row=1, column=1, padx=5, pady=5, sticky='w')
-        self.physaddr_mode.configure(command=self._trigger_change)
-
-        ctk.CTkLabel(right_frame, text='位数:', font=CTK_FONT_MAIN, width=100, anchor='w').grid(
-            row=2, column=0, padx=10, pady=5, sticky='w'
-        )
-        self.physaddr_bits = ctk.CTkEntry(right_frame, placeholder_text='42', width=80)
-        self.physaddr_bits.grid(row=2, column=1, padx=5, pady=5, sticky='w')
-        self.physaddr_bits.bind('<KeyRelease>', lambda e: self._trigger_change())
-
-        ctk.CTkLabel(right_frame, text='限制:', font=CTK_FONT_MAIN, width=100, anchor='w').grid(
-            row=3, column=0, padx=10, pady=5, sticky='w'
-        )
-        self.physaddr_limit = ctk.CTkEntry(right_frame, placeholder_text='39', width=80)
-        self.physaddr_limit.grid(row=3, column=1, padx=5, pady=5, sticky='w')
-        self.physaddr_limit.bind('<KeyRelease>', lambda e: self._trigger_change())
-
-    def get_config(self) -> dict:
-        """获取配置数据."""
-        return {
             'cache': {
-                'level': int(self.cache_level.get()),
+                'level': int(self.cache_level.get()) if self.cache_level.get() else 3,
                 'mode': self.cache_mode.get(),
             },
             'maxphysaddr': {
@@ -418,101 +466,29 @@ class CPUCacheSubTab(BaseConfigTab):
 
     def load_config(self, config: dict) -> None:
         """加载配置数据."""
-        cache = config.get('cache', {})
-        if 'level' in cache:
-            self.cache_level.set(str(cache['level']))
-        if 'mode' in cache:
-            self.cache_mode.set(cache['mode'])
+        # CPU 模型
+        model = config.get('model', {})
+        if 'mode' in model:
+            self.cpu_mode.set(model['mode'])
+        if 'match' in model:
+            self.cpu_match.set(model['match'])
+        if 'check' in model:
+            self.cpu_check.set(model['check'])
+        if 'migratable' in model:
+            self.cpu_migratable.set(model['migratable'])
+        if 'model' in model:
+            self.cpu_model.delete(0, 'end')
+            self.cpu_model.insert(0, model['model'])
+        if 'fallback' in model:
+            self.model_fallback.set(model['fallback'])
+        if 'vendor' in model:
+            self.cpu_vendor.delete(0, 'end')
+            self.cpu_vendor.insert(0, model['vendor'])
+        if 'vendor_id' in model:
+            self.vendor_id.delete(0, 'end')
+            self.vendor_id.insert(0, model['vendor_id'])
 
-        maxphysaddr = config.get('maxphysaddr', {})
-        if 'mode' in maxphysaddr:
-            self.physaddr_mode.set(maxphysaddr['mode'])
-        if 'bits' in maxphysaddr:
-            self.physaddr_bits.delete(0, 'end')
-            self.physaddr_bits.insert(0, maxphysaddr['bits'])
-        if 'limit' in maxphysaddr:
-            self.physaddr_limit.delete(0, 'end')
-            self.physaddr_limit.insert(0, maxphysaddr['limit'])
-
-
-class CPUTopologySubTab(BaseConfigTab):
-    """CPU 拓扑子 Tab."""
-
-    def __init__(self, master, on_change_callback=None, **kwargs):
-        super().__init__(master, on_change_callback, **kwargs)
-
-        self._init_ui()
-
-    def _init_ui(self) -> None:
-        """初始化界面."""
-        self.grid_columnconfigure(0, weight=1)
-        self.grid_columnconfigure(1, weight=1)
-
-        left_frame = ctk.CTkFrame(self, fg_color=BG_COLOR_CONTENT, corner_radius=6)
-        left_frame.grid(row=0, column=0, sticky='nsew', padx=5, pady=5)
-        left_frame.grid_columnconfigure(1, weight=1)
-
-        ctk.CTkLabel(left_frame, text='CPU 拓扑', font=CTK_FONT_BOLD, text_color='#ff5722').grid(
-            row=0, column=0, columnspan=2, padx=10, pady=5, sticky='w'
-        )
-
-        ctk.CTkLabel(left_frame, text='Socket数:', font=CTK_FONT_MAIN, width=100, anchor='w').grid(
-            row=1, column=0, padx=10, pady=5, sticky='w'
-        )
-        self.sockets = ctk.CTkEntry(left_frame, placeholder_text='1', width=80)
-        self.sockets.grid(row=1, column=1, padx=5, pady=5, sticky='w')
-        self.sockets.bind('<KeyRelease>', lambda e: self._trigger_change())
-
-        ctk.CTkLabel(left_frame, text='Die数:', font=CTK_FONT_MAIN, width=100, anchor='w').grid(
-            row=2, column=0, padx=10, pady=5, sticky='w'
-        )
-        self.dies = ctk.CTkEntry(left_frame, placeholder_text='1', width=80)
-        self.dies.grid(row=2, column=1, padx=5, pady=5, sticky='w')
-        self.dies.bind('<KeyRelease>', lambda e: self._trigger_change())
-
-        ctk.CTkLabel(left_frame, text='Cluster数:', font=CTK_FONT_MAIN, width=100, anchor='w').grid(
-            row=3, column=0, padx=10, pady=5, sticky='w'
-        )
-        self.clusters = ctk.CTkEntry(left_frame, placeholder_text='1', width=80)
-        self.clusters.grid(row=3, column=1, padx=5, pady=5, sticky='w')
-        self.clusters.bind('<KeyRelease>', lambda e: self._trigger_change())
-
-        right_frame = ctk.CTkFrame(self, fg_color=BG_COLOR_CONTENT, corner_radius=6)
-        right_frame.grid(row=0, column=1, sticky='nsew', padx=5, pady=5)
-        right_frame.grid_columnconfigure(1, weight=1)
-
-        ctk.CTkLabel(right_frame, text='核心配置', font=CTK_FONT_BOLD, text_color='#4caf50').grid(
-            row=0, column=0, columnspan=2, padx=10, pady=5, sticky='w'
-        )
-
-        ctk.CTkLabel(right_frame, text='每Socket核心数:', font=CTK_FONT_MAIN, width=120, anchor='w').grid(
-            row=1, column=0, padx=10, pady=5, sticky='w'
-        )
-        self.cores = ctk.CTkEntry(right_frame, placeholder_text='2', width=80)
-        self.cores.grid(row=1, column=1, padx=5, pady=5, sticky='w')
-        self.cores.bind('<KeyRelease>', lambda e: self._trigger_change())
-
-        ctk.CTkLabel(right_frame, text='每核心线程数:', font=CTK_FONT_MAIN, width=120, anchor='w').grid(
-            row=2, column=0, padx=10, pady=5, sticky='w'
-        )
-        self.threads = ctk.CTkEntry(right_frame, placeholder_text='1', width=80)
-        self.threads.grid(row=2, column=1, padx=5, pady=5, sticky='w')
-        self.threads.bind('<KeyRelease>', lambda e: self._trigger_change())
-
-    def get_config(self) -> dict:
-        """获取配置数据."""
-        return {
-            'topology': {
-                'sockets': self.sockets.get().strip(),
-                'dies': self.dies.get().strip(),
-                'clusters': self.clusters.get().strip(),
-                'cores': self.cores.get().strip(),
-                'threads': self.threads.get().strip(),
-            },
-        }
-
-    def load_config(self, config: dict) -> None:
-        """加载配置数据."""
+        # 拓扑
         topology = config.get('topology', {})
         if 'sockets' in topology:
             self.sockets.delete(0, 'end')
@@ -530,75 +506,24 @@ class CPUTopologySubTab(BaseConfigTab):
             self.threads.delete(0, 'end')
             self.threads.insert(0, topology['threads'])
 
+        # 特性
+        self.features_list = config.get('features', []).copy()
+        self._refresh_feature_display()
 
-class CPUModelTopologyTab(BaseConfigTab):
-    """CPU 模型与拓扑配置 Tab."""
+        # 缓存
+        cache = config.get('cache', {})
+        if 'level' in cache:
+            self.cache_level.set(str(cache['level']))
+        if 'mode' in cache:
+            self.cache_mode.set(cache['mode'])
 
-    SUB_TABS_CONFIG: ClassVar[dict] = {
-        'model': {
-            'name': 'CPU 模型',
-            'class': CPUModelSubTab,
-            'default': True,
-        },
-        'feature': {
-            'name': 'CPU 特性',
-            'class': CPUFeatureSubTab,
-            'default': False,
-        },
-        'cache': {
-            'name': 'CPU 缓存',
-            'class': CPUCacheSubTab,
-            'default': False,
-        },
-        'topology': {
-            'name': 'CPU 拓扑',
-            'class': CPUTopologySubTab,
-            'default': False,
-        },
-    }
-
-    def __init__(self, master, on_change_callback=None, **kwargs):
-        super().__init__(master, on_change_callback, **kwargs)
-
-        self._init_ui()
-
-    def _init_ui(self) -> None:
-        """初始化界面."""
-        self.grid_columnconfigure(0, weight=1)
-        self.grid_rowconfigure(0, weight=1)
-
-        # 包装 InnerTabPanel 的_switch_tab 方法
-        original_switch = InnerTabPanel._switch_tab
-        def wrapped_switch(self_inner, *args, **kwargs):
-            original_switch(self_inner, *args, **kwargs)
-            # Tab 切换后尝试加载配置
-            if hasattr(self, '_pending_config') and args[0] in self._pending_config:
-                tab_instance = self_inner.get_tab_instance(args[0])
-                if tab_instance and hasattr(tab_instance, 'load_config'):
-                    tab_instance.load_config(self._pending_config[args[0]])
-
-        InnerTabPanel._switch_tab = wrapped_switch
-
-        self.inner_panel = InnerTabPanel(
-            self,
-            tabs_config=self.SUB_TABS_CONFIG,
-            on_change_callback=self.on_change_callback,
-        )
-        self.inner_panel.grid(row=0, column=0, sticky='nsew')
-
-    def get_config(self) -> dict:
-        """获取配置数据."""
-        return self.inner_panel.collect_data()
-
-    def to_xml(self) -> dict:
-        """生成XML配置字典."""
-        return {'cpu_model_topology': self.get_config()}
-    def load_config(self, config: dict) -> None:
-        """加载配置数据到各个子 Tab."""
-        # config 格式:{'model': {...}, 'feature': {...}, 'cache': {...}}
-        self._pending_config = config
-        for tab_key, tab_data in config.items():
-            tab_instance = self.inner_panel.get_tab_instance(tab_key)
-            if tab_instance and hasattr(tab_instance, 'load_config'):
-                tab_instance.load_config(tab_data)
-
+        # 物理地址
+        maxphysaddr = config.get('maxphysaddr', {})
+        if 'mode' in maxphysaddr:
+            self.physaddr_mode.set(maxphysaddr['mode'])
+        if 'bits' in maxphysaddr:
+            self.physaddr_bits.delete(0, 'end')
+            self.physaddr_bits.insert(0, maxphysaddr['bits'])
+        if 'limit' in maxphysaddr:
+            self.physaddr_limit.delete(0, 'end')
+            self.physaddr_limit.insert(0, maxphysaddr['limit'])

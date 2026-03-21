@@ -130,11 +130,19 @@ class CPUFeature:
 
 @dataclass
 class CPUModel:
-    """CPU 模型"""
+    """CPU 模型
+
+    Attributes:
+        name: CPU 模型名称 (如 core2duo, IvyBridge)
+        fallback: 回退策略 (allow, forbid)
+        vendor: CPU 厂商名称 (如 Intel, AMD)
+        vendor_id: CPU 厂商标识符 (12 字符，如 AuthenticAMD, GenuineIntel)
+    """
 
     name: str
-    fallback: str | None = None  # allow, forbid, require
-    check: bool | None = None
+    fallback: str | None = None
+    vendor: str | None = None
+    vendor_id: str | None = None
 
     @classmethod
     def from_dict(cls, data: dict[str, Any]) -> 'CPUModel':
@@ -142,7 +150,8 @@ class CPUModel:
         return cls(
             name=data.get('name', ''),
             fallback=data.get('fallback'),
-            check=data.get('check'),
+            vendor=data.get('vendor'),
+            vendor_id=data.get('vendor_id'),
         )
 
     def to_dict(self) -> dict[str, Any]:
@@ -150,19 +159,37 @@ class CPUModel:
         return {
             'name': self.name,
             'fallback': self.fallback,
-            'check': self.check,
+            'vendor': self.vendor,
+            'vendor_id': self.vendor_id,
         }
 
 
 @dataclass
 class CPU:
-    """CPU 配置"""
+    """CPU 配置
+
+    Attributes:
+        mode: CPU 模式 (custom, host-model, host-passthrough, maximum)
+        model: CPU 模型
+        topology: CPU 拓扑结构
+        features: CPU 特性列表
+        match: 匹配模式 (exact, minimum, strict)
+        check: CPU 检查模式 (none, partial, full)
+        migratable: 可迁移性 (on, off)
+        vendor_id: CPU 厂商标识符 (12 字符)
+        placeholder: 占位符
+        numa: NUMA 配置
+        cache: 缓存配置
+        maxphysaddr: 物理地址配置
+    """
 
     mode: CpuMode = CpuMode.HOST_MODEL
     model: CPUModel | None = None
     topology: CPUTopology | None = None
     features: list[CPUFeature] = field(default_factory=list)
     match: str | None = None
+    check: str | None = None
+    migratable: str | None = None
     vendor_id: str | None = None
     placeholder: bool | None = None
     numa: NUMA | None = None
@@ -195,6 +222,8 @@ class CPU:
             topology=topology,
             features=features if isinstance(features, list) else [],
             match=data.get('match'),
+            check=data.get('check'),
+            migratable=data.get('migratable'),
             vendor_id=data.get('vendor_id'),
             placeholder=data.get('placeholder'),
             numa=numa,
@@ -210,6 +239,8 @@ class CPU:
             'topology': self.topology.to_dict() if self.topology else None,
             'features': [f.to_dict() for f in self.features],
             'match': self.match,
+            'check': self.check,
+            'migratable': self.migratable,
             'vendor_id': self.vendor_id,
             'placeholder': self.placeholder,
             'numa': self.numa,
@@ -1435,6 +1466,11 @@ class Domain:
             if hasattr(self.cpu, 'vendor') and self.cpu.vendor:
                 vendor_elem = ET.SubElement(cpu_elem, 'vendor')
                 vendor_elem.text = self.cpu.vendor
+                if hasattr(self.cpu, 'vendor_id') and self.cpu.vendor_id:
+                    vendor_elem.set('id', self.cpu.vendor_id)
+            elif hasattr(self.cpu, 'vendor_id') and self.cpu.vendor_id:
+                # 只有 vendor_id 时也创建 vendor 元素
+                ET.SubElement(cpu_elem, 'vendor', id=self.cpu.vendor_id)
             if hasattr(self.cpu, 'topology') and self.cpu.topology:
                 topology_attrib = {
                     'sockets': str(self.cpu.topology.sockets),

@@ -16,13 +16,14 @@ class CPUAllocationConfig:
     topology: CPUTopology = field(default_factory=lambda: CPUTopology.full_topology())
     vcpu_instances: list = field(default_factory=list)
     # CPU 模型和拓扑相关配置
-    mode: str = ''
-    match: str = ''
-    check: str = ''
-    migratable: str = ''
-    model: str = ''
-    fallback: str = ''
-    vendor: str = ''
+    mode: str = 'host-model'  # custom, host-model, host-passthrough, maximum
+    match: str = 'exact'  # exact, minimum, strict
+    check: str = 'none'  # none, partial, full
+    migratable: str = 'on'  # on, off
+    model: str = ''  # CPU 模型名称
+    fallback: str = 'allow'  # allow, forbid
+    vendor: str = ''  # 厂商名称
+    vendor_id: str = ''  # 厂商标识符 (12 字符)
     cache: dict = field(default_factory=dict)
     maxphysaddr: dict = field(default_factory=dict)
     feature: dict = field(default_factory=dict)
@@ -30,17 +31,18 @@ class CPUAllocationConfig:
     def update(self, data: dict) -> None:
         """更新配置."""
         # 重置 CPU 模型和拓扑相关配置
-        self.mode = ''
-        self.match = ''
-        self.check = ''
-        self.migratable = ''
+        self.mode = 'host-model'
+        self.match = 'exact'
+        self.check = 'none'
+        self.migratable = 'on'
         self.model = ''
-        self.fallback = ''
+        self.fallback = 'allow'
         self.vendor = ''
+        self.vendor_id = ''
         self.cache = {}
         self.maxphysaddr = {}
         self.feature = {}
-        
+
         # 处理来自 cpu_allocation_tab 的数据格式
         if 'cpu' in data:
             cpu_data = data['cpu']
@@ -61,20 +63,24 @@ class CPUAllocationConfig:
                             self.fallback = child['fallback']
                     elif 'vendor' in child:
                         self.vendor = child['vendor']
+                        if 'id' in child:
+                            self.vendor_id = child['id']
+                    elif 'vendor_id' in child:
+                        self.vendor_id = child['vendor_id']
                     elif 'cache' in child:
                         self.cache = child['cache']
                     elif 'maxphysaddr' in child:
                         self.maxphysaddr = child['maxphysaddr']
                     elif 'feature' in child:
                         self.feature = child['feature']
-        
+
         # 处理直接的配置项
         for key in ['max_vcpu', 'current_vcpu', 'placement', 'cpuset']:
             if key in data:
                 setattr(self, key, data[key])
-        
+
         # 处理 CPU 模型和拓扑相关配置
-        for key in ['mode', 'match', 'check', 'migratable', 'model', 'fallback', 'vendor']:
+        for key in ['mode', 'match', 'check', 'migratable', 'model', 'fallback', 'vendor', 'vendor_id']:
             if key in data:
                 setattr(self, key, data[key])
         if 'topology' in data:
