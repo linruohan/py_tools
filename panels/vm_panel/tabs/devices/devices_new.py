@@ -8,14 +8,7 @@ from utils.styles import BG_COLOR_CONTENT, CTK_FONT_BOLD, CTK_FONT_MAIN, CTK_FON
 
 
 class DevicesConfigTab(BaseConfigTab):
-    """设备配置 Tab - 整合所有设备配置，支持 XML 动态预览。
-
-    功能特性:
-    - 所有 section 合并为一个
-    - 每个组中所有元素放到一行，pack 布局，左对齐
-    - 可选项添加 None，选中 None 后删除对应 xml
-    - XML 动态生成，修改配置后 XML 动态变化
-    """
+    """设备配置 Tab - 整合所有设备配置，支持 XML 动态预览。"""
 
     # 所有设备类型 (根据 libvirt devices 文档)
     DEVICE_TYPES = {
@@ -51,6 +44,7 @@ class DevicesConfigTab(BaseConfigTab):
         'shmem': 'Shared Memory (共享内存)',
         'memory': 'Memory Device (内存设备)',
         'iommu': 'IOMMU Device',
+        'vsock': 'Vsock',
     }
 
     # 设备类别分组
@@ -80,7 +74,6 @@ class DevicesConfigTab(BaseConfigTab):
         self.current_category = 'all'  # 当前选中的类别
         self.selected_device_type: str | None = None  # 当前选中的设备类型
         self.config_widgets: dict = {}  # 当前配置界面的 widget 引用
-        self._current_row = 0  # 当前行号（用于 grid 布局）
         self._init_ui()
 
     def _init_ui(self) -> None:
@@ -93,10 +86,11 @@ class DevicesConfigTab(BaseConfigTab):
         top_frame = ctk.CTkFrame(self, fg_color=BG_COLOR_CONTENT, corner_radius=6)
         top_frame.grid(row=0, column=0, sticky='nsew', padx=5, pady=5)
         top_frame.grid_columnconfigure(0, weight=1)
+        top_frame.grid_rowconfigure(2, weight=1)
 
-        # 第一行：类别筛选 + 设备类型选择 + 添加按钮
+        # 第一行：类别筛选
         category_toolbar = ctk.CTkFrame(top_frame, fg_color='transparent')
-        category_toolbar.pack(fill='x', padx=5, pady=5)
+        category_toolbar.grid(row=0, column=0, sticky='ew', padx=5, pady=5)
 
         ctk.CTkLabel(
             category_toolbar, text='Category:', font=CTK_FONT_SMALL, width=70
@@ -140,15 +134,55 @@ class DevicesConfigTab(BaseConfigTab):
         )
         self.add_btn.pack(side='right', padx=5)
 
-        # 设备配置 + XML 预览
+        # 第二行：XML 预览开关
+        xml_toolbar = ctk.CTkFrame(top_frame, fg_color='transparent')
+        xml_toolbar.grid(row=1, column=0, sticky='ew', padx=5, pady=2)
+
+        ctk.CTkLabel(
+            xml_toolbar, text='XML Preview:', font=CTK_FONT_SMALL, width=80
+        ).pack(side='left', padx=5)
+
+        self.xml_preview_check = ctk.CTkCheckBox(
+            xml_toolbar,
+            text='Show XML Preview',
+            font=CTK_FONT_SMALL,
+            command=self._toggle_xml_preview,
+        )
+        self.xml_preview_check.pack(side='left', padx=5)
+
+        # 第三行：设备配置 + XML 预览
         config_container = ctk.CTkFrame(top_frame, fg_color='transparent')
-        config_container.pack(fill='both', expand=True, padx=5, pady=5)
+        config_container.grid(row=2, column=0, sticky='nsew', padx=5, pady=5)
+        config_container.grid_columnconfigure(0, weight=1)
+        config_container.grid_rowconfigure(0, weight=1)
 
         # 设备配置框架
-        self.config_frame = ctk.CTkFrame(
+        self.config_frame = ctk.CTkScrollableFrame(
             config_container, fg_color=BG_COLOR_CONTENT, corner_radius=6
         )
-        self.config_frame.pack(fill='both', expand=True, padx=5, pady=5)
+        self.config_frame.grid(row=0, column=0, sticky='nsew', padx=5, pady=5)
+
+        # XML 预览框架 (默认隐藏)
+        self.xml_frame = ctk.CTkScrollableFrame(
+            config_container, fg_color='#1e1e1e', corner_radius=6
+        )
+        self.xml_frame.grid(row=0, column=0, sticky='nsew', padx=5, pady=5)
+        self.xml_frame.grid_remove()
+
+        xml_label = ctk.CTkLabel(
+            self.xml_frame, text='XML Preview', font=CTK_FONT_BOLD, text_color='#4caf50'
+        )
+        xml_label.pack(anchor='w', padx=5, pady=5)
+
+        self.xml_preview_label = ctk.CTkLabel(
+            self.xml_frame,
+            text='',
+            font=('Consolas', 10),
+            text_color='#cccccc',
+            justify='left',
+            anchor='nw',
+        )
+        self.xml_preview_label.pack(fill='both', expand=True, padx=5, pady=5)
 
         # ===== 下部：已添加设备列表 =====
         bottom_frame = ctk.CTkFrame(self, fg_color=BG_COLOR_CONTENT, corner_radius=6)
@@ -161,7 +195,7 @@ class DevicesConfigTab(BaseConfigTab):
 
         ctk.CTkLabel(
             list_toolbar, text='Added Devices:', font=CTK_FONT_SMALL
-        ).pack(side='left', padx=5, pady=3)
+        ).grid(row=0, column=0, padx=5, pady=3, sticky='w')
 
         clear_btn = ctk.CTkButton(
             list_toolbar,
@@ -173,11 +207,11 @@ class DevicesConfigTab(BaseConfigTab):
             fg_color='#f44336',
             hover_color='#d32f2f',
         )
-        clear_btn.pack(side='left', padx=5)
+        clear_btn.grid(row=0, column=1, padx=5)
 
         # 设备列表
-        self.devices_list_frame = ctk.CTkFrame(
-            bottom_frame, fg_color='transparent'
+        self.devices_list_frame = ctk.CTkScrollableFrame(
+            bottom_frame, fg_color='transparent', height=120
         )
         self.devices_list_frame.grid(row=1, column=0, sticky='ew', padx=5, pady=3)
 
@@ -232,6 +266,7 @@ class DevicesConfigTab(BaseConfigTab):
 
         # 动态生成配置界面
         self._build_device_config_ui()
+        self._update_xml_preview()
 
     def _build_device_config_ui(self) -> None:
         """根据选中的设备类型动态构建配置界面。"""
@@ -239,12 +274,8 @@ class DevicesConfigTab(BaseConfigTab):
         if not device_type:
             return
 
-        # 重置行计数器
-        self._current_row = 0
-
         # 配置框架
         self.config_frame.configure(fg_color=BG_COLOR_CONTENT)
-        self.config_frame.grid_columnconfigure(0, weight=1)
 
         # 标题
         title = ctk.CTkLabel(
@@ -253,7 +284,7 @@ class DevicesConfigTab(BaseConfigTab):
             font=CTK_FONT_BOLD,
             text_color='#4caf50',
         )
-        title.pack(anchor='w', padx=10, pady=5)
+        title.pack(anchor='w', padx=10, pady=10)
 
         # 根据设备类型构建不同的配置界面
         if device_type == 'disk':
@@ -301,349 +332,450 @@ class DevicesConfigTab(BaseConfigTab):
             self._build_generic_config(device_type)
 
     def _create_row(self, parent, label_text: str, widgets: list = None, **kwargs):
-        """创建一行配置（label + widgets），pack 布局，左对齐，紧凑排列。"""
+        """创建一行配置（label + widgets），pack 布局，左对齐。"""
         row_frame = ctk.CTkFrame(parent, fg_color='transparent')
-        row_frame.pack(fill='x', padx=5, pady=1)
-        self._current_row += 1
+        row_frame.pack(fill='x', padx=5, pady=2, anchor='w')
 
         if label_text:
             label = ctk.CTkLabel(
                 row_frame,
                 text=label_text,
                 font=CTK_FONT_MAIN,
-                width=kwargs.get('label_width', 100),
+                width=kwargs.get('label_width', 120),
                 anchor='w',
             )
-            label.pack(side='left', padx=2, pady=0)
+            label.pack(side='left', padx=5)
 
         if widgets:
             for widget in widgets:
-                widget.pack(side='left', padx=5, pady=0)
+                widget.pack(side='left', padx=3)
 
         return row_frame
 
     def _build_disk_config(self) -> None:
-        """构建磁盘设备配置界面 - 所有元素紧凑排列。"""
+        """构建磁盘设备配置界面。"""
         # 第一行：type, device, bus
         self._create_row(
             self.config_frame, 'Type:',
-            [self._create_optionmenu(self.config_frame, 'disk_type', ['file', 'block', 'network', 'volume', 'dir', 'nvme', 'vhostuser', 'vhostvdpa', 'ctl', 'none'], 'file', width=100)]
+            [self._create_optionmenu('disk_type', ['file', 'block', 'network', 'volume', 'dir', 'nvme', 'vhostuser', 'vhostvdpa', 'ctl', 'none'], 'file')]
         )
         self._create_row(
             self.config_frame, 'Device:',
-            [self._create_optionmenu(self.config_frame, 'disk_device', ['disk', 'cdrom', 'lun', 'floppy'], 'disk', width=80)]
+            [self._create_optionmenu('disk_device', ['disk', 'cdrom', 'lun', 'floppy'], 'disk')]
         )
         self._create_row(
             self.config_frame, 'Bus:',
-            [self._create_optionmenu(self.config_frame, 'disk_bus', ['virtio', 'sata', 'ide', 'scsi', 'usb', 'nvme'], 'virtio', width=80)]
+            [self._create_optionmenu('disk_bus', ['virtio', 'sata', 'ide', 'scsi', 'usb', 'nvme'], 'virtio')]
         )
+
         # 第二行：source path
         self._create_row(
             self.config_frame, 'Source Path:',
-            [self._create_entry(self.config_frame, 'disk_source', '/var/lib/libvirt/images/disk.qcow2', 300)]
+            [self._create_entry('disk_source', '/var/lib/libvirt/images/disk.qcow2', 400)]
         )
+
         # 第三行：driver format
         self._create_row(
-            self.config_frame, 'Driver:',
-            [self._create_optionmenu(self.config_frame, 'disk_driver', ['qcow2', 'raw', 'vmdk', 'vdi', 'none'], 'qcow2', width=80)]
+            self.config_frame, 'Driver Format:',
+            [self._create_optionmenu('disk_driver', ['qcow2', 'raw', 'vmdk', 'vdi', 'none'], 'qcow2')]
         )
+
         # 第四行：target dev
         self._create_row(
-            self.config_frame, 'Target:',
-            [self._create_entry(self.config_frame, 'disk_target', 'vda', 80)]
+            self.config_frame, 'Target Device:',
+            [self._create_entry('disk_target', 'vda', 100)]
         )
-        # 第五行：options
+
+        # 第五行：readonly, boot_order, startup_policy
         self._create_row(
             self.config_frame, 'Options:',
             [
-                self._create_checkbox(self.config_frame, 'disk_readonly', 'RO'),
-                self._create_entry(self.config_frame, 'disk_boot_order', '', 50, placeholder='Boot'),
-                self._create_optionmenu(self.config_frame, 'disk_startup', ['mandatory', 'requisite', 'optional', 'none'], 'none', width=90),
+                self._create_checkbox('disk_readonly', 'Read-only'),
+                self._create_entry('disk_boot_order', '', 60, placeholder='Boot Order'),
+                self._create_optionmenu('disk_startup', ['mandatory', 'requisite', 'optional', 'none'], 'none'),
             ]
         )
 
     def _build_graphics_config(self) -> None:
-        """构建图形显示配置界面 - 所有元素紧凑排列。"""
-        # 第一行：type, autoport, port
+        """构建图形显示配置界面。"""
+        # 第一行：type, autoport
         self._create_row(
             self.config_frame, 'Type:',
-            [
-                self._create_optionmenu(self.config_frame, 'gfx_type', ['vnc', 'spice', 'rdp', 'sdl', 'desktop', 'egl-headless', 'dbus', 'none'], 'vnc', width=100),
-                self._create_checkbox(self.config_frame, 'gfx_autoport', 'Autoport', True),
-                self._create_entry(self.config_frame, 'gfx_port', '-1', 50),
-            ]
+            [self._create_optionmenu('gfx_type', ['vnc', 'spice', 'rdp', 'sdl', 'desktop', 'egl-headless', 'dbus', 'none'], 'vnc')]
         )
-        # 第二行：listen, tls_port, passwd
+        self._create_row(
+            self.config_frame, 'Autoport:',
+            [self._create_checkbox('gfx_autoport', 'Enabled', True)]
+        )
+
+        # 第二行：port, listen, tls_port (SPICE)
+        self._create_row(
+            self.config_frame, 'Port:',
+            [self._create_entry('gfx_port', '-1', 80)]
+        )
         self._create_row(
             self.config_frame, 'Listen:',
-            [
-                self._create_entry(self.config_frame, 'gfx_listen', '0.0.0.0', 100),
-                self._create_entry(self.config_frame, 'gfx_tls_port', '-1', 50),
-                self._create_entry(self.config_frame, 'gfx_passwd', '', 100, show='*'),
-            ]
+            [self._create_entry('gfx_listen', '0.0.0.0', 120)]
         )
-        # 第三行：keymap, share_policy, power_control
+        self._create_row(
+            self.config_frame, 'TLS Port:',
+            [self._create_entry('gfx_tls_port', '-1', 80)]
+        )
+
+        # 第三行：passwd, keymap
+        self._create_row(
+            self.config_frame, 'Password:',
+            [self._create_entry('gfx_passwd', '', 150, show='*')]
+        )
         self._create_row(
             self.config_frame, 'Keymap:',
-            [
-                self._create_entry(self.config_frame, 'gfx_keymap', 'en-us', 80),
-                self._create_optionmenu(self.config_frame, 'gfx_share', ['allow-exclusive', 'force-shared', 'ignore', 'none'], 'allow-exclusive', width=120),
-                self._create_checkbox(self.config_frame, 'gfx_power', 'Power'),
-            ]
+            [self._create_entry('gfx_keymap', 'en-us', 100)]
+        )
+
+        # 第四行：share_policy (VNC), power_control
+        self._create_row(
+            self.config_frame, 'Share Policy:',
+            [self._create_optionmenu('gfx_share', ['allow-exclusive', 'force-shared', 'ignore', 'none'], 'allow-exclusive')]
+        )
+        self._create_row(
+            self.config_frame, 'Power Control:',
+            [self._create_checkbox('gfx_power', 'Enabled')]
         )
 
         # SPICE 选项
-        spice_label = ctk.CTkLabel(
-            self.config_frame, text='SPICE Options:', font=CTK_FONT_BOLD, text_color='#ff9800'
-        )
-        spice_label.pack(anchor='w', padx=5, pady=(5, 2))
+        spice_frame = ctk.CTkFrame(self.config_frame, fg_color='transparent')
+        spice_frame.pack(fill='x', padx=5, pady=10)
+        ctk.CTkLabel(
+            spice_frame, text='SPICE Options:', font=CTK_FONT_BOLD, text_color='#ff9800'
+        ).pack(anchor='w')
 
-        # SPICE 选项行
         self._create_row(
-            self.config_frame, 'SPICE:',
-            [
-                self._create_optionmenu(self.config_frame, 'spice_mode', ['any', 'secure', 'insecure'], 'any', width=80),
-                self._create_optionmenu(self.config_frame, 'spice_image', ['auto_glz', 'auto_lz', 'quic', 'glz', 'lz', 'off'], 'auto_glz', width=100),
-                self._create_optionmenu(self.config_frame, 'spice_clipboard', ['yes', 'no'], 'yes', width=60),
-                self._create_optionmenu(self.config_frame, 'spice_mouse', ['client', 'server'], 'client', width=80),
-            ]
+            spice_frame, 'Default Mode:',
+            [self._create_optionmenu('spice_mode', ['any', 'secure', 'insecure'], 'any')]
+        )
+        self._create_row(
+            spice_frame, 'Image Compression:',
+            [self._create_optionmenu('spice_image', ['auto_glz', 'auto_lz', 'quic', 'glz', 'lz', 'off'], 'auto_glz')]
+        )
+        self._create_row(
+            spice_frame, 'Clipboard:',
+            [self._create_optionmenu('spice_clipboard', ['yes', 'no'], 'yes')]
+        )
+        self._create_row(
+            spice_frame, 'Mouse Mode:',
+            [self._create_optionmenu('spice_mouse', ['client', 'server'], 'client')]
         )
 
     def _build_video_config(self) -> None:
-        """构建视频设备配置界面 - 所有元素紧凑排列。"""
+        """构建视频设备配置界面。"""
         self._create_row(
             self.config_frame, 'Model:',
-            [
-                self._create_optionmenu(self.config_frame, 'video_model', ['vga', 'cirrus', 'vmvga', 'qxl', 'virtio', 'gop', 'bochs', 'ramfb', 'none'], 'qxl', width=100),
-                self._create_entry(self.config_frame, 'video_vram', '16384', 80),
-                self._create_entry(self.config_frame, 'video_heads', '1', 50),
-                self._create_checkbox(self.config_frame, 'video_accel3d', '3D'),
-            ]
+            [self._create_optionmenu('video_model', ['vga', 'cirrus', 'vmvga', 'qxl', 'virtio', 'gop', 'bochs', 'ramfb', 'none'], 'qxl')]
+        )
+        self._create_row(
+            self.config_frame, 'VRAM (KiB):',
+            [self._create_entry('video_vram', '16384', 100)]
+        )
+        self._create_row(
+            self.config_frame, 'Heads:',
+            [self._create_entry('video_heads', '1', 60)]
+        )
+        self._create_row(
+            self.config_frame, '3D Acceleration:',
+            [self._create_checkbox('video_accel3d', 'Enabled')]
         )
 
     def _build_sound_config(self) -> None:
-        """构建音频设备配置界面 - 所有元素紧凑排列。"""
+        """构建音频设备配置界面。"""
         self._create_row(
             self.config_frame, 'Model:',
-            [
-                self._create_optionmenu(self.config_frame, 'sound_model', ['sb16', 'es1370', 'ac97', 'ich6', 'ich9', 'usb', 'virtio', 'none'], 'ich9', width=100),
-                self._create_optionmenu(self.config_frame, 'sound_codec', ['duplex', 'micro', 'output', 'none'], 'duplex', width=80),
-            ]
+            [self._create_optionmenu('sound_model', ['sb16', 'es1370', 'ac97', 'ich6', 'ich9', 'usb', 'virtio', 'none'], 'ich9')]
+        )
+        self._create_row(
+            self.config_frame, 'Codec:',
+            [self._create_optionmenu('sound_codec', ['duplex', 'micro', 'output', 'none'], 'duplex')]
         )
 
     def _build_controller_config(self) -> None:
-        """构建控制器配置界面 - 所有元素紧凑排列。"""
+        """构建控制器配置界面。"""
         self._create_row(
             self.config_frame, 'Type:',
-            [
-                self._create_optionmenu(self.config_frame, 'ctrl_type', ['ide', 'fdc', 'scsi', 'sata', 'usb', 'virtio-serial', 'pci'], 'usb', width=100),
-                self._create_optionmenu(self.config_frame, 'ctrl_model', ['auto', 'virtio-scsi', 'pci-root', 'pci-bridge', 'pcie-root', 'none'], 'usb-xhci', width=120),
-                self._create_entry(self.config_frame, 'ctrl_index', '0', 50),
-                self._create_entry(self.config_frame, 'ctrl_queues', '', 60, placeholder='Queues'),
-            ]
+            [self._create_optionmenu('ctrl_type', ['ide', 'fdc', 'scsi', 'sata', 'usb', 'virtio-serial', 'pci'], 'usb')]
+        )
+        self._create_row(
+            self.config_frame, 'Model:',
+            [self._create_optionmenu('ctrl_model', ['auto', 'virtio-scsi', 'pci-root', 'pci-bridge', 'pcie-root', 'none'], 'usb-xhci')]
+        )
+        self._create_row(
+            self.config_frame, 'Index:',
+            [self._create_entry('ctrl_index', '0', 60)]
+        )
+        self._create_row(
+            self.config_frame, 'Queues:',
+            [self._create_entry('ctrl_queues', '', 60, placeholder='optional')]
         )
 
     def _build_interface_config(self) -> None:
-        """构建网络接口配置界面 - 所有元素紧凑排列。"""
+        """构建网络接口配置界面。"""
         self._create_row(
             self.config_frame, 'Type:',
-            [
-                self._create_optionmenu(self.config_frame, 'iface_type', ['network', 'bridge', 'direct', 'user', 'vhostuser', 'vdpa', 'none'], 'network', width=100),
-                self._create_entry(self.config_frame, 'iface_source', 'default', 100),
-                self._create_optionmenu(self.config_frame, 'iface_model', ['virtio', 'e1000', 'e1000e', 'rtl8139', 'vmxnet3'], 'virtio', width=80),
-                self._create_entry(self.config_frame, 'iface_mac', '', 130, placeholder='MAC'),
-                self._create_entry(self.config_frame, 'iface_boot', '', 50, placeholder='Boot'),
-            ]
+            [self._create_optionmenu('iface_type', ['network', 'bridge', 'direct', 'user', 'vhostuser', 'vdpa', 'none'], 'network')]
+        )
+        self._create_row(
+            self.config_frame, 'Source:',
+            [self._create_entry('iface_source', 'default', 150)]
+        )
+        self._create_row(
+            self.config_frame, 'Model:',
+            [self._create_optionmenu('iface_model', ['virtio', 'e1000', 'e1000e', 'rtl8139', 'vmxnet3'], 'virtio')]
+        )
+        self._create_row(
+            self.config_frame, 'MAC Address:',
+            [self._create_entry('iface_mac', '', 150, placeholder='auto-generated')]
+        )
+        self._create_row(
+            self.config_frame, 'Boot Order:',
+            [self._create_entry('iface_boot', '', 60, placeholder='optional')]
         )
 
     def _build_input_config(self) -> None:
-        """构建输入设备配置界面 - 所有元素紧凑排列。"""
+        """构建输入设备配置界面。"""
         self._create_row(
             self.config_frame, 'Type:',
-            [
-                self._create_optionmenu(self.config_frame, 'input_type', ['mouse', 'tablet', 'keyboard'], 'tablet', width=100),
-                self._create_optionmenu(self.config_frame, 'input_bus', ['usb', 'virtio', 'ps2'], 'usb', width=80),
-            ]
+            [self._create_optionmenu('input_type', ['mouse', 'tablet', 'keyboard'], 'tablet')]
+        )
+        self._create_row(
+            self.config_frame, 'Bus:',
+            [self._create_optionmenu('input_bus', ['usb', 'virtio', 'ps2'], 'usb')]
         )
 
     def _build_hostdev_config(self) -> None:
-        """构建主机设备配置界面 - 所有元素紧凑排列。"""
+        """构建主机设备配置界面。"""
+        self._create_row(
+            self.config_frame, 'Type:',
+            [self._create_optionmenu('hostdev_type', ['usb', 'pci', 'scsi', 'mdev'], 'usb')]
+        )
+
         # USB 设备
         self._create_row(
-            self.config_frame, 'USB:',
-            [
-                self._create_optionmenu(self.config_frame, 'hostdev_type', ['usb', 'pci', 'scsi', 'mdev'], 'usb', width=80),
-                self._create_entry(self.config_frame, 'hostdev_usb', '', 150, placeholder='Vendor:Product'),
-                self._create_optionmenu(self.config_frame, 'hostdev_policy', ['mandatory', 'requisite', 'optional'], 'optional', width=100),
-            ]
+            self.config_frame, 'Vendor/Product:',
+            [self._create_entry('hostdev_usb', '', 200, placeholder='e.g., 1234:abcd')]
         )
+        self._create_row(
+            self.config_frame, 'Startup Policy:',
+            [self._create_optionmenu('hostdev_policy', ['mandatory', 'requisite', 'optional'], 'optional')]
+        )
+
         # PCI 设备
         self._create_row(
-            self.config_frame, 'PCI:',
-            [
-                self._create_entry(self.config_frame, 'hostdev_pci', '', 150, placeholder='domain:bus:slot.func'),
-                self._create_optionmenu(self.config_frame, 'hostdev_managed', ['yes', 'no'], 'yes', width=80),
-            ]
+            self.config_frame, 'PCI Address:',
+            [self._create_entry('hostdev_pci', '', 200, placeholder='domain:bus:slot.func')]
         )
+        self._create_row(
+            self.config_frame, 'Managed:',
+            [self._create_optionmenu('hostdev_managed', ['yes', 'no'], 'yes')]
+        )
+
         # MDEV 设备
         self._create_row(
-            self.config_frame, 'MDEV:',
-            [self._create_entry(self.config_frame, 'hostdev_mdev', '', 300, placeholder='UUID')]
+            self.config_frame, 'MDEV UUID:',
+            [self._create_entry('hostdev_mdev', '', 300, placeholder='UUID of mediated device')]
         )
 
     def _build_watchdog_config(self) -> None:
-        """构建看门狗设备配置界面 - 所有元素紧凑排列。"""
+        """构建看门狗设备配置界面。"""
         self._create_row(
             self.config_frame, 'Model:',
-            [
-                self._create_optionmenu(self.config_frame, 'watchdog_model', ['i6300esb', 'ib700', 'itco', 'diag288'], 'i6300esb', width=100),
-                self._create_optionmenu(self.config_frame, 'watchdog_action', ['reset', 'shutdown', 'poweroff', 'pause', 'none', 'dump', 'inject-nmi'], 'reset', width=100),
-            ]
+            [self._create_optionmenu('watchdog_model', ['i6300esb', 'ib700', 'itco', 'diag288'], 'i6300esb')]
+        )
+        self._create_row(
+            self.config_frame, 'Action:',
+            [self._create_optionmenu('watchdog_action', ['reset', 'shutdown', 'poweroff', 'pause', 'none', 'dump', 'inject-nmi'], 'reset')]
         )
 
     def _build_memballoon_config(self) -> None:
-        """构建内存气球配置界面 - 所有元素紧凑排列。"""
+        """构建内存气球配置界面。"""
         self._create_row(
             self.config_frame, 'Model:',
-            [
-                self._create_optionmenu(self.config_frame, 'memballoon_model', ['virtio', 'xen', 'none'], 'virtio', width=80),
-                self._create_entry(self.config_frame, 'memballoon_period', '', 80, placeholder='Period(s)'),
-            ]
+            [self._create_optionmenu('memballoon_model', ['virtio', 'xen', 'none'], 'virtio')]
+        )
+        self._create_row(
+            self.config_frame, 'Stats Period:',
+            [self._create_entry('memballoon_period', '', 80, placeholder='seconds, optional')]
         )
 
     def _build_rng_config(self) -> None:
-        """构建随机数发生器配置界面 - 所有元素紧凑排列。"""
+        """构建随机数发生器配置界面。"""
         self._create_row(
             self.config_frame, 'Model:',
-            [
-                self._create_optionmenu(self.config_frame, 'rng_model', ['virtio', 'virtio-transitional', 'virtio-non-transitional'], 'virtio', width=150),
-                self._create_optionmenu(self.config_frame, 'rng_backend', ['random', 'egd', 'builtin'], 'random', width=100),
-            ]
+            [self._create_optionmenu('rng_model', ['virtio', 'virtio-transitional', 'virtio-non-transitional'], 'virtio')]
+        )
+        self._create_row(
+            self.config_frame, 'Backend Model:',
+            [self._create_optionmenu('rng_backend', ['random', 'egd', 'builtin'], 'random')]
         )
         self._create_row(
             self.config_frame, 'Source:',
-            [
-                self._create_entry(self.config_frame, 'rng_source', '/dev/urandom', 300),
-                self._create_entry(self.config_frame, 'rng_rate', '', 80, placeholder='Rate'),
-            ]
+            [self._create_entry('rng_source', '/dev/urandom', 300)]
+        )
+        self._create_row(
+            self.config_frame, 'Rate (bytes/period):',
+            [self._create_entry('rng_rate', '', 80, placeholder='optional')]
         )
 
     def _build_tpm_config(self) -> None:
-        """构建 TPM 设备配置界面 - 所有元素紧凑排列。"""
+        """构建 TPM 设备配置界面。"""
         self._create_row(
             self.config_frame, 'Model:',
-            [
-                self._create_optionmenu(self.config_frame, 'tpm_model', ['tpm-tis', 'tpm-crb', 'tpm-spapr', 'spapr-tpm-proxy'], 'tpm-tis', width=100),
-                self._create_optionmenu(self.config_frame, 'tpm_backend', ['passthrough', 'emulator', 'external'], 'emulator', width=100),
-            ]
+            [self._create_optionmenu('tpm_model', ['tpm-tis', 'tpm-crb', 'tpm-spapr', 'spapr-tpm-proxy'], 'tpm-tis')]
         )
         self._create_row(
-            self.config_frame, 'Device:',
-            [
-                self._create_entry(self.config_frame, 'tpm_device', '/dev/tpm0', 200),
-                self._create_optionmenu(self.config_frame, 'tpm_version', ['1.2', '2.0'], '2.0', width=80),
-            ]
+            self.config_frame, 'Backend Type:',
+            [self._create_optionmenu('tpm_backend', ['passthrough', 'emulator', 'external'], 'emulator')]
+        )
+        self._create_row(
+            self.config_frame, 'Device Path:',
+            [self._create_entry('tpm_device', '/dev/tpm0', 300)]
+        )
+        self._create_row(
+            self.config_frame, 'Version:',
+            [self._create_optionmenu('tpm_version', ['1.2', '2.0'], '2.0')]
         )
 
     def _build_filesystem_config(self) -> None:
-        """构建文件系统配置界面 - 所有元素紧凑排列。"""
+        """构建文件系统配置界面。"""
         self._create_row(
             self.config_frame, 'Type:',
-            [
-                self._create_optionmenu(self.config_frame, 'fs_type', ['mount', 'template', 'file', 'block', 'ram', 'bind'], 'mount', width=80),
-                self._create_optionmenu(self.config_frame, 'fs_access', ['passthrough', 'mapped', 'squash'], 'passthrough', width=100),
-            ]
+            [self._create_optionmenu('fs_type', ['mount', 'template', 'file', 'block', 'ram', 'bind'], 'mount')]
         )
         self._create_row(
-            self.config_frame, 'Source:',
-            [self._create_entry(self.config_frame, 'fs_source', '/export/to/guest', 300)]
+            self.config_frame, 'Access Mode:',
+            [self._create_optionmenu('fs_access', ['passthrough', 'mapped', 'squash'], 'passthrough')]
         )
         self._create_row(
-            self.config_frame, 'Target:',
-            [self._create_entry(self.config_frame, 'fs_target', '/import/from/host', 300)]
+            self.config_frame, 'Source Dir:',
+            [self._create_entry('fs_source', '/export/to/guest', 300)]
         )
         self._create_row(
-            self.config_frame, 'Options:',
-            [self._create_checkbox(self.config_frame, 'fs_readonly', 'Read-only')]
+            self.config_frame, 'Target Dir:',
+            [self._create_entry('fs_target', '/import/from/host', 300)]
+        )
+        self._create_row(
+            self.config_frame, 'Read-only:',
+            [self._create_checkbox('fs_readonly', 'Enabled')]
         )
 
     def _build_console_config(self) -> None:
-        """构建控制台配置界面 - 所有元素紧凑排列。"""
+        """构建控制台配置界面。"""
         self._create_row(
             self.config_frame, 'Type:',
-            [
-                self._create_optionmenu(self.config_frame, 'console_type', ['pty', 'vc', 'stdio', 'null', 'tty', 'udp', 'unix', 'spicevmc', 'qemu-vdagent'], 'pty', width=120),
-                self._create_optionmenu(self.config_frame, 'console_target', ['serial', 'virtio', 'xen'], 'virtio', width=100),
-            ]
+            [self._create_optionmenu('console_type', ['pty', 'vc', 'stdio', 'null', 'tty', 'udp', 'unix', 'spicevmc', 'qemu-vdagent'], 'pty')]
+        )
+        self._create_row(
+            self.config_frame, 'Target Type:',
+            [self._create_optionmenu('console_target', ['serial', 'virtio', 'xen'], 'virtio')]
         )
 
     def _build_serial_config(self) -> None:
-        """构建串口配置界面 - 所有元素紧凑排列。"""
+        """构建串口配置界面。"""
         self._create_row(
             self.config_frame, 'Type:',
-            [
-                self._create_optionmenu(self.config_frame, 'serial_type', ['pty', 'file', 'dev', 'null', 'udp', 'tcp', 'unix', 'spiceport'], 'pty', width=80),
-                self._create_entry(self.config_frame, 'serial_port', '0', 50),
-                self._create_entry(self.config_frame, 'serial_path', '', 250, placeholder='Path'),
-            ]
+            [self._create_optionmenu('serial_type', ['pty', 'file', 'dev', 'null', 'udp', 'tcp', 'unix', 'spiceport'], 'pty')]
+        )
+        self._create_row(
+            self.config_frame, 'Port:',
+            [self._create_entry('serial_port', '0', 60)]
+        )
+        self._create_row(
+            self.config_frame, 'Path:',
+            [self._create_entry('serial_path', '', 300, placeholder='/dev/ttyS0 or log file path')]
         )
 
     def _build_parallel_config(self) -> None:
-        """构建并口配置界面 - 所有元素紧凑排列。"""
+        """构建并口配置界面。"""
         self._create_row(
             self.config_frame, 'Type:',
-            [
-                self._create_optionmenu(self.config_frame, 'parallel_type', ['pty', 'dev', 'null'], 'pty', width=80),
-                self._create_entry(self.config_frame, 'parallel_port', '0', 50),
-                self._create_entry(self.config_frame, 'parallel_path', '', 250, placeholder='/dev/parport0'),
-            ]
+            [self._create_optionmenu('parallel_type', ['pty', 'dev', 'null'], 'pty')]
+        )
+        self._create_row(
+            self.config_frame, 'Port:',
+            [self._create_entry('parallel_port', '0', 60)]
+        )
+        self._create_row(
+            self.config_frame, 'Path:',
+            [self._create_entry('parallel_path', '', 300, placeholder='/dev/parport0')]
         )
 
     def _build_channel_config(self) -> None:
-        """构建通道配置界面 - 所有元素紧凑排列。"""
+        """构建通道配置界面。"""
         self._create_row(
             self.config_frame, 'Type:',
-            [
-                self._create_optionmenu(self.config_frame, 'channel_type', ['unix', 'pty', 'spicevmc', 'qemu-vdagent', 'virtio'], 'unix', width=80),
-                self._create_entry(self.config_frame, 'channel_name', 'org.qemu.guest_agent.0', 200),
-                self._create_entry(self.config_frame, 'channel_path', '', 200, placeholder='Path'),
-            ]
+            [self._create_optionmenu('channel_type', ['unix', 'pty', 'spicevmc', 'qemu-vdagent', 'virtio'], 'unix')]
+        )
+        self._create_row(
+            self.config_frame, 'Target Name:',
+            [self._create_entry('channel_name', 'org.qemu.guest_agent.0', 300)]
+        )
+        self._create_row(
+            self.config_frame, 'Source Path:',
+            [self._create_entry('channel_path', '', 300, placeholder='/var/lib/libvirt/qemu/agent.sock')]
         )
 
     def _build_iommu_config(self) -> None:
-        """构建 IOMMU 设备配置界面 - 所有元素紧凑排列。"""
+        """构建 IOMMU 设备配置界面。"""
         self._create_row(
             self.config_frame, 'Model:',
-            [
-                self._create_optionmenu(self.config_frame, 'iommu_model', ['intel', 'amd', 'virtio', 'smmuv3'], 'intel', width=80),
-                self._create_checkbox(self.config_frame, 'iommu_intremap', 'Intremap'),
-                self._create_checkbox(self.config_frame, 'iommu_caching', 'Caching'),
-                self._create_entry(self.config_frame, 'iommu_aw', '', 60, placeholder='AW'),
-            ]
+            [self._create_optionmenu('iommu_model', ['intel', 'amd', 'virtio', 'smmuv3'], 'intel')]
+        )
+        self._create_row(
+            self.config_frame, 'Interrupt Remap:',
+            [self._create_checkbox('iommu_intremap', 'Enabled')]
+        )
+        self._create_row(
+            self.config_frame, 'Caching Mode:',
+            [self._create_checkbox('iommu_caching', 'Enabled')]
+        )
+        self._create_row(
+            self.config_frame, 'Address Width:',
+            [self._create_entry('iommu_aw', '', 80, placeholder='e.g., 48')]
         )
 
     def _build_memory_config(self) -> None:
-        """构建内存设备配置界面 - 所有元素紧凑排列。"""
+        """构建内存设备配置界面。"""
         self._create_row(
             self.config_frame, 'Model:',
-            [
-                self._create_optionmenu(self.config_frame, 'memory_model', ['dimm', 'nvdimm', 'virtio-pmem', 'virtio-mem', 'sgx-epc'], 'dimm', width=100),
-                self._create_entry(self.config_frame, 'memory_size', '524288', 100),
-                self._create_entry(self.config_frame, 'memory_node', '0', 60),
-                self._create_optionmenu(self.config_frame, 'memory_access', ['private', 'shared'], 'private', width=80),
-            ]
+            [self._create_optionmenu('memory_model', ['dimm', 'nvdimm', 'virtio-pmem', 'virtio-mem', 'sgx-epc'], 'dimm')]
+        )
+        self._create_row(
+            self.config_frame, 'Size (KiB):',
+            [self._create_entry('memory_size', '524288', 100)]
+        )
+        self._create_row(
+            self.config_frame, 'NUMA Node:',
+            [self._create_entry('memory_node', '0', 60)]
+        )
+        self._create_row(
+            self.config_frame, 'Access:',
+            [self._create_optionmenu('memory_access', ['private', 'shared'], 'private')]
         )
 
     def _build_shmem_config(self) -> None:
-        """构建共享内存配置界面 - 所有元素紧凑排列。"""
+        """构建共享内存配置界面。"""
         self._create_row(
             self.config_frame, 'Name:',
-            [
-                self._create_entry(self.config_frame, 'shmem_name', 'my_shmem', 120),
-                self._create_optionmenu(self.config_frame, 'shmem_model', ['ivshmem-plain', 'ivshmem-doorbell'], 'ivshmem-plain', width=130),
-                self._create_entry(self.config_frame, 'shmem_size', '4', 60),
-                self._create_optionmenu(self.config_frame, 'shmem_role', ['master', 'peer'], 'peer', width=80),
-            ]
+            [self._create_entry('shmem_name', 'my_shmem', 150)]
+        )
+        self._create_row(
+            self.config_frame, 'Model:',
+            [self._create_optionmenu('shmem_model', ['ivshmem-plain', 'ivshmem-doorbell'], 'ivshmem-plain')]
+        )
+        self._create_row(
+            self.config_frame, 'Size (MiB):',
+            [self._create_entry('shmem_size', '4', 80)]
+        )
+        self._create_row(
+            self.config_frame, 'Role:',
+            [self._create_optionmenu('shmem_role', ['master', 'peer'], 'peer')]
         )
 
     def _build_generic_config(self, device_type: str) -> None:
@@ -658,10 +790,10 @@ class DevicesConfigTab(BaseConfigTab):
         info_label.pack(padx=10, pady=30)
 
     # ===== 辅助方法：创建 widget =====
-    def _create_optionmenu(self, parent, name: str, values: list, default: str = None, width: int = 120) -> ctk.CTkOptionMenu:
+    def _create_optionmenu(self, name: str, values: list, default: str = None, width: int = 120) -> ctk.CTkOptionMenu:
         """创建 OptionMenu widget。"""
         widget = ctk.CTkOptionMenu(
-            parent,
+            self.config_frame,
             values=values,
             width=width,
             font=CTK_FONT_SMALL,
@@ -672,10 +804,10 @@ class DevicesConfigTab(BaseConfigTab):
         self.config_widgets[name] = widget
         return widget
 
-    def _create_entry(self, parent, name: str, default: str = '', width: int = 200, placeholder: str = '', show: str = None) -> ctk.CTkEntry:
+    def _create_entry(self, name: str, default: str = '', width: int = 200, placeholder: str = '', show: str = None) -> ctk.CTkEntry:
         """创建 Entry widget。"""
         widget = ctk.CTkEntry(
-            parent,
+            self.config_frame,
             width=width,
             font=CTK_FONT_SMALL,
             placeholder_text=placeholder,
@@ -687,10 +819,10 @@ class DevicesConfigTab(BaseConfigTab):
         self.config_widgets[name] = widget
         return widget
 
-    def _create_checkbox(self, parent, name: str, text: str, default: bool = False) -> ctk.CTkCheckBox:
+    def _create_checkbox(self, name: str, text: str, default: bool = False) -> ctk.CTkCheckBox:
         """创建 Checkbox widget。"""
         widget = ctk.CTkCheckBox(
-            parent,
+            self.config_frame,
             text=text,
             font=CTK_FONT_SMALL,
             command=self._on_config_change,
@@ -726,38 +858,35 @@ class DevicesConfigTab(BaseConfigTab):
         device_type = self.selected_device_type
 
         # 检查是否选择了 "none"
-        none_checked = False
         if device_type == 'disk':
-            disk_type = self._get_widget_value('disk_type', 'file')
+            disk_type = self.config_widgets.get('disk_type', {}).get() if hasattr(self.config_widgets.get('disk_type'), 'get') else 'file'
             if disk_type == 'none':
-                none_checked = True
-        elif device_type == 'graphics':
-            gfx_type = self._get_widget_value('gfx_type', 'vnc')
-            if gfx_type == 'none':
-                none_checked = True
-        elif device_type == 'video':
-            video_model = self._get_widget_value('video_model', 'qxl')
-            if video_model == 'none':
-                none_checked = True
-        elif device_type == 'sound':
-            sound_model = self._get_widget_value('sound_model', 'ich9')
-            if sound_model == 'none':
-                none_checked = True
-        elif device_type == 'memballoon':
-            memballoon_model = self._get_widget_value('memballoon_model', 'virtio')
-            if memballoon_model == 'none':
-                none_checked = True
-        elif device_type == 'controller':
-            ctrl_model = self._get_widget_value('ctrl_model', 'usb-xhci')
-            if ctrl_model == 'none':
-                none_checked = True
-        elif device_type == 'interface':
-            iface_type = self._get_widget_value('iface_type', 'network')
-            if iface_type == 'none':
-                none_checked = True
+                return '<!-- disk: none selected, element will be removed -->'
 
-        if none_checked:
-            return f'<!-- {device_type}: none selected, element will be removed -->'
+        if device_type == 'graphics':
+            gfx_type = self.config_widgets.get('gfx_type', {}).get() if hasattr(self.config_widgets.get('gfx_type'), 'get') else 'vnc'
+            if gfx_type == 'none':
+                return '<!-- graphics: none selected, element will be removed -->'
+
+        if device_type == 'video':
+            video_model = self.config_widgets.get('video_model', {}).get() if hasattr(self.config_widgets.get('video_model'), 'get') else 'qxl'
+            if video_model == 'none':
+                return '<!-- video: none selected, element will be removed -->'
+
+        if device_type == 'sound':
+            sound_model = self.config_widgets.get('sound_model', {}).get() if hasattr(self.config_widgets.get('sound_model'), 'get') else 'ich9'
+            if sound_model == 'none':
+                return '<!-- sound: none selected, element will be removed -->'
+
+        if device_type == 'memballoon':
+            memballoon_model = self.config_widgets.get('memballoon_model', {}).get() if hasattr(self.config_widgets.get('memballoon_model'), 'get') else 'virtio'
+            if memballoon_model == 'none':
+                return '<!-- memballoon: none selected, element will be removed -->'
+
+        if device_type == 'iommu':
+            iommu_model = self.config_widgets.get('iommu_model', {}).get() if hasattr(self.config_widgets.get('iommu_model'), 'get') else 'intel'
+            if iommu_model == 'none':
+                return '<!-- iommu: none selected, element will be removed -->'
 
         # 生成 XML
         xml_lines = []
@@ -788,18 +917,12 @@ class DevicesConfigTab(BaseConfigTab):
             xml_lines = self._generate_console_xml()
         elif device_type == 'serial':
             xml_lines = self._generate_serial_xml()
-        elif device_type == 'parallel':
-            xml_lines = self._generate_parallel_xml()
-        elif device_type == 'channel':
-            xml_lines = self._generate_channel_xml()
         elif device_type == 'iommu':
             xml_lines = self._generate_iommu_xml()
         elif device_type == 'memory':
             xml_lines = self._generate_memory_xml()
-        elif device_type == 'shmem':
-            xml_lines = self._generate_shmem_xml()
         else:
-            xml_lines = [f'<!-- {device_type} configuration -->']
+            xml_lines = [f'<!-- {device_type} configuration not fully implemented -->']
 
         return '\n'.join(xml_lines) if xml_lines else f'<{device_type}/>'
 
@@ -808,6 +931,8 @@ class DevicesConfigTab(BaseConfigTab):
         widget = self.config_widgets.get(name)
         if widget:
             if hasattr(widget, 'get'):
+                return widget.get()
+            elif hasattr(widget, 'get'):
                 return widget.get()
         return default
 
@@ -863,32 +988,33 @@ class DevicesConfigTab(BaseConfigTab):
         if gfx_type == 'none':
             return []
 
-        xml_attrs = [f"type='{gfx_type}'"]
+        xml = [f"<graphics type='{gfx_type}'"]
 
         if gfx_autoport:
-            xml_attrs.append("autoport='yes'")
+            xml[-1] += " autoport='yes'"
         else:
-            xml_attrs.append(f"port='{gfx_port}'")
+            xml[-1] += f" port='{gfx_port}'"
 
-        xml_attrs.append(f"listen='{gfx_listen}'")
+        xml[-1] += f" listen='{gfx_listen}'"
 
         if gfx_passwd:
-            xml_attrs.append(f"passwd='{gfx_passwd}'")
+            xml[-1] += f" passwd='{gfx_passwd}'"
 
         if gfx_keymap:
-            xml_attrs.append(f"keymap='{gfx_keymap}'")
+            xml[-1] += f" keymap='{gfx_keymap}'"
 
-        if gfx_type == 'vnc':
-            if gfx_share != 'none':
-                xml_attrs.append(f"sharePolicy='{gfx_share}'")
-            if gfx_power:
-                xml_attrs.append("powerControl='on'")
+        if gfx_type == 'vnc' and gfx_share != 'none':
+            xml[-1] += f" sharePolicy='{gfx_share}'"
 
-        xml = [f"<graphics {' '.join(xml_attrs)}/>"]
+        if gfx_type == 'vnc' and gfx_power:
+            xml[-1] += " powerControl='on'"
+
+        xml[-1] += "/>"
 
         # SPICE 额外配置
-        if gfx_type == 'spice' and gfx_tls_port and gfx_tls_port != '-1':
-            xml.append(f"<graphics type='spice' tlsPort='{gfx_tls_port}' autoport='yes'/>")
+        if gfx_type == 'spice':
+            if gfx_tls_port and gfx_tls_port != '-1':
+                xml.append(f"<graphics type='spice' tlsPort='{gfx_tls_port}' autoport='yes'/>")
 
         return xml
 
@@ -903,7 +1029,7 @@ class DevicesConfigTab(BaseConfigTab):
             return []
 
         xml = ["<video>"]
-        accel_attrs = " accel3d='yes'" if video_accel3d else ""
+        accel_attrs = f" accel3d='yes'" if video_accel3d else ""
         xml.append(f"  <model type='{video_model}' vram='{video_vram}' heads='{video_heads}'{accel_attrs}/>")
         xml.append("</video>")
         return xml
@@ -932,10 +1058,7 @@ class DevicesConfigTab(BaseConfigTab):
         if ctrl_model == 'none':
             return []
 
-        if ctrl_queues:
-            xml = [f"<controller type='{ctrl_type}' index='{ctrl_index}' model='{ctrl_model}' queues='{ctrl_queues}'/>"]
-        else:
-            xml = [f"<controller type='{ctrl_type}' index='{ctrl_index}' model='{ctrl_model}'/>"]
+        xml = [f"<controller type='{ctrl_type}' index='{ctrl_index}' model='{ctrl_model}'/>"]
         return xml
 
     def _generate_interface_xml(self) -> list:
@@ -1090,46 +1213,6 @@ class DevicesConfigTab(BaseConfigTab):
         xml.append("</memory>")
         return xml
 
-    def _generate_shmem_xml(self) -> list:
-        """生成共享内存 XML。"""
-        shmem_name = self._get_widget_value('shmem_name', 'my_shmem')
-        shmem_model = self._get_widget_value('shmem_model', 'ivshmem-plain')
-        shmem_size = self._get_widget_value('shmem_size', '4')
-        shmem_role = self._get_widget_value('shmem_role', 'peer')
-
-        xml = [f"<shmem name='{shmem_name}'>"]
-        xml.append(f"  <model type='{shmem_model}'/>")
-        xml.append(f"  <size unit='MiB'>{shmem_size}</size>")
-        xml.append(f"  <role type='{shmem_role}'/>")
-        xml.append("</shmem>")
-        return xml
-
-    def _generate_parallel_xml(self) -> list:
-        """生成并口 XML。"""
-        parallel_type = self._get_widget_value('parallel_type', 'pty')
-        parallel_port = self._get_widget_value('parallel_port', '0')
-        parallel_path = self._get_widget_value('parallel_path', '')
-
-        xml = [f"<parallel type='{parallel_type}'>"]
-        xml.append(f"  <target port='{parallel_port}'/>")
-        if parallel_path:
-            xml.append(f"  <source path='{parallel_path}'/>")
-        xml.append("</parallel>")
-        return xml
-
-    def _generate_channel_xml(self) -> list:
-        """生成通道 XML。"""
-        channel_type = self._get_widget_value('channel_type', 'unix')
-        channel_name = self._get_widget_value('channel_name', 'org.qemu.guest_agent.0')
-        channel_path = self._get_widget_value('channel_path', '')
-
-        xml = [f"<channel type='{channel_type}'>"]
-        xml.append(f"  <target name='{channel_name}'/>")
-        if channel_path:
-            xml.append(f"  <source path='{channel_path}'/>")
-        xml.append("</channel>")
-        return xml
-
     # ===== 设备列表管理 =====
     def _add_device(self) -> None:
         """添加设备到列表。"""
@@ -1263,7 +1346,3 @@ class DevicesConfigTab(BaseConfigTab):
         """配置变更通知。"""
         if self.on_change_callback:
             self.on_change_callback()
-
-
-# 兼容别名 - 供旧代码使用
-DevicesTab = DevicesConfigTab

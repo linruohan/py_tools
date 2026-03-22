@@ -1,119 +1,123 @@
-"""设备配置模块 - 包含图形、磁盘、hostdev 等子模块."""
+"""设备配置模块 - 包含所有设备子模块."""
 
-from .disk import DiskConfigDialog, DiskDevicesTab
-from .graphics import GraphicsTab
-from .hostdev import MdevHostdevTab, PCIHostdevTab, SCSIHostdevTab, USBHostdevTab
+# 主模块
 from .devices import DevicesTab
+
+# 基础设备
+from .graphics import GraphicsTab
+from .video_devices import VideoDevicesTab
+from .hard_disks import HardDisksTab
+from .filesystems import FilesystemsTab
+from .network_interfaces import NetworkInterfacesTab
+from .controllers import ControllersTab
+from .disk import DiskDevicesTab, DiskConfigDialog
+from .hostdev import USBHostdevTab, PCIHostdevTab, SCSIHostdevTab, MdevHostdevTab
 from .others import OthersTab
-from .hard_disks import HardDisksTab, HardDiskConfigDialog
-from .filesystems import FilesystemsTab, FilesystemConfigDialog
-from .device_addresses import DeviceAddressesTab, DeviceAddressConfigDialog
-from .virtio import VirtioOptionsTab, VirtioDeviceModelsTab
-from .controllers import ControllersTab, ControllerConfigDialog
-from .device_leases import DeviceLeasesTab, DeviceLeaseConfigDialog
-from .host_device_assignment import (
-    HostDeviceAssignmentTab,
-    USBPCISCSIDevicesTab,
-    ACPIInitiatorsTab,
-    BlockCharDevicesTab,
-)
-from .network_interfaces import (
-    NetworkInterfacesTab,
-    VirtualNetworkTab,
-    BridgeToLANTab,
-    SLIRPConnectionTab,
-    PasstConnectionTab,
-    DirectAttachmentTab,
-    PCIPassthroughTab,
-    NetworkQoSTab,
-)
+
+# 从 other_devices 导入
 from .other_devices import (
     InputDevicesTab,
     HubDevicesTab,
     GraphicalFramebuffersTab,
-    VideoDevicesTab,
-    ConsolesDevicesTab,
     SoundDevicesTab,
     WatchdogDevicesTab,
     MemoryBalloonTab,
     TPMDeviceTab,
+    ConsolesDevicesTab,
 )
-from .audio_backends import AudioBackendsTab
-from .random_number_generator import RandomNumberGeneratorTab
-from .nvram_device import NVRAMDeviceTab
-from .panic_device import PanicDeviceTab
-from .shared_memory_device import SharedMemoryDeviceTab
-from .memory_devices import MemoryDevicesTab
-from .iommu_devices import IOMMUDevicesTab
-from .vsock import VsockTab
-from .crypto import CryptoTab
-from .pstore import PstoreTab
-from .console_channel import ChannelTab
-from .console_console import ConsoleTab
-from .console_domain_logfile import DomainLogfileTab
-from .console_parallel import ParallelPortTab
+
+# 控制台和串口
 from .console_serial import SerialPortTab
+from .console_parallel import ParallelPortTab
+from .console_console import ConsoleTab
+from .console_channel import ChannelTab
+from .console_domain_logfile import DomainLogfileTab
+
+# 主机设备
+from .host_device_assignment import HostDeviceAssignmentTab
 from .redirected_devices import RedirectedDevicesTab
 from .smartcard_devices import SmartcardDevicesTab
 
+# 特殊设备
+from .random_number_generator import RandomNumberGeneratorTab
+from .nvram_device import NVRAMDeviceTab
+from .panic_device import PanicDeviceTab
+from .vsock import VsockTab
+from .crypto import CryptoTab
+from .pstore import PstoreTab
+
+# 内存设备
+from .memory_devices import MemoryDevicesTab
+from .shared_memory_device import SharedMemoryDeviceTab
+
+# 高级功能
+from .iommu_devices import IOMMUDevicesTab
+from .device_addresses import DeviceAddressesTab
+from .device_leases import DeviceLeasesTab
+from .virtio import VirtioOptionsTab as VirtioTab
+
+# 音频后端
+from .audio_backends import AudioBackendsTab
+
 __all__ = [
+    # 主模块
     'DevicesTab',
-    'DiskConfigDialog',
-    'DiskDevicesTab',
+
+    # 基础设备
     'GraphicsTab',
-    'MdevHostdevTab',
-    'OthersTab',
-    'PCIHostdevTab',
-    'SCSIHostdevTab',
-    'USBHostdevTab',
+    'VideoDevicesTab',
     'HardDisksTab',
-    'HardDiskConfigDialog',
     'FilesystemsTab',
-    'FilesystemConfigDialog',
-    'DeviceAddressesTab',
-    'DeviceAddressConfigDialog',
-    'VirtioOptionsTab',
-    'VirtioDeviceModelsTab',
-    'ControllersTab',
-    'ControllerConfigDialog',
-    'DeviceLeasesTab',
-    'DeviceLeaseConfigDialog',
-    'HostDeviceAssignmentTab',
-    'USBPCISCSIDevicesTab',
-    'ACPIInitiatorsTab',
-    'BlockCharDevicesTab',
     'NetworkInterfacesTab',
-    'VirtualNetworkTab',
-    'BridgeToLANTab',
-    'SLIRPConnectionTab',
-    'PasstConnectionTab',
-    'DirectAttachmentTab',
-    'PCIPassthroughTab',
-    'NetworkQoSTab',
+    'ControllersTab',
+    'DiskDevicesTab',
+    'DiskConfigDialog',
+
+    # 其他设备
     'InputDevicesTab',
     'HubDevicesTab',
     'GraphicalFramebuffersTab',
-    'VideoDevicesTab',
-    'ConsolesDevicesTab',
     'SoundDevicesTab',
     'WatchdogDevicesTab',
     'MemoryBalloonTab',
     'TPMDeviceTab',
-    'AudioBackendsTab',
+    'ConsolesDevicesTab',
+    'OthersTab',
+
+    # 控制台和串口
+    'SerialPortTab',
+    'ParallelPortTab',
+    'ConsoleTab',
+    'ChannelTab',
+    'DomainLogfileTab',
+
+    # 主机设备
+    'HostDeviceAssignmentTab',
+    'RedirectedDevicesTab',
+    'SmartcardDevicesTab',
+    'USBHostdevTab',
+    'PCIHostdevTab',
+    'SCSIHostdevTab',
+    'MdevHostdevTab',
+
+    # 特殊设备
     'RandomNumberGeneratorTab',
     'NVRAMDeviceTab',
     'PanicDeviceTab',
-    'SharedMemoryDeviceTab',
-    'MemoryDevicesTab',
-    'IOMMUDevicesTab',
     'VsockTab',
     'CryptoTab',
     'PstoreTab',
-    'ChannelTab',
-    'ConsoleTab',
-    'DomainLogfileTab',
-    'ParallelPortTab',
-    'SerialPortTab',
-    'RedirectedDevicesTab',
-    'SmartcardDevicesTab',
+
+    # 内存设备
+    'MemoryDevicesTab',
+    'SharedMemoryDeviceTab',
+
+    # 高级功能
+    'IOMMUDevicesTab',
+    'DeviceAddressesTab',
+    'DeviceLeasesTab',
+    'VirtioTab',
+
+    # 音频后端
+    'AudioBackendsTab',
 ]

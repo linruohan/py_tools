@@ -10,40 +10,45 @@ class HardDisksTab(BaseConfigTab):
     """硬盘设备配置 Tab - 支持硬盘、软盘和CDROM设备."""
 
     def __init__(self, master, on_change_callback=None, **kwargs):
-        super().__init__(master, on_change_callback, **kwargs)
+        # 在调用父类 __init__ 之前初始化属性 (因为 _init_ui 会被父类 __init__ 调用)
         self.disk_list = []
-
-        self._init_ui()
+        super().__init__(master, on_change_callback, **kwargs)
 
     def _init_ui(self) -> None:
-        """初始化界面."""
+        """初始化界面 - 紧凑布局。"""
         self.grid_columnconfigure(0, weight=1)
         self.grid_rowconfigure(0, weight=0)
         self.grid_rowconfigure(1, weight=1)
 
-        # 工具栏
+        # 工具栏 - 单行
         toolbar = ctk.CTkFrame(self, fg_color='transparent')
-        toolbar.grid(row=0, column=0, sticky='ew', padx=5, pady=5)
+        toolbar.grid(row=0, column=0, sticky='ew', padx=5, pady=3)
+
+        ctk.CTkLabel(toolbar, text='Hard Disks:', font=CTK_FONT_MAIN).pack(side='left', padx=5)
 
         add_btn = ctk.CTkButton(
             toolbar,
-            text='Add Disk Device',
+            text='Add',
             command=self._add_disk,
             fg_color='#4caf50',
             hover_color='#388e3c',
-            width=120,
+            width=60,
+            height=28,
+            font=CTK_FONT_SMALL,
         )
-        add_btn.pack(side='left', padx=5)
+        add_btn.pack(side='left', padx=3)
 
         clear_btn = ctk.CTkButton(
             toolbar,
-            text='Clear List',
+            text='Clear',
             command=self._clear_list,
             fg_color='#f44336',
             hover_color='#d32f2f',
-            width=100,
+            width=60,
+            height=28,
+            font=CTK_FONT_SMALL,
         )
-        clear_btn.pack(side='left', padx=5)
+        clear_btn.pack(side='left', padx=3)
 
         # 内容区域
         self.content_frame = ctk.CTkScrollableFrame(
@@ -103,7 +108,7 @@ class HardDisksTab(BaseConfigTab):
         # 显示所有磁盘设备
         for i, disk in enumerate(self.disk_list):
             disk_frame = ctk.CTkFrame(self.content_frame, fg_color='transparent')
-            disk_frame.grid(row=i, column=0, sticky='ew', padx=10, pady=5)
+            disk_frame.grid(row=i, column=0, sticky='ew', padx=5, pady=2)
 
             # 设备类型标签
             type_label = f'[{disk.get("type", "file")}] {disk.get("device", "disk")}'
@@ -111,25 +116,25 @@ class HardDisksTab(BaseConfigTab):
             if disk.get('protocol'):
                 source_label = f'{disk["protocol"]}:{source_label}'
 
-            label = ctk.CTkLabel(
+            ctk.CTkLabel(
                 disk_frame,
                 text=f'{type_label}: {source_label} -> {disk.get("target_dev", "N/A")} ({disk.get("bus", "N/A")})',
                 font=CTK_FONT_MAIN,
                 anchor='w',
-            )
-            label.grid(row=0, column=0, sticky='w')
+            ).pack(side='left', padx=5, pady=3)
 
             # 删除按钮
             del_btn = ctk.CTkButton(
                 disk_frame,
-                text='删除',
-                width=60,
+                text='Del',
+                width=40,
+                height=24,
                 fg_color='#f44336',
                 hover_color='#d32f2f',
                 font=CTK_FONT_SMALL,
                 command=lambda idx=i: self._remove_disk(idx),
             )
-            del_btn.grid(row=0, column=1, padx=10)
+            del_btn.pack(side='right', padx=5)
 
     def _remove_disk(self, index):
         """删除指定索引的磁盘设备."""
@@ -203,15 +208,8 @@ class HardDiskConfigDialog:
         ctk.CTkLabel(
             info_frame, text='Target Device:', font=CTK_FONT_MAIN, width=80, anchor='w'
         ).grid(row=1, column=0, padx=5, pady=5, sticky='w')
-        # 生成默认目标设备名称
-        default_target = self._generate_default_target()
-        self.target_entry = ctk.CTkEntry(
-            info_frame, placeholder_text=default_target, width=100, font=CTK_FONT_SMALL
-        )
-        self.target_entry.insert(0, default_target)
-        self.target_entry.grid(row=1, column=1, padx=5, pady=5, sticky='w')
 
-        # Bus Type
+        # Bus Type (需要先初始化，因为_generate_default_target 需要用到)
         ctk.CTkLabel(info_frame, text='Bus:', font=CTK_FONT_MAIN, width=80, anchor='w').grid(
             row=1, column=2, padx=5, pady=5, sticky='w'
         )
@@ -222,6 +220,15 @@ class HardDiskConfigDialog:
             font=CTK_FONT_SMALL,
         )
         self.bus_menu.set('virtio')
+        self.bus_menu.grid(row=1, column=3, padx=5, pady=5, sticky='w')
+
+        # 生成默认目标设备名称
+        default_target = self._generate_default_target()
+        self.target_entry = ctk.CTkEntry(
+            info_frame, placeholder_text=default_target, width=100, font=CTK_FONT_SMALL
+        )
+        self.target_entry.insert(0, default_target)
+        self.target_entry.grid(row=1, column=1, padx=5, pady=5, sticky='w')
         self.bus_menu.grid(row=1, column=3, padx=5, pady=5, sticky='w')
 
         # 动态内容区域
