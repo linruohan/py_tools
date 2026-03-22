@@ -16,7 +16,7 @@ target-version = "py313"
 # Lint 配置
 [lint]
 select = ["E", "F", "B", "I", "UP", "RUF"] # 启用规则集
-ignore = ["E501"]                          # 忽略行长度限制
+ignore = ["E501", "RUF001", "RUF002", "RUF003"]  # 忽略行长度限制和中文文本误报
 fixable = ["ALL"]                          # 允许自动修复所有规则
 unfixable = ["B901"]                       # 禁止修复的规则
 [lint.per-file-ignores]
