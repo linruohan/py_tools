@@ -211,10 +211,7 @@ class IOThreadsAllocationTab(BaseConfigTab):
         for entry in self.iothread_entries:
             for widget in entry['frame'].winfo_children():
                 if isinstance(widget, ctk.CTkButton):
-                    if len(self.iothread_entries) == 1:
-                        widget.configure(state='disabled')
-                    else:
-                        widget.configure(state='normal')
+                    widget.configure(state='normal')
 
     def get_config(self) -> dict:
         """获取配置数据."""

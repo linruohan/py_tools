@@ -27,6 +27,7 @@ class LibvirtXMLGenerator:
         self._add_memory(config)
         self._add_cpu(config)
         self._add_os(config)
+        self._add_sysinfo(config)
         self._add_features(config)
         self._add_clock(config)
         self._add_pm(config)
@@ -512,6 +513,90 @@ class LibvirtXMLGenerator:
                     ET.SubElement(
                         acpi_elem, 'table', type=table.get('type', 'raw')
                     ).text = table.get('path', '')
+
+    def _add_sysinfo(self, config: dict) -> None:
+        """添加系统信息配置 (SMBIOS/FwCfg).
+
+        参考：https://www.libvirt.org/formatdomain.html#smbios-system-information
+        """
+        sysinfo_config = config.get('sysinfo', {})
+        if not sysinfo_config:
+            return
+
+        sysinfo_type = sysinfo_config.get('type', 'smbios')
+
+        # 如果 type 为 None 或空，不生成 XML
+        if not sysinfo_type or sysinfo_type == 'None':
+            return
+
+        if sysinfo_type == 'smbios':
+            # 检查是否有任何 SMBIOS 内容
+            bios = sysinfo_config.get('bios', {})
+            system = sysinfo_config.get('system', {})
+            base_board = sysinfo_config.get('base_board', {})
+            chassis = sysinfo_config.get('chassis', {})
+            oem_strings = sysinfo_config.get('oem_strings', [])
+
+            has_content = bios or system or base_board or chassis or oem_strings
+            if not has_content:
+                return
+
+            sysinfo_elem = ET.SubElement(self.domain, 'sysinfo', type='smbios')
+
+            # BIOS 信息
+            if bios:
+                bios_elem = ET.SubElement(sysinfo_elem, 'bios')
+                for entry_name, value in bios.items():
+                    if value and value != 'None':
+                        ET.SubElement(bios_elem, 'entry', name=entry_name).text = value
+
+            # 系统信息
+            if system:
+                system_elem = ET.SubElement(sysinfo_elem, 'system')
+                for entry_name, value in system.items():
+                    if value and value != 'None':
+                        ET.SubElement(system_elem, 'entry', name=entry_name).text = value
+
+            # 主板信息 (支持多个)
+            if base_board:
+                baseboard_elem = ET.SubElement(sysinfo_elem, 'baseBoard')
+                for entry_name, value in base_board.items():
+                    if value and value != 'None':
+                        ET.SubElement(baseboard_elem, 'entry', name=entry_name).text = value
+
+            # 机箱信息
+            if chassis:
+                chassis_elem = ET.SubElement(sysinfo_elem, 'chassis')
+                for entry_name, value in chassis.items():
+                    if value and value != 'None':
+                        ET.SubElement(chassis_elem, 'entry', name=entry_name).text = value
+
+            # OEM Strings
+            if oem_strings:
+                oem_elem = ET.SubElement(sysinfo_elem, 'oemStrings')
+                for oem_str in oem_strings:
+                    if oem_str and oem_str != 'None':
+                        ET.SubElement(oem_elem, 'entry').text = oem_str
+
+        elif sysinfo_type == 'fwcfg':
+            # FwCfg 配置
+            fwcfg_entries = sysinfo_config.get('fwcfg_entries', [])
+            if not fwcfg_entries:
+                return
+
+            sysinfo_elem = ET.SubElement(self.domain, 'sysinfo', type='fwcfg')
+            for entry in fwcfg_entries:
+                name = entry.get('name', '')
+                value = entry.get('value')
+                file_path = entry.get('file')
+
+                if name:
+                    entry_attrs = {'name': name}
+                    entry_elem = ET.SubElement(sysinfo_elem, 'entry', **entry_attrs)
+                    if file_path:
+                        entry_elem.set('file', file_path)
+                    elif value:
+                        entry_elem.text = value
 
     def _add_features(self, config: dict) -> None:
         """添加虚拟化特性.
@@ -1517,7 +1602,7 @@ class LibvirtXMLGenerator:
         if not tuning_config:
             return
 
-        # 检查是否有任何有效配置
+        # 检查是否有任何有效配置（排除空值和空列表）
         has_config = False
         for key in [
             'vcpupin',
@@ -1538,9 +1623,16 @@ class LibvirtXMLGenerator:
             'cachetune',
             'memorytune',
         ]:
-            if key in tuning_config:
-                has_config = True
-                break
+            val = tuning_config.get(key)
+            if val:
+                # 对于列表类型，检查是否非空
+                if isinstance(val, list) and len(val) > 0:
+                    has_config = True
+                    break
+                # 对于非列表类型，只要值存在即可
+                elif not isinstance(val, list):
+                    has_config = True
+                    break
 
         if not has_config:
             return

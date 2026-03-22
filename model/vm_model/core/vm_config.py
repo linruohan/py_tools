@@ -45,6 +45,8 @@ class VMConfig:
         self.memory_backing = MemoryBackingConfig()  # 内存后端配置
         self.numa_tuning = NumaTuneConfig()  # NUMA 节点调优配置
         self.iothreads_allocation = {}  # IO 线程分配配置
+        self.cpu_tuning = {}  # CPU 调优配置
+        self.sysinfo = {}  # SMBIOS/FwCfg 系统信息配置
 
         # 简化版本，移除策略管理器
         self._sync_context()
@@ -299,6 +301,28 @@ class VMConfig:
         if iothreads_data and isinstance(iothreads_data, dict):
             self.iothreads_allocation = iothreads_data
 
+        # CPU 调优配置（支持 tab_key 和 tab_data 两种格式）
+        if tab_key == 'cpu_tuning' and 'cpu_tuning' not in tab_data:
+            # tab_key 指定且 tab_data 中没有 cpu_tuning 键，直接使用 tab_data
+            cpu_tuning_data = tab_data
+        elif 'cpu_tuning' in tab_data:
+            # tab_data 中有 cpu_tuning 键，使用其值
+            cpu_tuning_data = tab_data['cpu_tuning']
+        else:
+            cpu_tuning_data = None
+
+        if cpu_tuning_data and isinstance(cpu_tuning_data, dict):
+            self.cpu_tuning = cpu_tuning_data
+
+        # SMBIOS/FwCfg 系统信息配置
+        if tab_key == 'smbios_system' or 'sysinfo' in tab_data:
+            sysinfo_data = tab_data.get('sysinfo', tab_data)
+            if isinstance(sysinfo_data, dict):
+                self.sysinfo = sysinfo_data
+            # smbios_mode 用于设置 os.smbios mode='sysinfo'
+            if 'smbios_mode' in tab_data:
+                self.os.smbios.mode = tab_data['smbios_mode']
+
     def to_dict(self) -> dict:
         """将配置转换为字典格式.
 
@@ -444,6 +468,10 @@ class VMConfig:
         if self.iothreads_allocation:
             config['iothreads_allocation'] = self.iothreads_allocation
 
+        # CPU 调优配置
+        if self.cpu_tuning:
+            config['cpu_tuning'] = self.cpu_tuning
+
         # CPU 模型和拓扑配置 (从 cpu 配置中提取)
         cpu_model_topology = {}
 
@@ -490,6 +518,10 @@ class VMConfig:
 
         if cpu_model_topology:
             config['cpu_model_topology'] = cpu_model_topology
+
+        # SMBIOS/FwCfg 系统信息配置
+        if self.sysinfo:
+            config['sysinfo'] = self.sysinfo
 
         return config
 
@@ -547,6 +579,8 @@ class VMConfig:
         self.memory_backing = MemoryBackingConfig()  # 内存后端配置
         self.numa_tuning = NumaTuneConfig()  # NUMA 节点调优配置
         self.iothreads_allocation = {}  # IO 线程分配配置
+        self.cpu_tuning = {}  # CPU 调优配置
+        self.sysinfo = {}  # SMBIOS/FwCfg 系统信息配置
 
         # 重新同步上下文
         self._sync_context()
