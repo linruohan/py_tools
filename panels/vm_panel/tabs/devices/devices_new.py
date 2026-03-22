@@ -1,7 +1,8 @@
 """设备配置模块 - 整合所有设备配置到一个 Tab (根据 libvirt devices 文档)."""
 
+from collections.abc import Callable
+
 import customtkinter as ctk
-from typing import Any, Callable
 
 from components.base_tab import BaseConfigTab
 from utils.styles import BG_COLOR_CONTENT, CTK_FONT_BOLD, CTK_FONT_MAIN, CTK_FONT_SMALL
@@ -1029,7 +1030,7 @@ class DevicesConfigTab(BaseConfigTab):
             return []
 
         xml = ["<video>"]
-        accel_attrs = f" accel3d='yes'" if video_accel3d else ""
+        accel_attrs = " accel3d='yes'" if video_accel3d else ""
         xml.append(f"  <model type='{video_model}' vram='{video_vram}' heads='{video_heads}'{accel_attrs}/>")
         xml.append("</video>")
         return xml
@@ -1206,10 +1207,10 @@ class DevicesConfigTab(BaseConfigTab):
         memory_access = self._get_widget_value('memory_access', 'private')
 
         xml = [f"<memory model='{memory_model}' access='{memory_access}'>"]
-        xml.append(f"  <target>")
+        xml.append("  <target>")
         xml.append(f"    <size unit='KiB'>{memory_size}</size>")
         xml.append(f"    <node>{memory_node}</node>")
-        xml.append(f"  </target>")
+        xml.append("  </target>")
         xml.append("</memory>")
         return xml
 

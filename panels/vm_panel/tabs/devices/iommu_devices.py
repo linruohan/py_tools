@@ -1,6 +1,7 @@
 """IOMMU 设备配置模块."""
 
 import customtkinter as ctk
+
 from components.base_tab import BaseConfigTab
 
 
@@ -17,7 +18,7 @@ class IOMMUDevicesTab(BaseConfigTab):
 
         self.type_var = ctk.StringVar(value='intel')
         type_menu = ctk.CTkOptionMenu(
-            self, variable=self.type_var, values=['intel', 'amd'], width=80,
+            self, variable=self.type_var, values=['intel', 'amd', 'none'], width=80,
             command=lambda e=None: self._trigger_change()
         )
         type_menu.pack(side='left', padx=5, pady=5)
@@ -43,8 +44,25 @@ class IOMMUDevicesTab(BaseConfigTab):
     def get_config(self):
         """获取 IOMMU 设备配置."""
         return {
-            'type': self.type_var.get(),
-            'address': self.address_entry.get(),
-            'mode': self.mode_var.get(),
-            'uuid': self.uuid_entry.get(),
+            'model': self.type_var.get(),
+            'caching_mode': 'on' if self.mode_var.get() == 'strict' else None,
+            'address': self.address_entry.get() or None,
+            'uuid': self.uuid_entry.get() or None,
+        }
+
+    def to_xml(self) -> dict:
+        """生成 XML 配置字典."""
+        iommu_type = self.type_var.get()
+
+        # 如果选择了 none，不生成 XML
+        if iommu_type == 'none':
+            return {}
+
+        return {
+            'iommu': [{
+                'model': iommu_type,
+                'caching_mode': 'on' if self.mode_var.get() == 'strict' else None,
+                'address': self.address_entry.get() or None,
+                'uuid': self.uuid_entry.get() or None,
+            }]
         }

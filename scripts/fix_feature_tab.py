@@ -1,9 +1,7 @@
-# -*- coding: utf-8 -*-
 """Fix CPUFeatureSubTab to support add/remove features."""
 
-import re
 
-with open('panels/vm_panel/tabs/cpu_model_topology_tab.py', 'r', encoding='utf-8') as f:
+with open('panels/vm_panel/tabs/cpu_model_topology_tab.py', encoding='utf-8') as f:
     content = f.read()
 
 # 找到 CPUFeatureSubTab 类并替换

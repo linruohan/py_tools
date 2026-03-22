@@ -1,14 +1,13 @@
 """内存调优配置数据类."""
 
 from dataclasses import dataclass
-from typing import Optional
 
 
 @dataclass
 class MemoryTuningItem:
     """内存调优单项配置类."""
 
-    value: Optional[str] = None  # 值 (字符串，允许空字符串表示 None)
+    value: str | None = None  # 值 (字符串，允许空字符串表示 None)
     unit: str = 'KiB'  # 单位：KiB, MiB, GiB, bytes
 
     def update(self, data: dict) -> None:

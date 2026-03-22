@@ -1,8 +1,6 @@
 """密钥包装配置类 - Key Wrap Configuration."""
 
-from dataclasses import dataclass, field
-
-from .keywrap import Cipher, KeyWrap as KeyWrapData
+from dataclasses import dataclass
 
 
 @dataclass

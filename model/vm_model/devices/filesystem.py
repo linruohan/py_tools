@@ -74,10 +74,32 @@ class Filesystem:
 
     def to_dict(self) -> dict[str, Any]:
         """转换为字典"""
+        # 处理 source 可能是字符串或 Source 对象
+        source_val = self.source
+        if isinstance(source_val, str):
+            # 字符串格式，直接作为 dir
+            source_dict = {'dir': source_val}
+        elif source_val:
+            # Source 对象格式
+            source_dict = source_val.__dict__
+        else:
+            source_dict = None
+
+        # 处理 access_mode 可能是字符串或 AccessMode 对象
+        access_mode_val = self.access_mode
+        if isinstance(access_mode_val, str):
+            # 字符串格式，直接作为 type
+            access_mode_dict = {'type': access_mode_val}
+        elif access_mode_val:
+            # AccessMode 对象格式
+            access_mode_dict = access_mode_val.__dict__
+        else:
+            access_mode_dict = None
+
         return {
             'type': self.type,
-            'access_mode': self.access_mode.__dict__ if self.access_mode else None,
-            'source': self.source.__dict__ if self.source else None,
+            'access_mode': access_mode_dict,
+            'source': source_dict,
             'target': self.target,
             'readonly': self.readonly,
             'driver': self.driver,

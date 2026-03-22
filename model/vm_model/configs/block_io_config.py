@@ -1,7 +1,6 @@
 """块 I/O 优化配置数据类."""
 
 from dataclasses import dataclass, field
-from typing import Optional
 
 
 @dataclass
@@ -9,11 +8,11 @@ class BlockIODevice:
     """块 IO 设备配置类."""
 
     path: str = ''
-    weight: Optional[int] = None  # 100-1000
-    read_bytes_sec: Optional[int] = None
-    write_bytes_sec: Optional[int] = None
-    read_iops_sec: Optional[int] = None
-    write_iops_sec: Optional[int] = None
+    weight: int | None = None  # 100-1000
+    read_bytes_sec: int | None = None
+    write_bytes_sec: int | None = None
+    read_iops_sec: int | None = None
+    write_iops_sec: int | None = None
 
     def update(self, data: dict) -> None:
         """更新配置."""
@@ -62,7 +61,7 @@ class BlockIODevice:
 class BlockIOConfig:
     """块 IO 优化配置类."""
 
-    weight: Optional[int] = None  # 全局权重 100-1000
+    weight: int | None = None  # 全局权重 100-1000
     devices: list[BlockIODevice] = field(default_factory=list)
 
     def update(self, data: dict) -> None:

@@ -116,10 +116,22 @@ class DevicesConfig:
                 self.video = [Video.from_dict(d) if isinstance(d, dict) else d for d in v]
             else:
                 self.video = []
+        if 'videos' in data:
+            v = data['videos']
+            if isinstance(v, dict):
+                self.video = [Video.from_dict(v)]
+            elif isinstance(v, list):
+                self.video = [Video.from_dict(d) if isinstance(d, dict) else d for d in v]
+            else:
+                self.video = []
         if 'audio' in data:
             self.audio = [Audio.from_dict(d) if isinstance(d, dict) else d for d in data['audio']]
+        if 'audios' in data:
+            self.audio = [Audio.from_dict(d) if isinstance(d, dict) else d for d in data['audios']]
         if 'sound' in data:
             self.sound = [Sound.from_dict(d) if isinstance(d, dict) else d for d in data['sound']]
+        if 'sounds' in data:
+            self.sound = [Sound.from_dict(d) if isinstance(d, dict) else d for d in data['sounds']]
         if 'controller' in data:
             self.controller = [
                 Controller.from_dict(d) if isinstance(d, dict) else d for d in data['controller']
@@ -134,17 +146,35 @@ class DevicesConfig:
                 self.serial = [Serial.from_dict(s)]
             elif isinstance(s, list):
                 self.serial = [Serial.from_dict(d) if isinstance(d, dict) else d for d in s]
+        if 'serials' in data:
+            s = data['serials']
+            if isinstance(s, dict):
+                self.serial = [Serial.from_dict(s)]
+            elif isinstance(s, list):
+                self.serial = [Serial.from_dict(d) if isinstance(d, dict) else d for d in s]
         if 'parallel' in data:
             self.parallel = [
                 Parallel.from_dict(d) if isinstance(d, dict) else d for d in data['parallel']
+            ]
+        if 'parallels' in data:
+            self.parallel = [
+                Parallel.from_dict(d) if isinstance(d, dict) else d for d in data['parallels']
             ]
         if 'console' in data:
             self.console = [
                 Console.from_dict(d) if isinstance(d, dict) else d for d in data['console']
             ]
+        if 'consoles' in data:
+            self.console = [
+                Console.from_dict(d) if isinstance(d, dict) else d for d in data['consoles']
+            ]
         if 'channel' in data:
             self.channel = [
                 Channel.from_dict(d) if isinstance(d, dict) else d for d in data['channel']
+            ]
+        if 'channels' in data:
+            self.channel = [
+                Channel.from_dict(d) if isinstance(d, dict) else d for d in data['channels']
             ]
         if 'input' in data:
             inp = data['input']
@@ -156,17 +186,33 @@ class DevicesConfig:
                     self.input.append(Input(type='mouse', bus=inp.get('mouse', 'tablet')))
             elif isinstance(inp, list):
                 self.input = [Input.from_dict(d) if isinstance(d, dict) else d for d in inp]
+        if 'inputs' in data:
+            self.input = [
+                Input.from_dict(d) if isinstance(d, dict) else d for d in data['inputs']
+            ]
         if 'hostdev' in data:
             self.hostdev = [
                 Hostdev.from_dict(d) if isinstance(d, dict) else d for d in data['hostdev']
+            ]
+        if 'hostdevs' in data:
+            self.hostdev = [
+                Hostdev.from_dict(d) if isinstance(d, dict) else d for d in data['hostdevs']
             ]
         if 'watchdog' in data:
             self.watchdog = [
                 Watchdog.from_dict(d) if isinstance(d, dict) else d for d in data['watchdog']
             ]
+        if 'watchdogs' in data:
+            self.watchdog = [
+                Watchdog.from_dict(d) if isinstance(d, dict) else d for d in data['watchdogs']
+            ]
         if 'memballoon' in data:
             self.memballoon = [
                 Memballoon.from_dict(d) if isinstance(d, dict) else d for d in data['memballoon']
+            ]
+        if 'memballoons' in data:
+            self.memballoon = [
+                Memballoon.from_dict(d) if isinstance(d, dict) else d for d in data['memballoons']
             ]
         if 'iommu' in data:
             self.iommu = [IOMMU.from_dict(d) if isinstance(d, dict) else d for d in data['iommu']]
@@ -176,16 +222,32 @@ class DevicesConfig:
                 self.tpm = [TPM.from_dict(t)]
             elif isinstance(t, list):
                 self.tpm = [TPM.from_dict(d) if isinstance(d, dict) else d for d in t]
+        if 'tpms' in data:
+            t = data['tpms']
+            if isinstance(t, dict):
+                self.tpm = [TPM.from_dict(t)]
+            elif isinstance(t, list):
+                self.tpm = [TPM.from_dict(d) if isinstance(d, dict) else d for d in t]
         if 'rng' in data:
             self.rng = [Rng.from_dict(d) if isinstance(d, dict) else d for d in data['rng']]
+        if 'rngs' in data:
+            self.rng = [Rng.from_dict(d) if isinstance(d, dict) else d for d in data['rngs']]
         if 'smartcard' in data:
             self.smartcard = [
                 Smartcard.from_dict(d) if isinstance(d, dict) else d for d in data['smartcard']
             ]
+        if 'smartcards' in data:
+            self.smartcard = [
+                Smartcard.from_dict(d) if isinstance(d, dict) else d for d in data['smartcards']
+            ]
         if 'shmem' in data:
             self.shmem = [Shmem.from_dict(d) if isinstance(d, dict) else d for d in data['shmem']]
+        if 'shmems' in data:
+            self.shmem = [Shmem.from_dict(d) if isinstance(d, dict) else d for d in data['shmems']]
         if 'vsock' in data:
             self.vsock = [Vsock.from_dict(d) if isinstance(d, dict) else d for d in data['vsock']]
+        if 'vsocks' in data:
+            self.vsock = [Vsock.from_dict(d) if isinstance(d, dict) else d for d in data['vsocks']]
         if 'crypto' in data:
             self.crypto = [
                 Crypto.from_dict(d) if isinstance(d, dict) else d for d in data['crypto']
@@ -196,25 +258,46 @@ class DevicesConfig:
             ]
         if 'panic' in data:
             self.panic = [Panic.from_dict(d) if isinstance(d, dict) else d for d in data['panic']]
+        if 'panics' in data:
+            self.panic = [Panic.from_dict(d) if isinstance(d, dict) else d for d in data['panics']]
         if 'filesystem' in data:
             self.filesystem = [
-                Filesystem.from_dict(d) if isinstance(d, dict) else d for d in data['filesystem']
+                self._convert_filesystem_dict(d) if isinstance(d, dict) else d for d in data['filesystem']
+            ]
+        if 'filesystems' in data:
+            self.filesystem = [
+                self._convert_filesystem_dict(d) if isinstance(d, dict) else d for d in data['filesystems']
             ]
         if 'nvram' in data:
             self.nvram = [Nvram.from_dict(d) if isinstance(d, dict) else d for d in data['nvram']]
+        if 'nvrams' in data:
+            self.nvram = [Nvram.from_dict(d) if isinstance(d, dict) else d for d in data['nvrams']]
         if 'memory' in data:
             self.memory = [
                 Memory.from_dict(d) if isinstance(d, dict) else d for d in data['memory']
             ]
+        if 'memory_devices' in data:
+            self.memory = [
+                Memory.from_dict(d) if isinstance(d, dict) else d for d in data['memory_devices']
+            ]
         if 'hub' in data:
             self.hub = [Hub.from_dict(d) if isinstance(d, dict) else d for d in data['hub']]
+        if 'hubs' in data:
+            self.hub = [Hub.from_dict(d) if isinstance(d, dict) else d for d in data['hubs']]
         if 'redirdev' in data:
             self.redirdev = [
                 Redirdev.from_dict(d) if isinstance(d, dict) else d for d in data['redirdev']
             ]
+        if 'redirdevs' in data:
+            self.redirdev = [
+                Redirdev.from_dict(d) if isinstance(d, dict) else d for d in data['redirdevs']
+            ]
         if 'redirfilter' in data:
             self.redirfilter = [
-                Redirfilter.from_dict(d) if isinstance(d, dict) else d for d in data['redirfilter']
+                Redirfilter.from_dict(d)
+                if isinstance(d, dict)
+                else d
+                for d in data['redirfilter']
             ]
         if 'usb_controller' in data:
             # 处理 USB 控制器配置
@@ -227,21 +310,40 @@ class DevicesConfig:
             self.monitor = data['monitor']
 
     def _convert_disk_dict(self, d: Any) -> Disk:
-        """转换磁盘配置字典,将模块格式转换为 Disk 格式."""
+        """转换磁盘配置字典，将模块格式转换为 Disk 格式."""
         if not isinstance(d, dict):
             return d
         # 将模块格式转换为 Disk.from_dict 期望的格式
-        converted = {
-            'type': d.get('format', 'qcow2'),  # format -> type
-            'device': d.get('device_type', 'disk'),  # device_type -> device
+        # 注意：type 字段在 Disk 类中表示磁盘格式（qcow2, raw 等），不是磁盘源类型（file, block 等）
+        # driver_type 或 format 才是磁盘格式
+        driver_type = d.get('driver_type') or d.get('format', 'qcow2')
+        return Disk.from_dict({
+            'type': driver_type,  # 磁盘格式（qcow2, raw 等）
+            'device': d.get('device') or d.get('disk_device') or d.get('device_type', 'disk'),
             'bus': d.get('bus', 'virtio'),
-            'source_file': d.get('path', ''),  # path -> source_file
+            'target': d.get('target') or d.get('target_dev', 'vda'),
+            'source_file': d.get('source_file') or d.get('source') or d.get('path', ''),
+            'driver': d.get('driver') or d.get('driver_type'),
             'cache': d.get('cache', 'none'),
             'readonly': d.get('readonly', False),
             'shareable': d.get('shareable', False),
             'discard': 'unmap' if d.get('discard') else None,
+            'boot_order': d.get('boot_order', ''),
+        })
+
+    def _convert_filesystem_dict(self, d: Any) -> dict | Filesystem:
+        """转换 filesystem 配置字典，将模块格式转换为 Filesystem 格式."""
+        if not isinstance(d, dict):
+            return d
+        # 直接返回 xml_generator 期望的扁平格式
+        # 不经过 Filesystem 类，避免嵌套字典问题
+        return {
+            'type': d.get('type', 'mount'),
+            'accessmode': d.get('accessmode') or d.get('access_mode', 'passthrough'),
+            'source': d.get('source', ''),  # 字符串路径
+            'target': d.get('target', ''),
+            'readonly': d.get('readonly', False),
         }
-        return Disk.from_dict(converted)
 
     def to_dict(self) -> dict[str, Any]:
         """转换为字典格式.
@@ -275,7 +377,7 @@ class DevicesConfig:
             'crypto': [d.to_dict() for d in self.crypto],
             'pstore': [d.to_dict() for d in self.pstore],
             'panic': [d.to_dict() for d in self.panic],
-            'filesystem': [d.to_dict() for d in self.filesystem],
+            'filesystem': self.filesystem,  # 已经是字典列表
             'nvram': [d.to_dict() for d in self.nvram],
             'memory': [d.to_dict() for d in self.memory],
             'hub': [d.to_dict() for d in self.hub],

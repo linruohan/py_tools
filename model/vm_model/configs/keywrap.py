@@ -1,6 +1,6 @@
 """S390 密钥包装配置 - Key Wrap."""
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 
 
 @dataclass

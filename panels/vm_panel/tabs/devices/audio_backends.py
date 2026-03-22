@@ -1,4 +1,5 @@
 import customtkinter as ctk
+
 from components.base_tab import BaseConfigTab
 
 

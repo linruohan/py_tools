@@ -22,7 +22,8 @@
       "Bash(sed -i 's/配置字典，格式为/配置字典，格式为/g' components/inner_tab_panel.py && \\\\\nsed -i 's/可选，如果没有则为空/可选，如果没有则为空/g' components/inner_tab_panel.py && \\\\\nsed -i 's/配置字典，将模块/配置字典，将模块/g' model/vm_model/configs/devices_config.py && \\\\\nsed -i 's/简化版本，移除/简化版本，移除/g' model/vm_model/core/vm_config.py && \\\\\nsed -i 's/\\(是否有效，错误信息\\)/\\(是否有效，错误信息\\)/g' model/vm_model/core/vm_config.py && \\\\\nsed -i 's/值字符串，如/值字符串，如/g' panels/vm_panel/tabs/basic_tab.py && \\\\\nsed -i 's/配置字典，用于/配置字典，用于/g' panels/vm_panel/tabs/basic_tab.py && \\\\\nsed -i 's/兼容层，从新模块/兼容层，从新模块/g' panels/vm_panel/tabs/devices_tab.py && \\\\\nsed -i 's/# 兼容层：/# 兼容层:/g' panels/vm_panel/tabs/devices_tab.py && \\\\\nsed -i 's/# 新代码请使用：/# 新代码请使用:/g' panels/vm_panel/tabs/devices_tab.py && \\\\\nsed -i 's/（延迟导入）/\\(延迟导入\\)/g' panels/vm_panel/vm_panel.py && \\\\\nsed -i 's/# 主布局：/# 主布局:/g' panels/vm_panel/vm_panel.py)",
       "Bash(powershell -Command \"Get-ChildItem -Recurse -Filter '__pycache__' -Directory | Remove-Item -Recurse -Force\")",
       "Bash(sed -i 's/# ========== 第一行：时钟偏移配置 ==========/# ========== 第一行 - 时钟偏移配置 ==========/' panels/vm_panel/tabs/time_keeping_tab.py)",
-      "Bash(sed -i 's/# ========== 第二行：定时器标题 ==========/# ========== 第二行 - 定时器标题 ==========/' panels/vm_panel/tabs/time_keeping_tab.py)"
+      "Bash(sed -i 's/# ========== 第二行：定时器标题 ==========/# ========== 第二行 - 定时器标题 ==========/' panels/vm_panel/tabs/time_keeping_tab.py)",
+      "Bash(cd:*)"
     ],
     "deny": [
       "Bash(rm -rf /)",

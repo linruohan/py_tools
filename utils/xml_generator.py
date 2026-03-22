@@ -1056,16 +1056,33 @@ class LibvirtXMLGenerator:
 
         sounds = devices_config.get('sounds', devices_config.get('sound', []))
         for sound in sounds:
-            ET.SubElement(devices, 'sound', model=sound.get('model', 'ich6'))
+            model = sound.get('model', 'ich6')
+            if model == 'none':
+                continue
+            ET.SubElement(devices, 'sound', model=model)
 
         hostdevs = devices_config.get('hostdevs', devices_config.get('hostdev', []))
         for hostdev in hostdevs:
             self._add_hostdev(devices, hostdev)
 
+        # IOMMU 设备
+        iommus = devices_config.get('iommu', [])
+        for iommu in iommus:
+            self._add_iommu(devices, iommu)
+
+        # Filesystem 设备
+        filesystems = devices_config.get('filesystems', devices_config.get('filesystem', []))
+        for fs in filesystems:
+            self._add_filesystem(devices, fs)
+
     def _add_disk_device(self, devices: ET.Element, disk: dict) -> None:
         """添加磁盘设备 (支持 file, block, network, volume, dir, nvme, vhostuser, vhostvdpa, ctl 类型)."""
         disk_type = disk.get('type', 'file')
         device_type = disk.get('device', 'disk')
+
+        # 如果选择了 none，不生成 XML
+        if disk_type == 'none':
+            return
 
         type_map = {
             'file': 'file',
@@ -1179,6 +1196,11 @@ class LibvirtXMLGenerator:
         """添加磁盘设备."""
         # 支持 disk_type 和 type 两种字段
         disk_type_val = disk.get('disk_type') or disk.get('type', 'file')
+
+        # 如果选择了 none，不生成 XML
+        if disk_type_val == 'none':
+            return
+
         # 将 qcow2, raw 等格式转换为 file 类型
         if disk_type_val in ('qcow2', 'raw', 'qed', 'vdi', 'vmdk', 'vpc'):
             disk_type = 'file'
@@ -1234,6 +1256,11 @@ class LibvirtXMLGenerator:
     def _add_interface(self, devices: ET.Element, iface: dict) -> None:
         """添加网络接口."""
         iface_type = iface.get('type', 'network')
+
+        # 如果选择了 none，不生成 XML
+        if iface_type == 'none':
+            return
+
         iface_elem = ET.SubElement(devices, 'interface', type=iface_type)
 
         if iface.get('mac'):
@@ -1288,8 +1315,14 @@ class LibvirtXMLGenerator:
 
     def _add_video(self, devices: ET.Element, video: dict) -> None:
         """添加视频设备."""
+        model = video.get('model', 'qxl')
+
+        # 如果选择了 none，不生成 XML
+        if model == 'none':
+            return
+
         video_elem = ET.SubElement(devices, 'video')
-        model_attrs = {'type': video.get('model', 'qxl')}
+        model_attrs = {'type': model}
         if video.get('vram'):
             model_attrs['vram'] = str(video['vram'])
         if video.get('heads'):
@@ -1298,9 +1331,15 @@ class LibvirtXMLGenerator:
 
     def _add_controller(self, devices: ET.Element, ctrl: dict) -> None:
         """添加控制器."""
+        model = ctrl.get('model', '')
+
+        # 如果选择了 none，不生成 XML
+        if model == 'none':
+            return
+
         attrs = {'type': ctrl.get('type', 'usb')}
-        if ctrl.get('model'):
-            attrs['model'] = ctrl['model']
+        if model:
+            attrs['model'] = model
         if ctrl.get('index'):
             attrs['index'] = str(ctrl['index'])
         ET.SubElement(devices, 'controller', **attrs)
@@ -1455,6 +1494,84 @@ class LibvirtXMLGenerator:
                     'devno': ccw.get('devno', '0x0001'),
                 }
                 ET.SubElement(devices, 'address', **addr_attrs)
+
+    def _add_iommu(self, devices: ET.Element, iommu: dict) -> None:
+        """添加 IOMMU 设备."""
+        model = iommu.get('model', 'intel')
+
+        # 如果选择了 none，不生成 XML
+        if model == 'none':
+            return
+
+        iommu_elem = ET.SubElement(devices, 'iommu', model=model)
+
+        # 驱动配置
+        driver_attrs = {}
+        if iommu.get('caching_mode'):
+            driver_attrs['caching_mode'] = 'on'
+        if iommu.get('aw_bits'):
+            driver_attrs['aw_bits'] = str(iommu['aw_bits'])
+        if iommu.get('intsremap'):
+            driver_attrs['intremap'] = 'on'
+        if iommu.get('eisr'):
+            driver_attrs['eisr'] = 'on'
+        if iommu.get('iotlb'):
+            driver_attrs['iotlb'] = 'on'
+        if iommu.get('translation'):
+            driver_attrs['translation'] = iommu['translation']
+        if iommu.get('bus'):
+            driver_attrs['bus'] = str(iommu['bus'])
+
+        if driver_attrs:
+            ET.SubElement(iommu_elem, 'driver', **driver_attrs)
+        else:
+            ET.SubElement(iommu_elem, 'driver')
+
+    def _add_filesystem(self, devices: ET.Element, fs: dict) -> None:
+        """添加文件系统设备 (9p filesystem).
+
+        参考：https://www.libvirt.org/formatdomain.html#filesystems
+        """
+        fs_type = fs.get('type', 'mount')
+
+        # 如果选择了 none，不生成 XML
+        if fs_type == 'none':
+            return
+
+        # 创建 filesystem 元素
+        fs_elem = ET.SubElement(devices, 'filesystem', type=fs_type)
+
+        # 访问模式
+        accessmode = fs.get('accessmode')
+        if accessmode:
+            fs_elem.set('accessmode', accessmode)
+
+        # Source - 根据类型不同而不同
+        source = fs.get('source')
+        if source:
+            if fs_type == 'mount':
+                ET.SubElement(fs_elem, 'source', dir=source)
+            elif fs_type == 'file':
+                ET.SubElement(fs_elem, 'source', file=source)
+            elif fs_type == 'block':
+                ET.SubElement(fs_elem, 'source', dev=source)
+            elif fs_type == 'ram':
+                # RAM 类型不需要 source
+                pass
+            elif fs_type == 'template':
+                # 模板类型不需要 source
+                pass
+            elif fs_type == 'bind':
+                ET.SubElement(fs_elem, 'source', dir=source)
+
+        # Target (必需)
+        target = fs.get('target')
+        if target:
+            ET.SubElement(fs_elem, 'target', dir=target)
+
+        # 只读
+        if fs.get('readonly'):
+            ET.SubElement(fs_elem, 'readonly')
 
     def _add_memory_backing(self, config: dict) -> None:
         """添加内存后端配置."""

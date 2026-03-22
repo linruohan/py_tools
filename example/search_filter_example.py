@@ -1,6 +1,7 @@
 """搜索筛选组件示例."""
 
 import customtkinter as ctk
+
 from components.search_filter import SearchFilter
 
 

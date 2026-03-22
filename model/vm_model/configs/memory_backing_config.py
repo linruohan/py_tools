@@ -1,16 +1,15 @@
 """内存后端配置数据类."""
 
 from dataclasses import dataclass, field
-from typing import Optional
 
 
 @dataclass
 class HugepageItem:
     """Hugepage 配置项."""
 
-    size: Optional[str] = None  # 页面大小
+    size: str | None = None  # 页面大小
     unit: str = 'GiB'  # 单位：KiB, MiB, GiB
-    nodeset: Optional[str] = None  # 节点集
+    nodeset: str | None = None  # 节点集
 
     def update(self, data: dict) -> None:
         """更新配置."""
@@ -53,7 +52,7 @@ class MemoryBackingConfig:
     source_type: str = 'anonymous'  # anonymous, file, memfd
     access_mode: str = 'private'  # private, shared
     allocation_mode: str = 'ondemand'  # immediate, ondemand
-    allocation_threads: Optional[str] = None
+    allocation_threads: str | None = None
     nosharepages: bool = False
     locked: bool = False
     discard: bool = False
@@ -62,11 +61,11 @@ class MemoryBackingConfig:
         """更新配置."""
         if 'hugepages' in data and isinstance(data['hugepages'], list):
             self.hugepages = [HugepageItem.from_dict(hp) for hp in data['hugepages']]
-        if 'source_type' in data and data['source_type']:
+        if data.get('source_type'):
             self.source_type = data['source_type']
-        if 'access_mode' in data and data['access_mode']:
+        if data.get('access_mode'):
             self.access_mode = data['access_mode']
-        if 'allocation_mode' in data and data['allocation_mode']:
+        if data.get('allocation_mode'):
             self.allocation_mode = data['allocation_mode']
         if 'allocation_threads' in data:
             self.allocation_threads = data['allocation_threads'] or None

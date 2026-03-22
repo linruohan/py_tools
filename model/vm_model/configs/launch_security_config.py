@@ -1,6 +1,6 @@
 """启动安全配置模块 - SEV/SEV-SNP/TDX/s390-pv."""
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 
 
 @dataclass

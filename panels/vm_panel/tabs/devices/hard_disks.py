@@ -183,6 +183,7 @@ class HardDiskConfigDialog:
                 'vhostuser',
                 'vhostvdpa',
                 'ctl',
+                'none',
             ],
             width=120,
             font=CTK_FONT_SMALL,

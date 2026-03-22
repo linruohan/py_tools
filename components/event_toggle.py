@@ -2,7 +2,7 @@
 
 import customtkinter as ctk
 
-from utils.styles import CTK_FONT_MAIN, CTK_FONT_SMALL
+from utils.styles import CTK_FONT_SMALL
 
 
 class EventToggleSwitch(ctk.CTkFrame):

@@ -1,7 +1,5 @@
 import tkinter as tk
 
-from tkinter import ttk
-
 
 class ToolTip:
     """为任何控件添加工具提示的简单类"""

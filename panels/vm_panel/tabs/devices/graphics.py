@@ -218,3 +218,14 @@ class GraphicsTab(BaseConfigTab):
             })
 
         return config
+
+    def to_xml(self) -> dict:
+        """生成 XML 配置字典."""
+        gfx_type = self.graphics_type.get()
+
+        # 如果选择了 none，不生成 XML
+        if gfx_type == 'none':
+            return {}
+
+        config = self.get_config()
+        return {'graphics': config}
