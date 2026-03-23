@@ -4,7 +4,7 @@
 a = Analysis(
     ['main.py'],
     pathex=[],
-    binaries=[],D:\codehub\py_tools\resources\images
+    binaries=[],
     datas=[('c:/software/Python3/lib/site-packages/customtkinter', 'customtkinter/'), ('d:/codehub/py_tools/resources/images', 'resources/images/')],
     hiddenimports=[],
     hookspath=[],
