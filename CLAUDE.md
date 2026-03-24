@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## 项目概述
 
-基于 `customtkinter` 的桌面应用工具箱,提供现代化 UI 界面。
+基于 `customtkinter` 的桌面应用工具箱，提供现代化 UI 界面。包含三个主要功能面板：Home（组件展示）、JSON（解析与 Excel 导出）、VM（KVM/QEMU 虚拟机 XML 配置生成器）。
 
 ## 开发命令
 
@@ -13,165 +13,91 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ruff check           # 检查语法错误
 ruff check --fix     # 检查并自动修复
 ruff format          # 格式化代码
-
-# 或使用构建脚本
-python -m scripts.build check
-python -m scripts.build fix
-python -m scripts.build format
-python -m scripts.build lint       # 运行所有检查
-python -m scripts.build test       # 运行测试
 ```
 
-### 运行应用
+### 构建脚本
+```bash
+python -m scripts.build check      # Ruff 检查
+python -m scripts.build fix        # 检查并修复
+python -m scripts.build format     # 格式化
+python -m scripts.build test       # 运行测试
+python -m scripts.build lint       # 运行所有检查
+python -m scripts.build build      # PyInstaller 打包
+```
+
+### 运行与测试
 ```bash
 python main.py                     # 运行主应用
-python example/simple_example.py   # 运行简单示例
-python example/drag_example.py     # 运行拖拽示例
+python -m pytest tests/ -v         # 运行所有测试
+python -m pytest tests/test_vm_config.py -v  # 运行单个测试文件
 ```
 
 ### 打包
 ```bash
-# PyInstaller 方式
-pyinstaller main.spec
-
-# 或使用构建脚本
-python -m scripts.build build
+pyinstaller main.spec              # 使用现有 spec 打包
 ```
 
 ## 代码架构
 
-### 核心结构
-- `main.py` - 应用入口,使用 `CTk` 创建主窗口,含左侧导航栏和多面板切换逻辑
-- `panels/` - 功能面板模块
-  - `home_panel.py` - 主页面板,包含多 Tab 展示各种 CTk 组件
-  - `json_panel.py` - JSON 解析与 Excel 导出工具
-  - `vm_panel/` - KVM/QEMU 虚拟机 XML 配置生成模块（24 个可配置 Tab）
-    - `tabs/` - 24 个 Tab 定义
-    - `tabs/devices/` - 设备配置子模块（disk.py、graphics.py、hostdev.py 等）
-    - `frames/` - 可复用帧组件（disk_frame.py、network_frame.py、hostdev_frame.py）
-    - `tab_toggle.py` - Tab 切换管理
-    - `xml_generator.py` - XML 生成器
-- `model/vm_model/` - 虚拟机配置数据模型层
-  - `core/` - 核心模块（vm_config.py、domain.py、converter.py）
-  - `configs/` - 配置类（basic_config.py、cpu_allocation_config.py 等）
-  - `cpu/` - CPU 相关模型（cpu.py、numa.py）
-  - `devices/` - 设备模型（disk.py、interface.py、graphics.py 等）
-- `utils/` - 工具函数（xml_generator.py - Libvirt XML 生成器）
-- `tests/` - 测试代码
+### 应用结构
+- `main.py` - 应用入口，`App` 类继承自 `ctk.CTk`，管理左侧导航栏和三个主面板切换
+- `panels/` - 三大功能面板：`HomePanel`、`JsonPanel`、`VmPanel`
+- `model/vm_model/` - VM 配置数据模型层，采用组合模式
+- `utils/` - 工具模块（XML 生成器、解析器）
+- `components/` - 可复用 UI 组件
 - `example/` - customtkinter 示例代码
 - `resources/` - 资源文件（图片、图标）
 - `scripts/` - 构建脚本
-- `config/` - 配置模块（策略模式实现）
-- `components/` - 可复用 UI 组件（accordion.py、tab_toggle.py、styles.py 等）
 
-### VmPanel 虚拟机配置（24 个 Tab）
+### VM Panel 架构（24 Tab）
 
-**默认启用的基础 Tab**:
-- 基础信息 (`general_metadata`) - 名称、描述、UUID、机型、虚拟化类型、vCPU、内存
-- 系统引导 (`os_booting`) - 固件 (BIOS/UEFI)、引导设备、超时设置
-- CPU 分配 (`cpu_allocation`) - vCPU、拓扑结构
-- 内存分配 (`memory_allocation`) - 内存大小、交换内存
-- 设备 (`devices`) - 图形显示 (vnc/spice)、视频模型、USB、串口、TPM
+**面板组成**:
+- `vm_panel.py` - 主面板，集成 `TabTogglePanel` 管理 24 个 Tab 的显示/隐藏
+- `tabs/` - 24 个配置 Tab，每个 Tab 继承自 `components/base_tab.py` 的 `BaseTab`
+- `frames/` - 可复用帧组件（`disk_frame.py`、`network_frame.py`、`hostdev_frame.py`）
+- `tabs/devices/` - 设备配置子模块
 
-**可选高级 Tab**:
-- SMBIOS 系统信息、IO 线程分配、CPU 优化、内存后端、内存优化
-- NUMA 节点优化、块 IO 优化、资源分区、光纤通道 VMID、CPU 模型与拓扑
-- 事件配置、电源管理、磁盘节流组、虚拟化特性、时间同步
-- 性能监控、安全标签、密钥包装、启动安全
+**默认启用的基础 Tab**: `general_metadata`、`os_booting`、`cpu_allocation`、`memory_allocation`、`devices`
 
-### model/vm_model 数据模型层
+**可选高级 Tab**: 共 19 个，包括 SMBIOS、IOThreads、NUMA、性能监控等
 
-采用组合模式管理配置,目录结构:
+### 数据模型层 (model/vm_model)
+
+采用组合模式，由 `VMConfig` 统一管理：
+
 ```
 model/vm_model/
-├── core/              # 核心模块
+├── core/
 │   ├── vm_config.py   - VMConfig 统一配置管理类
-│   ├── domain.py      - Domain 数据模型（含枚举类型、数据类）
-│   └── converter.py   - 配置转换工具
-├── configs/           # 配置类
-│   ├── basic_config.py           - 基础配置
-│   ├── cpu_allocation_config.py  - CPU 分配配置
-│   ├── memory_allocation_config.py - 内存分配配置
-│   ├── os_booting_config.py      - OS 引导配置
-│   └── devices_config.py         - 设备配置
-├── cpu/               - CPU 相关模型（cpu.py、numa.py）
-└── devices/           - 设备模型（disk.py、interface.py、graphics.py 等）
+│   └── domain.py      - Domain 数据模型（枚举、数据类）
+├── configs/           - 各模块配置类（basic、cpu、memory、devices 等）
+├── cpu/               - CPU 模型（topology、numa）
+└── devices/           - 设备模型（disk、graphics、interface 等）
 ```
 
-### utils/ 工具模块
+**配置流程**: UI Tab → `tab_data` → `VMConfig.update_from_tab()` → `LibvirtXMLGenerator.generate()`
 
-- `xml_generator.py` - Libvirt XML 生成器
-  - `LibvirtXMLGenerator` 类生成标准 libvirt domain XML
-  - 支持动态 XML 预览,配置变更时自动更新
-  - 支持保存 XML 文件或通过 `virsh define` 创建虚拟机
+### 关键组件
 
-### 优化记录
-
-**2026-03-14 优化**:
-- 删除空目录 `core/`、`services/`
-- 删除未使用的 `utils/xml_builder.py`（与 `xml_generator.py` 功能重复）
-- 清理所有 `__pycache__/` 目录
-- 重构 `vm_panel.py`,将重复的 Tab 导入代码提取为 `_get_tab_classes()` 函数
+- `components/tab_toggle.py` - `TabTogglePanel` 类管理 24 Tab 的启用/禁用状态，通过复选框控制
+- `components/base_tab.py` - `BaseTab` 基类，定义 `get_tab_data()` 接口供所有 Tab 继承
+- `utils/xml_generator.py` - `LibvirtXMLGenerator` 类根据配置生成 libvirt domain XML
 
 ### 技术栈
-- `customtkinter` - 现代化 Tkinter UI 框架
-- `PIL/Pillow` - 图像处理
-- `pandas` + `openpyxl` - Excel 文件生成
+- `customtkinter>=5.2.0` - GUI 框架
+- `PIL/Pillow>=10.0.0` - 图像处理
+- `pandas>=2.0.0` + `openpyxl>=3.1.0` - Excel 生成
 - `xml.etree.ElementTree` / `minidom` - XML 生成与格式化
-- `libvirt` / `virsh` - 虚拟机管理 (可选)
 
-### 关键模式
-- 采用 `CTkFrame` 网格布局 (`grid`) 组织界面
-- 使用 `CTkTabview` 实现多 Tab 切换
-- `TabTogglePanel` 管理 24 个 Tab 的显示/隐藏
-- 深色/浅色主题通过 `set_appearance_mode()` 控制
+## 开发模式
 
-## 项目结构
+- 使用 `CTkFrame.grid()` 网格布局组织界面
+- `CTkTabview` 实现 Tab 切换
+- 深色/浅色主题通过 `ctk.set_appearance_mode()` 控制
+- 资源路径使用 `Path(__file__).resolve().parent / 'resources'` 确保跨平台
 
-```
-py_tools/
-├── CLAUDE.md               # Claude 配置说明
-├── README.md               # 项目文档
-├── pyproject.toml          # 项目配置
-├── requirements.txt        # 依赖列表
-├── ruff.toml               # Ruff 配置
-├── main.py                 # 应用入口
-├── main.spec               # PyInstaller 配置
-│
-├── components/             # 可复用 UI 组件
-│   ├── accordion.py        # 手风琴组件
-│   ├── inner_tab_panel.py  # 内部 Tab 面板
-│   ├── styles.py           # 样式定义
-│   └── tab_toggle.py       # Tab 切换组件
-│
-├── config/                 # 配置模块
-│   └── strategies/         # 策略模式实现
-│
-├── panels/                 # UI 面板层
-│   ├── home_panel.py       # 主页面板
-│   ├── json_panel.py       # JSON 解析面板
-│   └── vm_panel/           # 虚拟机配置面板
-│       ├── tabs/           # 24 个 Tab
-│       │   └── devices/    # 设备配置子模块
-│       └── frames/         # 可复用组件
-│
-├── model/                  # 数据模型层
-│   └── vm_model/
-│       ├── core/           # 核心模块
-│       ├── configs/        # 配置类
-│       ├── cpu/            # CPU 模型
-│       └── devices/        # 设备模型
-│
-├── utils/                  # 工具函数
-│   └── xml_generator.py    # Libvirt XML 生成器
-│
-├── tests/                  # 测试代码
-├── example/                # 示例代码
-├── resources/              # 资源文件
-│   ├── icons/
-│   └── images/
-└── scripts/                # 构建脚本
-```
-
-## libvirt 文档参考
+## libvirt 参考
 https://www.libvirt.org/formatdomain.html
+
+## GitHub Actions
+推送 `v*` 标签自动构建 Windows exe 并创建 Release，支持在 Actions 页面手动触发。
