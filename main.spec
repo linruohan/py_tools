@@ -1,12 +1,21 @@
 # -*- mode: python ; coding: utf-8 -*-
 
+import os
+import sys
+
+# 获取项目根目录
+project_root = os.path.dirname(os.path.abspath('__file__'))
+
+# 动态获取 customtkinter 路径
+import customtkinter
+ctk_path = os.path.dirname(customtkinter.__file__)
 
 a = Analysis(
     ['main.py'],
     pathex=[],
     binaries=[],
-    datas=[('c:/software/pythoncore-3.14-64/lib/site-packages/customtkinter', 'customtkinter/'), ('d:/codehub/py_tools/resources/images', 'resources/images/')],
-    hiddenimports=[],
+    datas=[(ctk_path, 'customtkinter/'), (os.path.join(project_root, 'resources/images'), 'resources/images/')],
+    hiddenimports=['customtkinter'],
     hookspath=[],
     hooksconfig={},
     runtime_hooks=[],
@@ -32,7 +41,7 @@ exe = EXE(
     target_arch=None,
     codesign_identity=None,
     entitlements_file=None,
-    icon=['d:\\codehub\\py_tools\\resources\\icons\\mytool.ico'],
+    icon=[os.path.join(project_root, 'resources/icons/mytool.ico')],
 )
 coll = COLLECT(
     exe,

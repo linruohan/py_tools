@@ -61,6 +61,23 @@ pyinstaller --noconfirm --onedir --windowed \
 pyinstaller main.spec
 ```
 
+### GitHub Actions 自动构建
+
+本项目配置了 GitHub Actions 工作流自动构建 Windows exe 文件。
+
+**触发条件**:
+- 推送 `v*` 标签（如 `v1.0.0`）时自动构建并发布
+- 手动在 Actions 页面触发
+
+**构建产物**:
+- 自动上传到 Actions Artifacts（保留 30 天）
+- 推送标签时自动创建 GitHub Release 并附带构建产物
+
+**手动触发构建**:
+1. 进入仓库的 Actions 标签
+2. 选择 "Build Windows EXE" 工作流
+3. 点击 "Run workflow"
+
 ## 项目结构
 
 ```
