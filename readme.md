@@ -129,3 +129,12 @@ py_tools/
 ## License
 
 MIT License
+
+## 运行
+
+```bash
+poetry install
+poetry config virtualenvs.in-project true
+poetry env use python
+poetry run pyinstaller main.spec
+```

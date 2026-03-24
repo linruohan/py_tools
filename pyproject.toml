@@ -3,7 +3,7 @@ name = "py-tools"
 version = "0.1.0"
 description = "基于 customtkinter 的桌面应用工具箱"
 readme = "README.md"
-requires-python = ">=3.10"
+requires-python = ">=3.14,<3.15"
 authors = [
     {name = "linruohan",email = "mjt1220@126.com"}
 ]

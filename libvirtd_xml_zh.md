@@ -1,666 +1,1268 @@
-## 19 [时间保持](https://www.libvirt.org/formatdomain.html#id26)
+# 域 XML 格式
 
-客户机时钟通常从主机时钟初始化。大多数操作系统期望硬件时钟保持在 UTC 中，这是默认设置。然而，Windows 期望它在所谓的 'localtime' 中。
+[toc]
 
-```
-...
-<clock offset='localtime'>
-  <timer name='rtc' tickpolicy='catchup' track='guest'>
-    <catchup threshold='123' slew='120' limit='10000'/>
-  </timer>
-  <timer name='pit' tickpolicy='delay'/>
-</clock>
-...
-```
+本节描述用于表示域的 XML 格式，根据运行的域类型和启动它们的选项，格式会有所不同。有关特定于 hypervisor 的详细信息，请参考 [驱动文档](https://www.libvirt.org/drivers.html)
 
-- clock
+# [元素和属性概述](https://www.libvirt.org/formatdomain.html#id1)
 
-  offset 属性有四个可能的值，允许对客户机时钟如何与主机同步进行细粒度控制。注意，并非所有 hypervisor 都支持所有模式。utc 客户机时钟在启动时将始终与 UTC 同步。自 0.9.11 起，'utc' 模式可以转换为 'variable' 模式，这可以通过使用 adjustment 属性来控制。如果值为 'reset'，则永远不会进行转换（并非所有 hypervisor 都能在每次启动时与 UTC 同步；使用 'reset' 将在那些 hypervisor 上导致错误）。数值强制转换为 'variable' 模式，使用该值作为初始调整。默认调整是特定于 hypervisor 的。localtime 客户机时钟在启动时将与主机配置的时区（如果有）同步。自 0.9.11 起，adjustment 属性的行为与 'utc' 模式相同。timezone 客户机时钟将使用 timezone 属性同步到请求的时区。自 0.7.7 起 variable 客户机时钟将应用相对于 UTC 或 localtime 的任意偏移，具体取决于 basis 属性。相对于 UTC（或 localtime）的增量以秒为单位，使用 adjustment 属性指定。客户机可以自由随时间调整 RTC，并期望在下次重启时会被遵守。这与 'utc' 和 'localtime' 模式（带有可选属性 adjustment='reset'）形成对比，其中 RTC 调整在每次重启时都会丢失。自 0.7.7 起 自 0.9.11 起，basis 属性可以是 'utc'（默认）或 'localtime'。absolute 客户机时钟在域启动时将始终设置为 start 属性的值。start 属性采用纪元时间戳。自 8.4.0 起。 时钟可能有零个或多个 timer 子元素。自 0.8.0 起
-- timer
+所有虚拟机所需的根元素名为 domain。它有两个属性，type 指定用于运行域的 hypervisor。允许的值是特定于驱动程序的，但包括 "xen"、"kvm"、"hvf"（自 8.1.0 和 QEMU 2.12 起）、"qemu" 和 "lxc"。第二个属性是 id，它是运行中的客户机的唯一整数标识符。非活动机器没有 id 值。
 
-  每个 timer 元素需要一个 name 属性，并且具有其他取决于指定名称的可选属性。各种 hypervisor 支持不同的属性组合。name name 属性选择要修改的计时器，可以是 "platform"（当前不受支持）、"hpet"（xen、qemu、lxc）、"kvmclock"（qemu）、"pit"（qemu）、"rtc"（qemu、lxc）、"tsc"（xen、qemu - 自 3.2.0 起）、"hypervclock"（qemu - 自 1.2.2 起）或 "armvtimer"（qemu - 自 6.1.0 起）。hypervclock 计时器为运行 Microsoft Windows 操作系统的客户机添加对参考时间计数器和 iTSC 功能参考页的支持。track track 属性指定计时器跟踪的内容，可以是 "boot"、"guest"、"wall" 或 "realtime"。仅对 name="rtc" 或 name="platform" 有效。tickpolicy tickpolicy 属性确定当 QEMU 错过向客户机注入 tick 的截止日期时会发生什么。例如，这可能因为客户机被暂停而发生。delay 继续以正常速率传递 tick。客户机 OS 不会注意到任何问题，因为从它的角度来看，时间将继续正常流动。客户机中的时间现在应该落后于主机中的时间，正好是错过 tick 的时间量。catchup 以更高的速率传递 tick 以赶上错过的 tick。客户机 OS 不会注意到任何问题，因为从它的角度来看，时间将继续正常流动。一旦计时器设法赶上所有错过的 tick，客户机和主机中的时间应该匹配。merge 将错过的 tick(s) 合并为一个 tick 并注入。客户机时间可能会延迟，具体取决于 OS 对 tick 合并的反应 discard 丢弃错过的 tick 并正常继续未来的注入。客户机 OS 将看到计时器一次性跳转相当大的量，就好像中间的时间块根本不存在一样；不用说，
-
-## 20 [性能监控事件](https://www.libvirt.org/formatdomain.html#id27)
-
-某些平台允许监控虚拟机和其中执行的代码的性能。要启用性能监控事件，您可以在 perf 元素中指定它们，或通过 virDomainSetPerfEvents API 启用它们。然后使用 virConnectGetAllDomainStats API 检索性能值。自 2.0.0 起
-
-```xml
-...
-<perf>
-  <event name='cmt' enabled='yes'/>
-  <event name='mbmt' enabled='no'/>
-  <event name='mbml' enabled='yes'/>
-  <event name='cpu_cycles' enabled='no'/>
-  <event name='instructions' enabled='yes'/>
-  <event name='cache_references' enabled='no'/>
-  <event name='cache_misses' enabled='no'/>
-  <event name='branch_instructions' enabled='no'/>
-  <event name='branch_misses' enabled='no'/>
-  <event name='bus_cycles' enabled='no'/>
-</perf>
-...
-```
-
-- perf
-
-  perf 元素是性能监控事件的容器。
-
-- event
-
-  event 元素定义了一个性能监控事件。name 属性指定事件的名称，enabled 属性指定事 件是否启用。
-
-## 21 [设备](https://www.libvirt.org/formatdomain.html#id28)
-
-### 21.2 [文件系统](https://www.libvirt.org/formatdomain.html#id30)
-
-主机上的目录可以从客户机直接访问。自 0.3.3 起，QEMU/KVM 自 0.8.5 起
+## 1 [一般元数据](https://www.libvirt.org/formatdomain.html#id2)
 
 ```
-...
-<devices>
-  <filesystem type='template'>
-    <source name='my-vm-template'/>
-    <target dir='/'/>
-  </filesystem>
-  <filesystem type='mount' accessmode='passthrough' multidevs='remap'>
-    <driver type='path' wrpolicy='immediate'/>
-    <source dir='/export/to/guest'/>
-    <target dir='/import/from/host'/>
-    <readonly/>
-  </filesystem>
-  <filesystem type='mount' accessmode='mapped' fmode='644' dmode='755'>
-    <driver type='path'/> 
-    <source dir='/export/to/guest'/>
-    <target dir='/import/from/host'/>
-    <readonly/>
-  </filesystem>
-  <filesystem type='file' accessmode='passthrough'>
-    <driver type='loop' format='raw'/>
-    <source file='/export/to/guest.img'/>
-    <target dir='/import/from/host'/>
-    <readonly/>
-  </filesystem>
-  <filesystem type='mount' accessmode='passthrough'>
-      <driver type='virtiofs' queue='1024'/>
-      <binary path='/usr/libexec/virtiofsd' xattr='on'>
-         <cache mode='always'/>
-         <sandbox mode='namespace'/>
-         <lock posix='on' flock='on'/>
-         <thread_pool size='16'/>
-      </binary>
-      <source dir='/path'/>
-      <target dir='mount_tag'/>
-      <idmap>
-          <uid start='0' target='100000' count='65535'/>
-          <gid start='0' target='100000' count='65535'/>
-      </idmap>
-  </filesystem>
-  <filesystem type='mount'>
-      <driver type='virtiofs' queue='1024'/>
-      <source socket='/tmp/sock'/>
-      <target dir='tag'/>
-  </filesystem>
-  <filesystem type='mount'>
-      <driver type='mtp'/>
-      <source dir='/export/to/guest'/>
-      <target dir='mtptag'/>
-  </filesystem>
+<domain type='kvm' id='1'>
+  <name>MyGuest</name>
+  <uuid>4dea22b3-1d52-d8f3-2516-782e98ab3fa0</uuid>
+  <genid>43dc0cf8-809b-4adb-9bea-a9abb5f3d90e</genid>
+  <title>A short description - title - of the domain</title>
+  <description>Some human readable description</description>
+  <metadata>
+    <app1:foo xmlns:app1="http://app1.org/app1/">..</app1:foo>
+    <app2:bar xmlns:app2="http://app1.org/app2/">..</app2:bar>
+  </metadata>
   ...
-</devices>
+```
+
+- name
+
+  name 元素的内容为虚拟机提供一个简短名称。此名称应仅由字母数字字符组成，并且在单个主机的范围内必须是唯一的。它通常用于形成用于存储持久配置文件的文件名。自 0.0.1 起
+
+- uuid
+
+  uuid 元素的内容为虚拟机提供全局唯一标识符。格式必须符合 RFC 4122，例如 3e3fce45-4f53-4fa7-bb32-11f34168b82b。如果在定义/创建新机器时省略，则会生成随机 UUID。自 0.0.1 起 自 0.8.7 起，也可以通过 [SMBIOS 系统信息](https://www.libvirt.org/formatdomain.html#smbios-system-information) 规范提供 UUID。
+
+- hwuuid
+
+  可选的 hwuuid 元素可用于提供替代 UUID，用于从上面的域 uuid 识别虚拟机。使用 hwuuid 元素与通过 [SMBIOS 系统信息](https://www.libvirt.org/formatdomain.html#smbios-system-information) 规范简单提供替代 UUID 之间的区别在于，hwuuid 会影响所有向客户机公开 UUID 的设备。自 11.7.0 起仅 QEMU/KVM
+
+- genid
+
+  自 4.4.0 起，genid 元素可用于添加虚拟机生成 ID，该 ID 使用与 uuid 相同的格式公开 128 位加密随机整数值标识符，称为全局唯一标识符 (GUID)。该值用于帮助通知客户机操作系统虚拟机何时重新执行已经执行过的操作，例如：VM 开始执行快照 VM 从备份中恢复 VM 在灾难恢复环境中故障转移 VM 被导入、复制或克隆 客户机操作系统注意到更改，然后能够通过将其分布式数据库的副本标记为脏、重新初始化其随机数生成器等方式做出适当的反应。libvirt XML 解析器将接受提供的 GUID 值或仅接受 <genid/>，在这种情况下，将生成 GUID 并保存在 XML 中。对于上述转换，libvirt 将在重新执行前更改 GUID。
+
+- title
+
+  可选元素 title 为域提供简短描述的空间。title 不应包含任何换行符。自 0.9.10 起。
+
+- description
+
+  description 元素的内容提供虚拟机的人类可读描述。这些数据不会被 libvirt 以任何方式使用，它可以包含用户想要的任何信息。自 0.7.2 起
+
+- metadata
+
+  metadata 节点可由应用程序用于以 XML 节点/树的形式存储自定义元数据。应用程序必须在其 XML 节点/树上使用自定义命名空间，每个命名空间只有一个顶级元素（如果应用程序需要结构，它们应该在其命名空间元素中有子元素）。自 0.9.10 起
+
+## 2 [操作系统引导](https://www.libvirt.org/formatdomain.html#id3)
+
+有多种不同的方式引导虚拟机，每种方式都有其优缺点。
+
+### 2.1 [客户机固件](https://www.libvirt.org/formatdomain.html#id4)
+
+通过客户机固件引导适用于支持完全虚拟化的 hypervisor。在这种情况下，固件具有引导顺序优先级（软盘、硬盘、光盘、网络），决定从哪里获取/查找引导映像。
+
+```
+<!-- Xen with fullvirt loader -->
+...
+<os>
+  <type>hvm</type>
+  <loader>/usr/lib/xen/boot/hvmloader</loader>
+  <boot dev='hd'/>
+</os>
+...
+
+<!-- QEMU with default firmware, serial console and SMBIOS -->
+...
+<os>
+  <type>hvm</type>
+  <boot dev='cdrom'/>
+  <bootmenu enable='yes' timeout='3000'/>
+  <smbios mode='sysinfo'/>
+  <bios useserial='yes' rebootTimeout='0'/>
+</os>
+...
+
+<!-- QEMU with UEFI manual firmware and secure boot -->
+...
+<os>
+  <type>hvm</type>
+  <loader readonly='yes' secure='yes' type='pflash'>/usr/share/OVMF/OVMF_CODE.fd</loader>
+  <nvram template='/usr/share/OVMF/OVMF_VARS.fd'>/var/lib/libvirt/nvram/guest_VARS.fd</nvram>
+  <boot dev='hd'/>
+</os>
+...
+
+<!-- QEMU with UEFI manual firmware, secure boot and with NVRAM type 'file'-->
+...
+<os>
+  <type>hvm</type>
+  <loader readonly='yes' secure='yes' type='pflash'>/usr/share/OVMF/OVMF_CODE.fd</loader>
+  <nvram type='file' template='/usr/share/OVMF/OVMF_VARS.fd'>
+    <source file='/var/lib/libvirt/nvram/guest_VARS.fd'/>
+  </nvram>
+  <boot dev='hd'/>
+</os>
+...
+
+<!-- QEMU with UEFI manual firmware, secure boot and with network backed NVRAM'-->
+...
+<os>
+  <type>hvm</type>
+  <loader readonly='yes' secure='yes' type='pflash'>/usr/share/OVMF/OVMF_CODE.fd</loader>
+  <nvram type='network'>
+    <source protocol='iscsi' name='iqn.2013-07.com.example:iscsi-nopool/0'>
+      <host name='example.com' port='6000'/>
+      <auth username='myname'>
+        <secret type='iscsi' usage='mycluster_myname'/>
+      </auth>
+    </source>
+  </nvram>
+  <boot dev='hd'/>
+</os>
+...
+
+<!-- QEMU with automatic UEFI firmware and secure boot -->
+...
+<os firmware='efi'>
+  <type>hvm</type>
+  <loader secure='yes'/>
+  <boot dev='hd'/>
+</os>
+...
+
+<!-- QEMU with automatic UEFI stateless firmware for AMD SEV -->
+...
+<os firmware='efi'>
+  <type>hvm</type>
+  <loader stateless='yes'/>
+  <boot dev='hd'/>
+</os>
 ...
 ```
 
-- filesystem
+- firmware
 
-  filesystem 属性 type 指定源的类型。可能的值包括：mount 要在客户机中挂载的主机目录。由 LXC、OpenVZ（自 0.6.2 起）和 QEMU/KVM（自 0.8.5 起）使用。如果未指定，这是默认类型。此模式还有一个可选的子元素 driver，其属性 type='path' 或 type='handle'（自 0.9.7 起）。driver 块有一个可选的属性 wrpolicy，用于进一步控制与主机页面缓存的交互；省略该属性会提供默认行为，而值 immediate 表示在客户机文件写入操作期间触及的所有页面会立即触发主机写回（自 0.9.10 起）。自 6.2.0 起，还支持 type='virtiofs'。使用 virtiofs 需要设置共享内存，请参阅指南：[Virtiofs](https://www.libvirt.org/kbase/virtiofs.html) template OpenVZ 文件系统模板。仅由 OpenVZ 驱动程序使用。file 主机文件将被视为映像并在客户机中挂载。文件系统格式将被自动检测。仅由 LXC 驱动程序使用。block 要在客户机中挂载的主机块设备。文件系统格式将被自动检测。仅由 LXC 驱动程序使用（自 0.9.5 起）。ram 内存文件系统，使用来自主机 OS 的内存。source 元素有一个属性 usage，用于指定内存使用限制（以 KiB 为单位），除非 units 属性指定了单位。仅由 LXC 驱动程序使用。（自 0.9.13 起）bind 客户机内的目录将绑定到客户机内的另一个目录。仅由 LXC 驱动程序使用（自 0.9.13 起） filesystem 元素有一个可选的属性 accessmode，用于指定访问源的安全模式（自 0.8.5 起）。目前，这仅适用于 QEMU/KVM 驱动程序的 type='mount'。对于驱动程序类型 virtiofs，仅支持 passthrough。对于其他驱动程序类型，可能的值为：passthrough 源以客户机内用户的权限访问。如果未指定，这是默认的 accessmode。mapped 源以 QEMU 进程的权限访问，UID/GID 从客户机映射到主机。squash 与 mapped 类似，但将客户机的 root 用户映射到主机上的非特权用户。
+  firmware 属性允许管理应用程序自动填充 <loader/> 和 <nvram/> 或 <varstore/> 元素，并可能启用所选固件所需的一些功能。接受的值为 bios 和 efi。选择过程扫描指定位置中描述已安装固件映像的文件，并使用最能满足域要求的特定文件。优先顺序（从通用到最特定）的位置是：/usr/share/qemu/firmware /etc/qemu/firmware $XDG_CONFIG_HOME/qemu/firmware 有关更多信息，请参考 QEMU 存储库中 docs/interop/firmware.json 中描述的固件元数据规范。普通用户不需要担心。自 5.2.0 起（仅 QEMU 和 KVM）对于 VMware 客户机，当客户机使用 UEFI 时设置为 efi，使用 BIOS 时不设置。自 5.3.0 起（VMware ESX 和 Workstation/Player）
 
-- driver
+- type
 
-  可选的 driver 元素允许指定与用于提供文件系统的 hypervisor 驱动程序相关的更多详细信息。自 1.0.6 起 如果 hypervisor 支持多个后端驱动程序，则 type 属性选择主要后端驱动程序名称，而 format 属性提供格式类型。例如，LXC 支持类型为 "loop"，格式为 "raw" 或 "nbd"（具有任何格式）。QEMU 支持类型为 "path" 或 "handle"，但没有格式。Virtuozzo 驱动程序支持类型为 "ploop"，格式为 "ploop"。对于 virtio 后端设备，还可以设置 [Virtio 相关选项](https://www.libvirt.org/formatdomain.html#virtio-related-options)。（自 3.5.0 起）对于 virtiofs，可以使用 queue 属性指定队列大小（即队列可以容纳多少请求）。（自 6.2.0 起）QEMU 支持 mtp，它向客户机公开虚拟 USB MTP 设备。（自 10.2.0 起）
+  type 元素的内容指定要在虚拟机中引导的操作系统类型。hvm 表示操作系统是设计为在裸机上运行的，因此需要完全虚拟化。linux（命名不佳！）指的是支持 Xen 3 hypervisor 客户机 ABI 的操作系统。还有两个可选属性，arch 指定要虚拟化的 CPU 架构，machine 指的是机器类型。[Capabilities XML](https://www.libvirt.org/formatcaps.html) 提供了这些允许值的详细信息。如果省略 arch，则对于大多数 hypervisor 驱动程序，将选择主机本机架构。但是，对于 test、ESX 和 VMWare hypervisor 驱动程序，即使在 x86_64 主机上，也始终会选择 i686 架构。自 0.0.1 起
 
-- binary
+- firmware
 
-  可选的 binary 元素可以调整 virtiofsd 的选项。以下所有属性和元素都是可选的。属性 path 可用于覆盖守护程序的路径。属性 xattr 启用文件系统扩展属性的使用。缓存可以通过 cache 元素进行调整，可能的模式值为 none 和 always。锁定可以通过 lock 元素控制 - 属性 posix 和 flock 都接受值 on 或 off。（自 6.2.0 起）virtiofsd 使用的沙箱方法可以通过 sandbox 元素配置，可能的模式值为 namespace 和 chroot，请参阅 [virtiofsd 文档](https://qemu.readthedocs.io/en/latest/tools/virtiofsd.html) 了解更多详细信息。（自 7.2.0 起）元素 thread_pool 接受一个属性 size，用于定义最大线程池大小。值 "0" 禁用池。线程池有助于在使用具有较高延迟的存储时增加正在处理的请求数量。但是，它有开销，因此对于快速、低延迟的文件系统，最好将其关闭。（自 8.5.0 起）元素 openfiles 接受一个属性 max，用于定义文件描述符的最大数量。非正值是禁止的。打开文件数量的上限是由实现定义的。（自 10.6.0 起）
+  自 7.2.0 起仅 QEMU/KVM 使用固件自动选择时，固件中启用了不同的功能。功能列表可用于限制应为 VM 自动选择哪种固件。可以使用零个或多个 feature 元素指定功能列表。Libvirt 在选择固件时将只考虑列出的功能，忽略其余功能。feature 强制属性列表：enabled（接受的值为 yes 和 no）用于告诉 libvirt 在自动选择的固件中是否必须启用该功能 name 功能的名称，功能列表：enrolled-keys 所选 nvram 模板是否已注册默认证书。具有 Secure Boot 功能但未注册密钥的固件也会成功引导未签名的二进制文件。仅对具有 Secure Boot 功能的固件有效。secure-boot 固件是否实现 UEFI Secure boot 功能。
 
-- source
+- loader
 
-  主机上在客户机中访问的资源。name 属性必须与 type='template' 一起使用，dir 属性必须与 type='mount' 一起使用。对于 virtiofs，可以使用 socket 属性连接到在 libvirt 外部启动的 virtiofsd 守护程序。在这种情况下，target 元素不适用，大多数 virtiofs 相关选项也不适用，因为它们由 virtiofsd 而不是 libvirtd 控制。usage 属性与 type='ram' 一起使用，用于设置内存限制（以 KiB 为单位），除非 units 属性指定了单位。
+  可选的 loader 标签指的是固件 blob，由绝对路径指定，用于协助域创建过程。它被 Xen 完全虚拟化域使用，以及为 QEMU/KVM 域设置 QEMU BIOS 文件路径。Xen 自 0.1.0 起，QEMU/KVM 自 0.9.12 起 然后，自 1.2.8 起，该元素可以有两个可选属性：readonly（接受的值为 yes 和 no）以反映映像应该是可写的还是只读的。第二个属性 type 接受值 rom 和 pflash。它告诉 hypervisor 文件应该映射到客户机内存中的什么位置。例如，如果 loader 路径指向 UEFI 映像，type 应该是 pflash。此外，一些固件可能实现 Secure boot 功能。属性 secure 可用于告诉 hypervisor 固件能够实现 Secure Boot 功能。它不能用于在固件中启用或禁用该功能本身。自 2.1.0 起。如果 loader 被标记为只读，那么对于 UEFI，假设会有可用的可写 NVRAM。但是，在某些情况下，可能希望 loader 在没有任何 NVRAM 的情况下运行，在关闭时丢弃任何配置更改。stateless 标志（自 8.6.0 起）可用于控制此行为，当设置为 yes 时，永远不会创建 NVRAM。启用固件自动选择时，format 属性可用于告诉 libvirt 只考虑特定格式的固件构建。支持的值为 raw 和 qcow2。自 9.2.0 起（仅 QEMU）
+
+- nvram
+
+  一些 UEFI 固件可能希望使用非易失性内存来存储一些变量。在主机上，这表示为一个文件，该文件的绝对路径存储在此元素中。此外，当域启动时，libvirt 会复制所谓的主 NVRAM 存储文件，该文件要么由固件自动选择过程选择，要么在 qemu.conf 中定义。如果需要，可以使用 template 属性覆盖自动选择的 NVRAM 模板，并使用 templateFormat 指定模板文件的格式（当前支持 raw 和 qcow2）。使用固件自动选择时，templateFormat 字段反映所选模板的格式。自 10.10.0 起（仅 QEMU）注意，对于瞬态域，如果 NVRAM 文件是由 libvirt 创建的，它会被留下，管理应用程序有责任保存和删除文件（如果需要持久化）。自 1.2.8 起 自 8.5.0 起，该元素可以具有 type 属性（接受值 file、block 和 network），在这种情况下，NVRAM 存储由 <source> 子元素描述，其语法与磁盘的源相同。请参阅 [硬盘、软盘、光盘](https://www.libvirt.org/formatdomain.html#hard-drives-floppy-disks-cdroms)。对于基于块的 NVRAM 映像，可能需要确保块设备具有基于 hypervisor 期望的正确客户机可见大小。这可能需要使用允许任意磁盘大小的非原始格式映像。**注意：** 网络备份的 NVRAM 变量不会从模板实例化，用户有责任提供有效的 NVRAM 映像。此元素支持 format 属性，指定 NVRAM 映像的格式。自 9.2.0 起（仅 QEMU）注意，hypervisor 可能不支持如果 format 与 templateFormat 不同，则自动填充 nvram，或者可能只支持特定格式。如果 loader 被标记为 stateless，则提供此元素无效。
+
+- varstore
+
+  这与上面描述的 <nvram/> 元素工作方式大致相同，不同之处在于变量存储由 uefi-vars QEMU 设备处理，而不是由 pflash 设备支持。自 12.1.0 起（仅 QEMU）path 属性包含存储变量的域特定文件的路径，而 template 属性指向可以从中（重新）生成域特定文件的模板。假设存在必要的 JSON 固件描述符文件，libvirt 将自动填充这两个属性。在非 x86 架构（如 aarch64）上使用 <varstore/> 而不是 <nvram/> 特别有用，因为它是使 Secure Boot 工作的唯一方式。它也可以在 x86 上使用，这样做可以在不需要使用 SMM 模拟的情况下保持 UEFI 认证变量不被篡改。
+
+- boot
+
+  dev 属性采用 "fd"、"hd"、"cdrom" 或 "network" 之一的值，用于指定要考虑的下一个引导设备。boot 元素可以重复多次，以设置要依次尝试的引导设备的优先级列表。相同类型的多个设备根据其目标排序，同时保留总线顺序。定义域后，libvirt（通过 virDomainGetXMLDesc）返回的 XML 配置按排序顺序列出设备。排序后，第一个设备被标记为可引导。因此，例如，配置为从 "hd" 引导并分配了 vdb、hda、vda 和 hdc 磁盘的域将从 vda 引导（排序后的列表是 vda、vdb、hda、hdc）。具有 hdc、vda、vdb 和 hda 磁盘的类似域将从 hda 引导（排序后的磁盘是：hda、hdc、vda、vdb）。这可能很难按预期方式配置，这就是为什么引入了每个设备的 boot 元素（请参阅下面的 [硬盘、软盘、光盘](https://www.libvirt.org/formatdomain.html#hard-drives-floppy-disks-cdroms)、[网络接口](https://www.libvirt.org/formatdomain.html#network-interfaces) 和 [主机设备分配](https://www.libvirt.org/formatdomain.html#host-device-assignment) 部分），它们是提供对引导顺序完全控制的首选方式。boot 元素和每个设备的 boot 元素是互斥的。自 0.1.3 起，每个设备的 boot 自 0.8.8 起
+
+- smbios
+
+  如何填充在客户机中可见的 SMBIOS 信息。必须指定 mode 属性，它可以是 "emulate"（让 hypervisor 生成所有值）、"host"（从主机的 SMBIOS 值复制所有 Block 0 和 Block 1，除了 UUID；[virConnectGetSysinfo](https://www.libvirt.org/html/libvirt-libvirt-host.html#virConnectGetSysinfo) 调用可用于查看复制了哪些值），或 "sysinfo"（使用 [SMBIOS 系统信息](https://www.libvirt.org/formatdomain.html#smbios-system-information) 元素中的值）。如果未指定，则使用 hypervisor 默认值。自 0.8.7 起
+
+到目前为止，BIOS/UEFI 配置旋钮足够通用，可以由大多数（如果不是全部）固件实现。然而，从现在开始，并不是每一个设置都对所有固件有意义。例如，rebootTimeout 对 UEFI 没有意义，useserial 可能无法与不在串行线上产生任何输出的 BIOS 固件一起使用，等等。此外，固件通常不会导出其功能供 libvirt（或用户）检查。并且它们的功能集可能会随着每个新版本而变化。因此，建议用户在依赖生产环境中使用的设置之前先尝试它们。
+
+- bootmenu
+
+  是否在客户机启动时启用交互式引导菜单提示。enable 属性可以是 "yes" 或 "no"。如果未指定，则使用 hypervisor 默认值。自 0.8.3 起 附加属性 timeout 采用引导菜单应等待直到超时的毫秒数。允许的值是 [0, 65535] 范围内的数字，除非 enable 设置为 "yes"，否则将被忽略。自 1.2.8 起
+
+- bios
+
+  此元素具有 useserial 属性，可能的值为 yes 或 no。它启用或禁用串行图形适配器，允许用户在串行端口上查看 BIOS 消息。因此，需要定义 [串行端口](https://www.libvirt.org/formatdomain.html#serial-port)。自 0.9.4 起。rebootTimeout 属性（自 0.10.2 起，仅 QEMU）控制在引导失败时（根据 BIOS）客户机是否以及多长时间后应该再次开始引导。该值以毫秒为单位，最大值为 65535，特殊值 -1 禁用重新引导。
+
+### 2.2 [主机引导加载程序](https://www.libvirt.org/formatdomain.html#id5)
+
+采用半虚拟化的 hypervisor 通常不模拟 BIOS，而是由主机负责启动操作系统引导。这可能使用主机中的伪引导加载程序来提供选择客户机内核的接口。例如，Xen 的 pygrub。Bhyve hypervisor 也使用主机引导加载程序，要么是 bhyveload 要么是 grub-bhyve。
+
+```
+...
+<bootloader>/usr/bin/pygrub</bootloader>
+<bootloader_args>--append single</bootloader_args>
+...
+```
+
+- bootloader
+
+  bootloader 元素的内容提供主机 OS 中引导加载程序可执行文件的完全限定路径。将运行此引导加载程序以选择要引导的内核。引导加载程序的所需输出取决于所使用的 hypervisor。自 0.1.0 起
+
+- bootloader_args
+
+  可选的 bootloader_args 元素允许将命令行参数传递给引导加载程序。自 0.2.3 起
+
+### 2.3 [直接内核引导](https://www.libvirt.org/formatdomain.html#id6)
+
+安装新的客户机 OS 时，通常有用的是直接从存储在主机 OS 中的内核和 initrd 引导，允许将命令行参数直接传递给安装程序。这种能力通常可用于半虚拟化和完全虚拟化的客户机。
+
+```
+...
+<os>
+  <type>hvm</type>
+  <loader>/usr/lib/xen/boot/hvmloader</loader>
+  <kernel>/root/f8-i386-vmlinuz</kernel>
+  <initrd>/root/f8-i386-initrd</initrd>
+  <cmdline>console=ttyS0 ks=http://example.com/f8-i386/os/</cmdline>
+  <shim>/path/to/shim.efi</shim>
+  <dtb>/root/ppc.dtb</dtb>
+</os>
+...
+```
+
+- type
+
+  此元素具有与前面 [客户机固件](https://www.libvirt.org/formatdomain.html#guest-firmware) 部分中描述的相同语义。
+
+- loader
+
+  此元素具有与前面 [客户机固件](https://www.libvirt.org/formatdomain.html#guest-firmware) 部分中描述的相同语义。
+
+- kernel
+
+  此元素的内容指定主机 OS 中内核映像的完全限定路径。
+
+- initrd
+
+  此元素的内容指定主机 OS 中（可选）ramdisk 映像的完全限定路径。
+
+- cmdline
+
+  此元素的内容指定在引导时传递给内核（或安装程序）的参数。这通常用于指定备用主控制台（例如串行端口），或安装介质源 / kickstart 文件
+
+- shim
+
+  使用指定的完全限定路径加载初始 UEFI 引导加载程序，该引导加载程序在安全引导环境下处理链接到受信任的完整引导加载程序。
+
+- dtb
+
+  此元素的内容指定主机 OS 中（可选）设备树二进制（dtb）映像的完全限定路径。自 1.0.4 起
+
+### 2.4 [容器引导](https://www.libvirt.org/formatdomain.html#id7)
+
+使用基于容器的虚拟化引导域时，不需要内核/引导映像，而是需要使用 init 元素指定 init 二进制文件的路径。默认情况下，它将在没有参数的情况下启动。要指定初始 argv，请使用 initarg 元素，根据需要重复多次。如果设置了 cmdline 元素，它将用于提供等效于 /proc/cmdline 的内容，但不会影响 init argv。
+
+要设置环境变量，请使用 initenv 元素，每个变量一个。
+
+要为 init 设置自定义工作目录，请使用 initdir 元素。
+
+要以给定用户或组运行 init 命令，请分别使用 inituser 或 initgroup 元素。这两个元素都可以提供用户（或组）id 或名称。在用户或组 id 前加上 + 将强制将其视为数值。否则，它将首先尝试作为用户或组名称。
+
+```
+<os>
+  <type arch='x86_64'>exe</type>
+  <init>/bin/systemd</init>
+  <initarg>--unit</initarg>
+  <initarg>emergency.service</initarg>
+  <initenv name='MYENV'>some value</initenv>
+  <initdir>/my/custom/cwd</initdir>
+  <inituser>tester</inituser>
+  <initgroup>1000</initgroup>
+</os>
+```
+
+如果要启用用户命名空间，请设置 idmap 元素。uid 和 gid 元素有三个属性：
+
+- start
+
+  容器中的第一个用户 ID。它必须是 '0'。
 
 - target
 
-  源在客户机中的访问位置。对于大多数驱动程序，这是一个自动挂载点，但对于 QEMU/KVM，这只是一个任意字符串标签，作为挂载位置的提示导出到客户机。
+  容器中的第一个用户 ID 将映射到主机中的此目标用户 ID。
 
-- idmap
+- count
 
-  对于 virtiofs，可以指定 idmap 元素来映射用户命名空间中的 ID。有关元素的语法，请参阅 [容器引导](https://www.libvirt.org/formatdomain.html#container-boot) 部分。自 10.0.0 起
+  容器中有多少用户被允许映射到主机的用户。
 
-- readonly
+```
+<idmap>
+  <uid start='0' target='1000' count='10'/>
+  <gid start='0' target='1000' count='10'/>
+</idmap>
+```
 
-  启用将文件系统作为只读挂载导出给客户机，默认情况下提供读写访问（适用于 QEMU/KVM 驱动程序，自 11.0.0 起，需要 virtiofs 1.13.0）。
+### 2.5 [通用 元素配置](https://www.libvirt.org/formatdomain.html#id8)
 
-- space_hard_limit
-
-  此客户机文件系统可用的最大空间。自 0.9.13 起仅由 OpenVZ 驱动程序支持。
-
-- space_soft_limit
-
-  此客户机文件系统可用的最大空间。容器允许在宽限期内超过其软限制。之后将强制执行硬限制。自 0.9.13 起仅由 OpenVZ 驱动程序支持。
-
-### 21.3 [设备地址](https://www.libvirt.org/formatdomain.html#id31)
-
-许多设备都有一个可选的 <address> 子元素，用于描述设备在呈现给客户机的虚拟总线上的位置。如果在输入时省略地址（或地址内的任何可选属性），libvirt 将生成适当的地址；但如果需要对布局进行更多控制，则需要明确的地址。请参阅下面的包含地址元素的设备示例。
-
-每个地址都有一个必需的属性 type，用于描述设备所在的总线。为给定设备选择使用哪个地址部分受设备和客户机架构的约束。例如，<disk> 设备使用 type='drive'，而 <console> 设备在 i686 或 x86_64 客户机上使用 type='pci'，或在 PowerPC64 pseries 客户机上使用 type='spapr-vio'。每种地址类型都有进一步的可选属性，用于控制设备在总线上的放置位置：
-
-- pci
-
-  PCI 地址具有以下附加属性：domain（2 字节十六进制整数，当前未被 qemu 使用）、bus（十六进制值，介于 0 和 0xff 之间，包括 0 和 0xff）、slot（十六进制值，介于 0x0 和 0x1f 之间，包括 0x0 和 0x1f）和 function（值介于 0 和 7 之间，包括 0 和 7）。还可以使用 multifunction 属性，用于控制在 PCI 控制寄存器中为特定槽/功能打开多功能位（自 0.9.7 起，需要 QEMU 0.13）。multifunction 默认为 'off'，但对于将使用多个功能的槽的功能 0，应设置为 'on'。（自 4.10.0 起），支持取决于架构的 PCI 地址扩展。例如，S390 客户机的 PCI 地址将具有 zpci 子元素，带有两个属性：uid（十六进制值，介于 0x0001 和 0xffff 之间，包括 0x0001 和 0xffff）和 fid（十六进制值，介于 0x00000000 和 0xffffffff 之间，包括 0x00000000 和 0xffffffff），由 S390 上的 PCI 设备用于用户定义标识符和功能标识符。自 1.3.5 起，一些 hypervisor 驱动程序可能接受 <address type='pci'/> 元素，没有其他属性，作为为设备分配 PCI 地址的明确请求，而不是可能也适用于同一设备的其他类型的地址（例如 virtio-mmio）。在域 XML 中配置的 PCI 地址与客户机 OS 看到的地址之间的关系有时可能看起来令人困惑：单独的文档更详细地描述了 [PCI 地址如何工作](https://www.libvirt.org/pci-addresses.html)。
-
-- drive
-
-  驱动器地址具有以下附加属性：controller（2 位控制器编号）、bus（2 位总线编号）、target（2 位目标编号）和 unit（总线上的 2 位单元编号）。
-
-- virtio-serial
-
-  每个 virtio-serial 地址具有以下附加属性：controller（2 位控制器编号）、bus（2 位总线编号）和 slot（总线内的 2 位槽）。
-
-- ccid
-
-  智能卡的 CCID 地址具有以下附加属性：bus（2 位总线编号）和 slot 属性（总线内的 2 位槽）。自 0.8.8 起。
-
-- usb
-
-  USB 地址具有以下附加属性：bus（十六进制值，介于 0 和 0xfff 之间，包括 0 和 0xfff）和 port（最多四个八位字节的点分表示法，例如 1.2 或 2.1.3.1）。
-
-- spapr-vio
-
-  在 PowerPC pseries 客户机上，设备可以分配到 SPAPR-VIO 总线。它有一个扁平的 32 位地址空间；按照惯例，设备通常分配在 0x00001000 的非零倍数处，但其他地址也是有效的，并被 libvirt 允许。每个地址具有以下附加属性：reg（起始寄存器的十六进制值地址）。自 0.9.9 起。
-
-- ccw
-
-  机器值为 s390-ccw-virtio 的 S390 客户机使用本机 CCW 总线进行 I/O 设备。CCW 总线地址具有以下附加属性：cssid（十六进制值，介于 0 和 0xfe 之间，包括 0 和 0xfe）、ssid（值介于 0 和 3 之间，包括 0 和 3）和 devno（十六进制值，介于 0 和 0xffff 之间，包括 0 和 0xffff）。不允许部分指定的总线地址。如果省略，libvirt 将分配一个空闲的总线地址，cssid=0xfe 和 ssid=0。Virtio-ccw 设备必须将其 cssid 设置为 0xfe。自 1.0.4 起
-
-- virtio-mmio
-
-  这将设备放置在 virtio-mmio 传输上，目前仅适用于某些 armv7l 和 aarch64 虚拟机。virtio-mmio 地址没有任何附加属性。自 1.1.3 起 如果客户机架构是 aarch64 且机器类型是 virt，libvirt 将自动为设备分配 PCI 地址；但是，客户机配置中存在单个带有 virtio-mmio 地址的设备将导致 libvirt 为所有其他设备分配 virtio-mmio 地址。自 3.0.0 起
-
-- isa
-
-  ISA 地址具有以下附加属性：iobase 和 irq。自 1.2.1 起
-
-- unassigned
-
-  对于 PCI hostdev，<address type='unassigned'/> 允许管理员在域 XML 定义中包含 PCI hostdev，而不使其对客户机可用。这允许在其中 Libvirt 将设备作为常规 PCI hostdev 管理的配置，无论客户机是否可以访问它。<address type='unassigned'/> 对所有其他设备类型是无效的地址类型。自 6.0.0 起
-
-### 21.4 [Virtio 相关选项](https://www.libvirt.org/formatdomain.html#id32)
-
-QEMU 的 virtio 设备在 driver 元素下有一些与 virtio 传输相关的属性：iommu 属性启用设备对模拟 IOMMU 的使用。ats 属性控制 PCIe 设备的地址转换服务支持。这是使用 IOTLB 支持所必需的（请参阅 [IOMMU 设备](https://www.libvirt.org/formatdomain.html#iommu-devices)）。可能的值为 on 或 off。自 3.5.0 起
-
-packed 属性控制 QEMU 是否应尝试使用打包 virtqueue。与常规分离队列相比，打包队列仅由单个描述符环组成，替换可用和已使用的环、索引和描述符缓冲区。这可以导致更好的缓存利用率和性能。是否实际使用打包 virtqueue 取决于 QEMU、vhost 后端和客户机驱动程序之间的功能协商。可能的值为 on 或 off。自 6.3.0 起（仅 QEMU 和 KVM）
-
-此可选属性 page_per_vq 控制暴露给客户机的通知功能的布局。启用时，每个 virtio 队列将在暴露给客户机的设备 BAR 上有一个专用页面。建议在 hypervisor 上启用 vDPA 时使用，因为它允许将通知区域映射到物理设备，这仅在页面粒度上支持。默认值由 QEMU 确定。自 7.9.0 起（QEMU 2.8）注意：一般情况下，您应该保持此选项不变，除非您非常确定自己在做什么。
-
-### 21.5 [Virtio 设备模型](https://www.libvirt.org/formatdomain.html#id33)
-
-Virtio 设备有几种变体，其中一些仅适用于特定的机器类型或场景。可以通过 model 属性选择变体，该属性支持以下值：
-
-- virtio
-
-  这是在没有客户机 OS 特定约束的情况下的推荐选择，因为它通常可以在各种架构、机器类型和 libvirt 版本上正常工作。
-
-自 5.2.0 起，以下值还可以与基于 PCI 的机器类型（常规 PCI 或 PCI Express）一起使用：
-
-- virtio-transitional
-
-  此设备可以同时与 virtio 0.9 和 virtio 1.0 客户机驱动程序一起工作，因此当需要与较旧的客户机操作系统兼容时，它是最佳选择。libvirt 将设备插入常规 PCI 槽。
-
-- virtio-non-transitional
-
-  此设备只能与 virtio 1.0 客户机驱动程序一起工作，除非需要与较旧的客户机操作系统兼容，否则它是推荐选项。libvirt 将根据机器类型将设备插入 PCI Express 槽或常规 PCI 槽，从而产生更优化的 PCI 拓扑。
-
-虽然上面概述的信息适用于大多数 virtio 设备，但有一些例外：
-
-- 对于 SCSI 控制器，由于历史原因，没有可用的 virtio 模型：请改用 virtio-scsi，它的行为与其他设备的 virtio 相同。virtio-transitional 和 virtio-non-transitional 都适用于 SCSI 控制器；
-- 某些设备，如 GPU 和输入设备（键盘、平板电脑和鼠标），仅在 virtio 1.0 规范中定义，因此没有过渡变体：唯一接受的模型是 virtio，这将导致非过渡设备。
-
-有关更多详细信息，请参阅 [qemu patch posting](https://lists.gnu.org/archive/html/qemu-devel/2018-12/msg00923.html) 和 [virtio-1.0 规范](https://docs.oasis-open.org/virtio/virtio/v1.0/virtio-v1.0.html)。
-
-### 21.6 [控制器](https://www.libvirt.org/formatdomain.html#id34)
-
-根据客户机架构，某些设备总线可能出现多次，一组虚拟设备绑定到一个虚拟控制器。通常，libvirt 可以自动推断这些控制器，而不需要显式的 XML 标记，但有时需要提供显式的 controller 元素，特别是在规划期望设备热插拔的客户机的 [PCI 拓扑](https://www.libvirt.org/pci-hotplug.html) 时。
+这些选项适用于客户机 OS 的任何形式的引导。
 
 ```
 ...
-<devices>
-  <controller type='ide' index='0'/>
-  <controller type='virtio-serial' index='0' ports='16' vectors='4'/>
-  <controller type='virtio-serial' index='1'>
-    <address type='pci' domain='0x0000' bus='0x00' slot='0x0a' function='0x0'/>
-  </controller>
-  <controller type='scsi' index='0' model='virtio-scsi'>
-    <driver iothread='4'/>
-    <address type='pci' domain='0x0000' bus='0x00' slot='0x0b' function='0x0'/>
-  </controller>
-  <controller type='xenbus' maxGrantFrames='64' maxEventChannels='2047'/>
-  <controller type='nvme'>
-    <serial>
-    ...
-    </serial>
+<os>
   ...
-</devices>
+  <acpi>
+    <table type='slic'>/path/to/slic.dat</table>
+  </acpi>
+</os>
 ...
-```
-
-每个控制器都有一个必需的属性 type，必须是 'ide'、'fdc'、'scsi'、'sata'、'usb'、'ccid'、'virtio-serial' 或 'pci' 之一，以及一个必需的属性 index，它是描述总线控制器遇到顺序的十进制整数（用于 <address> 元素的 controller 属性）。自 1.3.5 起，index 是可选的；如果未指定，它将自动分配为给定控制器类型的最低未使用索引。某些控制器类型有额外的属性来控制特定功能，例如：
-
-- virtio-serial
-
-  virtio-serial 控制器有两个额外的可选属性 ports 和 vectors，用于控制可以通过控制器连接的设备数量。自 5.2.0 起，它支持可选的属性 model，可以是 'virtio'、'virtio-transitional' 或 'virtio-non-transitional'。有关更多详细信息，请参阅 [virtio 设备模型](https://www.libvirt.org/formatdomain.html#virtio-device-models)。
-
-- scsi
-
-  scsi 控制器有一个可选的属性 model，可以是 'auto'、'buslogic'、'ibmvscsi'、'lsilogic'、'lsisas1068'、'lsisas1078'、'virtio-scsi'、'vmpvscsi'、'virtio-transitional'、'virtio-non-transitional'、'ncr53c90'（仅作为内置隐式控制器）、'am53c974'、'dc390'。有关更多详细信息，请参阅 [virtio 设备模型](https://www.libvirt.org/formatdomain.html#virtio-device-models)。
-
-- usb
-
-  usb 控制器有一个可选的属性 model，可以是 "piix3-uhci"、"piix4-uhci"、"ehci"、"ich9-ehci1"、"ich9-uhci1"、"ich9-uhci2"、"ich9-uhci3"、"vt82c686b-uhci"、"pci-ohci"、"nec-xhci"、"qusb1"（带有 qemu 后端的 xen pvusb，版本 1.1）、"qusb2"（带有 qemu 后端的 xen pvusb，版本 2.0）或 "qemu-xhci"。此外，自 0.10.0 起，如果需要为客户机明确禁用 USB 总线，可以使用 model='none'。自 1.0.5 起，s390 上不会构建默认的 USB 控制器。自 1.3.5 起，USB 控制器接受 ports 属性来配置可以连接到控制器的设备数量。
-
-- ide
-
-  自 3.10.0 起，对于 vbox 驱动程序，ide 控制器有一个可选的属性 model，可以是 "piix3"、"piix4" 或 "ich6"。
-
-- xenbus
-
-  自 5.2.0 起，xenbus 控制器有一个可选的属性 maxGrantFrames，用于指定控制器为连接的设备提供的最大授权帧数。自 6.3.0 起，xenbus 控制器支持可选的 maxEventChannels 属性，用于指定客户机可以使用的最大事件通道数（PV 中断）。
-
-- nvme
-
-  自 11.5.0 起支持，nvme 控制器可用于支持 NVMe 磁盘。它有一个可选的 serial 子元素，就像常规磁盘一样。
-
-注意：PowerPC64 "spapr-vio" 地址没有关联的控制器。
-
-对于本身是 PCI 或 USB 总线上的设备的控制器，可选的子元素 <address> 可以指定控制器与其主总线的精确关系，其语义在 [设备地址](https://www.libvirt.org/formatdomain.html#device-addresses) 部分中描述。
-
-可选的子元素 driver 可以指定驱动程序特定的选项：
-
-- queues
-
-  可选的 queues 属性指定控制器的队列数。为获得最佳性能，建议指定与 vCPU 数量匹配的值。自 1.0.5 起（仅 QEMU 和 KVM）
-
-- cmd_per_lun
-
-  可选的 cmd_per_lun 属性指定可以在由主机控制的设备上排队的最大命令数。自 1.2.7 起（仅 QEMU 和 KVM）
-
-- max_sectors
-
-  可选的 max_sectors 属性指定在单个命令中传输到或从设备传输的最大数据量（以字节为单位）。传输长度以扇区为单位测量，其中一个扇区为 512 字节。自 1.2.7 起（仅 QEMU 和 KVM）
-
-- ioeventfd
-
-  可选的 ioeventfd 属性指定控制器是否应使用 [I/O 异步处理](https://patchwork.kernel.org/patch/43390/)。接受的值为 "on" 和 "off"。自 1.2.18 起
-
-- iothread
-
-  自 1.3.5 起（QEMU 2.4），支持使用模型 virtio-scsi 且地址类型为 pci 和 ccw 的控制器类型 scsi。可选的 iothread 属性将控制器分配给 IOThread，该 IOThread 由域 iothreads 的范围定义（请参阅 [IOThreads 分配](https://www.libvirt.org/formatdomain.html#iothreads-allocation)）。分配给使用指定控制器的每个 SCSI 磁盘将使用同一个 IOThread。如果需要为特定 SCSI 磁盘使用特定的 IOThread，则必须定义多个控制器，每个控制器都有特定的 iothread 值。iothread 值必须在 1 到域 iothreads 值的范围内。
-
-- iothreads
-
-  自 11.2.0 起（QEMU 10.0），支持使用地址类型 pci 和 ccw 的 virtio-scsi 控制器。与 iothread 互斥。可选的 iothreads 子元素允许通过 iothread 子元素（带有属性 id）指定多个 IOThread，virtio-scsi 控制器将用于 I/O 操作。virt 队列（请参阅 driver 的 queues 属性）会自动分布在配置的 iothread 之间。可选的 iothread 元素可以有多个 queue 子元素，带有必需的 id 属性，指定该 iothread 应用于处理给定的 virt 队列。如果存在队列映射，则必须配置 driver 的 queues 属性，并且所有配置的 virt 队列必须包含在映射中。virtio-scsi 设备公开请求 virt 队列 0 到 N-1，其中 N 是为设备配置的队列数。示例：`<driver queues='4>  <iothreads>    <iothread id='2'/>    <iothread id='3'/>  </iothreads> </driver> <driver queues='3'>  <iothreads>    <iothread id='2'>      <queue id='1'/>    </iothread>    <iothread id='3'>      <queue id='0'/>      <queue id='2'/>    </iothread>  </iothreads> </driver>`
-
-- virtio 选项
-
-  对于 virtio 控制器，还可以设置 [Virtio 相关选项](https://www.libvirt.org/formatdomain.html#virtio-related-options)。（自 3.5.0 起）
-
-USB 伴生控制器有一个可选的子元素 <master>，用于指定伴生与主控制器的确切关系。伴生控制器与主控制器在同一总线上，因此伴生索引值应相等。并非所有控制器模型都可以用作伴生控制器，libvirt 可能会为某些特定模型提供一些合理的默认值（主 startport 和地址功能的设置）。首选的伴生控制器是 ich-uhci[123]。
-
-```
-...
-<devices>
-  <controller type='usb' index='0' model='ich9-ehci1'>
-    <address type='pci' domain='0' bus='0' slot='4' function='7'/>
-  </controller>
-  <controller type='usb' index='0' model='ich9-uhci1'>
-    <master startport='0'/>
-    <address type='pci' domain='0' bus='0' slot='4' function='0' multifunction='on'/>
-  </controller>
-  ...
-</devices>
-...
-```
-
-PCI 控制器有一个可选的 model 属性；此属性的可能值为
-
-- pci-root、pci-bridge（自 1.0.5 起）
-- pcie-root、dmi-to-pci-bridge（自 1.1.2 起）
-- pcie-root-port、pcie-switch-upstream-port、pcie-switch-downstream-port（自 1.2.19 起）
-- pci-expander-bus、pcie-expander-bus（自 1.3.4 起）
-- pcie-to-pci-bridge（自 4.3.0 起）
-
-根控制器（pci-root 和 pcie-root）有一个可选的 pcihole64 元素，指定 64 位 PCI 孔的大小（以 kiB 为单位，或由 pcihole64 的 unit 属性指定的单位）。当 QEMU 和 Seabios 足够新以支持 64 位 PCI 孔时，某些客户机（如 Windows XP 或 Windows Server 2003）可能会崩溃，除非将其禁用（设置为 0）。自 1.1.2 起（仅 QEMU）
-
-PCI 控制器还有一个可选的子元素 <model>，带有属性 name。name 属性包含 qemu 正在模拟的特定设备的名称（例如 "i82801b11-bridge"），而不仅仅是设备的类（"pcie-to-pci-bridge"、"pci-bridge"），这在控制器元素的 model **属性** 中设置。在几乎所有情况下，您都不应手动向控制器添加 <model> 子元素，也不应修改由 libvirt 自动生成的 <model> 子元素。自 1.2.19 起（仅 QEMU）。
-
-PCI 控制器还有一个可选的子元素 <target>，带有以下属性和子元素。这些是可配置项，1）对客户机 OS 可见，因此必须为客户机 ABI 兼容性而保留，2）通常保留为默认值或由 libvirt 自动派生。在几乎所有情况下，您都不应手动向控制器添加 <target> 子元素，也不应修改由 libvirt 自动生成的 <target> 子元素中的值。自 1.2.19 起（仅 QEMU）。
-
-- chassisNr
-
-  具有属性 model="pci-bridge" 的 PCI 控制器还可以在 <target> 子元素中具有 chassisNr 属性，用于控制 pci-bridge 设备的 QEMU "chassis_nr" 选项（通常 libvirt 自动将其设置为与 pci 控制器的 index 属性相同的值）。如果设置，chassisNr 必须在 1 到 255 之间。
-
-- chassis
-
-  pcie-root-port 和 pcie-switch-downstream-port 控制器还可以在 <target> 子元素中具有 chassis 属性，用于设置控制器的 "chassis" 配置值，该值对虚拟机可见。如果设置，chassis 必须在 0 到 255 之间。
-
-- port
-
-  pcie-root-port 和 pcie-switch-downstream-port 控制器还可以在 <target> 子元素中具有 port 属性，用于设置控制器的 "port" 配置值，该值对虚拟机可见。如果设置，port 必须在 0 到 255 之间。
-
-- hotplug
-
-  pci-root（自 7.9.0 起）、pcie-root-port（自 6.3.0 起）和 pcie-switch-downstream-port 控制器（自 6.3.0 起）还可以在 <target> 子元素中具有 hotplug 属性，用于禁用特定控制器上设备的热插拔/拔出。对于 pci-root 控制器，此设置影响基于 ACPI 的热插拔。对于其他控制器，此设置影响基于 ACPI 的热插拔以及 PCIE 原生热插拔。hotplug 的默认设置为 on；应将其设置为 off 以禁用特定控制器上设备的热插拔/拔出。
-
-- busNr
-
-  pci-expander-bus 和 pcie-expander-bus 控制器可以有一个可选的 busNr 属性（1-254）。这将是新总线的总线编号；从指定值到 255 之间的所有总线编号将仅可用于分配给插入到此扩展总线开始的层次结构中的 PCI/PCIe 控制器，而小于指定值的总线编号将可用于下一个较低的扩展总线（或如果没有较低的扩展总线，则可用于根总线）。如果不指定 busNumber，libvirt 将在所有其他扩展总线中找到最低的现有 busNumber（或如果没有其他扩展总线，则使用 256），并自动分配该找到的总线的 busNr - 2，这为 pci-expander-bus 和自动附加到它的 pci-bridge 提供一个总线编号（如果计划向总线的层次结构添加更多 pci-bridge，则应手动将 busNr 设置为较低的值）。类似的算法用于自动确定 pcie-expander-bus 的 busNr 属性，但由于 pcie-expander-bus 没有任何内置的 pci-bridge，第二个总线编号只是为必须连接到总线才能实际插入端点设备的 pcie-root-port 保留。如果打算将多个设备插入 pcie-expander-bus，则必须将 pcie-switch-upstream-port 连接到插入 pcie-expander-bus 的 pcie-root-port，并将多个 pcie-switch-downstream-port 连接到 pcie-switch-upstream-port，当然，为了使此工作正常，需要相应地减少 pcie-expander-bus 的 busNr，以便在其上方有足够的未使用总线编号，以容纳为上游端口和每个下游端口分配一个总线编号（除了 pcie-root-port 和 pcie-expander-bus 本身）。
-
-- node
-
-  某些 PCI 控制器（pc 机器类型的 pci-expander-bus、q35 机器类型的 pcie-expander-bus，以及自 3.6.0 起，pseries 机器类型的 pci-root）可以在 <target> 子元素中具有可选的 <node> 子元素，用于设置向客户机 OS 报告的该总线的 NUMA 节点 - 客户机 OS 然后将知道该总线上的所有设备都是指定 NUMA 节点的一部分（在将主机设备分配给域时，由 libvirt API 的用户负责将主机设备附加到正确的 pci-expander-bus）。
-
-- index
-
-  pSeries 客户机的 pci-root 控制器使用此属性记录它们在客户机中显示的顺序。自 3.6.0 起
-
-- memReserve
-
-  某些 PCI 设备具有大于 2MiB 的非预取内存条。使用此属性覆盖固件计算的值，从而使控制器保留更多内存（以 KiB 为单位），以便可以热插拔此类 PCI 设备。对于冷插拔的 PCI 设备，固件将自动保留正确数量的内存。自 10.3.0 起
-
-对于提供隐式 PCI 总线的机器类型，会自动添加 index=0 的 pci-root 控制器，并且是使用 PCI 设备所必需的。pci-root 没有地址。如果有太多设备无法容纳在 pci-root 提供的一个总线上，或者指定了大于零的 PCI 总线编号，则会自动添加 PCI 桥。也可以手动指定 PCI 桥，但其地址应仅引用由已指定的 PCI 控制器提供的 PCI 总线。在 PCI 控制器索引中留下间隙可能会导致无效配置。
-
-```
-...
-<devices>
-  <controller type='pci' index='0' model='pci-root'/>
-  <controller type='pci' index='1' model='pci-bridge'>
-    <address type='pci' domain='0' bus='0' slot='5' function='0' multifunction='off'/>
-  </controller>
-</devices>
-...
-```
-
-对于提供隐式 PCI Express (PCIe) 总线的机器类型（例如，基于 Q35 芯片组的机器类型），会自动将 index=0 的 pcie-root 控制器添加到域的配置中。pcie-root 也没有地址，提供 31 个槽（编号 1-31），可用于连接 PCIe 或 PCI 设备（尽管 libvirt 永远不会自动将 PCI 设备分配给 PCIe 槽，但它会允许手动指定此类分配）。连接到 pcie-root 的设备不能热插拔。如果客户机配置中存在传统 PCI 设备，将自动添加 pcie-to-pci-bridge 控制器：此控制器插入 pcie-root-port，提供 31 个可用的 PCI 槽（1-31），支持热插拔（自 4.3.0 起）。如果 QEMU 二进制不支持相应的设备，则会添加 dmi-to-pci-bridge 控制器代替，通常位于 slot=0x1e 的默认标准位置。dmi-to-pci-bridge 控制器插入 PCIe 槽（由 pcie-root 提供），并本身提供 31 个标准 PCI 槽（也不支持设备热插拔）。为了在客户机系统中拥有可热插拔的 PCI 槽，还将自动创建 pci-bridge 控制器并连接到自动创建的 dmi-to-pci-bridge 控制器的一个槽；所有地址由 libvirt 自动确定的客户机 PCI 设备将放置在此 pci-bridge 设备上。（自 1.1.2 起）。
-
-具有隐式 pcie-root 的域还可以添加 model='pcie-root-port'、model='pcie-switch-upstream-port' 和 model='pcie-switch-downstream-port' 的控制器。pcie-root-port 是一种简单的桥接设备，只能在其上游侧连接到 pcie-root 总线上的 31 个槽之一，并在下游侧（在 slot='0'）提供单个（PCIe，可热插拔）端口。pcie-root-port 可用于提供单个槽，以便稍后热插拔 PCIe 设备（但它本身不可热插拔 - 它必须在域启动时在配置中）。（自 1.2.19 起）
-
-pcie-switch-upstream-port 是一种更灵活（但也更复杂）的设备，只能在其上游侧插入 pcie-root-port 或 pcie-switch-downstream-port（并且只能在域启动之前 - 它不可热插拔），并在下游侧（slot='0' - slot='31'）提供 32 个端口，仅接受 pcie-switch-downstream-port 设备；每个 pcie-switch-downstream-port 设备只能在其上游侧插入 pcie-switch-upstream-port（同样，不可热插拔），并在其下游侧提供单个可热插拔的 pcie 端口，可以接受任何标准 pci 或 pcie 设备（或另一个 pcie-switch-upstream-port），即功能与 pcie-root-port 相同。（自 1.2.19 起）
-
-```
-...
-<devices>
-  <controller type='pci' index='0' model='pcie-root'/>
-  <controller type='pci' index='1' model='pcie-root-port'>
-    <address type='pci' domain='0x0000' bus='0x00' slot='0x01' function='0x0'/>
-  </controller>
-  <controller type='pci' index='2' model='pcie-to-pci-bridge'>
-    <address type='pci' domain='0x0000' bus='0x01' slot='0x00' function='0x0'/>
-  </controller>
-</devices>
-...
-```
-
-### 21.8 [主机设备分配](https://www.libvirt.org/formatdomain.html#id36)
-
-#### 21.8.1 [USB / PCI / SCSI 设备](https://www.libvirt.org/formatdomain.html#id37)
-
-主机上连接的 USB（自 0.4.4 起）、PCI（自 0.6.0 起，仅 KVM）和 SCSI（自 1.0.6 起，仅 KVM）设备可以使用 hostdev 元素传递给客户机。
-
-```
-...
-<devices>
-  <hostdev mode='subsystem' type='usb'>
-    <source startupPolicy='optional' guestReset='off'>
-      <vendor id='0x1234'/>
-      <product id='0xbeef'/>
-    </source>
-    <boot order='2'/>
-  </hostdev>
-</devices>
-...
-```
-
-或：
-
-```
-...
-<devices>
-  <hostdev mode='subsystem' type='pci' managed='yes'>
-    <source writeFiltering='no'>
-      <address domain='0x0000' bus='0x06' slot='0x02' function='0x0'/>
-    </source>
-    <boot order='1'/>
-    <rom bar='on' file='/etc/fake/boot.bin'/>
-  </hostdev>
-</devices>
-...
-```
-
-或：
-
-```
-...
-<devices>
-  <hostdev mode='subsystem' type='scsi' rawio='yes'>
-    <source>
-      <adapter name='scsi_host0'/>
-      <address bus='0' target='0' unit='0'/>
-    </source>
-    <readonly/>
-    <address type='drive' controller='0' bus='0' target='0' unit='0'/>
-  </hostdev>
-</devices>
-...
-```
-
-或：
-
-```
-...
-<devices>
-  <hostdev mode='subsystem' type='scsi'>
-    <source protocol='iscsi' name='iqn.2014-08.com.example:iscsi-nopool/1'>
-      <host name='example.com' port='3260'/>
-      <auth username='myuser'>
-        <secret type='iscsi' usage='libvirtiscsi'/>
-      </auth>
-      <initiator>
-        <iqn name='iqn.2020-07.com.example:test'/>
-      </initiator>
-    </source>
-    <address type='drive' controller='0' bus='0' target='0' unit='0'/>
-  </hostdev>
-</devices>
-...
-```
-
-或：
-
-```
-...
-<devices>
-  <hostdev mode='subsystem' type='scsi_host'>
-    <source protocol='vhost' wwpn='naa.50014057667280d8'/>
-  </hostdev>
-</devices>
-...
-```
-
-或：
-
-```
-...
-<devices>
-  <hostdev mode='subsystem' type='mdev' model='vfio-pci'>
-    <source>
-      <address uuid='c2177883-f1bb-47f0-914d-32a22e3a8804'/>
-    </source>
-  </hostdev>
-  <hostdev mode='subsystem' type='mdev' model='vfio-ccw'>
-    <source>
-      <address uuid='9063cba3-ecef-47b6-abcf-3fef4fdcad85'/>
-    </source>
-    <address type='ccw' cssid='0xfe' ssid='0x0' devno='0x0001'/>
-  </hostdev>
-</devices>
-...
-```
-
-- hostdev
-
-  hostdev 元素是描述主机设备的主要容器。对于每个设备，mode 始终为 "subsystem"，type 是以下值之一，并带有附加属性：
-  - usb USB 设备在客户机启动时从主机分离，在客户机退出或设备热插拔后重新附加。
-  - pci 对于 PCI 设备，当 managed 为 "yes" 时，它在传递给客户机之前从主机分离，并在客户机退出后重新附加到主机。如果省略 managed 或为 "no"，用户负责在启动客户机或热插拔设备之前调用 virNodeDeviceDetachFlags（或 virsh nodedev-detach），并在热插拔或停止客户机后调用 virNodeDeviceReAttach（或 virsh nodedev-reattach）。自 10.3.0 起，可以使用可选的 display 属性来启用将 vgpu 设备用作客户机的显示设备。支持的值为 on 或 off（默认）。还有一个可选的 ramfb 属性，值为 on 或 off（默认）。启用时，ramfb 属性为客户机提供内存帧缓冲区设备。此帧缓冲区允许 vgpu 在客户机内加载 gpu 驱动程序之前用作启动显示。ramfb 需要将 display 属性设置为 on。
-  - scsi 对于 SCSI 设备，用户负责确保设备不被主机使用。
-
-    如果 hypervisor 和 OS 支持，可选的 sgio（自 1.0.6 起，但目前不再被任何 hypervisor 驱动程序支持）属性指示是否为磁盘过滤非特权 SG_IO 命令。有效的设置是 "filtered" 或 "unfiltered"，默认值为 "filtered"。
-
-    可选的 rawio（自 1.2.9 起）属性指示 lun 是否需要 rawio 能力。有效的设置是 "yes" 或 "no"。请参阅 [硬盘、软盘、CDROM](https://www.libvirt.org/formatdomain.html#hard-drives-floppy-disks-cdroms) 部分中的 rawio 描述。如果域中的磁盘 lun 已经具有 rawio 能力，则不需要此设置。
-  - scsi_host 自 2.5.0 起 对于 SCSI 设备，用户负责确保设备不被主机使用。此类型将单个 HBA 呈现的所有 LUN 传递给客户机。自 5.2.0 起，可以使用 model 属性进一步指定为 "virtio"、"virtio-transitional" 或 "virtio-non-transitional"。有关更多详细信息，请参阅 [virtio 设备模型](https://www.libvirt.org/formatdomain.html#virtio-device-models)。
-  - mdev 对于中介设备（自 3.2.0 起），model 属性指定设备 API，该 API 确定主机的 vfio 驱动程序如何向客户机公开设备。目前，支持 model='vfio-pci'、model='vfio-ccw'（自 4.4.0 起）和 model='vfio-ap'（自 4.9.0 起）。[MDEV](https://www.libvirt.org/drvnodedev.html#mediated-devices-mdevs) 部分提供了有关中介设备以及如何在主机上创建中介设备的更多信息。自 4.6.0（QEMU 2.12）起，可以使用可选的 display 属性来启用或禁用支持由中介设备（如 NVIDIA vGPU 或 Intel GVT-g）支持的加速远程桌面，作为模拟 [视频设备](https://www.libvirt.org/formatdomain.html#video-devices) 的替代方案。此属性仅限于 model='vfio-pci'。支持的值为 on 或 off（默认值为 'off'）。为了使用此属性，需要使用图形帧缓冲区（请参阅 [图形帧缓冲区](https://www.libvirt.org/formatdomain.html#graphical-framebuffers)），目前仅支持 VNC、Spice 和 egl-headless 图形设备。自 5.10.0 版本起，对于 model='vfio-pci' 的设备，有一个可选的 ramfb 属性。支持的值为 on 或 off（默认值为 'off'）。启用时，此属性为客户机提供内存帧缓冲区设备。当 vgpu 设备是主显示时，此帧缓冲区将用作启动显示。
-  - 注意：根据 model 属性，对客户机地址类型的使用也有一些影响，请参见下面的 address 元素。
-  注意：managed 属性仅用于 type='pci'，并被所有其他设备类型忽略，因此使用除 PCI 设备以外的其他设备显式设置 managed 与省略它具有相同的效果。同样，model 属性仅受中介设备支持，并被所有其他设备类型忽略。
-- source
-
-  source 元素使用以下机制描述从主机看到的设备：
-  - usb USB 设备可以通过使用 vendor 和 product 元素的厂商/产品 ID 或通过使用 address 元素的设备在主机上的地址来寻址。
-  自 1.0.0 起，USB 设备的 source 元素可能包含 startupPolicy 属性，可用于定义如果未找到指定的主机 USB 设备时要执行的策略。该属性接受以下值：
-  | mandatory | 如果因任何原因缺失则失败（默认）                          |
-  | --------- | ------------------------------------------------------- |
-  | requisite | 启动时缺失则失败，迁移/恢复/还原时缺失则丢弃                 |
-  | optional  | 在任何启动尝试时缺失则丢弃                                   |
-  自 8.6.0 起，source 元素可以包含 guestReset 属性，具有以下值：
-  | off           | 忽略所有客户机发起的设备重置请求                            |
-  | ------------- | -------------------------------------------------------- |
-  | uninitialized | 如果设备已初始化则忽略设备请求，否则执行重置                   |
-  | on            | 在每次客户机发起的请求时重置设备                              |
-  此属性在分配带有在重置时崩溃的固件的 USB 设备时可能很有帮助。
-  - pci PCI 设备只能通过其地址来描述。自 6.8.0（仅 Xen）起，PCI 设备的 source 元素可能包含 writeFiltering 属性，用于控制对 PCI 配置空间的写访问。默认情况下，Xen 只允许写入已知安全值到配置空间。设置 writeFiltering='no' 将允许对设备的 PCI 配置空间进行所有写入。
-  - scsi SCSI 设备由 adapter 和 address 元素描述。address 元素包括 bus 属性（2 位总线编号）、target 属性（10 位目标编号）和 unit 属性（总线上的 20 位单元编号）。并非所有 hypervisor 都支持更大的 target 和 unit 值。每个 hypervisor 负责确定适配器支持的最大值。
-
-    自 1.2.8 起，SCSI 设备的 source 元素可能包含 protocol 属性。当该属性设置为 "iscsi" 时，主机设备 XML 遵循网络磁盘设备（请参阅 [硬盘、软盘、CDROM](https://www.libvirt.org/formatdomain.html#hard-drives-floppy-disks-cdroms)），使用相同的 name 属性，并可选地使用 auth 元素为 iSCSI 服务器提供认证凭证。
-
-    自 6.7.0 起，可选的 initiator 子元素通过其 <iqn name='iqn...' 子元素控制 hypervisor 运行的发起方的 IQN。
-  - scsi_host 自 2.5.0 起，单个 SCSI HBA 后面的多个 LUN 通过设置为 "vhost" 的 protocol 属性和 wwpn 属性（主机 configfs 中建立的 vhost_scsi wwpn，带有 "naa." 前缀的 16 位十六进制数字）来描述。
-  - mdev 中介设备（自 3.2.0 起）由 address 元素描述。address 元素包含单个必需的 uuid 属性。
-- vendor, product
-
-  vendor 和 product 元素各有一个 id 属性，指定 USB 厂商和产品 ID。这些 ID 可以以十进制、十六进制（以 0x 开头）或八进制（以 0 开头）形式给出。
-- boot
-
-  指定设备可引导。order 属性确定引导序列期间尝试设备的顺序。每设备引导元素不能与 [客户机固件](https://www.libvirt.org/formatdomain.html#guest-firmware) 部分中的一般引导元素一起使用。自 0.8.8 起用于 PCI 设备，自 1.0.1 起用于 USB 设备。
-- rom
-
-  rom 元素用于更改 PCI 设备的 ROM 如何呈现给客户机。可选的 bar 属性可以设置为 "on" 或 "off"，并确定设备的 ROM 是否会在客户机的内存映射中可见。（在 PCI 文档中，"rombar" 设置控制 ROM 基址寄存器的存在）。如果未指定 rom bar，则使用 qemu 默认值（较旧版本的 qemu 使用 "off" 的默认值，而较新的 qemus 使用 "on" 的默认值）。自 0.9.7（仅 QEMU 和 KVM）起。可选的 file 属性包含一个二进制文件的绝对路径，该文件将作为设备的 ROM BIOS 呈现给客户机。这对于为 sr-iov 功能的以太网设备的虚拟功能（其 VF 没有启动 ROM）提供 PXE 启动 ROM 等情况很有用。自 0.9.10（仅 QEMU 和 KVM）起。可选的 enabled 属性可以设置为 no 以完全禁用 PCI ROM 加载；如果通过此属性禁用了 PCI ROM 加载，尝试通过 bar 或 file 属性进一步调整加载过程将被拒绝。自 4.3.0（仅 QEMU 和 KVM）起。
-- address
-
-  USB 设备的 address 元素具有 bus 属性，用于指定 USB 总线。此外，需要 device 属性或 port 属性来标识主机上的设备。虽然设备编号在设备连接时分配，但端口号是物理主机端口的稳定标识符。总线和设备编号可以以十进制、十六进制（以 0x 开头）或八进制（以 0 开头）形式给出。端口号是点分路径（例如：2, 1.2.5）。对于 PCI 设备，该元素带有 4 个属性，允许指定设备，如通过 lspci 或 virsh nodedev-list 找到的那样。对于 SCSI 设备，必须使用 'drive' 地址类型。对于中介设备，它们是在物理父设备上定义资源分配的纯软件设备，使用的地址类型必须符合 hostdev 元素的 model 属性，例如，对于 vfio-pci 设备 API，除了 PCI 之外的任何地址类型，或者对于 vfio-ccw 设备 API，除了 CCW 之外的任何地址类型都会导致错误。有关 address 元素的更多详细信息，请参阅 [设备地址](https://www.libvirt.org/formatdomain.html#device-addresses) 部分。
-- driver
-
-  PCI hostdev 设备可以有一个可选的 driver 子元素，指定在准备将设备分配给客户机时绑定到设备的主机驱动程序。自 10.0.0（仅对 QEMU 和 KVM 有用）起。这是通过设置 <driver> 元素的 model 属性来完成的，例如：`...  <hostdev mode='subsystem' type='pci' managed='yes'>    <driver model='vfio-pci-igb'/> ...` 告诉 libvirt 在将设备交给 QEMU 分配给客户机之前，在主机上将驱动程序 "vfio-pci-igb" 绑定到设备。通常，libvirt 会将设备绑定到它在内核的 modules.alias 文件中找到的 "最佳匹配" VFIO 类型驱动程序（基于匹配设备的 sysfs 中的 modalias 文件的相应字段），或者如果没有找到更好的匹配，则绑定到通用的 "vfio-pci" 驱动程序（在 libvirt 10.0.0 之前始终使用 vfio-pci），但在正确的驱动程序未在 modules.alias 中列出的情况下，可以通过设置驱动程序名称来强制使用所需的设备特定驱动程序，或者如果找到的设备特定驱动程序在某些方面 "有问题"，同样可以强制使用通用的 vfio-pci 驱动程序。自 12.1.0（仅 QEMU 和 KVM）起，可以使用 iommufd 元素来为 VFIO 设备启用 IOMMUFD 后端。这提供了一个接口，用于将 DMA 映射传播到内核以用于分配的设备。Libvirt 将打开 /dev/iommu 和 VFIO 设备 cdev，并将相关的文件描述符传递给 QEMU。（注意：自 1.0.5 起，name 属性被描述为用于选择 PCI 设备分配的类型（"vfio"、"kvm" 或 "xen"），但这些值大多无用，因为设备分配的类型实际上由使用的 hypervisor 决定。这意味着您可能会偶尔在域的状态 XML 中看到 <driver name='vfio'/> 或 <driver name='xen'/>，或者更罕见地在配置中看到，但这些特定值基本上被忽略。）
-- readonly
-
-  指示设备为只读，目前仅支持 SCSI 主机设备。自 1.0.6（仅 QEMU 和 KVM）起
-- shareable
-
-  如果存在，这表示设备预期在域之间共享（假设 hypervisor 和 OS 支持此功能）。仅支持 SCSI 主机设备。自 1.0.6 起，但仅自 1.2.2 起按预期工作。
-
-#### 21.8.2 [ACPI Generic Initiators](https://www.libvirt.org/formatdomain.html#id38)
-
-主机设备可以包含 <acpi> 元素，用于在 QEMU 中为设备创建 ACPI Generic Initiator 对象。
-
-这可用于 **NVIDIA Multi-Instance GPU (MIG)** 配置，其中物理 GPU 被划分为多个隔离的实例，每个实例与一个或多个虚拟 NUMA 节点相关联。
-
-通过将 <acpi nodeset=.../> 元素附加到域 XML 中的 MIG 设备，客户机将为该实例配置正确的分区。
-
-```
-<numa>
-  <cell id='0' cpus='0-15' memory='8388608' unit='KiB'/>
-  <cell id='1' memory='0' unit='KiB'/>
-  <cell id='2' memory='0' unit='KiB'/>
-  <cell id='3' memory='0' unit='KiB'/>
-</numa>
-...
-<devices>
-  ...
-  <hostdev mode='subsystem' type='mdev' model='vfio-pci'>
-    <source>
-      <address uuid='64139528-a53f-45b4-851e-fa80c87c1a88'/>
-    </source>
-    <acpi nodeset='0' type='numa'/>
-  </hostdev>
-  ...
-</devices>
 ```
 
 - acpi
 
-  acpi 元素具有以下属性：
-  - nodeset 逗号分隔的 NUMA 节点列表，与设备关联。
-  - type 关联类型，目前仅支持 'numa'。
+  table 元素包含 ACPI 表的完全限定路径，type 属性指示文件中必须存在的数据：raw: 单个 ACPI 表，带有头和数据，ACPI 签名从头部自动检测（自 11.2.0 起，QEMU）。rawset: 多个 ACPI 表的连接，带有头和数据，每个表都有任何 ACPI 签名，从头部自动检测（自 11.2.0 起，Xen）。slic: 单个 ACPI 表，带有头和数据，提供软件许可信息。头部中的 ACPI 表签名将被强制设置为 SLIC（自 1.3.5 起，QEMU），自 5.9.0 起（Xen）被错误解释为 rawset。msdm: 单个 ACPI 表，带有头和数据，提供 Microsoft 数据管理信息。头部中的 ACPI 表签名将被强制设置为 MSDM（自 11.2.0 起，QEMU）。每种类型只能使用一次，除了 raw 可以出现多次。
 
-### 21.9 [智能卡设备](https://www.libvirt.org/formatdomain.html#id39)
+## 3 [SMBIOS 系统信息](https://www.libvirt.org/formatdomain.html#id9)
 
-智能卡设备允许将主机上的智能卡或智能卡读卡器传递给客户机。
+一些 hypervisor 允许控制呈现给客户机的系统信息（例如，SMBIOS 字段可以由 hypervisor 填充并通过客户机中的 dmidecode 命令检查）。可选的 sysinfo 元素涵盖所有此类信息类别。自 0.8.7 起
 
 ```
 ...
-<devices>
-  <smartcard mode='passthrough' type='tcp'>
-    <source mode='connect' host='192.168.1.1' service='2001'/>  
-  </smartcard>
-  <smartcard mode='host' type='ccid'>
-    <address type='ccid' bus='0' slot='0'/>
-  </smartcard>
-</devices>
+<os>
+  <smbios mode='sysinfo'/>
+  ...
+</os>
+<sysinfo type='smbios'>
+  <bios>
+    <entry name='vendor'>LENOVO</entry>
+  </bios>
+  <system>
+    <entry name='manufacturer'>Fedora</entry>
+    <entry name='product'>Virt-Manager</entry>
+    <entry name='version'>0.9.4</entry>
+  </system>
+  <baseBoard>
+    <entry name='manufacturer'>LENOVO</entry>
+    <entry name='product'>20BE0061MC</entry>
+    <entry name='version'>0B98401 Pro</entry>
+    <entry name='serial'>W1KS427111E</entry>
+  </baseBoard>
+  <chassis>
+    <entry name='manufacturer'>Dell Inc.</entry>
+    <entry name='version'>2.12</entry>
+    <entry name='serial'>65X0XF2</entry>
+    <entry name='asset'>40000101</entry>
+    <entry name='sku'>Type3Sku1</entry>
+  </chassis>
+  <oemStrings>
+    <entry>myappname:some arbitrary data</entry>
+    <entry>otherappname:more arbitrary data</entry>
+  </oemStrings>
+</sysinfo>
+<sysinfo type='fwcfg'>
+  <entry name='opt/com.example/name'>example value</entry>
+  <entry name='opt/com.coreos/config' file='/tmp/provision.ign'/>
+</sysinfo>
 ...
 ```
 
-- mode
+sysinfo 元素具有强制属性 type，确定子元素的布局，支持的值为：
 
-  智能卡设备模式，可以是 'passthrough'、'host' 或 'emulated'。
+- smbios
 
-- type
+  子元素调用特定的 SMBIOS 值，如果与 os 元素的 smbios 子元素（请参阅 [操作系统引导](https://www.libvirt.org/formatdomain.html#operating-system-booting)）结合使用，将影响客户机。sysinfo 的每个子元素都命名一个 SMBIOS 块，在这些元素中可以有描述块中字段的 entry 元素列表。识别以下块和条目：bios 这是 SMBIOS 的块 0，条目名称来自：vendor BIOS 供应商名称 version BIOS 版本 date BIOS 发布日期。如果提供，格式为 mm/dd/yy 或 mm/dd/yyyy。如果字符串的年份部分是两位数字，则年份被假定为 19yy。release 系统 BIOS 主要和次要版本号值连接在一起作为一个用句点分隔的字符串，例如 10.22。 system 这是 SMBIOS 的块 1，条目名称来自：manufacturer BIOS 制造商 product 产品名称 version 产品版本 serial 序列号 uuid 全局唯一 ID 号。如果此条目与顶级 uuid 元素（请参阅 [一般元数据](https://www.libvirt.org/formatdomain.html#general-metadata)）一起提供，则两个值必须匹配。sku 用于识别特定配置的 SKU 编号。family 识别特定计算机所属的系列。 baseBoard 这是 SMBIOS 的块 2。此元素可以重复多次以描述所有主板；但是，并非所有 hypervisor 都必然支持重复。该元素可以有以下子元素：manufacturer BIOS 制造商 product 产品名称 version 产品版本 serial 序列号 asset 资产标签 location 机箱中的位置 注意：为 bios、system 或 baseBoard 块提供的不正确条目将被忽略，不会出错。除了 uuid 验证和日期格式检查外，所有值都作为字符串传递给 hypervisor 驱动程序。chassis 自 4.1.0 起，这是 SMBIOS 的块 3，带有
 
-  智能卡设备类型，如 'tcp'、'unix' 或 'ccid'。
+- fwcfg
+
+  一些 hypervisor 提供统一的方式来调整固件如何配置自己，或者可能包含要为客户机 OS 安装的表，例如引导顺序、ACPI、SMBIOS 等。它甚至允许用户定义自己的配置 blob。在 QEMU 的情况下，这些会出现在域的 sysfs 下（如果客户机内核启用了 FW_CFG_SYSFS 配置选项），在 /sys/firmware/qemu_fw_cfg 下。注意，这些值无论 <os/> 下的 <smbios/> 模式如何都适用。自 6.5.0 起 **请注意，由于数据槽数量有限，强烈建议不要使用 fwcfg，而应使用 <oemStrings/>**。 `<sysinfo type='fwcfg'>  <entry name='opt/com.example/name'>example value</entry>  <entry name='opt/com.example/config' file='/tmp/provision.ign'/> </sysinfo>` sysinfo 元素可以有多个 entry 子元素。每个元素都有强制的 name 属性，定义 blob 的名称，必须以 opt/ 开头，为避免与其他名称冲突，建议采用 opt/$RFQDN/$name 的形式，其中 $RFQDN 是您控制的反向完全限定域名。然后，该元素可以包含值（直接设置 blob 值），或 file 属性（从文件设置 blob 值）。
+
+## 4 [CPU 分配](https://www.libvirt.org/formatdomain.html#id10)
+
+```
+<domain>
+  ...
+  <vcpu placement='static' cpuset="1-4,^3,6" current="1">2</vcpu>
+  <vcpus>
+    <vcpu id='0' enabled='yes' hotpluggable='no' order='1'/>
+    <vcpu id='1' enabled='no' hotpluggable='yes'/>
+  </vcpus>
+  ...
+</domain>
+```
+
+- vcpu
+
+  此元素的内容定义为客户机 OS 分配的最大虚拟 CPU 数量，必须在 1 和 hypervisor 支持的最大值之间。cpuset 可选属性 cpuset 是物理 CPU 编号的逗号分隔列表，默认情况下域进程和虚拟 CPU 可以固定到这些编号。（注意：域进程和虚拟 CPU 的固定策略可以通过 cputune 单独指定。如果指定了 cputune 的 emulatorpin 属性，则此处由 vcpu 指定的 cpuset 将被忽略。同样，对于指定了 vcpupin 的虚拟 CPU，此处由 cpuset 指定的 cpuset 将被忽略。对于未指定 vcpupin 的虚拟 CPU，每个都将固定到此处由 cpuset 指定的物理 CPU。）该列表中的每个元素要么是单个 CPU 编号，要么是 CPU 编号范围，要么是插入号后跟要从先前范围中排除的 CPU 编号。自 0.4.4 起 current 可选属性 current 可用于指定是否应启用少于最大数量的虚拟 CPU。自 0.8.5 起 placement 可选属性 placement 可用于指示域进程的 CPU 放置模式。值可以是 "static" 或 "auto"，但默认为 numatune 的放置或如果指定了 cpuset 则为 "static"。使用 "auto" 表示域进程将固定到查询 numad 的建议节点集，如果指定了 cpuset 属性，则将被忽略。如果既未指定 cpuset 和 placement，或者 placement 为 "static" 但未指定 cpuset，则域进程将固定到所有可用的物理 CPU。自 0.9.11 起（仅 QEMU 和 KVM）
+
+- vcpus
+
+  vcpus 元素允许控制各个 vCPU 的状态。id 属性指定 libvirt 在其他地方（如 vCPU 固定、调度程序信息和 NUMA 分配）使用的 vCPU id。请注意，在客户机中看到的 vCPU ID 在某些情况下可能与 libvirt ID 不同。有效 ID 从 0 到由 vcpu 元素设置的最大 vCPU 计数减 1。enabled 属性允许控制 vCPU 的状态。有效值为 yes 和 no。hotpluggable 控制给定 vCPU 是否可以在 CPU 在引导时启用的情况下进行热插拔和热卸载。请注意，所有禁用的 vCPU 必须是可热插拔的。有效值为 yes 和 no。order 允许指定添加在线 vCPU 的顺序。对于需要一次插入多个 vCPU 的 hypervisor/平台，顺序可以在需要同时启用的所有 vCPU 上重复。指定顺序不是必需的，vCPU 然后以任意顺序添加。如果使用顺序信息，则必须对所有在线 vCPU 使用。Hypervisor 可能会在某些操作期间清除或更新排序信息以确保有效的配置。请注意，hypervisor 可能以与引导 vCPU 不同的方式创建可热插拔 vCPU，因此可能需要特殊初始化。Hypervisor 可能要求在引导时启用的不可热插拔 vCPU 聚集在开头，从 ID 0 开始。还可能要求 vCPU 0 始终存在且不可热插拔。请注意，提供各个 CPU 的状态可能是启用可寻址 vCPU 热插拔支持所必需的，并且此功能可能不被所有 hypervisor 支持。对于 QEMU，需要以下条件。vCPU 0 需要启用且不可热插拔。在 PPC64 上，与其在同一核心中的 vCPU 也需要启用。启动时存在的所有不可热插拔 CPU 需要在 vCPU 0 之后分组。自 2.2.0 起（仅 QEMU）
+
+## 5 [IOThreads 分配](https://www.libvirt.org/formatdomain.html#id11)
+
+IOThreads 是用于支持的磁盘设备的专用事件循环线程，用于执行块 I/O 请求，以提高可扩展性，尤其是在具有许多 LUN 的 SMP 主机/客户机上。自 1.2.8 起（仅 QEMU）
+
+```
+<domain>
+  ...
+  <iothreads>4</iothreads>
+  ...
+</domain>
+<domain>
+  ...
+  <iothreadids>
+    <iothread id="2"/>
+    <iothread id="4"/>
+    <iothread id="6"/>
+    <iothread id="8" thread_pool_min="2" thread_pool_max="32">
+      <poll max='123' grow='456' shrink='789'/>
+    </iothread>
+  </iothreadids>
+  <defaultiothread thread_pool_min="8" thread_pool_max="16"/>
+  ...
+</domain>
+```
+
+- iothreads
+
+  此可选元素的内容定义要分配给域的 IOThreads 数量，供支持的目标存储设备使用。每个主机 CPU 应该只有 1 或 2 个 IOThreads。每个 IOThread 可以分配多个支持的设备。自 1.2.8 起
+
+- iothreadids
+
+  可选的 iothreadids 元素提供了专门定义域的 IOThread ID 的能力。默认情况下，IOThread ID 从 1 开始顺序编号，直到为域定义的 iothreads 数量。id 属性用于定义 IOThread ID。id 属性必须是大于 0 的正整数。如果定义的 iothreadids 少于为域定义的 iothreads，则 libvirt 将从 1 开始顺序填充 iothreadids，避免任何预定义的 id。如果定义的 iothreadids 多于为域定义的 iothreads，则 iothreads 值将相应调整。自 1.2.15 起 该元素有两个可选属性 thread_pool_min 和 thread_pool_max，允许为给定 IOThread 设置工作线程数量的下限和上限。前者可以为零，后者不能。自 8.5.0 起 自 9.4.0 起，可选的子元素 poll 可用于覆盖 hypervisor 默认的 iothread 在切换回事件之前的轮询间隔。可选属性 max 设置轮询应使用的最大时间（以纳秒为单位）。将 max 设置为 0 禁用轮询。属性 grow 和 shrink 覆盖（或在设置为 0 时禁用）如果设置的间隔被认为不足或过度，则增加/减少轮询间隔的默认步骤。
+
+- defaultiothread
+
+  此元素表示 hypervisor 内的默认事件循环，处理未分配给特定 IOThread 的设备的 I/O 请求。该元素可以具有 thread_pool_min 和/或 thread_pool_max 属性，控制默认事件循环的工作线程数量的下限和上限。模拟器可能是多线程的，并根据需要生成所谓的工作线程。一般来说，这些属性都不应设置（让模拟器使用其自己的默认值），除非模拟器在实时工作负载中运行，因此无法承受生成新工作线程所需时间的不可预测性。自 8.5.0 起
+
+## 6 [CPU 调优](https://www.libvirt.org/formatdomain.html#id12)
+
+```
+<domain>
+  ...
+  <cputune>
+    <vcpupin vcpu="0" cpuset="1-4,^2"/>
+    <vcpupin vcpu="1" cpuset="0,1"/>
+    <vcpupin vcpu="2" cpuset="2,3"/>
+    <vcpupin vcpu="3" cpuset="0,4"/>
+    <emulatorpin cpuset="1-3"/>
+    <iothreadpin iothread="1" cpuset="5,6"/>
+    <iothreadpin iothread="2" cpuset="7,8"/>
+    <shares>2048</shares>
+    <period>1000000</period>
+    <quota>-1</quota>
+    <global_period>1000000</global_period>
+    <global_quota>-1</global_quota>
+    <emulator_period>1000000</emulator_period>
+    <emulator_quota>-1</emulator_quota>
+    <iothread_period>1000000</iothread_period>
+    <iothread_quota>-1</iothread_quota>
+    <vcpusched vcpus='0-4,^3' scheduler='fifo' priority='1'/>
+    <iothreadsched iothreads='2' scheduler='batch'/>
+    <cachetune vcpus='0-3'>
+      <cache id='0' level='3' type='both' size='3' unit='MiB'/>
+      <cache id='1' level='3' type='both' size='3' unit='MiB'/>
+      <monitor level='3' vcpus='1'/>
+      <monitor level='3' vcpus='0-3'/>
+    </cachetune>
+    <cachetune vcpus='4-5'>
+      <monitor level='3' vcpus='4'/>
+      <monitor level='3' vcpus='5'/>
+    </cachetune>
+    <memorytune vcpus='0-3'>
+      <node id='0' bandwidth='60'/>
+    </memorytune>
+
+  </cputune>
+  ...
+</domain>
+```
+
+- cputune
+
+  可选的 cputune 元素提供有关域的 CPU 可调参数的详细信息。注意：对于 qemu 驱动程序，可选的 vcpupin 和 emulatorpin 固定设置在模拟器启动和考虑 NUMA 约束后生效。这意味着在此期间，域预计会使用主机的其他物理 CPU，这将通过 virsh cpu-stats 的输出来反映。自 0.9.0 起
+
+- vcpupin
+
+  可选的 vcpupin 元素指定域 vCPU 将固定到主机的哪些物理 CPU。如果省略，并且未指定元素 vcpu 的属性 cpuset，则 vCPU 默认固定到所有物理 CPU。它包含两个必需属性，属性 vcpu 指定 vCPU id，属性 cpuset 与元素 vcpu 的属性 cpuset 相同。QEMU 驱动程序支持自 0.9.0 起，Xen 驱动程序支持自 0.9.1 起
+
+- emulatorpin
+
+  可选的 emulatorpin 元素指定域的"模拟器"（不包括 vCPU 或 iothreads 的域子集）将固定到主机的哪些物理 CPU。如果省略，并且未指定元素 vcpu 的属性 cpuset，则"模拟器"默认固定到所有物理 CPU。它包含一个必需属性 cpuset，指定要固定到的物理 CPU。
+
+- iothreadpin
+
+  可选的 iothreadpin 元素指定 IOThreads 将固定到主机的哪些物理 CPU。如果省略，并且未指定元素 vcpu 的属性 cpuset，则 IOThreads 默认固定到所有物理 CPU。有两个必需属性，属性 iothread 指定 IOThread ID，属性 cpuset 指定要固定到的物理 CPU。请参阅 [IOThreads 分配](https://www.libvirt.org/formatdomain.html#iothreads-allocation) 部分，记录 iothread 的有效值。自 1.2.9 起
+
+- shares
+
+  可选的 shares 元素指定域的比例加权份额。如果省略，默认为 OS 提供的默认值。注意，该值没有单位，它是基于其他 VM 设置的相对度量，例如，配置为值 2048 的 VM 将获得配置为值 1024 的 VM 的两倍 CPU 时间。使用 cgroups v1 时，值应在 [2, 262144] 范围内，使用 cgroups v2 时，值应在 [1, 10000] 范围内。自 0.9.0 起
+
+- period
+
+  可选的 period 元素指定执行间隔（单位：微秒）。在 period 内，域的每个 vCPU 不允许消耗超过 quota 的运行时间。值应在 [1000, 1000000] 范围内。值为 0 的 period 表示无值。仅 QEMU 驱动程序支持自 0.9.4 起，LXC 自 0.9.10 起
+
+- quota
+
+  可选的 quota 元素指定最大允许带宽（单位：微秒）。quota 为任何负值的域表示该域对 vCPU 线程具有无限带宽，这意味着它不受带宽控制。值应在 [1000, 17592186044415] 范围内或小于 0。值为 0 的 quota 表示无值。您可以使用此功能确保所有 vCPU 以相同的速度运行。仅 QEMU 驱动程序支持自 0.9.4 起，LXC 自 0.9.10 起
+
+- global_period
+
+  可选的 global_period 元素指定整个域的执行 CFS 调度程序间隔（单位：微秒），与 period 相比，后者按 vCPU 执行间隔。值应在 1000, 1000000] 范围内。值为 0 的 global_period 表示无值。仅 QEMU 驱动程序支持自 1.3.3 起
+
+- global_quota
+
+  可选的 global_quota 元素指定在一个周期内整个域的最大允许带宽（单位：微秒）。global_quota 为任何负值的域表示该域具有无限带宽，这意味着它不受带宽控制。值应在 [1000, 17592186044415] 范围内或小于 0。值为 0 的 global_quota 表示无值。仅 QEMU 驱动程序支持自 1.3.3 起
+
+- emulator_period
+
+  可选的 emulator_period 元素指定执行间隔（单位：微秒）。在 emulator_period 内，域的模拟器线程（不包括 vCPU）不允许消耗超过 emulator_quota 的运行时间。值应在 [1000, 1000000] 范围内。值为 0 的 period 表示无值。仅 QEMU 驱动程序支持自 0.10.0 起
+
+- emulator_quota
+
+  可选的 emulator_quota 元素指定域的模拟器线程（不包括 vCPU）的最大允许带宽（单位：微秒）。emulator_quota 为任何负值的域表示该域对模拟器线程（不包括 vCPU）具有无限带宽，这意味着它不受带宽控制。值应在 [1000, 17592186044415] 范围内或小于 0。值为 0 的 quota 表示无值。仅 QEMU 驱动程序支持自 0.10.0 起
+
+- iothread_period
+
+  可选的 iothread_period 元素指定 IOThreads 的执行间隔（单位：微秒）。在 iothread_period 内，域的每个 IOThread 不允许消耗超过 iothread_quota 的运行时间。值应在 [1000, 1000000] 范围内。值为 0 的 iothread_period 表示无值。仅 QEMU 驱动程序支持自 2.1.0 起
+
+- iothread_quota
+
+  可选的 iothread_quota 元素指定 IOThreads 的最大允许带宽（单位：微秒）。iothread_quota 为任何负值的域表示该域的 IOThreads 具有无限带宽，这意味着它不受带宽控制。值应在 [1000, 17592186044415] 范围内或小于 0。值为 0 的 iothread_quota 表示无值。您可以使用此功能确保所有 IOThreads 以相同的速度运行。仅 QEMU 驱动程序支持自 2.1.0 起
+
+- vcpusched、iothreadsched 和 emulatorsched
+
+  可选的 vcpusched、iothreadsched 和 emulatorsched 元素分别指定特定 vCPU、IOThread 和模拟器线程的调度程序类型（值 batch、idle、fifo、rr）。对于 vcpusched 和 iothreadsched，属性 vcpus 和 iothreads 选择此设置适用的 vCPU/IOThreads，省略它们设置默认值。元素 emulatorsched 没有该属性。有效的 vcpus 值从 0 开始，到为域定义的 vCPU 数量减 1。有效的 iothreads 值在 [IOThreads 分配](https://www.libvirt.org/formatdomain.html#iothreads-allocation) 部分中描述。如果未定义 iothreadids，则 libvirt 从 1 到域可用的 iothreads 数量对 IOThreads 进行编号。对于实时调度程序（fifo、rr），还必须指定优先级（对于非实时调度程序，优先级被忽略）。优先级的取值范围取决于主机内核（通常为 1-99）。自 1.2.13 起 emulatorsched 自 5.3.0 起
+
+- cachetune 自 4.1.0 起
+
+  可选的 cachetune 元素可以使用主机上的 resctrl 控制 CPU 缓存分配。是否支持这一点可以从功能中获取，其中还报告了一些限制，如最小大小和所需的粒度。必需属性 vcpus 指定此分配适用的 vCPU。一个 vCPU 只能是一个 cachetune 元素分配的成员。cachetune 指定的 vCPU 可以与 memorytune 中的 vCPU 相同，但它们不允许重叠。可选的、仅输出的 id 属性唯一标识缓存。支持的子元素有：cache 此可选元素控制 CPU 缓存的分配，具有以下属性：level 要从中分配的主机缓存级别。id 要从中分配的主机缓存 id。type 分配类型。可以是 code 用于代码（指令），data 用于数据，或 both 用于代码和数据（统一）。目前，分配只能使用与主机支持相同的类型，这意味着对于启用了 CDP（代码/数据优先级）的主机，您不能请求两者。size 要分配的区域大小。默认值以字节为单位，但可以使用 unit 属性来缩放值。unit（可选）如果指定，它是 size 指定的单位，如 KiB、MiB、GiB 或 TiB（在 [内存分配](https://www.libvirt.org/formatdomain.html#memory-allocation) 的 memory 元素中描述），默认为字节。 monitor 自 4.10.0 起 可选元素 monitor 为当前缓存分配创建缓存监视器，并具有以下必需属性：level 监视器所属的主机缓存级别。vcpus 监视器适用的 vCPU 列表。监视器的 vCPU 列表只能是关联分配的 vCPU 列表的成员。默认监视器具有与关联分配相同的 vCPU 列表。对于非默认监视器，不允许重叠的 vCPU。
+
+- memorytune 自 4.7.0 起
+
+  可选的 memorytune 元素可以使用主机上的 resctrl 控制内存带宽分配。是否支持这一点可以从功能中获取，其中还报告了一些限制，如最小带宽和所需的粒度。必需属性 vcpus 指定此分配适用的 vCPU。一个 vCPU 只能是一个 memorytune 元素分配的成员。memorytune 指定的 vcpus 可以与 cachetune 指定的 vcpus 相同。但是它们不允许相互重叠。支持的子元素有：node 此元素控制 CPU 内存带宽的分配，具有以下属性：id 要从中分配内存带宽的主机节点 id。bandwidth 要从该节点分配的内存带宽。该值通常以百分比表示（Intel），但也可以以 MB/s 表示（如果 resctrl 以 mba_MBps 选项挂载）或以 1/8 GB/s 增量表示（AMD）。 用户负责确保该值在其系统和配置上有意义。
+
+## 7 [内存分配](https://www.libvirt.org/formatdomain.html#id13)
+
+```
+<domain>
+  ...
+  <maxMemory slots='16' unit='KiB'>1524288</maxMemory>
+  <memory unit='KiB'>524288</memory>
+  <currentMemory unit='KiB'>524288</currentMemory>
+  ...
+</domain>
+```
+
+- memory
+
+  客户机在引导时的最大内存分配。内存分配包括启动时指定或稍后热插拔的可能的额外内存设备。此值的单位由可选属性 unit 确定，默认为 "KiB"（ kibibytes，2^10 或 1024 字节块）。有效的单位是 "b" 或 "bytes" 表示字节，"KB" 表示千字节（10^3 或 1,000 字节），"k" 或 "KiB" 表示 kibibytes（1024 字节），"MB" 表示兆字节（10^6 或 1,000,000 字节），"M" 或 "MiB" 表示 mebibytes（2^20 或 1,048,576 字节），"GB" 表示吉字节（10^9 或 1,000,000,000 字节），"G" 或 "GiB" 表示 gibibytes（2^30 或 1,073,741,824 字节），"TB" 表示太字节（10^12 或 1,000,000,000,000 字节），或 "T" 或 "TiB" 表示 tebibytes（2^40 或 1,099,511,627,776 字节）。然而，libvirt 会将值向上舍入到最接近的 kibibyte，并且可能会进一步舍入到 hypervisor 支持的粒度。一些 hypervisor 还强制执行最小值，例如 4000KiB。如果为客户机配置了 NUMA（请参阅 [CPU 模型和拓扑](https://www.libvirt.org/formatdomain.html#cpu-model-and-topology)），则可以省略 memory 元素。在崩溃的情况下，可选属性 dumpCore 可用于控制是否应在生成的核心转储中包含客户机内存（值 "on"、"off"）。unit 自 0.9.11 起，dumpCore 自 0.10.2 起（仅 QEMU）
+
+- maxMemory
+
+  客户机的运行时最大内存分配。由 <memory> 元素或 NUMA 单元大小配置指定的初始内存可以通过热插拔内存增加到该元素指定的限制。unit 属性的行为与 <memory> 相同。slots 属性指定可用于向客户机添加内存的插槽数。边界是特定于 hypervisor 的。请注意，由于通过内存热插拔添加的内存块的对齐，可能无法实现此元素指定的完整大小分配。自 1.2.14 起由 QEMU 驱动程序支持。
+
+- currentMemory
+
+  客户机的实际内存分配。此值可以小于最大分配，以允许动态增加客户机内存。如果省略，默认为与 memory 元素相同的值。unit 属性的行为与 memory 相同。
+
+## 8 [内存后备](https://www.libvirt.org/formatdomain.html#id14)
+
+```
+<domain>
+  ...
+  <memoryBacking>
+    <hugepages>
+      <page size="1" unit="G" nodeset="0-3,5"/>
+      <page size="2" unit="M" nodeset="4"/>
+    </hugepages>
+    <nosharepages/>
+    <locked/>
+    <source type="file|anonymous|memfd"/>
+    <access mode="shared|private"/>
+    <allocation mode="immediate|ondemand" threads='8'/>
+    <discard/>
+  </memoryBacking>
+  ...
+</domain>
+```
+
+可选的 memoryBacking 元素可能包含几个影响虚拟内存页如何由主机页支持的元素。
+
+- hugepages
+
+  这告诉 hypervisor 客户机的内存应该使用大页而不是正常的本机页大小来分配。自 1.2.5 起，可以更具体地为每个 numa 节点设置大页。引入了 page 元素。它有一个强制属性 size，指定应该使用哪些大页（在支持不同大小大页的系统上特别有用）。size 属性的默认单位是 kiB（1024 的倍数）。如果要使用不同的单位，请使用可选的 unit 属性。对于具有 NUMA 的系统，可选的 nodeset 属性可能很有用，因为它将给定客户机的 NUMA 节点与特定的大页大小相关联。从示例代码片段中，除了节点 4 之外，每个 NUMA 节点都使用 1GB 的大页。有关正确的语法，请参阅 [NUMA 节点调优](https://www.libvirt.org/formatdomain.html#numa-node-tuning)。
+
+- nosharepages
+
+  指示 hypervisor 为此域禁用共享页（内存合并，KSM）。自 1.0.6 起
+
+- locked
+
+  当设置并由 hypervisor 支持时，属于域的内存页将被锁定在主机内存中，主机将不允许将它们换出，这对于某些工作负载（如实时）可能是必需的。对于 QEMU/KVM 客户机，QEMU 进程本身使用的内存也会被锁定：与客户机内存不同，这是 libvirt 无法提前计算的数量，因此它必须完全删除锁定内存的限制。因此，启用此选项会带来潜在的安全风险：当主机内存不足时，主机将无法从客户机收回锁定的内存，这意味着分配大量锁定内存的恶意客户机可能会对主机造成拒绝服务攻击。因此，除非工作负载需要，否则不建议使用此选项；即使如此，也强烈建议同时设置适合特定环境的内存分配硬限制（请参阅 [内存调优](https://www.libvirt.org/formatdomain.html#memory-tuning)）以减轻上述风险。自 1.0.6 起
 
 - source
 
-  智能卡设备的源，如 TCP 连接或主机设备地址。
+  使用 type 属性，可以提供 "file" 来利用文件内存后备，或保持默认的 "anonymous"。自 4.10.0 起，您可以选择 "memfd" 后备。（仅 QEMU/KVM）
 
-### 21.10 [网络接口](https://www.libvirt.org/formatdomain.html#id40)
+- access
 
-网络接口允许客户机连接到网络。libvirt 支持多种网络连接类型，包括虚拟网络、桥接到 LAN、用户空间连接等。
+  使用 mode 属性，指定内存是 "shared" 还是 "private"。这可以通过 memAccess 按 numa 节点覆盖。
+
+- allocation
+
+  使用可选的 mode 属性，通过提供 "immediate" 或 "ondemand" 来指定何时分配内存。自 8.2.0 起，可以通过 threads 属性设置 hypervisor 用于分配内存的线程数。为了加快分配过程，当固定模拟器线程时，建议包括来自所需 NUMA 节点的 CPU，以便分配线程可以设置其亲和性。
+
+- discard
+
+  当设置并由 hypervisor 支持时，内存内容会在客户机关闭前（或 DIMM 模块拔出时）被丢弃。请注意，这只是一种优化，并不保证在所有情况下都能工作（例如，当 hypervisor 崩溃时）。自 4.4.0 起（仅 QEMU/KVM）
+
+## 9 [内存调优](https://www.libvirt.org/formatdomain.html#id15)
+
+```
+<domain>
+  ...
+  <memtune>
+    <hard_limit unit='G'>1</hard_limit>
+    <soft_limit unit='M'>128</soft_limit>
+    <swap_hard_limit unit='G'>2</swap_hard_limit>
+    <min_guarantee unit='bytes'>67108864</min_guarantee>
+  </memtune>
+  ...
+</domain>
+```
+
+- memtune
+
+  可选的 memtune 元素提供有关域的内存可调参数的详细信息。如果省略，默认为 OS 提供的默认值。对于 QEMU/KVM，参数应用于整个 QEMU 进程。因此，在计算它们时，需要将客户机 RAM、客户机视频 RAM 和 QEMU 本身的一些内存开销相加。最后一部分很难确定，所以需要猜测和尝试。对于每个可调参数，可以使用与 <memory> 相同的值指定输入中数字的单位。为了向后兼容，输出始终以 KiB 为单位。unit 自 0.9.11 起 所有 limit 参数的可能值范围从 0 到 VIR_DOMAIN_MEMORY_PARAM_UNLIMITED。
+
+- hard_limit
+
+  可选的 hard_limit 元素是客户机可以使用的最大内存。此值的单位是 kibibytes（即 1024 字节的块）。强烈建议 QEMU 和 KVM 的用户不要设置此限制，因为如果猜测过低，域可能会被内核杀死，并且确定进程运行所需的内存是一个 [不可判定的问题](https://en.wikipedia.org/wiki/Undecidable_problem)；也就是说，如果您已经在 [内存后备](https://www.libvirt.org/formatdomain.html#memory-backing) 中设置了 locked，因为您的工作负载需要它，您将不得不考虑部署的具体情况，并找出一个足够大的 hard_limit 值来支持客户机的内存需求，但又足够小以保护主机免受恶意客户机锁定所有内存的影响。
+
+- soft_limit
+
+  可选的 soft_limit 元素是内存争用时强制执行的内存限制。此值的单位是 kibibytes（即 1024 字节的块）
+
+- swap_hard_limit
+
+  可选的 swap_hard_limit 元素是客户机可以使用的最大内存加交换空间。此值的单位是 kibibytes（即 1024 字节的块）。这必须大于提供的 hard_limit 值
+
+- min_guarantee
+
+  可选的 min_guarantee 元素是客户机的保证最小内存分配。此值的单位是 kibibytes（即 1024 字节的块）。此元素仅由 VMware ESX 和 OpenVZ 驱动程序支持。
+
+## 10 [NUMA 节点调优](https://www.libvirt.org/formatdomain.html#id16)
+
+```
+<domain>
+  ...
+  <numatune>
+    <memory mode="strict" nodeset="1-4,^3"/>
+    <memnode cellid="0" mode="strict" nodeset="1"/>
+    <memnode cellid="2" mode="preferred" nodeset="2"/>
+  </numatune>
+  ...
+</domain>
+```
+
+- numatune
+
+  可选的 numatune 元素提供了如何通过控制域进程的 NUMA 策略来调优 NUMA 主机性能的详细信息。注意，仅由 QEMU 驱动程序支持。自 0.9.3 起
+
+- memory
+
+  可选的 memory 元素指定如何在 NUMA 主机上为域进程分配内存。它包含几个可选属性。属性 mode 可以是 'interleave'、'strict'、'preferred' 或 'restrictive'，默认为 'strict'。值 'restrictive' 指定使用系统默认策略，仅使用 cgroups 来限制内存节点，并且需要在 memnode 元素中设置 mode 为 'restrictive'（见下面的怪癖）。这仅用于能够使用 virsh numatune 或 virDomainSetNumaParameters 请求移动运行中域的此类内存，并且不保证会发生。属性 nodeset 指定 NUMA 节点，使用与元素 vcpu 的属性 cpuset 相同的语法。属性 placement（自 0.9.12 起）可用于指示域进程的内存放置模式，其值可以是 "static" 或 "auto"，默认为 vcpu 的放置，或者如果指定了 nodeset 则为 "static"。"auto" 表示域进程将仅从查询 numad 返回的建议节点集分配内存，如果指定了属性 nodeset，则将忽略其值。如果 vcpu 的放置是 'auto'，并且未指定 numatune，则会隐式添加一个默认的 numatune，其中放置为 'auto' 且 mode 为 'strict'。自 0.9.3 起 有关此元素更新的更多信息，请参阅 [virDomainSetNumaParameters](https://www.libvirt.org/html/libvirt-libvirt-domain.html#virDomainSetNumaParameters)。
+
+- memnode
+
+  可选的 memnode 元素可以为每个客户机 NUMA 节点指定内存分配策略。对于没有对应 memnode 元素的节点，将使用元素 memory 中的默认值。属性 cellid 寻址应用设置的客户机 NUMA 节点。属性 mode 和 nodeset 与 memory 元素中的含义和语法相同。此设置与自动放置不兼容。请注意，对于 memnode，这只会指导 vCPU 线程的内存访问或类似机制，并且是非常特定于 hypervisor 的。这不能保证节点内存分配的放置。对于正确的限制，应使用其他方法（例如，不同的模式，预分配的大页）。QEMU 自 1.2.7 起
+
+## 11 [块 I/O 调优](https://www.libvirt.org/formatdomain.html#id17)
+
+```
+<domain>
+  ...
+  <blkiotune>
+    <weight>800</weight>
+    <device>
+      <path>/dev/sda</path>
+      <weight>1000</weight>
+    </device>
+    <device>
+      <path>/dev/sdb</path>
+      <weight>500</weight>
+      <read_bytes_sec>10000</read_bytes_sec>
+      <write_bytes_sec>10000</write_bytes_sec>
+    </device>
+  </blkiotune>
+  ...
+</domain>
+```
+
+- blkiotune
+
+  可选的 blkiotune 元素提供有关域的块 I/O 可调参数的详细信息。如果省略，默认为 OS 提供的默认值。
+
+- weight
+
+  可选的 weight 元素指定域的相对权重。当多个域竞争相同的磁盘 I/O 时，这个值决定了域将获得的 I/O 时间的比例。有效值范围从 100 到 1000。自 0.10.2 起
+
+- device
+
+  可选的 device 元素指定特定设备的块 I/O 可调参数。
+
+- path
+
+  必需的 path 元素指定设备的路径。
+
+- weight
+
+  可选的 weight 元素指定设备的相对权重。当多个域竞争相同的磁盘 I/O 时，这个值决定了域将获得的 I/O 时间的比例。有效值范围从 100 到 1000。
+
+- read_bytes_sec
+
+  可选的 read_bytes_sec 元素指定设备的最大读取速率（以字节/秒为单位）。
+
+- write_bytes_sec
+
+  可选的 write_bytes_sec 元素指定设备的最大写入速率（以字节/秒为单位）。
+
+- read_iops_sec
+
+  可选的 read_iops_sec 元素指定设备的最大读取 I/O 操作数/秒。
+
+- write_iops_sec
+
+  可选的 write_iops_sec 元素指定设备的最大写入 I/O 操作数/秒。
+
+- read_bytes_sec_max
+
+  可选的 read_bytes_sec_max 元素指定设备的突发最大读取速率（以字节/秒为单位）。
+
+- write_bytes_sec_max
+
+  可选的 write_bytes_sec_max 元素指定设备的突发最大写入速率（以字节/秒为单位）。
+
+- read_iops_sec_max
+
+  可选的 read_iops_sec_max 元素指定设备的突发最大读取 I/O 操作数/秒。
+
+- write_iops_sec_max
+
+  可选的 write_iops_sec_max 元素指定设备的突发最大写入 I/O 操作数/秒。
+
+- read_bytes_sec_cds
+
+  可选的 read_bytes_sec_cds 元素指定设备的突发读取持续时间（以秒为单位）。
+
+- write_bytes_sec_cds
+
+  可选的 write_bytes_sec_cds 元素指定设备的突发写入持续时间（以秒为单位）。
+
+- read_iops_sec_cds
+
+  可选的 read_iops_sec_cds 元素指定设备的突发读取 I/O 操作持续时间（以秒为单位）。
+
+- write_iops_sec_cds
+
+  可选的 write_iops_sec_cds 元素指定设备的突发写入 I/O 操作持续时间（以秒为单位）。
+
+## 12 [资源分区](https://www.libvirt.org/formatdomain.html#id18)
+
+Hypervisor 可能允许将虚拟机放置到资源分区中，可能会嵌套这些分区。resource 元素将与资源分区相关的配置分组在一起。它目前支持一个子元素 partition，其内容定义了放置域的资源分区的绝对路径。如果没有列出分区，则域将被放置在默认分区中。应用程序/管理员有责任确保在启动客户机之前分区存在。只有（特定于 hypervisor 的）默认分区可以假定默认存在。
 
 ```
 ...
-<devices>
-  <interface type='network'>
-    <mac address='00:11:22:33:44:55'/>
-    <source network='default'/>
-    <target dev='vnet0'/>
-    <model type='virtio'/>
-    <address type='pci' domain='0x0000' bus='0x00' slot='0x03' function='0x0'/>
-  </interface>
-</devices>
+<resource>
+  <partition>/virtualmachines/production</partition>
+</resource>
 ...
 ```
+
+资源分区目前由 QEMU 和 LXC 驱动程序支持，它们将分区路径映射到所有已挂载控制器中的 cgroups 目录。自 1.0.5 起
+
+## 13 [Fibre Channel VMID](https://www.libvirt.org/formatdomain.html#id19)
+
+FC SAN 可以根据 VMID 提供各种 QoS 级别和访问控制。它还可以在每个 VM 级别收集遥测数据，这些数据可用于增强 VM 的 IO 性能。这可以通过使用 fibrechannel 元素的 appid 属性来配置。该属性包含单个字符串（最大 128 字节），内核使用它来创建 VMID。
+
+```
+...
+<resource>
+  <fibrechannel appid='userProvidedID'/>
+</resource>
+...
+```
+
+使用此功能需要支持 Fibre Channel 的硬件、编译时启用了 CONFIG_BLK_CGROUP_FC_APPID 选项的内核以及加载的 nvme_fc 内核模块。自 7.7.0 起
+
+## 14 [CPU 模型和拓扑](https://www.libvirt.org/formatdomain.html#id20)
+
+可以使用以下元素集合指定 CPU 模型、其功能和拓扑的要求。自 0.7.5 起
+
+```
+...
+<cpu match='exact'>
+  <model fallback='allow'>core2duo</model>
+  <vendor>Intel</vendor>
+  <topology sockets='1' dies='1' clusters='1' cores='2' threads='1'/>
+  <cache level='3' mode='emulate'/>
+  <maxphysaddr mode='emulate' bits='42'/>
+  <feature policy='disable' name='lahf_lm'/>
+</cpu>
+...
+<cpu mode='host-model'>
+  <model fallback='forbid'/>
+  <topology sockets='1' dies='1' clusters='1' cores='2' threads='1'/>
+</cpu>
+...
+<cpu mode='host-passthrough' migratable='off'>
+  <cache mode='passthrough'/>
+  <maxphysaddr mode='passthrough' limit='39'/>
+  <feature policy='disable' name='lahf_lm'/>
+...
+<cpu mode='maximum' migratable='off'>
+  <cache mode='passthrough'/>
+  <feature policy='disable' name='lahf_lm'/>
+...
+```
+
+如果不需要对 CPU 模型及其功能施加限制，可以使用更简单的 cpu 元素。自 0.7.6 起
+
+```
+...
+<cpu>
+  <topology sockets='1' dies='1' clusters='1' cores='2' threads='1'/>
+</cpu>
+...
+```
+
+- cpu
+
+  cpu 元素是描述客户机 CPU 要求的主要容器。其 match 属性指定提供给客户机的虚拟 CPU 与这些要求的匹配程度。自 0.7.6 起，如果 topology 是 cpu 中的唯一元素，则可以省略 match 属性。match 属性的可能值为：minimum 指定的 CPU 模型和功能描述了最小请求的 CPU。如果使用当前主机上的请求 hypervisor 可能，将向客户机提供更好的 CPU。这是一种受限的 host-model 模式；如果提供的虚拟 CPU 不满足要求，将不会创建域。exact 提供给客户机的虚拟 CPU 应与规范完全匹配。如果不支持这样的 CPU，libvirt 将拒绝启动域。strict 除非主机 CPU 与规范完全匹配，否则不会创建域。这在实践中不是很有用，应该只在有真正原因时使用。 自 0.8.5 起，match 属性可以省略，默认值为 exact。有时，hypervisor 无法创建与 libvirt 传递的规范完全匹配的虚拟 CPU。自 3.2.0 起，可以使用可选的 check 属性来请求特定的方式来检查虚拟 CPU 是否与规范匹配。启动域时通常可以安全地省略此属性，并坚持使用默认值。一旦域启动，libvirt 将自动将 check 属性更改为最佳支持的值，以确保虚拟 CPU 在域迁移到另一台主机时不会改变。可以使用以下值：none Libvirt 不进行检查，由 hypervisor 负责拒绝启动域，如果它无法提供请求的 CPU。对于 QEMU，这意味着根本不进行检查，因为 QEMU 的默认行为是发出警告，但仍然启动域。partial Libvirt 将在启动域之前检查客户机 CPU 规范，但其余部分由 hypervisor 处理。full Libvirt 将在启动域之前完全检查客户机 CPU 规范。
+
+- model
+
+  model 元素的内容指定客户机请求的 CPU 模型。可用的 CPU 模型及其定义可以在安装在 libvirt 数据目录中的 cpu_map 目录中找到。如果 hypervisor 无法使用确切的 CPU 模型，libvirt 会自动回退到 hypervisor 支持的最接近的模型，同时保持 CPU 功能列表。自 0.9.10 起，可以使用可选的 fallback 属性来禁止此行为，在这种情况下，尝试启动请求不支持的 CPU 模型的域将失败。fallback 属性支持的值为：allow（默认值）和 forbid。可选的 vendor_id 属性（自 0.10.0 起）可用于设置客户机看到的供应商 ID。它必须恰好 12 个字符长。如果未设置，则使用主机的供应商 ID。典型的可能值是 "AuthenticAMD" 和 "GenuineIntel"。
+
+- vendor
+
+  自 0.8.3 起，vendor 元素的内容指定客户机请求的 CPU 供应商。如果缺少此元素，客户机可以在任何 CPU 上运行，只要它匹配给定的功能，无论其供应商如何。支持的供应商列表可以在 cpu_map/\*\_vendors.xml 中找到。
+
+- topology
+
+  topology 元素指定提供给客户机的虚拟 CPU 的请求拓扑。其属性 sockets、dies（自 6.1.0 起）、clusters（自 10.1.0 起）、cores 和 threads 接受非零正整数值。它们分别指 CPU 插槽总数、每个插槽的 die 数、每个 die 的簇数、每个簇的核心数以及每个核心的线程数。dies 和 clusters 属性是可选的，如果省略，默认为 1，而其他属性都是必需的。Hypervisor 可能要求 cpus 元素指定的最大 vCPU 数量等于拓扑产生的 vCPU 数量。此外，并非所有架构和机器类型都支持为所有属性指定除 1 之外的值。
+
+- feature
+
+  cpu 元素可以包含零个或多个 feature 元素，用于微调所选 CPU 模型提供的功能。已知功能名称的列表可以在与 CPU 模型相同的文件中找到。每个 feature 元素的含义取决于其 policy 属性，该属性必须设置为以下值之一：force 虚拟 CPU 将声称支持该功能，无论主机 CPU 是否支持。require 除非主机 CPU 支持该功能或 hypervisor 能够模拟它，否则客户机创建将失败。optional 虚拟 CPU 将支持该功能，当且仅当主机 CPU 支持它。disable 虚拟 CPU 将不支持该功能。forbid 如果主机 CPU 支持该功能，则客户机创建将失败。 自 0.8.5 起，policy 属性可以省略，默认值为 require。各个 CPU 功能名称在 name 属性中指定。例如，要使用 Intel IvyBridge CPU 模型明确指定 'pcid' 功能：`... <cpu match='exact'>  <model fallback='forbid'>IvyBridge</model>  <vendor>Intel</vendor>  <feature policy='require' name='pcid'/> </cpu> ...`
+
+- deprecated_features
+
+  自 11.0.0 起，S390 客户机可以利用 deprecated_features 属性来指定切换被 hypervisor 标记为已弃用的 CPU 模型功能。当此属性设置为 off 时，活动的客户机 XML 将反映具有 disable 策略的相应功能。当此属性设置为 on 时，相应的功能将被启用。
+
+- cache
+
+  自 3.3.0 起，cache 元素描述虚拟 CPU 缓存。如果缺少该元素，hypervisor 将使用合理的默认值。level 此可选属性指定元素描述的缓存级别。缺少属性意味着元素同时描述所有 CPU 缓存级别。禁止混合使用设置了 level 属性的 cache 元素和未设置该属性的 cache 元素。mode 支持以下值：emulate hypervisor 将提供假的 CPU 缓存数据。passthrough 主机 CPU 报告的真实 CPU 缓存数据将传递给虚拟 CPU。disable 虚拟 CPU 将报告没有指定级别的 CPU 缓存（如果缺少 level 属性，则完全没有缓存）。
+
+- maxphysaddr
+
+  自 8.7.0 起，maxphysaddr 元素描述虚拟 CPU 地址大小（以位为单位）。如果缺少该元素，则使用 hypervisor 默认值。mode 此必需属性指定地址大小的呈现方式。支持以下模式：passthrough 主机 CPU 报告的物理地址位数将传递给虚拟 CPU emulate hypervisor 将通过 bits 属性为物理地址位数定义特定值（自 9.2.0 起可选）位数不能超过 hypervisor 支持的物理地址位数。 bits 如果 mode 属性设置为 emulate，则 bits 属性是必需的，指定虚拟 CPU 地址大小（以位为单位）。limit limit 属性可用于限制 passthrough 模式的地址位数的最大值，即如果主机 CPU 报告的位数超过该值，则使用 limit。自 9.3.0 起
+
+可以使用 numa 元素指定客户机 NUMA 拓扑。自 0.9.8 起
+
+```
+...
+<cpu>
+  ...
+  <numa>
+    <cell id='0' cpus='0-3' memory='512000' unit='KiB' discard='yes'/>
+    <cell id='1' cpus='4-7' memory='512000' unit='KiB' memAccess='shared'/>
+  </numa>
+  ...
+</cpu>
+...
+```
+
+每个 cell 元素指定一个 NUMA cell 或 NUMA 节点。cpus 指定属于该节点的 CPU 或 CPU 范围。自 6.5.0 起 对于 qemu 驱动程序，如果模拟器二进制文件支持每个 cell 中的不连续 cpu 范围，则在每个 cell 中声明的所有 CPU 的总和将与 vcpu 元素中声明的最大虚拟 CPU 数量匹配。这是通过将任何剩余的 CPU 填充到第一个 NUMA cell 中来完成的。鼓励用户提供完整的 NUMA 拓扑，其中 NUMA CPU 的总和与 vcpus 中声明的最大虚拟 CPU 数量匹配，以确保域在 qemu 和 libvirt 版本之间保持一致。memory 指定节点内存（以 kibibytes 为单位，即 1024 字节块）。自 6.6.0 起，cpus 属性是可选的，如果省略，则创建无 CPU 的 NUMA 节点。自 1.2.11 起，可以使用附加的 unit 属性（请参阅 [内存分配](https://www.libvirt.org/formatdomain.html#memory-allocation)）来定义指定内存的单位。自 1.2.7 起，所有 cell 都应该有 id 属性，以防在代码中需要引用某个 cell，否则 cell 将按从 0 开始的递增顺序分配 id。不建议混合使用有和没有 id 属性的 cell，因为这可能导致意外行为。自 1.2.9 起，可选属性 memAccess 可以控制内存是映射为 "shared" 还是 "private"。这仅对大页支持的内存和 nvdimm 模块有效。每个 cell 元素可以有一个可选的 discard 属性，该属性根据 [内存后备](https://www.libvirt.org/formatdomain.html#memory-backing) 中描述的内容微调给定 numa 节点的 discard 功能。接受的值为 yes 和 no。自 4.4.0 起
+
+此客户机 NUMA 规范目前仅适用于 QEMU/KVM 和 Xen。
+
+NUMA 硬件架构支持 NUMA cell 之间距离的概念。自 3.10.0 起，可以使用 NUMA cell 描述中的 distances 元素定义 NUMA cell 之间的距离。sibling 子元素用于指定兄弟 NUMA cell 之间的距离值。有关更多详细信息，请参阅 ACPI（高级配置和电源接口）规范中解释系统 SLIT（系统 locality 信息表）的章节。
+
+```
+...
+<cpu>
+  ...
+  <numa>
+    <cell id='0' cpus='0,4-7' memory='512000' unit='KiB'>
+      <distances>
+        <sibling id='0' value='10'/>
+        <sibling id='1' value='21'/>
+        <sibling id='2' value='31'/>
+        <sibling id='3' value='41'/>
+      </distances>
+    </cell>
+    <cell id='1' cpus='1,8-10,12-15' memory='512000' unit='KiB' memAccess='shared'>
+      <distances>
+        <sibling id='0' value='21'/>
+        <sibling id='1' value='10'/>
+        <sibling id='2' value='21'/>
+        <sibling id='3' value='31'/>
+      </distances>
+    </cell>
+    <cell id='2' cpus='2,11' memory='512000' unit='KiB' memAccess='shared'>
+      <distances>
+        <sibling id='0' value='31'/>
+        <sibling id='1' value='21'/>
+        <sibling id='2' value='10'/>
+        <sibling id='3' value='21'/>
+      </distances>
+    </cell>
+    <cell id='3' cpus='3' memory='512000' unit='KiB'>
+      <distances>
+        <sibling id='0' value='41'/>
+        <sibling id='1' value='31'/>
+        <sibling id='2' value='21'/>
+        <sibling id='3' value='10'/>
+      </distances>
+    </cell>
+  </numa>
+  ...
+</cpu>
+...
+```
+
+描述 NUMA cell 之间的距离目前仅由 Xen 和 QEMU 支持。如果没有给出描述不同 cell 之间 SLIT 数据的距离，它将默认为本地距离为 10、远程距离为 20 的方案。
+
+### 14.1 [ACPI 异构内存属性表](https://www.libvirt.org/formatdomain.html#id21)
+
+```
+...
+<cpu>
+  ...
+  <numa>
+    <cell id='0' cpus='0-3' memory='2097152' unit='KiB' discard='yes'>
+      <cache level='1' associativity='direct' policy='writeback'>
+        <size value='10' unit='KiB'/>
+        <line value='8' unit='B'/>
+      </cache>
+    </cell>
+    <cell id='1' cpus='4-7' memory='512000' unit='KiB' memAccess='shared'/>
+    <interconnects>
+      <latency initiator='0' target='0' type='access' value='5'/>
+      <latency initiator='0' target='0' cache='1' type='access' value='10'/>
+      <bandwidth initiator='0' target='0' type='access' value='204800' unit='KiB'/>
+    </interconnects>
+  </numa>
+  ...
+</cpu>
+...
+```
+
+自 6.6.0 起，cell 元素可以有一个 cache 子元素，用于描述内存邻近域的内存侧缓存。cache 元素有一个 level 属性，描述缓存级别，因此该元素可以重复多次以描述缓存的不同级别。
+
+cache 元素具有以下必需属性：
+
+- level
+
+  此描述所指的缓存级别。
+
+- associativity
+
+  描述缓存关联度（接受的值为 none、direct 和 full）。
+
+- policy
+
+  描述缓存写入关联度（接受的值为 none、writeback 和 writethrough）。
+
+cache 元素有两个必需的子元素：size 和 line，分别描述缓存大小和缓存行大小。这两个元素都接受两个属性：value 和 unit，用于设置相应缓存属性的值。
+
+NUMA 描述有一个可选的 interconnects 元素，用于描述发起方邻近域（处理器或 I/O）和目标邻近域（内存）之间的标准化内存读/写延迟、读/写带宽。
+
+interconnects 元素可以有零个或多个 latency 子元素来描述两个内存节点之间的延迟，以及零个或多个 bandwidth 子元素来描述两个内存节点之间的带宽。这两者都具有以下必需属性：
+
+- initiator
+
+  引用源 NUMA 节点
+
+- target
+
+  引用目标 NUMA 节点
 
 - type
 
-  网络接口类型，可以是 'network'、'bridge'、'direct'、'user'、'vhostuser' 等。
+  访问类型。接受的值：access、read、write
 
-- mac
+- value
 
-  网络接口的 MAC 地址。
+  实际值。对于延迟，这是以纳秒为单位的延迟，对于带宽，此值是以 kibibytes/秒为单位。使用附加的 unit 属性更改单位。
 
-- source
+要描述从一个 NUMA 节点到另一个 NUMA 节点缓存的延迟，latency 元素具有可选的 cache 属性，该属性与 target 属性结合使用，创建对远程 NUMA 节点缓存级别的完整引用。例如，target='0' cache='1' 引用 NUMA 节点 0 的第一级缓存。
 
-  网络接口的源，如网络名称或桥
+## 15 [事件配置](https://www.libvirt.org/formatdomain.html#id22)
+
+有时需要覆盖对各种事件采取的默认操作。并非所有 hypervisor 都支持所有事件和操作。这些操作可能是调用 libvirt API [virDomainReboot](https://www.libvirt.org/html/libvirt-libvirt-domain.html#virDomainReboot)、[virDomainShutdown](https://www.libvirt.org/html/libvirt-libvirt-domain.html#virDomainShutdown) 或 [virDomainShutdownFlags](https://www.libvirt.org/html/libvirt-libvirt-domain.html#virDomainShutdownFlags) 的结果。使用 virsh reboot 或 virsh shutdown 也会触发事件。
+
+```
+...
+<on_poweroff>destroy</on_poweroff>
+<on_reboot>restart</on_reboot>
+<on_crash>restart</on_crash>
+<on_lockfailure>poweroff</on_lockfailure>
+...
+```
+
+以下元素集合允许指定当客户机 OS 触发生命周期操作时要采取的操作。一个常见用例是在进行初始 OS 安装时将重启视为关机。这允许在首次安装后启动时重新配置 VM。
+
+- on_poweroff
+
+  此元素的内容指定当客户机请求关机时要采取的操作。
+
+- on_reboot
+
+  此元素的内容指定当客户机请求重启时要采取的操作。
+
+- on_crash
+
+  此元素的内容指定当客户机崩溃时要采取的操作。
+
+每个这些状态都允许相同的四种可能操作。
+
+- destroy
+
+  域将被完全终止，所有资源将被释放。
+
+- restart
+
+  域将被终止，然后使用相同的配置重新启动。
+
+- preserve
+
+  域将被终止，其资源将被保留以供分析。
+
+- rename-restart
+
+  域将被终止，然后使用新名称重新启动。（仅由 libxl hypervisor 驱动程序支持。）
+
+QEMU/KVM/HVF 支持 on_poweroff 和 on_reboot 事件处理 destroy 和 restart 操作，但禁止将 on_poweroff 设置为 restart 且 on_reboot 设置为 destroy 的组合。
+
+自 0.8.4 起，on_crash 事件支持这些额外操作。
+
+- coredump-destroy
+
+  崩溃域的核心将被转储，然后域将被完全终止，所有资源将被释放
+
+- coredump-restart
+
+  崩溃域的核心将被转储，然后域将使用相同的配置重新启动
+
+自 3.9.0 起，可以通过 [virDomainSetLifecycleAction](https://www.libvirt.org/html/libvirt-libvirt-domain.html#virDomainSetLifecycleAction) API 配置生命周期事件。
+
+on_lockfailure 元素（自 1.0.0 起）可用于配置当锁管理器失去资源锁时应采取的操作。libvirt 识别以下操作，尽管并非所有操作都需要由各个锁管理器支持。当未指定操作时，每个锁管理器将采取其默认操作。
+
+- poweroff
+
+  域将被强制关机。
+
+- restart
+
+  域将被关机并重新启动以重新获取其锁。
+
+- pause
+
+  域将被暂停，以便在解决锁问题时可以手动恢复。
+
+- ignore
+
+  保持域运行，就像什么都没发生一样。
+
+## 16 [电源管理](https://www.libvirt.org/formatdomain.html#id23)
+
+自 0.10.2 起，可以强制启用或禁用对客户机 OS 的 BIOS 广告。（注意：仅 qemu 驱动程序支持）
+
+```
+...
+<pm>
+  <suspend-to-disk enabled='no'/>
+  <suspend-to-mem enabled='yes'/>
+</pm>
+...
+```
+
+- pm
+
+  这些元素启用（'yes'）或禁用（'no'）BIOS 对 S3（挂起到内存）和 S4（挂起到磁盘）ACPI 睡眠状态的支持。如果未指定任何内容，则 hypervisor 将保持其默认值。注意：此设置不能阻止客户机 OS 执行挂起，因为客户机 OS 本身可以选择规避睡眠状态的不可用性（例如，通过完全关闭来实现 S4）。
+
+## 17 [磁盘 Throttle 组管理](https://www.libvirt.org/formatdomain.html#id24)
+
+自 11.2.0 起，可以创建多个命名的 throttle 组，然后在 throttlefilters（disk 元素的子元素）中引用它们，以在 QEMU 中为特定磁盘形成过滤器链。限制（throttlegroups）在域内共享，因此同一组可以被不同的过滤器引用。
+
+```
+<domain>
+  ...
+  <throttlegroups>
+    <throttlegroup>
+      <group_name>limit0</group_name>
+      <total_bytes_sec>10000000</total_bytes_sec>
+      <read_iops_sec>400000</read_iops_sec>
+      <write_iops_sec>100000</write_iops_sec>
+    </throttlegroup>
+  </throttlegroups>
+  ...
+</domain>
+```
+
+- throttlegroup
+
+  它具有与 iotune 相同的子元素（请参阅 [硬盘、软盘、光盘](https://www.libvirt.org/formatdomain.html#hard-drives-floppy-disks-cdroms)），不同之处在于 group_name> 是必需的。
+
+## 18 [Hypervisor 特性](https://www.libvirt.org/formatdomain.html#id25)
+
+Hypervisor 可能允许切换某些 CPU / 机器特性的开/关。
+
+```xml
+...
+<features>
+  <pae/>
+  <acpi/>
+  <apic/>
+  <hap/>
+  <privnet/>
+  <hyperv mode='custom'>
+    <relaxed state='on'/>
+    <vapic state='on'/>
+    <spinlocks state='on' retries='4096'/>
+    <vpindex state='on'/>
+    <runtime state='on'/>
+    <synic state='on'/>
+    <stimer state='on'>
+      <direct state='on'/>
+    </stimer>
+    <reset state='on'/>
+    <vendor_id state='on' value='KVM Hv'/>
+    <frequencies state='on'/>
+    <reenlightenment state='on'/>
+    <tlbflush state='on'>
+      <direct state='on'/>
+      <extended state='on'/>
+    </tlbflush>
+    <ipi state='on'/>
+    <evmcs state='on'/>
+    <emsr_bitmap state='on'/>
+    <xmm_input state='on'/>
+  </hyperv>
+  <kvm>
+    <hidden state='on'/>
+    <hint-dedicated state='on'/>
+    <poll-control state='on'/>
+    <pv-ipi state='off'/>
+    <dirty-ring state='on' size='4096'/>
+  </kvm>
+  <xen>
+    <e820_host state='on'/>
+    <passthrough state='on' mode='share_pt'/>
+  </xen>
+  <pvspinlock state='on'/>
+  <gic version='2'/>
+  <ioapic driver='qemu'/>
+  <hpt resizing='required'>
+    <maxpagesize unit='MiB'>16</maxpagesize>
+  </hpt>
+  <vmcoreinfo state='on'/>
+  <smm state='on'>
+    <tseg unit='MiB'>48</tseg>
+  </smm>
+  <htm state='on'/>
+  <ccf-assist state='on'/>
+  <msrs unknown='ignore'/>
+  <cfpc value='workaround'/>
+  <sbbc value='workaround'/>
+  <ibs value='fixed-na'/>
+  <tcg>
+    <tb-cache unit='MiB'>128</tb-cache>
+  </tcg>
+  <async-teardown enabled='yes'/>
+  <ras state='on'/>
+  <ps2 state='on'/>
+  <aia value='aplic-imsic'/>
+</features>
+...
+```
+
+- features
+
+  features 元素包含一组可选元素，用于启用或禁用特定的 hypervisor 特性。这些特性因 hypervisor 而异，并非所有 hypervisor 都支持所有特性。
+
+- pae
+
+  启用 Physical Address Extension (PAE)，允许 32 位 x86 处理器访问超过 4GB 的物理内存。
+
+- acpi
+
+  启用 Advanced Configuration and Power Interface (ACPI)，提供操作系统与硬件之间的电源管理和配置接口。
+
+- apic
+
+  启用 Advanced Programmable Interrupt Controller (APIC)，提供更高级的中断管理。
+
+- hap
+
+  启用 Hardware Assisted Paging (HAP)，利用硬件虚拟化支持进行内存管理。
+
+- privnet
+
+  启用私有网络功能。
+
+- hyperv
+
+  配置 Hyper-V 特定的特性。mode 属性可以是 'custom' 或 'passthrough'。
+
+- kvm
+
+  配置 KVM 特定的特性。
+
+- xen
+
+  配置 Xen 特定的特性。
+
+- pvspinlock
+
+  启用 paravirtualized spinlock 支持，提高虚拟机内自旋锁的性能。
+
+- gic
+
+  配置 Generic Interrupt Controller (GIC) 版本。
+
+- ioapic
+
+  配置 I/O APIC 驱动程序。
+
+- hpt
+
+  配置 Hash Page Table (HPT) 相关设置。
+
+- vmcoreinfo
+
+  启用 vmcoreinfo 支持，提供虚拟机崩溃时的核心转储信息。
+
+- smm
+
+  启用 System Management Mode (SMM) 支持。
+
+- htm
+
+  启用 Hardware Transactional Memory (HTM) 支持。
+
+- ccf-assist
+
+  启用 CCF (Common Clock Framework) 辅助功能。
+
+- msrs
+
+  配置如何处理未知的 Model Specific Registers (MSRs)。
+
+- cfpc
+
+  配置 Control Flow Protection Control (CFPC) 设置。
+
+- sbbc
+
+  配置 Speculative Barrier Control (SBBC) 设置。
+
+- ibs
+
+  配置 Instruction Based Sampling (IBS) 设置。
+
+- tcg
+
+  配置 Tiny Code Generator (TCG) 相关设置。
+
+- async-teardown
