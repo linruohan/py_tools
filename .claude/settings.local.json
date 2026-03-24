@@ -23,7 +23,9 @@
       "Bash(powershell -Command \"Get-ChildItem -Recurse -Filter '__pycache__' -Directory | Remove-Item -Recurse -Force\")",
       "Bash(sed -i 's/# ========== 第一行：时钟偏移配置 ==========/# ========== 第一行 - 时钟偏移配置 ==========/' panels/vm_panel/tabs/time_keeping_tab.py)",
       "Bash(sed -i 's/# ========== 第二行：定时器标题 ==========/# ========== 第二行 - 定时器标题 ==========/' panels/vm_panel/tabs/time_keeping_tab.py)",
-      "Bash(cd:*)"
+      "Bash(cd:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)"
     ],
     "deny": [
       "Bash(rm -rf /)",
