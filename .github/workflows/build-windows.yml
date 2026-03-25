@@ -43,3 +43,4 @@ jobs:
         with:
           files: dist/PyTools.zip
           generate_release_notes: true
+          prune_assets: true
