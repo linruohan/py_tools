@@ -1,5 +1,6 @@
 """Initialize the App class."""
 
+from collections.abc import Callable
 from pathlib import Path
 
 import customtkinter as ctk
@@ -9,6 +10,9 @@ from PIL import Image
 from panels.home_panel import HomePanel
 from panels.json_panel import JsonPanel
 from panels.vm_panel import VmPanel
+from utils.logger import setup_logger
+
+logger = setup_logger('py_tools')
 
 
 class App(ctk.CTk):
@@ -103,7 +107,7 @@ class App(ctk.CTk):
         name: str,
         dark_image_name: str,
         light_image_name: str,
-        command: callable,
+        command: Callable[[], None],
         size: tuple[int, int] = (20, 20),
         grid: tuple[int, int] = (0, 0),
     ) -> ctk.CTkButton:
@@ -147,5 +151,12 @@ class App(ctk.CTk):
 
 
 if __name__ == '__main__':
-    app = App()
-    app.mainloop()
+    try:
+        logger.info('应用启动')
+        app = App()
+        app.mainloop()
+    except Exception:
+        logger.exception('应用异常退出')
+        raise
+    finally:
+        logger.info('应用关闭')

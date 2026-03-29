@@ -149,7 +149,19 @@ class VideoConfigDialog:
         )
         self.model_menu = ctk.CTkOptionMenu(
             info_frame,
-            values=['vga', 'cirrus', 'vmvga', 'xen', 'vbox', 'qxl', 'virtio', 'gop', 'bochs', 'ramfb', 'none'],
+            values=[
+                'vga',
+                'cirrus',
+                'vmvga',
+                'xen',
+                'vbox',
+                'qxl',
+                'virtio',
+                'gop',
+                'bochs',
+                'ramfb',
+                'none',
+            ],
             width=120,
             font=CTK_FONT_SMALL,
         )
@@ -157,10 +169,12 @@ class VideoConfigDialog:
         self.model_menu.grid(row=1, column=1, padx=5, pady=5, sticky='w')
 
         # VRAM (KiB)
-        ctk.CTkLabel(info_frame, text='VRAM (KiB):', font=CTK_FONT_MAIN, width=100, anchor='w').grid(
-            row=1, column=2, padx=5, pady=5, sticky='w'
+        ctk.CTkLabel(
+            info_frame, text='VRAM (KiB):', font=CTK_FONT_MAIN, width=100, anchor='w'
+        ).grid(row=1, column=2, padx=5, pady=5, sticky='w')
+        self.vram_entry = ctk.CTkEntry(
+            info_frame, placeholder_text='16384', width=100, font=CTK_FONT_SMALL
         )
-        self.vram_entry = ctk.CTkEntry(info_frame, placeholder_text='16384', width=100, font=CTK_FONT_SMALL)
         self.vram_entry.insert(0, '16384')
         self.vram_entry.grid(row=1, column=3, padx=5, pady=5, sticky='w')
 
@@ -168,7 +182,9 @@ class VideoConfigDialog:
         ctk.CTkLabel(info_frame, text='Heads:', font=CTK_FONT_MAIN, width=80, anchor='w').grid(
             row=2, column=0, padx=5, pady=5, sticky='w'
         )
-        self.heads_entry = ctk.CTkEntry(info_frame, placeholder_text='1', width=60, font=CTK_FONT_SMALL)
+        self.heads_entry = ctk.CTkEntry(
+            info_frame, placeholder_text='1', width=60, font=CTK_FONT_SMALL
+        )
         self.heads_entry.insert(0, '1')
         self.heads_entry.grid(row=2, column=1, padx=5, pady=5, sticky='w')
 
@@ -196,23 +212,29 @@ class VideoConfigDialog:
         ctk.CTkLabel(qxl_frame, text='RAM (KiB):', font=CTK_FONT_MAIN, width=100, anchor='w').grid(
             row=1, column=0, padx=5, pady=5, sticky='w'
         )
-        self.ram_entry = ctk.CTkEntry(qxl_frame, placeholder_text='65536', width=100, font=CTK_FONT_SMALL)
+        self.ram_entry = ctk.CTkEntry(
+            qxl_frame, placeholder_text='65536', width=100, font=CTK_FONT_SMALL
+        )
         self.ram_entry.insert(0, '65536')
         self.ram_entry.grid(row=1, column=1, padx=5, pady=5, sticky='w')
 
         # VRAM64 (KiB)
-        ctk.CTkLabel(qxl_frame, text='VRAM64 (KiB):', font=CTK_FONT_MAIN, width=100, anchor='w').grid(
-            row=1, column=2, padx=5, pady=5, sticky='w'
+        ctk.CTkLabel(
+            qxl_frame, text='VRAM64 (KiB):', font=CTK_FONT_MAIN, width=100, anchor='w'
+        ).grid(row=1, column=2, padx=5, pady=5, sticky='w')
+        self.vram64_entry = ctk.CTkEntry(
+            qxl_frame, placeholder_text='65536', width=100, font=CTK_FONT_SMALL
         )
-        self.vram64_entry = ctk.CTkEntry(qxl_frame, placeholder_text='65536', width=100, font=CTK_FONT_SMALL)
         self.vram64_entry.insert(0, '65536')
         self.vram64_entry.grid(row=1, column=3, padx=5, pady=5, sticky='w')
 
         # VGAMEM (KiB)
-        ctk.CTkLabel(qxl_frame, text='VGAMEM (KiB):', font=CTK_FONT_MAIN, width=100, anchor='w').grid(
-            row=2, column=0, padx=5, pady=5, sticky='w'
+        ctk.CTkLabel(
+            qxl_frame, text='VGAMEM (KiB):', font=CTK_FONT_MAIN, width=100, anchor='w'
+        ).grid(row=2, column=0, padx=5, pady=5, sticky='w')
+        self.vgamem_entry = ctk.CTkEntry(
+            qxl_frame, placeholder_text='16384', width=100, font=CTK_FONT_SMALL
         )
-        self.vgamem_entry = ctk.CTkEntry(qxl_frame, placeholder_text='16384', width=100, font=CTK_FONT_SMALL)
         self.vgamem_entry.insert(0, '16384')
         self.vgamem_entry.grid(row=2, column=1, padx=5, pady=5, sticky='w')
 
@@ -226,18 +248,22 @@ class VideoConfigDialog:
         )
 
         # Resolution X
-        ctk.CTkLabel(resolution_frame, text='Width:', font=CTK_FONT_MAIN, width=80, anchor='w').grid(
-            row=1, column=0, padx=5, pady=5, sticky='w'
+        ctk.CTkLabel(
+            resolution_frame, text='Width:', font=CTK_FONT_MAIN, width=80, anchor='w'
+        ).grid(row=1, column=0, padx=5, pady=5, sticky='w')
+        self.res_x_entry = ctk.CTkEntry(
+            resolution_frame, placeholder_text='1024', width=80, font=CTK_FONT_SMALL
         )
-        self.res_x_entry = ctk.CTkEntry(resolution_frame, placeholder_text='1024', width=80, font=CTK_FONT_SMALL)
         self.res_x_entry.insert(0, '1024')
         self.res_x_entry.grid(row=1, column=1, padx=5, pady=5, sticky='w')
 
         # Resolution Y
-        ctk.CTkLabel(resolution_frame, text='Height:', font=CTK_FONT_MAIN, width=80, anchor='w').grid(
-            row=1, column=2, padx=5, pady=5, sticky='w'
+        ctk.CTkLabel(
+            resolution_frame, text='Height:', font=CTK_FONT_MAIN, width=80, anchor='w'
+        ).grid(row=1, column=2, padx=5, pady=5, sticky='w')
+        self.res_y_entry = ctk.CTkEntry(
+            resolution_frame, placeholder_text='768', width=80, font=CTK_FONT_SMALL
         )
-        self.res_y_entry = ctk.CTkEntry(resolution_frame, placeholder_text='768', width=80, font=CTK_FONT_SMALL)
         self.res_y_entry.insert(0, '768')
         self.res_y_entry.grid(row=1, column=3, padx=5, pady=5, sticky='w')
 
@@ -246,15 +272,17 @@ class VideoConfigDialog:
         virtio_frame.grid(row=3, column=0, sticky='ew', padx=20, pady=10)
         virtio_frame.grid_columnconfigure(1, weight=1)
 
-        ctk.CTkLabel(virtio_frame, text='VirtIO Options', font=CTK_FONT_SMALL, text_color='#4caf50').grid(
-            row=0, column=0, columnspan=4, padx=5, pady=5, sticky='w'
-        )
+        ctk.CTkLabel(
+            virtio_frame, text='VirtIO Options', font=CTK_FONT_SMALL, text_color='#4caf50'
+        ).grid(row=0, column=0, columnspan=4, padx=5, pady=5, sticky='w')
 
         # Blob
         ctk.CTkLabel(virtio_frame, text='Blob:', font=CTK_FONT_MAIN, width=100, anchor='w').grid(
             row=1, column=0, padx=5, pady=5, sticky='w'
         )
-        self.blob_check = ctk.CTkCheckBox(virtio_frame, text='Enable blob resources', font=CTK_FONT_SMALL)
+        self.blob_check = ctk.CTkCheckBox(
+            virtio_frame, text='Enable blob resources', font=CTK_FONT_SMALL
+        )
         if False:
             self.blob_check.select()
         else:

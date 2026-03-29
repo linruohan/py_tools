@@ -108,7 +108,7 @@ class BasicTab(BaseConfigTab):
         self.current_memory = self._create_label_option(
             mem_frame,
             '当前内存:',
-            ['None'] + MEMORY_OPTIONS,
+            ['None', *MEMORY_OPTIONS],
             'None',
             width=100,
             row=1,
@@ -118,7 +118,7 @@ class BasicTab(BaseConfigTab):
         self.max_memory = self._create_label_option(
             mem_frame,
             '最大内存:',
-            ['None'] + MEMORY_OPTIONS,
+            ['None', *MEMORY_OPTIONS],
             'None',
             width=100,
             row=1,

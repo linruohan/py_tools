@@ -4,7 +4,7 @@ import os
 import sys
 
 # 获取项目根目录
-project_root = os.path.dirname(os.path.abspath('__file__'))
+project_root = os.path.dirname(os.path.abspath(__file__))
 
 # 动态获取 customtkinter 路径
 import customtkinter

@@ -1,6 +1,5 @@
 """Fix CPUFeatureSubTab to support add/remove features."""
 
-
 with open('panels/vm_panel/tabs/cpu_model_topology_tab.py', encoding='utf-8') as f:
     content = f.read()
 

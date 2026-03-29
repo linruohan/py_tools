@@ -17,7 +17,7 @@ class MemoryAllocationTab(BaseConfigTab):
             right_color='#4caf50',
         )
 
-        memory_options_with_none = ['None'] + MEMORY_OPTIONS
+        memory_options_with_none = ['None', *MEMORY_OPTIONS]
 
         # 左侧面板 - 内存配置
         self.memory = self._create_label_option(left_frame, '内存:', MEMORY_OPTIONS, '2G', row=1)

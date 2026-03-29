@@ -900,7 +900,6 @@ class OSTab(StandardConfigTab):
 
     def _add_boot_device(self) -> None:
         """添加引导设备，紧跟在加减号后面横向排列."""
-        index = len(self.boot_devices) if hasattr(self, 'boot_devices') else 0
         if not hasattr(self, 'boot_devices'):
             self.boot_devices = []
 
@@ -928,11 +927,10 @@ class OSTab(StandardConfigTab):
     def _add_initarg(self) -> None:
         """添加 initarg."""
         index = len(self.initargs)
-        row = len(self.initargs)
         arg = ctk.CTkEntry(
             self.initargs_frame, placeholder_text=f'arg {index + 1}', font=('', 10), width=50
         )
-        arg.grid(row=row, column=0, padx=2, pady=1, sticky='ew')
+        arg.grid(row=index, column=0, padx=2, pady=1, sticky='ew')
         arg.bind('<KeyRelease>', lambda e: self._trigger_change())
         self.initargs.append(arg)
         self._trigger_change()
@@ -947,12 +945,11 @@ class OSTab(StandardConfigTab):
     def _add_initenv(self) -> None:
         """添加 initenv."""
         index = len(self.initenvs)
-        row = len(self.initenvs)
         name = ctk.CTkEntry(self.initenvs_frame, placeholder_text='name', font=('', 10), width=20)
-        name.grid(row=row, column=0, padx=2, pady=1, sticky='ew')
+        name.grid(row=index, column=0, padx=2, pady=1, sticky='ew')
         name.bind('<KeyRelease>', lambda e: self._trigger_change())
         value = ctk.CTkEntry(self.initenvs_frame, placeholder_text='value', font=('', 10), width=20)
-        value.grid(row=row, column=1, padx=2, pady=1, sticky='ew')
+        value.grid(row=index, column=1, padx=2, pady=1, sticky='ew')
         value.bind('<KeyRelease>', lambda e: self._trigger_change())
         self.initenvs.append((name, value))
         self._trigger_change()
@@ -967,7 +964,6 @@ class OSTab(StandardConfigTab):
 
     def _add_acpi_table(self) -> None:
         """添加 ACPI 表配置."""
-        index = len(self.acpi_tables) if hasattr(self, 'acpi_tables') else 0
         if not hasattr(self, 'acpi_tables'):
             self.acpi_tables = []
 

@@ -11,7 +11,7 @@ class SearchFilter(ctk.CTkFrame):
     def __init__(
         self,
         master,
-        items: list = None,
+        items: list | None = None,
         on_select_callback=None,
         placeholder_text='请输入关键词...',
         **kwargs,

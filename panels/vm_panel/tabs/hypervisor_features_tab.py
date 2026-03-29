@@ -288,7 +288,7 @@ class HypervFeaturesSubTab(BaseConfigTab):
     """Hyper-V 特性子 Tab - 支持所有 Hyper-V enlightenment 特性."""
 
     # 根据 libvirt 文档的完整特性列表
-    HYPERV_FEATURES = [
+    HYPERV_FEATURES: ClassVar[list] = [
         ('relaxed', '放宽计时器约束'),
         ('vapic', '虚拟 APIC'),
         ('spinlocks', '自旋锁'),

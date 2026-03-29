@@ -56,8 +56,103 @@ class VMConfig:
         # 简化版本，移除策略管理器
         pass
 
+    def _resolve_tab_data(self, tab_key: str, data_key: str, tab_data: dict) -> dict | None:
+        """从 tab_data 中提取指定键的数据，支持 tab_key 直接匹配和 data_key 嵌套两种格式.
+
+        Args:
+            tab_key: Tab 的键名
+            data_key: tab_data 中的数据键名
+            tab_data: Tab 的配置数据
+
+        Returns:
+            提取到的数据字典，或 None
+        """
+        if tab_key == data_key and data_key not in tab_data:
+            return tab_data
+        return tab_data.get(data_key)
+
+    def _update_basic(self, tab_data: dict) -> None:
+        self.basic.update(tab_data)
+        self._sync_context()
+
+    def _update_memory(self, tab_data: dict) -> None:
+        data = tab_data.get('memory_allocation', tab_data)
+        self.memory.update(data)
+        for field in ('current_memory', 'max_memory', 'dump_core'):
+            if field not in data:
+                setattr(self.memory, field, None)
+
+    def _update_cpu(self, tab_data: dict) -> None:
+        self.cpu.update(tab_data.get('cpu_allocation', tab_data))
+
+    def _update_cpu_model_topology(self, tab_data: dict) -> None:
+        data = tab_data.get('cpu_model_topology', tab_data)
+        if 'topology' in data:
+            topo = data['topology']
+            self.cpu.topology = CPUTopology.from_dict(topo) if isinstance(topo, dict) else topo
+        for key in ('mode', 'match', 'check', 'migratable', 'deprecated_features'):
+            if key in data:
+                setattr(self.cpu, key, data[key])
+        model_data = data.get('model', {})
+        for attr in ('name', 'fallback', 'vendor', 'vendor_id'):
+            if attr in model_data:
+                setattr(self.cpu, 'model' if attr == 'name' else attr, model_data[attr])
+        for attr in ('cache', 'maxphysaddr', 'feature'):
+            if data.get(attr):
+                setattr(self.cpu, attr, data[attr])
+
+    def _update_os(self, tab_data: dict) -> None:
+        self.os.update(tab_data.get('os_booting', tab_data))
+        self._sync_context()
+
+    def _update_devices(self, tab_data: dict) -> None:
+        self.devices.update(tab_data.get('devices', tab_data))
+
+    def _update_key_wrap(self, tab_data: dict) -> None:
+        kw = tab_data.get('key_wrap', tab_data)
+        if not isinstance(kw, dict):
+            return
+        if 'cipher' in kw:
+            for cipher in kw['cipher']:
+                if isinstance(cipher, dict):
+                    name, state = cipher.get('name', ''), cipher.get('state', 'off')
+                    if name == 'aes':
+                        self.key_wrap.aes_state = state
+                    elif name == 'dea':
+                        self.key_wrap.dea_state = state
+        elif 'aes_state' in kw:
+            self.key_wrap.aes_state = kw.get('aes_state', 'off')
+            self.key_wrap.dea_state = kw.get('dea_state', 'off')
+
+    def _update_throttlegroups(self, tab_data: dict) -> None:
+        throttle_data = tab_data.get('disk_throttle_group', tab_data)
+        if not isinstance(throttle_data, dict):
+            return
+        self.throttlegroups.throttlegroups = [
+            ThrottleGroup(
+                name=g.get('name', ''),
+                total_bytes_sec=g.get('total_bytes_sec'),
+                read_bytes_sec=g.get('read_bytes_sec'),
+                write_bytes_sec=g.get('write_bytes_sec'),
+                total_iops_sec=g.get('total_iops_sec'),
+                read_iops_sec=g.get('read_iops_sec'),
+                write_iops_sec=g.get('write_iops_sec'),
+            )
+            for g in throttle_data.get('throttle_groups', [])
+            if isinstance(g, dict)
+        ]
+
+    def _update_sysinfo(self, tab_data: dict) -> None:
+        sysinfo_data = tab_data.get('sysinfo', tab_data)
+        if isinstance(sysinfo_data, dict):
+            self.sysinfo = sysinfo_data
+        if 'smbios_mode' in tab_data:
+            self.os.smbios.mode = tab_data['smbios_mode']
+
     def update_from_tab(self, tab_key: str, tab_data: dict) -> None:
         """从 Tab 更新配置.
+
+        使用分发表替代 if-elif 链，每个 tab_key 对应一个处理方法。
 
         Args:
             tab_key: Tab 的键名
@@ -66,262 +161,76 @@ class VMConfig:
         if not tab_data:
             return
 
-        # 基础配置
-        if (
-            tab_key == 'general_metadata'
-            or tab_key == 'basic_info'
-            or 'basic' in tab_data
-            or 'name' in tab_data
-        ):
-            self.basic.update(tab_data)
-            self._sync_context()
+        # ── 直接键名匹配的分发表 ──────────────────────────────────────────────
+        _direct: dict = {
+            'general_metadata': self._update_basic,
+            'basic_info': self._update_basic,
+            'memory_allocation': self._update_memory,
+            'cpu_allocation': self._update_cpu,
+            'cpu_model_topology': self._update_cpu_model_topology,
+            'os_booting': self._update_os,
+            'devices': self._update_devices,
+            'key_wrap': self._update_key_wrap,
+            'disk_throttle_group': self._update_throttlegroups,
+            'memory_tuning': lambda d: self.memory_tuning.update(d),
+            'memory_backing': lambda d: self.memory_backing.update(d),
+            'numa_node_tuning': lambda d: setattr(self, 'numa_tuning', NumaTuneConfig.from_dict(d)),
+            'iothreads_allocation': lambda d: setattr(self, 'iothreads_allocation', d),
+            'cpu_tuning': lambda d: setattr(self, 'cpu_tuning', d),
+            'block_io_tuning': lambda d: self.block_io_tuning.update(d),
+            'time_keeping': lambda d: setattr(self, 'time_keeping', d),
+            'hypervisor_features': lambda d: setattr(self, 'hypervisor_features', d),
+            'smbios_system': self._update_sysinfo,
+        }
 
-        # 内存配置
-        if tab_key == 'memory_allocation' or 'memory_allocation' in tab_data:
-            data = tab_data.get('memory_allocation', tab_data)
-            self.memory.update(data)
-            if 'current_memory' not in data:
-                self.memory.current_memory = None
-            if 'max_memory' not in data:
-                self.memory.max_memory = None
-            if 'dump_core' not in data:
-                self.memory.dump_core = None
+        if tab_key in _direct:
+            _direct[tab_key](tab_data)
 
-        # CPU 配置
-        if tab_key == 'cpu_allocation' or 'cpu_allocation' in tab_data:
-            data = tab_data.get('cpu_allocation', tab_data)
-            self.cpu.update(data)
+        # ── 通过 tab_data 键名匹配的补充更新 ─────────────────────────────────
+        # 处理 tab_data 中直接包含配置键的情况（如 {'name': 'vm0', ...}）
+        if 'basic' in tab_data or 'name' in tab_data:
+            if tab_key not in ('general_metadata', 'basic_info'):
+                self._update_basic(tab_data)
 
-        # CPU 模型和拓扑配置
-        if tab_key == 'cpu_model_topology' or 'cpu_model_topology' in tab_data:
-            data = tab_data.get('cpu_model_topology', tab_data)
-            # 更新 topology
-            if 'topology' in data:
-                if isinstance(data['topology'], dict):
-                    self.cpu.topology = CPUTopology.from_dict(data['topology'])
-                else:
-                    self.cpu.topology = data['topology']
-            # 更新 CPU 模型相关配置 (mode, match, check, migratable 在 data 顶层)
-            for key in ['mode', 'match', 'check', 'migratable', 'deprecated_features']:
-                if key in data:
-                    setattr(self.cpu, key, data[key])
-            # 更新 model 字典中的配置 (name, fallback, vendor, vendor_id)
-            model_data = data.get('model', {})
-            if model_data:
-                if 'name' in model_data:
-                    self.cpu.model = model_data['name']
-                if 'fallback' in model_data:
-                    self.cpu.fallback = model_data['fallback']
-                if 'vendor' in model_data:
-                    self.cpu.vendor = model_data['vendor']
-                if 'vendor_id' in model_data:
-                    self.cpu.vendor_id = model_data['vendor_id']
-            # 更新 cache 配置
-            if data.get('cache'):
-                self.cpu.cache = data['cache']
-            # 更新 maxphysaddr 配置
-            if data.get('maxphysaddr'):
-                self.cpu.maxphysaddr = data['maxphysaddr']
-            # 更新 feature 配置
-            if data.get('feature'):
-                self.cpu.feature = data['feature']
+        _data_key_map: dict = {
+            'memory_allocation': self._update_memory,
+            'cpu_allocation': self._update_cpu,
+            'cpu_model_topology': self._update_cpu_model_topology,
+            'os_booting': self._update_os,
+            'devices': self._update_devices,
+            'resource_partitioning': lambda d: self.resource_partitioning.update(d),
+            'fibre_channel_vmid': lambda d: self.fibre_channel_vmid.update(d),
+            'hypervisor': lambda d: setattr(self, 'hypervisor', d),
+            'launch_security': lambda d: setattr(
+                self, 'launch_security', LaunchSecurityConfig.from_dict(d)
+            ),
+            'key_wrap': self._update_key_wrap,
+            'power_management': lambda d: setattr(self, 'power_management', d),
+            'events_configuration': lambda d: setattr(self, 'events_configuration', d),
+            'security_label': lambda d: setattr(self, 'security_label', d),
+            'seclabel': lambda d: setattr(self, 'security_label', d),
+            'performance_monitoring': lambda d: setattr(self, 'performance_monitoring', d),
+            'time_keeping': lambda d: setattr(self, 'time_keeping', d),
+            'hypervisor_features': lambda d: setattr(self, 'hypervisor_features', d),
+            'block_io_tuning': lambda d: self.block_io_tuning.update(d),
+            'disk_throttle_group': self._update_throttlegroups,
+            'memory_tuning': lambda d: self.memory_tuning.update(d),
+            'memory_backing': lambda d: self.memory_backing.update(d),
+            'numa_node_tuning': lambda d: setattr(self, 'numa_tuning', NumaTuneConfig.from_dict(d)),
+            'iothreads_allocation': lambda d: setattr(self, 'iothreads_allocation', d),
+            'cpu_tuning': lambda d: setattr(self, 'cpu_tuning', d),
+            'sysinfo': self._update_sysinfo,
+        }
 
-        # OS 引导配置
-        if tab_key == 'os_booting' or 'os_booting' in tab_data:
-            data = tab_data.get('os_booting', tab_data)
-            self.os.update(data)
-            self._sync_context()
-
-        # 设备配置
-        if tab_key == 'devices' or 'devices' in tab_data:
-            data = tab_data.get('devices', tab_data)
-            self.devices.update(data)
-
-        # 资源分区配置
-        if 'resource_partitioning' in tab_data:
-            self.resource_partitioning.update(tab_data['resource_partitioning'])
-
-        # 光纤通道 VMID 配置
-        if 'fibre_channel_vmid' in tab_data:
-            self.fibre_channel_vmid.update(tab_data['fibre_channel_vmid'])
-
-        # 虚拟机监控程序配置
-        if 'hypervisor' in tab_data:
-            self.hypervisor = tab_data['hypervisor']
-
-        # 启动安全配置
-        if 'launch_security' in tab_data:
-            self.launch_security = LaunchSecurityConfig.from_dict(tab_data['launch_security'])
-
-        # 密钥包装配置
-        if tab_key == 'key_wrap' or 'key_wrap' in tab_data:
-            key_wrap_data = tab_data.get('key_wrap', tab_data)
-            if isinstance(key_wrap_data, dict):
-                # 支持 cipher 列表格式
-                if 'cipher' in key_wrap_data:
-                    cipher_list = key_wrap_data['cipher']
-                    if isinstance(cipher_list, list):
-                        for cipher in cipher_list:
-                            if isinstance(cipher, dict):
-                                name = cipher.get('name', '')
-                                state = cipher.get('state', 'off')
-                                if name == 'aes':
-                                    self.key_wrap.aes_state = state
-                                elif name == 'dea':
-                                    self.key_wrap.dea_state = state
-                # 支持直接格式（来自 KeyWrapTab.get_config()）
-                elif 'aes_state' in key_wrap_data:
-                    self.key_wrap.aes_state = key_wrap_data.get('aes_state', 'off')
-                    self.key_wrap.dea_state = key_wrap_data.get('dea_state', 'off')
-
-        # 电源管理配置
-        if 'power_management' in tab_data:
-            self.power_management = tab_data['power_management']
-
-        # 事件配置
-        if 'events_configuration' in tab_data:
-            self.events_configuration = tab_data['events_configuration']
-
-        # 安全标签配置（支持 security_label 和 seclabel 两种键名）
-        if 'security_label' in tab_data:
-            self.security_label = tab_data['security_label']
-        elif 'seclabel' in tab_data:
-            self.security_label = tab_data['seclabel']
-
-        # 性能监控配置
-        if 'performance_monitoring' in tab_data:
-            self.performance_monitoring = tab_data['performance_monitoring']
-
-        # 时间管理配置（支持 tab_key 和 tab_data 两种格式）
-        if tab_key == 'time_keeping' and 'time_keeping' not in tab_data:
-            # tab_key 指定且 tab_data 中没有 time_keeping 键，直接使用 tab_data
-            self.time_keeping = tab_data
-        elif 'time_keeping' in tab_data:
-            # tab_data 中 time_keeping 键，使用其值
-            self.time_keeping = tab_data['time_keeping']
-
-        # 虚拟化特性配置（支持 tab_key 和 tab_data 两种格式）
-        if tab_key == 'hypervisor_features' and 'hypervisor_features' not in tab_data:
-            # tab_key 指定且 tab_data 中没有 hypervisor_features 键，直接使用 tab_data
-            self.hypervisor_features = tab_data
-        elif 'hypervisor_features' in tab_data:
-            # tab_data 中有 hypervisor_features 键，使用其值
-            self.hypervisor_features = tab_data['hypervisor_features']
-
-        # 块 IO 优化配置（支持 tab_key 和 tab_data 两种格式）
-        if tab_key == 'block_io_tuning' and 'block_io_tuning' not in tab_data:
-            # tab_key 指定且 tab_data 中没有 block_io_tuning 键，直接使用 tab_data
-            block_io_data = tab_data
-        elif 'block_io_tuning' in tab_data:
-            # tab_data 中有 block_io_tuning 键，使用其值
-            block_io_data = tab_data['block_io_tuning']
-        else:
-            block_io_data = None
-
-        if block_io_data and isinstance(block_io_data, dict):
-            self.block_io_tuning.update(block_io_data)
-
-        # 节流组配置（支持 tab_key 和 tab_data 两种格式）
-        if tab_key == 'disk_throttle_group' and 'disk_throttle_group' not in tab_data:
-            # tab_key 指定且 tab_data 中没有 disk_throttle_group 键，直接使用 tab_data
-            throttle_data = tab_data
-        elif 'disk_throttle_group' in tab_data:
-            # tab_data 中有 disk_throttle_group 键，使用其值
-            throttle_data = tab_data['disk_throttle_group']
-        else:
-            throttle_data = None
-
-        if throttle_data and isinstance(throttle_data, dict):
-            groups_data = throttle_data.get('throttle_groups', [])
-            # 清空现有节流组
-            self.throttlegroups.throttlegroups = []
-            # 添加新的节流组
-            for group_data in groups_data:
-                if isinstance(group_data, dict):
-                    throttle_group = ThrottleGroup(
-                        name=group_data.get('name', ''),
-                        total_bytes_sec=group_data.get('total_bytes_sec'),
-                        read_bytes_sec=group_data.get('read_bytes_sec'),
-                        write_bytes_sec=group_data.get('write_bytes_sec'),
-                        total_iops_sec=group_data.get('total_iops_sec'),
-                        read_iops_sec=group_data.get('read_iops_sec'),
-                        write_iops_sec=group_data.get('write_iops_sec'),
-                    )
-                    self.throttlegroups.throttlegroups.append(throttle_group)
-
-        # 内存调优配置（支持 tab_key 和 tab_data 两种格式）
-        if tab_key == 'memory_tuning' and 'memory_tuning' not in tab_data:
-            # tab_key 指定且 tab_data 中没有 memory_tuning 键，直接使用 tab_data
-            memory_tuning_data = tab_data
-        elif 'memory_tuning' in tab_data:
-            # tab_data 中有 memory_tuning 键，使用其值
-            memory_tuning_data = tab_data['memory_tuning']
-        else:
-            memory_tuning_data = None
-
-        if memory_tuning_data and isinstance(memory_tuning_data, dict):
-            self.memory_tuning.update(memory_tuning_data)
-
-        # 内存后端配置（支持 tab_key 和 tab_data 两种格式）
-        if tab_key == 'memory_backing' and 'memory_backing' not in tab_data:
-            # tab_key 指定且 tab_data 中没有 memory_backing 键，直接使用 tab_data
-            memory_backing_data = tab_data
-        elif 'memory_backing' in tab_data:
-            # tab_data 中有 memory_backing 键，使用其值
-            memory_backing_data = tab_data['memory_backing']
-        else:
-            memory_backing_data = None
-
-        if memory_backing_data and isinstance(memory_backing_data, dict):
-            self.memory_backing.update(memory_backing_data)
-
-        # NUMA 调优配置（支持 tab_key 和 tab_data 两种格式）
-        if tab_key == 'numa_node_tuning' and 'numa_node_tuning' not in tab_data:
-            # tab_key 指定且 tab_data 中没有 numa_node_tuning 键，直接使用 tab_data
-            numa_tuning_data = tab_data
-        elif 'numa_node_tuning' in tab_data:
-            # tab_data 中有 numa_node_tuning 键，使用其值
-            numa_tuning_data = tab_data['numa_node_tuning']
-        else:
-            numa_tuning_data = None
-
-        if numa_tuning_data and isinstance(numa_tuning_data, dict):
-            self.numa_tuning = NumaTuneConfig.from_dict(numa_tuning_data)
-
-        # IO 线程分配配置（支持 tab_key 和 tab_data 两种格式）
-        if tab_key == 'iothreads_allocation' and 'iothreads_allocation' not in tab_data:
-            # tab_key 指定且 tab_data 中没有 iothreads_allocation 键，直接使用 tab_data
-            iothreads_data = tab_data
-        elif 'iothreads_allocation' in tab_data:
-            # tab_data 中有 iothreads_allocation 键，使用其值
-            iothreads_data = tab_data['iothreads_allocation']
-        else:
-            iothreads_data = None
-
-        if iothreads_data and isinstance(iothreads_data, dict):
-            self.iothreads_allocation = iothreads_data
-
-        # CPU 调优配置（支持 tab_key 和 tab_data 两种格式）
-        if tab_key == 'cpu_tuning' and 'cpu_tuning' not in tab_data:
-            # tab_key 指定且 tab_data 中没有 cpu_tuning 键，直接使用 tab_data
-            cpu_tuning_data = tab_data
-        elif 'cpu_tuning' in tab_data:
-            # tab_data 中有 cpu_tuning 键，使用其值
-            cpu_tuning_data = tab_data['cpu_tuning']
-        else:
-            cpu_tuning_data = None
-
-        if cpu_tuning_data and isinstance(cpu_tuning_data, dict):
-            self.cpu_tuning = cpu_tuning_data
-
-        # SMBIOS/FwCfg 系统信息配置
-        if tab_key == 'smbios_system' or 'sysinfo' in tab_data:
-            sysinfo_data = tab_data.get('sysinfo', tab_data)
-            if isinstance(sysinfo_data, dict):
-                self.sysinfo = sysinfo_data
-            # smbios_mode 用于设置 os.smbios mode='sysinfo'
-            if 'smbios_mode' in tab_data:
-                self.os.smbios.mode = tab_data['smbios_mode']
+        for key, handler in _data_key_map.items():
+            if key in tab_data and tab_key != key:
+                value = tab_data[key]
+                handler(
+                    value
+                    if not callable(getattr(value, 'items', None))
+                    or key not in ('resource_partitioning', 'fibre_channel_vmid')
+                    else {key: value}
+                )
 
     def to_dict(self) -> dict:
         """将配置转换为字典格式.

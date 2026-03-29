@@ -1,8 +1,15 @@
 """Libvirt XML 生成器 - 根据Tab配置动态生成XML."""
 
+import logging
 import xml.etree.ElementTree as ET
 
 from xml.dom import minidom
+
+logger = logging.getLogger(__name__)
+
+
+class XMLGenerationError(Exception):
+    """XML 生成错误."""
 
 
 class LibvirtXMLGenerator:
@@ -20,33 +27,42 @@ class LibvirtXMLGenerator:
 
         Returns:
             格式化后的 XML 字符串
+
+        Raises:
+            XMLGenerationError: XML 生成失败时抛出
         """
-        self.domain = ET.Element('domain', type=config.get('hypervisor', 'kvm'))
+        try:
+            self.domain = ET.Element('domain', type=config.get('hypervisor', 'kvm'))
 
-        self._add_metadata(config)
-        self._add_memory(config)
-        self._add_cpu(config)
-        self._add_os(config)
-        self._add_sysinfo(config)
-        self._add_features(config)
-        self._add_clock(config)
-        self._add_pm(config)
-        self._add_events(config)
-        self._add_devices(config)
-        self._add_memory_backing(config)
-        self._add_memory_tuning(config)
-        self._add_cpu_tuning(config)
-        self._add_numa_tuning(config)
-        self._add_block_io_tuning(config)
-        self._add_iothreads(config)
-        self._add_resource(config)
-        self._add_security(config)
-        self._add_launch_security(config)
-        self._add_key_wrap(config)
-        self._add_perf(config)
-        self._add_throttlegroups(config)
+            self._add_metadata(config)
+            self._add_memory(config)
+            self._add_cpu(config)
+            self._add_os(config)
+            self._add_sysinfo(config)
+            self._add_features(config)
+            self._add_clock(config)
+            self._add_pm(config)
+            self._add_events(config)
+            self._add_devices(config)
+            self._add_memory_backing(config)
+            self._add_memory_tuning(config)
+            self._add_cpu_tuning(config)
+            self._add_numa_tuning(config)
+            self._add_block_io_tuning(config)
+            self._add_iothreads(config)
+            self._add_resource(config)
+            self._add_security(config)
+            self._add_launch_security(config)
+            self._add_key_wrap(config)
+            self._add_perf(config)
+            self._add_throttlegroups(config)
 
-        return self._pretty_print()
+            return self._pretty_print()
+        except XMLGenerationError:
+            raise
+        except Exception as e:
+            logger.exception('XML 生成失败')
+            raise XMLGenerationError(f'生成 XML 时发生错误: {e}') from e
 
     def _add_metadata(self, config: dict) -> None:
         """添加元数据."""

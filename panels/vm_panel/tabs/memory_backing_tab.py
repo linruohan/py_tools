@@ -158,7 +158,7 @@ class MemoryBackingTab(BaseConfigTab):
 
     def _add_hugepage_entry(self):
         """添加一个 hugepage 配置条目."""
-        row = len(self.hugepage_entries)
+        _ = len(self.hugepage_entries)  # 保留用于将来的行号计算
 
         entry_frame = ctk.CTkFrame(self.hugepage_list_frame, fg_color='transparent')
         entry_frame.pack(side='left', padx=2, pady=2)

@@ -17,6 +17,7 @@ from utils.styles import (
 @dataclass
 class DeviceConfig:
     """设备配置数据类."""
+
     device_type: str
     device_label: str
     config: dict
@@ -83,10 +84,31 @@ class DevicesConfigTab(BaseConfigTab):
 
     # 类别与设备类型的映射
     CATEGORY_DEVICES: ClassVar[dict[str, list[str]]] = {
-        'base': ['disk', 'filesystem', 'controller', 'interface', 'input', 'hub', 'graphics', 'video', 'sound', 'audio'],
+        'base': [
+            'disk',
+            'filesystem',
+            'controller',
+            'interface',
+            'input',
+            'hub',
+            'graphics',
+            'video',
+            'sound',
+            'audio',
+        ],
         'console': ['console', 'serial', 'parallel', 'channel'],
         'hostdev': ['hostdev', 'smartcard', 'redirecteddev'],
-        'special': ['watchdog', 'memballoon', 'rng', 'tpm', 'nvram', 'panic', 'vsock', 'crypto', 'pstore'],
+        'special': [
+            'watchdog',
+            'memballoon',
+            'rng',
+            'tpm',
+            'nvram',
+            'panic',
+            'vsock',
+            'crypto',
+            'pstore',
+        ],
         'memory': ['shmem', 'memory'],
         'advanced': ['iommu'],
     }
@@ -123,9 +145,9 @@ class DevicesConfigTab(BaseConfigTab):
         top_frame.grid_columnconfigure(1, weight=1)
 
         # Category 标签
-        ctk.CTkLabel(
-            top_frame, text='Category:', font=CTK_FONT_SMALL, width=70
-        ).grid(row=0, column=0, padx=5, pady=5, sticky='w')
+        ctk.CTkLabel(top_frame, text='Category:', font=CTK_FONT_SMALL, width=70).grid(
+            row=0, column=0, padx=5, pady=5, sticky='w'
+        )
 
         # Category 下拉框
         self.category_menu = ctk.CTkOptionMenu(
@@ -139,9 +161,9 @@ class DevicesConfigTab(BaseConfigTab):
         self.category_menu.grid(row=0, column=1, padx=5, pady=5, sticky='w')
 
         # Device Type 标签
-        ctk.CTkLabel(
-            top_frame, text='Device:', font=CTK_FONT_SMALL, width=50
-        ).grid(row=0, column=2, padx=10, pady=5, sticky='w')
+        ctk.CTkLabel(top_frame, text='Device:', font=CTK_FONT_SMALL, width=50).grid(
+            row=0, column=2, padx=10, pady=5, sticky='w'
+        )
 
         # Device Type 下拉框
         self.device_type_menu = ctk.CTkOptionMenu(
@@ -224,7 +246,14 @@ class DevicesConfigTab(BaseConfigTab):
             device_types = ['None', *list(self.DEVICE_TYPES.values())]
         else:
             device_types_in_category = self.CATEGORY_DEVICES.get(self.current_category, [])
-            device_types = ['None', *[self.DEVICE_TYPES[dt] for dt in device_types_in_category if dt in self.DEVICE_TYPES]]
+            device_types = [
+                'None',
+                *[
+                    self.DEVICE_TYPES[dt]
+                    for dt in device_types_in_category
+                    if dt in self.DEVICE_TYPES
+                ],
+            ]
 
         self.device_type_menu.configure(values=device_types)
         self.device_type_menu.set('None')
@@ -518,9 +547,11 @@ class DevicesConfigTab(BaseConfigTab):
 
         # Type
         type_menu = ctk.CTkOptionMenu(
-            parent, values=['file', 'block', 'network', 'volume', 'dir', 'nvme', 'vhostuser'],
-            width=80, font=CTK_FONT_SMALL,
-            command=lambda v, idx=index: self._on_config_change(idx, 'disk_type', v)
+            parent,
+            values=['file', 'block', 'network', 'volume', 'dir', 'nvme', 'vhostuser'],
+            width=80,
+            font=CTK_FONT_SMALL,
+            command=lambda v, idx=index: self._on_config_change(idx, 'disk_type', v),
         )
         type_menu.set(config.get('disk_type', 'file'))
         type_menu.pack(side='left', padx=2)
@@ -528,9 +559,11 @@ class DevicesConfigTab(BaseConfigTab):
 
         # Device
         dev_menu = ctk.CTkOptionMenu(
-            parent, values=['disk', 'cdrom', 'lun', 'floppy'],
-            width=70, font=CTK_FONT_SMALL,
-            command=lambda v, idx=index: self._on_config_change(idx, 'disk_device', v)
+            parent,
+            values=['disk', 'cdrom', 'lun', 'floppy'],
+            width=70,
+            font=CTK_FONT_SMALL,
+            command=lambda v, idx=index: self._on_config_change(idx, 'disk_device', v),
         )
         dev_menu.set(config.get('disk_device', 'disk'))
         dev_menu.pack(side='left', padx=2)
@@ -538,9 +571,11 @@ class DevicesConfigTab(BaseConfigTab):
 
         # Bus
         bus_menu = ctk.CTkOptionMenu(
-            parent, values=['virtio', 'sata', 'ide', 'scsi', 'usb', 'nvme'],
-            width=70, font=CTK_FONT_SMALL,
-            command=lambda v, idx=index: self._on_bus_change(idx, v)
+            parent,
+            values=['virtio', 'sata', 'ide', 'scsi', 'usb', 'nvme'],
+            width=70,
+            font=CTK_FONT_SMALL,
+            command=lambda v, idx=index: self._on_bus_change(idx, v),
         )
         bus_menu.set(config.get('disk_bus', 'virtio'))
         bus_menu.pack(side='left', padx=2)
@@ -548,9 +583,11 @@ class DevicesConfigTab(BaseConfigTab):
 
         # Driver
         drv_menu = ctk.CTkOptionMenu(
-            parent, values=['qcow2', 'raw', 'vmdk', 'vdi', 'none'],
-            width=70, font=CTK_FONT_SMALL,
-            command=lambda v, idx=index: self._on_config_change(idx, 'disk_driver', v)
+            parent,
+            values=['qcow2', 'raw', 'vmdk', 'vdi', 'none'],
+            width=70,
+            font=CTK_FONT_SMALL,
+            command=lambda v, idx=index: self._on_config_change(idx, 'disk_driver', v),
         )
         drv_menu.set(config.get('disk_driver', 'qcow2'))
         drv_menu.pack(side='left', padx=2)
@@ -559,20 +596,35 @@ class DevicesConfigTab(BaseConfigTab):
         # Target
         target_entry = ctk.CTkEntry(parent, width=60, font=CTK_FONT_SMALL)
         target_entry.insert(0, config.get('disk_target', 'vda'))
-        target_entry.bind('<KeyRelease>', lambda e, idx=index: self._on_entry_change(idx, 'disk_target', target_entry.get()))
+        target_entry.bind(
+            '<KeyRelease>',
+            lambda e, idx=index: self._on_entry_change(idx, 'disk_target', target_entry.get()),
+        )
         target_entry.pack(side='left', padx=2)
         widgets.append(('disk_target', target_entry))
 
         # Source
-        source_entry = ctk.CTkEntry(parent, width=200, font=CTK_FONT_SMALL, placeholder_text='Source path')
+        source_entry = ctk.CTkEntry(
+            parent, width=200, font=CTK_FONT_SMALL, placeholder_text='Source path'
+        )
         source_entry.insert(0, config.get('disk_source', ''))
-        source_entry.bind('<KeyRelease>', lambda e, idx=index: self._on_entry_change(idx, 'disk_source', source_entry.get()))
+        source_entry.bind(
+            '<KeyRelease>',
+            lambda e, idx=index: self._on_entry_change(idx, 'disk_source', source_entry.get()),
+        )
         source_entry.pack(side='left', padx=2)
         widgets.append(('disk_source', source_entry))
 
         # Readonly
-        ro_check = ctk.CTkCheckBox(parent, text='RO', width=30, font=CTK_FONT_SMALL,
-                                   command=lambda idx=index: self._on_checkbox_change(idx, 'disk_readonly', ro_check.get()))
+        ro_check = ctk.CTkCheckBox(
+            parent,
+            text='RO',
+            width=30,
+            font=CTK_FONT_SMALL,
+            command=lambda idx=index: self._on_checkbox_change(
+                idx, 'disk_readonly', ro_check.get()
+            ),
+        )
         if config.get('disk_readonly', False):
             ro_check.select()
         ro_check.pack(side='left', padx=2)
@@ -587,17 +639,24 @@ class DevicesConfigTab(BaseConfigTab):
 
         # Type
         type_menu = ctk.CTkOptionMenu(
-            parent, values=['vnc', 'spice', 'rdp', 'sdl', 'desktop', 'egl-headless', 'dbus'],
-            width=90, font=CTK_FONT_SMALL,
-            command=lambda v, idx=index: self._on_config_change(idx, 'gfx_type', v)
+            parent,
+            values=['vnc', 'spice', 'rdp', 'sdl', 'desktop', 'egl-headless', 'dbus'],
+            width=90,
+            font=CTK_FONT_SMALL,
+            command=lambda v, idx=index: self._on_config_change(idx, 'gfx_type', v),
         )
         type_menu.set(config.get('gfx_type', 'vnc'))
         type_menu.pack(side='left', padx=2)
         widgets.append(('gfx_type', type_menu))
 
         # Autoport
-        ap_check = ctk.CTkCheckBox(parent, text='Autoport', width=70, font=CTK_FONT_SMALL,
-                                   command=lambda idx=index: self._on_checkbox_change(idx, 'gfx_autoport', ap_check.get()))
+        ap_check = ctk.CTkCheckBox(
+            parent,
+            text='Autoport',
+            width=70,
+            font=CTK_FONT_SMALL,
+            command=lambda idx=index: self._on_checkbox_change(idx, 'gfx_autoport', ap_check.get()),
+        )
         if config.get('gfx_autoport', True):
             ap_check.select()
         ap_check.pack(side='left', padx=2)
@@ -606,21 +665,30 @@ class DevicesConfigTab(BaseConfigTab):
         # Port
         port_entry = ctk.CTkEntry(parent, width=45, font=CTK_FONT_SMALL)
         port_entry.insert(0, str(config.get('gfx_port', '-1')))
-        port_entry.bind('<KeyRelease>', lambda e, idx=index: self._on_entry_change(idx, 'gfx_port', port_entry.get()))
+        port_entry.bind(
+            '<KeyRelease>',
+            lambda e, idx=index: self._on_entry_change(idx, 'gfx_port', port_entry.get()),
+        )
         port_entry.pack(side='left', padx=2)
         widgets.append(('gfx_port', port_entry))
 
         # Listen
         listen_entry = ctk.CTkEntry(parent, width=90, font=CTK_FONT_SMALL)
         listen_entry.insert(0, config.get('gfx_listen', '0.0.0.0'))
-        listen_entry.bind('<KeyRelease>', lambda e, idx=index: self._on_entry_change(idx, 'gfx_listen', listen_entry.get()))
+        listen_entry.bind(
+            '<KeyRelease>',
+            lambda e, idx=index: self._on_entry_change(idx, 'gfx_listen', listen_entry.get()),
+        )
         listen_entry.pack(side='left', padx=2)
         widgets.append(('gfx_listen', listen_entry))
 
         # Keymap
         keymap_entry = ctk.CTkEntry(parent, width=70, font=CTK_FONT_SMALL)
         keymap_entry.insert(0, config.get('gfx_keymap', 'en-us'))
-        keymap_entry.bind('<KeyRelease>', lambda e, idx=index: self._on_entry_change(idx, 'gfx_keymap', keymap_entry.get()))
+        keymap_entry.bind(
+            '<KeyRelease>',
+            lambda e, idx=index: self._on_entry_change(idx, 'gfx_keymap', keymap_entry.get()),
+        )
         keymap_entry.pack(side='left', padx=2)
         widgets.append(('gfx_keymap', keymap_entry))
 
@@ -633,9 +701,11 @@ class DevicesConfigTab(BaseConfigTab):
 
         # Model
         model_menu = ctk.CTkOptionMenu(
-            parent, values=['vga', 'cirrus', 'vmvga', 'qxl', 'virtio', 'gop', 'bochs', 'ramfb'],
-            width=80, font=CTK_FONT_SMALL,
-            command=lambda v, idx=index: self._on_config_change(idx, 'video_model', v)
+            parent,
+            values=['vga', 'cirrus', 'vmvga', 'qxl', 'virtio', 'gop', 'bochs', 'ramfb'],
+            width=80,
+            font=CTK_FONT_SMALL,
+            command=lambda v, idx=index: self._on_config_change(idx, 'video_model', v),
         )
         model_menu.set(config.get('video_model', 'qxl'))
         model_menu.pack(side='left', padx=2)
@@ -644,20 +714,33 @@ class DevicesConfigTab(BaseConfigTab):
         # VRAM
         vram_entry = ctk.CTkEntry(parent, width=60, font=CTK_FONT_SMALL)
         vram_entry.insert(0, str(config.get('video_vram', '16384')))
-        vram_entry.bind('<KeyRelease>', lambda e, idx=index: self._on_entry_change(idx, 'video_vram', vram_entry.get()))
+        vram_entry.bind(
+            '<KeyRelease>',
+            lambda e, idx=index: self._on_entry_change(idx, 'video_vram', vram_entry.get()),
+        )
         vram_entry.pack(side='left', padx=2)
         widgets.append(('video_vram', vram_entry))
 
         # Heads
         heads_entry = ctk.CTkEntry(parent, width=40, font=CTK_FONT_SMALL)
         heads_entry.insert(0, str(config.get('video_heads', '1')))
-        heads_entry.bind('<KeyRelease>', lambda e, idx=index: self._on_entry_change(idx, 'video_heads', heads_entry.get()))
+        heads_entry.bind(
+            '<KeyRelease>',
+            lambda e, idx=index: self._on_entry_change(idx, 'video_heads', heads_entry.get()),
+        )
         heads_entry.pack(side='left', padx=2)
         widgets.append(('video_heads', heads_entry))
 
         # 3D Acceleration
-        accel_check = ctk.CTkCheckBox(parent, text='3D', width=35, font=CTK_FONT_SMALL,
-                                      command=lambda idx=index: self._on_checkbox_change(idx, 'video_accel3d', accel_check.get()))
+        accel_check = ctk.CTkCheckBox(
+            parent,
+            text='3D',
+            width=35,
+            font=CTK_FONT_SMALL,
+            command=lambda idx=index: self._on_checkbox_change(
+                idx, 'video_accel3d', accel_check.get()
+            ),
+        )
         if config.get('video_accel3d', False):
             accel_check.select()
         accel_check.pack(side='left', padx=2)
@@ -672,9 +755,11 @@ class DevicesConfigTab(BaseConfigTab):
 
         # Model
         model_menu = ctk.CTkOptionMenu(
-            parent, values=['sb16', 'es1370', 'ac97', 'ich6', 'ich9', 'usb', 'virtio'],
-            width=80, font=CTK_FONT_SMALL,
-            command=lambda v, idx=index: self._on_config_change(idx, 'sound_model', v)
+            parent,
+            values=['sb16', 'es1370', 'ac97', 'ich6', 'ich9', 'usb', 'virtio'],
+            width=80,
+            font=CTK_FONT_SMALL,
+            command=lambda v, idx=index: self._on_config_change(idx, 'sound_model', v),
         )
         model_menu.set(config.get('sound_model', 'ich9'))
         model_menu.pack(side='left', padx=2)
@@ -682,9 +767,11 @@ class DevicesConfigTab(BaseConfigTab):
 
         # Codec
         codec_menu = ctk.CTkOptionMenu(
-            parent, values=['duplex', 'micro', 'output', 'none'],
-            width=80, font=CTK_FONT_SMALL,
-            command=lambda v, idx=index: self._on_config_change(idx, 'sound_codec', v)
+            parent,
+            values=['duplex', 'micro', 'output', 'none'],
+            width=80,
+            font=CTK_FONT_SMALL,
+            command=lambda v, idx=index: self._on_config_change(idx, 'sound_codec', v),
         )
         codec_menu.set(config.get('sound_codec', 'duplex'))
         codec_menu.pack(side='left', padx=2)
@@ -699,9 +786,11 @@ class DevicesConfigTab(BaseConfigTab):
 
         # Type
         type_menu = ctk.CTkOptionMenu(
-            parent, values=['ide', 'fdc', 'scsi', 'sata', 'usb', 'virtio-serial', 'pci'],
-            width=90, font=CTK_FONT_SMALL,
-            command=lambda v, idx=index: self._on_config_change(idx, 'ctrl_type', v)
+            parent,
+            values=['ide', 'fdc', 'scsi', 'sata', 'usb', 'virtio-serial', 'pci'],
+            width=90,
+            font=CTK_FONT_SMALL,
+            command=lambda v, idx=index: self._on_config_change(idx, 'ctrl_type', v),
         )
         type_menu.set(config.get('ctrl_type', 'usb'))
         type_menu.pack(side='left', padx=2)
@@ -709,9 +798,20 @@ class DevicesConfigTab(BaseConfigTab):
 
         # Model
         model_menu = ctk.CTkOptionMenu(
-            parent, values=['auto', 'virtio-scsi', 'pci-root', 'pci-bridge', 'pcie-root', 'usb-xhci', 'usb-ehci', 'uhci'],
-            width=100, font=CTK_FONT_SMALL,
-            command=lambda v, idx=index: self._on_config_change(idx, 'ctrl_model', v)
+            parent,
+            values=[
+                'auto',
+                'virtio-scsi',
+                'pci-root',
+                'pci-bridge',
+                'pcie-root',
+                'usb-xhci',
+                'usb-ehci',
+                'uhci',
+            ],
+            width=100,
+            font=CTK_FONT_SMALL,
+            command=lambda v, idx=index: self._on_config_change(idx, 'ctrl_model', v),
         )
         model_menu.set(config.get('ctrl_model', 'usb-xhci'))
         model_menu.pack(side='left', padx=2)
@@ -720,7 +820,10 @@ class DevicesConfigTab(BaseConfigTab):
         # Index
         index_entry = ctk.CTkEntry(parent, width=40, font=CTK_FONT_SMALL)
         index_entry.insert(0, str(config.get('ctrl_index', '0')))
-        index_entry.bind('<KeyRelease>', lambda e, idx=index: self._on_entry_change(idx, 'ctrl_index', index_entry.get()))
+        index_entry.bind(
+            '<KeyRelease>',
+            lambda e, idx=index: self._on_entry_change(idx, 'ctrl_index', index_entry.get()),
+        )
         index_entry.pack(side='left', padx=2)
         widgets.append(('ctrl_index', index_entry))
 
@@ -733,9 +836,11 @@ class DevicesConfigTab(BaseConfigTab):
 
         # Type
         type_menu = ctk.CTkOptionMenu(
-            parent, values=['network', 'bridge', 'direct', 'user', 'vhostuser', 'vdpa'],
-            width=80, font=CTK_FONT_SMALL,
-            command=lambda v, idx=index: self._on_config_change(idx, 'iface_type', v)
+            parent,
+            values=['network', 'bridge', 'direct', 'user', 'vhostuser', 'vdpa'],
+            width=80,
+            font=CTK_FONT_SMALL,
+            command=lambda v, idx=index: self._on_config_change(idx, 'iface_type', v),
         )
         type_menu.set(config.get('iface_type', 'network'))
         type_menu.pack(side='left', padx=2)
@@ -744,24 +849,34 @@ class DevicesConfigTab(BaseConfigTab):
         # Source
         source_entry = ctk.CTkEntry(parent, width=100, font=CTK_FONT_SMALL)
         source_entry.insert(0, config.get('iface_source', 'default'))
-        source_entry.bind('<KeyRelease>', lambda e, idx=index: self._on_entry_change(idx, 'iface_source', source_entry.get()))
+        source_entry.bind(
+            '<KeyRelease>',
+            lambda e, idx=index: self._on_entry_change(idx, 'iface_source', source_entry.get()),
+        )
         source_entry.pack(side='left', padx=2)
         widgets.append(('iface_source', source_entry))
 
         # Model
         model_menu = ctk.CTkOptionMenu(
-            parent, values=['virtio', 'e1000', 'e1000e', 'rtl8139', 'vmxnet3'],
-            width=70, font=CTK_FONT_SMALL,
-            command=lambda v, idx=index: self._on_config_change(idx, 'iface_model', v)
+            parent,
+            values=['virtio', 'e1000', 'e1000e', 'rtl8139', 'vmxnet3'],
+            width=70,
+            font=CTK_FONT_SMALL,
+            command=lambda v, idx=index: self._on_config_change(idx, 'iface_model', v),
         )
         model_menu.set(config.get('iface_model', 'virtio'))
         model_menu.pack(side='left', padx=2)
         widgets.append(('iface_model', model_menu))
 
         # MAC
-        mac_entry = ctk.CTkEntry(parent, width=120, font=CTK_FONT_SMALL, placeholder_text='MAC address')
+        mac_entry = ctk.CTkEntry(
+            parent, width=120, font=CTK_FONT_SMALL, placeholder_text='MAC address'
+        )
         mac_entry.insert(0, config.get('iface_mac', ''))
-        mac_entry.bind('<KeyRelease>', lambda e, idx=index: self._on_entry_change(idx, 'iface_mac', mac_entry.get()))
+        mac_entry.bind(
+            '<KeyRelease>',
+            lambda e, idx=index: self._on_entry_change(idx, 'iface_mac', mac_entry.get()),
+        )
         mac_entry.pack(side='left', padx=2)
         widgets.append(('iface_mac', mac_entry))
 
@@ -774,9 +889,11 @@ class DevicesConfigTab(BaseConfigTab):
 
         # Type
         type_menu = ctk.CTkOptionMenu(
-            parent, values=['mouse', 'tablet', 'keyboard'],
-            width=80, font=CTK_FONT_SMALL,
-            command=lambda v, idx=index: self._on_config_change(idx, 'input_type', v)
+            parent,
+            values=['mouse', 'tablet', 'keyboard'],
+            width=80,
+            font=CTK_FONT_SMALL,
+            command=lambda v, idx=index: self._on_config_change(idx, 'input_type', v),
         )
         type_menu.set(config.get('input_type', 'tablet'))
         type_menu.pack(side='left', padx=2)
@@ -784,9 +901,11 @@ class DevicesConfigTab(BaseConfigTab):
 
         # Bus
         bus_menu = ctk.CTkOptionMenu(
-            parent, values=['usb', 'virtio', 'ps2'],
-            width=70, font=CTK_FONT_SMALL,
-            command=lambda v, idx=index: self._on_config_change(idx, 'input_bus', v)
+            parent,
+            values=['usb', 'virtio', 'ps2'],
+            width=70,
+            font=CTK_FONT_SMALL,
+            command=lambda v, idx=index: self._on_config_change(idx, 'input_bus', v),
         )
         bus_menu.set(config.get('input_bus', 'usb'))
         bus_menu.pack(side='left', padx=2)
@@ -801,26 +920,35 @@ class DevicesConfigTab(BaseConfigTab):
 
         # Type
         type_menu = ctk.CTkOptionMenu(
-            parent, values=['usb', 'pci', 'scsi', 'mdev'],
-            width=70, font=CTK_FONT_SMALL,
-            command=lambda v, idx=index: self._on_config_change(idx, 'hostdev_type', v)
+            parent,
+            values=['usb', 'pci', 'scsi', 'mdev'],
+            width=70,
+            font=CTK_FONT_SMALL,
+            command=lambda v, idx=index: self._on_config_change(idx, 'hostdev_type', v),
         )
         type_menu.set(config.get('hostdev_type', 'usb'))
         type_menu.pack(side='left', padx=2)
         widgets.append(('hostdev_type', type_menu))
 
         # USB
-        usb_entry = ctk.CTkEntry(parent, width=130, font=CTK_FONT_SMALL, placeholder_text='Vendor:Product')
+        usb_entry = ctk.CTkEntry(
+            parent, width=130, font=CTK_FONT_SMALL, placeholder_text='Vendor:Product'
+        )
         usb_entry.insert(0, config.get('hostdev_usb', ''))
-        usb_entry.bind('<KeyRelease>', lambda e, idx=index: self._on_entry_change(idx, 'hostdev_usb', usb_entry.get()))
+        usb_entry.bind(
+            '<KeyRelease>',
+            lambda e, idx=index: self._on_entry_change(idx, 'hostdev_usb', usb_entry.get()),
+        )
         usb_entry.pack(side='left', padx=2)
         widgets.append(('hostdev_usb', usb_entry))
 
         # Policy
         policy_menu = ctk.CTkOptionMenu(
-            parent, values=['mandatory', 'requisite', 'optional'],
-            width=90, font=CTK_FONT_SMALL,
-            command=lambda v, idx=index: self._on_config_change(idx, 'hostdev_policy', v)
+            parent,
+            values=['mandatory', 'requisite', 'optional'],
+            width=90,
+            font=CTK_FONT_SMALL,
+            command=lambda v, idx=index: self._on_config_change(idx, 'hostdev_policy', v),
         )
         policy_menu.set(config.get('hostdev_policy', 'optional'))
         policy_menu.pack(side='left', padx=2)
@@ -835,9 +963,11 @@ class DevicesConfigTab(BaseConfigTab):
 
         # Model
         model_menu = ctk.CTkOptionMenu(
-            parent, values=['i6300esb', 'ib700', 'itco', 'diag288'],
-            width=90, font=CTK_FONT_SMALL,
-            command=lambda v, idx=index: self._on_config_change(idx, 'watchdog_model', v)
+            parent,
+            values=['i6300esb', 'ib700', 'itco', 'diag288'],
+            width=90,
+            font=CTK_FONT_SMALL,
+            command=lambda v, idx=index: self._on_config_change(idx, 'watchdog_model', v),
         )
         model_menu.set(config.get('watchdog_model', 'i6300esb'))
         model_menu.pack(side='left', padx=2)
@@ -845,9 +975,11 @@ class DevicesConfigTab(BaseConfigTab):
 
         # Action
         action_menu = ctk.CTkOptionMenu(
-            parent, values=['reset', 'shutdown', 'poweroff', 'pause', 'none', 'dump', 'inject-nmi'],
-            width=100, font=CTK_FONT_SMALL,
-            command=lambda v, idx=index: self._on_config_change(idx, 'watchdog_action', v)
+            parent,
+            values=['reset', 'shutdown', 'poweroff', 'pause', 'none', 'dump', 'inject-nmi'],
+            width=100,
+            font=CTK_FONT_SMALL,
+            command=lambda v, idx=index: self._on_config_change(idx, 'watchdog_action', v),
         )
         action_menu.set(config.get('watchdog_action', 'reset'))
         action_menu.pack(side='left', padx=2)
@@ -862,18 +994,27 @@ class DevicesConfigTab(BaseConfigTab):
 
         # Model
         model_menu = ctk.CTkOptionMenu(
-            parent, values=['virtio', 'xen', 'none'],
-            width=70, font=CTK_FONT_SMALL,
-            command=lambda v, idx=index: self._on_config_change(idx, 'memballoon_model', v)
+            parent,
+            values=['virtio', 'xen', 'none'],
+            width=70,
+            font=CTK_FONT_SMALL,
+            command=lambda v, idx=index: self._on_config_change(idx, 'memballoon_model', v),
         )
         model_menu.set(config.get('memballoon_model', 'virtio'))
         model_menu.pack(side='left', padx=2)
         widgets.append(('memballoon_model', model_menu))
 
         # Period
-        period_entry = ctk.CTkEntry(parent, width=70, font=CTK_FONT_SMALL, placeholder_text='Period(s)')
+        period_entry = ctk.CTkEntry(
+            parent, width=70, font=CTK_FONT_SMALL, placeholder_text='Period(s)'
+        )
         period_entry.insert(0, str(config.get('memballoon_period', '')))
-        period_entry.bind('<KeyRelease>', lambda e, idx=index: self._on_entry_change(idx, 'memballoon_period', period_entry.get()))
+        period_entry.bind(
+            '<KeyRelease>',
+            lambda e, idx=index: self._on_entry_change(
+                idx, 'memballoon_period', period_entry.get()
+            ),
+        )
         period_entry.pack(side='left', padx=2)
         widgets.append(('memballoon_period', period_entry))
 
@@ -886,9 +1027,11 @@ class DevicesConfigTab(BaseConfigTab):
 
         # Model
         model_menu = ctk.CTkOptionMenu(
-            parent, values=['virtio', 'virtio-transitional', 'virtio-non-transitional'],
-            width=130, font=CTK_FONT_SMALL,
-            command=lambda v, idx=index: self._on_config_change(idx, 'rng_model', v)
+            parent,
+            values=['virtio', 'virtio-transitional', 'virtio-non-transitional'],
+            width=130,
+            font=CTK_FONT_SMALL,
+            command=lambda v, idx=index: self._on_config_change(idx, 'rng_model', v),
         )
         model_menu.set(config.get('rng_model', 'virtio'))
         model_menu.pack(side='left', padx=2)
@@ -896,18 +1039,25 @@ class DevicesConfigTab(BaseConfigTab):
 
         # Backend
         backend_menu = ctk.CTkOptionMenu(
-            parent, values=['random', 'egd', 'builtin'],
-            width=80, font=CTK_FONT_SMALL,
-            command=lambda v, idx=index: self._on_config_change(idx, 'rng_backend', v)
+            parent,
+            values=['random', 'egd', 'builtin'],
+            width=80,
+            font=CTK_FONT_SMALL,
+            command=lambda v, idx=index: self._on_config_change(idx, 'rng_backend', v),
         )
         backend_menu.set(config.get('rng_backend', 'random'))
         backend_menu.pack(side='left', padx=2)
         widgets.append(('rng_backend', backend_menu))
 
         # Source
-        source_entry = ctk.CTkEntry(parent, width=150, font=CTK_FONT_SMALL, placeholder_text='Source')
+        source_entry = ctk.CTkEntry(
+            parent, width=150, font=CTK_FONT_SMALL, placeholder_text='Source'
+        )
         source_entry.insert(0, config.get('rng_source', '/dev/urandom'))
-        source_entry.bind('<KeyRelease>', lambda e, idx=index: self._on_entry_change(idx, 'rng_source', source_entry.get()))
+        source_entry.bind(
+            '<KeyRelease>',
+            lambda e, idx=index: self._on_entry_change(idx, 'rng_source', source_entry.get()),
+        )
         source_entry.pack(side='left', padx=2)
         widgets.append(('rng_source', source_entry))
 
@@ -920,9 +1070,11 @@ class DevicesConfigTab(BaseConfigTab):
 
         # Model
         model_menu = ctk.CTkOptionMenu(
-            parent, values=['tpm-tis', 'tpm-crb', 'tpm-spapr', 'spapr-tpm-proxy'],
-            width=80, font=CTK_FONT_SMALL,
-            command=lambda v, idx=index: self._on_config_change(idx, 'tpm_model', v)
+            parent,
+            values=['tpm-tis', 'tpm-crb', 'tpm-spapr', 'spapr-tpm-proxy'],
+            width=80,
+            font=CTK_FONT_SMALL,
+            command=lambda v, idx=index: self._on_config_change(idx, 'tpm_model', v),
         )
         model_menu.set(config.get('tpm_model', 'tpm-tis'))
         model_menu.pack(side='left', padx=2)
@@ -930,9 +1082,11 @@ class DevicesConfigTab(BaseConfigTab):
 
         # Backend
         backend_menu = ctk.CTkOptionMenu(
-            parent, values=['passthrough', 'emulator', 'external'],
-            width=90, font=CTK_FONT_SMALL,
-            command=lambda v, idx=index: self._on_config_change(idx, 'tpm_backend', v)
+            parent,
+            values=['passthrough', 'emulator', 'external'],
+            width=90,
+            font=CTK_FONT_SMALL,
+            command=lambda v, idx=index: self._on_config_change(idx, 'tpm_backend', v),
         )
         backend_menu.set(config.get('tpm_backend', 'emulator'))
         backend_menu.pack(side='left', padx=2)
@@ -941,7 +1095,10 @@ class DevicesConfigTab(BaseConfigTab):
         # Device
         device_entry = ctk.CTkEntry(parent, width=120, font=CTK_FONT_SMALL)
         device_entry.insert(0, config.get('tpm_device', '/dev/tpm0'))
-        device_entry.bind('<KeyRelease>', lambda e, idx=index: self._on_entry_change(idx, 'tpm_device', device_entry.get()))
+        device_entry.bind(
+            '<KeyRelease>',
+            lambda e, idx=index: self._on_entry_change(idx, 'tpm_device', device_entry.get()),
+        )
         device_entry.pack(side='left', padx=2)
         widgets.append(('tpm_device', device_entry))
 
@@ -954,9 +1111,11 @@ class DevicesConfigTab(BaseConfigTab):
 
         # Type
         type_menu = ctk.CTkOptionMenu(
-            parent, values=['mount', 'template', 'file', 'block', 'ram', 'bind'],
-            width=70, font=CTK_FONT_SMALL,
-            command=lambda v, idx=index: self._on_config_change(idx, 'fs_type', v)
+            parent,
+            values=['mount', 'template', 'file', 'block', 'ram', 'bind'],
+            width=70,
+            font=CTK_FONT_SMALL,
+            command=lambda v, idx=index: self._on_config_change(idx, 'fs_type', v),
         )
         type_menu.set(config.get('fs_type', 'mount'))
         type_menu.pack(side='left', padx=2)
@@ -964,25 +1123,37 @@ class DevicesConfigTab(BaseConfigTab):
 
         # Access
         access_menu = ctk.CTkOptionMenu(
-            parent, values=['passthrough', 'mapped', 'squash'],
-            width=90, font=CTK_FONT_SMALL,
-            command=lambda v, idx=index: self._on_config_change(idx, 'fs_access', v)
+            parent,
+            values=['passthrough', 'mapped', 'squash'],
+            width=90,
+            font=CTK_FONT_SMALL,
+            command=lambda v, idx=index: self._on_config_change(idx, 'fs_access', v),
         )
         access_menu.set(config.get('fs_access', 'passthrough'))
         access_menu.pack(side='left', padx=2)
         widgets.append(('fs_access', access_menu))
 
         # Source
-        source_entry = ctk.CTkEntry(parent, width=150, font=CTK_FONT_SMALL, placeholder_text='Source path')
+        source_entry = ctk.CTkEntry(
+            parent, width=150, font=CTK_FONT_SMALL, placeholder_text='Source path'
+        )
         source_entry.insert(0, config.get('fs_source', ''))
-        source_entry.bind('<KeyRelease>', lambda e, idx=index: self._on_entry_change(idx, 'fs_source', source_entry.get()))
+        source_entry.bind(
+            '<KeyRelease>',
+            lambda e, idx=index: self._on_entry_change(idx, 'fs_source', source_entry.get()),
+        )
         source_entry.pack(side='left', padx=2)
         widgets.append(('fs_source', source_entry))
 
         # Target
-        target_entry = ctk.CTkEntry(parent, width=150, font=CTK_FONT_SMALL, placeholder_text='Target path')
+        target_entry = ctk.CTkEntry(
+            parent, width=150, font=CTK_FONT_SMALL, placeholder_text='Target path'
+        )
         target_entry.insert(0, config.get('fs_target', ''))
-        target_entry.bind('<KeyRelease>', lambda e, idx=index: self._on_entry_change(idx, 'fs_target', target_entry.get()))
+        target_entry.bind(
+            '<KeyRelease>',
+            lambda e, idx=index: self._on_entry_change(idx, 'fs_target', target_entry.get()),
+        )
         target_entry.pack(side='left', padx=2)
         widgets.append(('fs_target', target_entry))
 
@@ -995,9 +1166,11 @@ class DevicesConfigTab(BaseConfigTab):
 
         # Type
         type_menu = ctk.CTkOptionMenu(
-            parent, values=['pty', 'vc', 'stdio', 'null', 'tty', 'udp', 'unix', 'spicevmc', 'qemu-vdagent'],
-            width=110, font=CTK_FONT_SMALL,
-            command=lambda v, idx=index: self._on_config_change(idx, 'console_type', v)
+            parent,
+            values=['pty', 'vc', 'stdio', 'null', 'tty', 'udp', 'unix', 'spicevmc', 'qemu-vdagent'],
+            width=110,
+            font=CTK_FONT_SMALL,
+            command=lambda v, idx=index: self._on_config_change(idx, 'console_type', v),
         )
         type_menu.set(config.get('console_type', 'pty'))
         type_menu.pack(side='left', padx=2)
@@ -1005,9 +1178,11 @@ class DevicesConfigTab(BaseConfigTab):
 
         # Target
         target_menu = ctk.CTkOptionMenu(
-            parent, values=['serial', 'virtio', 'xen'],
-            width=80, font=CTK_FONT_SMALL,
-            command=lambda v, idx=index: self._on_config_change(idx, 'console_target', v)
+            parent,
+            values=['serial', 'virtio', 'xen'],
+            width=80,
+            font=CTK_FONT_SMALL,
+            command=lambda v, idx=index: self._on_config_change(idx, 'console_target', v),
         )
         target_menu.set(config.get('console_target', 'virtio'))
         target_menu.pack(side='left', padx=2)
@@ -1022,9 +1197,11 @@ class DevicesConfigTab(BaseConfigTab):
 
         # Type
         type_menu = ctk.CTkOptionMenu(
-            parent, values=['pty', 'file', 'dev', 'null', 'udp', 'tcp', 'unix', 'spiceport'],
-            width=70, font=CTK_FONT_SMALL,
-            command=lambda v, idx=index: self._on_config_change(idx, 'serial_type', v)
+            parent,
+            values=['pty', 'file', 'dev', 'null', 'udp', 'tcp', 'unix', 'spiceport'],
+            width=70,
+            font=CTK_FONT_SMALL,
+            command=lambda v, idx=index: self._on_config_change(idx, 'serial_type', v),
         )
         type_menu.set(config.get('serial_type', 'pty'))
         type_menu.pack(side='left', padx=2)
@@ -1033,14 +1210,20 @@ class DevicesConfigTab(BaseConfigTab):
         # Port
         port_entry = ctk.CTkEntry(parent, width=45, font=CTK_FONT_SMALL)
         port_entry.insert(0, str(config.get('serial_port', '0')))
-        port_entry.bind('<KeyRelease>', lambda e, idx=index: self._on_entry_change(idx, 'serial_port', port_entry.get()))
+        port_entry.bind(
+            '<KeyRelease>',
+            lambda e, idx=index: self._on_entry_change(idx, 'serial_port', port_entry.get()),
+        )
         port_entry.pack(side='left', padx=2)
         widgets.append(('serial_port', port_entry))
 
         # Path
         path_entry = ctk.CTkEntry(parent, width=150, font=CTK_FONT_SMALL, placeholder_text='Path')
         path_entry.insert(0, config.get('serial_path', ''))
-        path_entry.bind('<KeyRelease>', lambda e, idx=index: self._on_entry_change(idx, 'serial_path', path_entry.get()))
+        path_entry.bind(
+            '<KeyRelease>',
+            lambda e, idx=index: self._on_entry_change(idx, 'serial_path', path_entry.get()),
+        )
         path_entry.pack(side='left', padx=2)
         widgets.append(('serial_path', path_entry))
 
@@ -1053,9 +1236,11 @@ class DevicesConfigTab(BaseConfigTab):
 
         # Type
         type_menu = ctk.CTkOptionMenu(
-            parent, values=['pty', 'dev', 'null'],
-            width=70, font=CTK_FONT_SMALL,
-            command=lambda v, idx=index: self._on_config_change(idx, 'parallel_type', v)
+            parent,
+            values=['pty', 'dev', 'null'],
+            width=70,
+            font=CTK_FONT_SMALL,
+            command=lambda v, idx=index: self._on_config_change(idx, 'parallel_type', v),
         )
         type_menu.set(config.get('parallel_type', 'pty'))
         type_menu.pack(side='left', padx=2)
@@ -1064,14 +1249,22 @@ class DevicesConfigTab(BaseConfigTab):
         # Port
         port_entry = ctk.CTkEntry(parent, width=45, font=CTK_FONT_SMALL)
         port_entry.insert(0, str(config.get('parallel_port', '0')))
-        port_entry.bind('<KeyRelease>', lambda e, idx=index: self._on_entry_change(idx, 'parallel_port', port_entry.get()))
+        port_entry.bind(
+            '<KeyRelease>',
+            lambda e, idx=index: self._on_entry_change(idx, 'parallel_port', port_entry.get()),
+        )
         port_entry.pack(side='left', padx=2)
         widgets.append(('parallel_port', port_entry))
 
         # Path
-        path_entry = ctk.CTkEntry(parent, width=150, font=CTK_FONT_SMALL, placeholder_text='/dev/parport0')
+        path_entry = ctk.CTkEntry(
+            parent, width=150, font=CTK_FONT_SMALL, placeholder_text='/dev/parport0'
+        )
         path_entry.insert(0, config.get('parallel_path', ''))
-        path_entry.bind('<KeyRelease>', lambda e, idx=index: self._on_entry_change(idx, 'parallel_path', path_entry.get()))
+        path_entry.bind(
+            '<KeyRelease>',
+            lambda e, idx=index: self._on_entry_change(idx, 'parallel_path', path_entry.get()),
+        )
         path_entry.pack(side='left', padx=2)
         widgets.append(('parallel_path', path_entry))
 
@@ -1084,9 +1277,11 @@ class DevicesConfigTab(BaseConfigTab):
 
         # Type
         type_menu = ctk.CTkOptionMenu(
-            parent, values=['unix', 'pty', 'spicevmc', 'qemu-vdagent', 'virtio'],
-            width=80, font=CTK_FONT_SMALL,
-            command=lambda v, idx=index: self._on_config_change(idx, 'channel_type', v)
+            parent,
+            values=['unix', 'pty', 'spicevmc', 'qemu-vdagent', 'virtio'],
+            width=80,
+            font=CTK_FONT_SMALL,
+            command=lambda v, idx=index: self._on_config_change(idx, 'channel_type', v),
         )
         type_menu.set(config.get('channel_type', 'unix'))
         type_menu.pack(side='left', padx=2)
@@ -1095,7 +1290,10 @@ class DevicesConfigTab(BaseConfigTab):
         # Name
         name_entry = ctk.CTkEntry(parent, width=180, font=CTK_FONT_SMALL)
         name_entry.insert(0, config.get('channel_name', 'org.qemu.guest_agent.0'))
-        name_entry.bind('<KeyRelease>', lambda e, idx=index: self._on_entry_change(idx, 'channel_name', name_entry.get()))
+        name_entry.bind(
+            '<KeyRelease>',
+            lambda e, idx=index: self._on_entry_change(idx, 'channel_name', name_entry.get()),
+        )
         name_entry.pack(side='left', padx=2)
         widgets.append(('channel_name', name_entry))
 
@@ -1108,25 +1306,41 @@ class DevicesConfigTab(BaseConfigTab):
 
         # Model
         model_menu = ctk.CTkOptionMenu(
-            parent, values=['intel', 'amd', 'virtio', 'smmuv3', 'none'],
-            width=70, font=CTK_FONT_SMALL,
-            command=lambda v, idx=index: self._on_config_change(idx, 'iommu_model', v)
+            parent,
+            values=['intel', 'amd', 'virtio', 'smmuv3', 'none'],
+            width=70,
+            font=CTK_FONT_SMALL,
+            command=lambda v, idx=index: self._on_config_change(idx, 'iommu_model', v),
         )
         model_menu.set(config.get('iommu_model', 'intel'))
         model_menu.pack(side='left', padx=2)
         widgets.append(('iommu_model', model_menu))
 
         # Intremap
-        intremap_check = ctk.CTkCheckBox(parent, text='Intremap', width=60, font=CTK_FONT_SMALL,
-                                         command=lambda idx=index: self._on_checkbox_change(idx, 'iommu_intremap', intremap_check.get()))
+        intremap_check = ctk.CTkCheckBox(
+            parent,
+            text='Intremap',
+            width=60,
+            font=CTK_FONT_SMALL,
+            command=lambda idx=index: self._on_checkbox_change(
+                idx, 'iommu_intremap', intremap_check.get()
+            ),
+        )
         if config.get('iommu_intremap', False):
             intremap_check.select()
         intremap_check.pack(side='left', padx=2)
         widgets.append(('iommu_intremap', intremap_check))
 
         # Caching
-        caching_check = ctk.CTkCheckBox(parent, text='Caching', width=60, font=CTK_FONT_SMALL,
-                                        command=lambda idx=index: self._on_checkbox_change(idx, 'iommu_caching', caching_check.get()))
+        caching_check = ctk.CTkCheckBox(
+            parent,
+            text='Caching',
+            width=60,
+            font=CTK_FONT_SMALL,
+            command=lambda idx=index: self._on_checkbox_change(
+                idx, 'iommu_caching', caching_check.get()
+            ),
+        )
         if config.get('iommu_caching', False):
             caching_check.select()
         caching_check.pack(side='left', padx=2)
@@ -1141,9 +1355,11 @@ class DevicesConfigTab(BaseConfigTab):
 
         # Model
         model_menu = ctk.CTkOptionMenu(
-            parent, values=['dimm', 'nvdimm', 'virtio-pmem', 'virtio-mem', 'sgx-epc'],
-            width=90, font=CTK_FONT_SMALL,
-            command=lambda v, idx=index: self._on_config_change(idx, 'memory_model', v)
+            parent,
+            values=['dimm', 'nvdimm', 'virtio-pmem', 'virtio-mem', 'sgx-epc'],
+            width=90,
+            font=CTK_FONT_SMALL,
+            command=lambda v, idx=index: self._on_config_change(idx, 'memory_model', v),
         )
         model_menu.set(config.get('memory_model', 'dimm'))
         model_menu.pack(side='left', padx=2)
@@ -1152,14 +1368,20 @@ class DevicesConfigTab(BaseConfigTab):
         # Size
         size_entry = ctk.CTkEntry(parent, width=90, font=CTK_FONT_SMALL)
         size_entry.insert(0, str(config.get('memory_size', '524288')))
-        size_entry.bind('<KeyRelease>', lambda e, idx=index: self._on_entry_change(idx, 'memory_size', size_entry.get()))
+        size_entry.bind(
+            '<KeyRelease>',
+            lambda e, idx=index: self._on_entry_change(idx, 'memory_size', size_entry.get()),
+        )
         size_entry.pack(side='left', padx=2)
         widgets.append(('memory_size', size_entry))
 
         # Node
         node_entry = ctk.CTkEntry(parent, width=50, font=CTK_FONT_SMALL)
         node_entry.insert(0, str(config.get('memory_node', '0')))
-        node_entry.bind('<KeyRelease>', lambda e, idx=index: self._on_entry_change(idx, 'memory_node', node_entry.get()))
+        node_entry.bind(
+            '<KeyRelease>',
+            lambda e, idx=index: self._on_entry_change(idx, 'memory_node', node_entry.get()),
+        )
         node_entry.pack(side='left', padx=2)
         widgets.append(('memory_node', node_entry))
 
@@ -1173,15 +1395,20 @@ class DevicesConfigTab(BaseConfigTab):
         # Name
         name_entry = ctk.CTkEntry(parent, width=80, font=CTK_FONT_SMALL)
         name_entry.insert(0, config.get('shmem_name', 'shmem0'))
-        name_entry.bind('<KeyRelease>', lambda e, idx=index: self._on_entry_change(idx, 'shmem_name', name_entry.get()))
+        name_entry.bind(
+            '<KeyRelease>',
+            lambda e, idx=index: self._on_entry_change(idx, 'shmem_name', name_entry.get()),
+        )
         name_entry.pack(side='left', padx=2)
         widgets.append(('shmem_name', name_entry))
 
         # Model
         model_menu = ctk.CTkOptionMenu(
-            parent, values=['ivshmem-plain', 'ivshmem-doorbell'],
-            width=120, font=CTK_FONT_SMALL,
-            command=lambda v, idx=index: self._on_config_change(idx, 'shmem_model', v)
+            parent,
+            values=['ivshmem-plain', 'ivshmem-doorbell'],
+            width=120,
+            font=CTK_FONT_SMALL,
+            command=lambda v, idx=index: self._on_config_change(idx, 'shmem_model', v),
         )
         model_menu.set(config.get('shmem_model', 'ivshmem-plain'))
         model_menu.pack(side='left', padx=2)
@@ -1190,7 +1417,10 @@ class DevicesConfigTab(BaseConfigTab):
         # Size
         size_entry = ctk.CTkEntry(parent, width=50, font=CTK_FONT_SMALL)
         size_entry.insert(0, str(config.get('shmem_size', '4')))
-        size_entry.bind('<KeyRelease>', lambda e, idx=index: self._on_entry_change(idx, 'shmem_size', size_entry.get()))
+        size_entry.bind(
+            '<KeyRelease>',
+            lambda e, idx=index: self._on_entry_change(idx, 'shmem_size', size_entry.get()),
+        )
         size_entry.pack(side='left', padx=2)
         widgets.append(('shmem_size', size_entry))
 
@@ -1261,7 +1491,7 @@ class DevicesConfigTab(BaseConfigTab):
         else:
             self.controller_counter[controller_type] += 1
 
-        controller_id = f"{controller_type}_ctrl_{self.controller_counter[controller_type]}"
+        controller_id = f'{controller_type}_ctrl_{self.controller_counter[controller_type]}'
 
         model_map = {
             'scsi': 'virtio-scsi',
@@ -1295,7 +1525,10 @@ class DevicesConfigTab(BaseConfigTab):
                 # 检查是否还有其他设备使用同一个 controller
                 controller_in_use = False
                 for other_device in self.devices_list:
-                    if other_device != device and other_device.controller_ref == device.controller_ref:
+                    if (
+                        other_device != device
+                        and other_device.controller_ref == device.controller_ref
+                    ):
                         controller_in_use = True
                         break
 
@@ -1459,11 +1692,13 @@ class DevicesConfigTab(BaseConfigTab):
             if 'controllers' not in result:
                 result['controllers'] = []
             for ctrl in self.controllers_list:
-                result['controllers'].append({
-                    'type': ctrl.get('type', 'usb'),
-                    'model': ctrl.get('model', 'usb-xhci'),
-                    'index': ctrl.get('index', '0'),
-                })
+                result['controllers'].append(
+                    {
+                        'type': ctrl.get('type', 'usb'),
+                        'model': ctrl.get('model', 'usb-xhci'),
+                        'index': ctrl.get('index', '0'),
+                    }
+                )
 
         return result
 

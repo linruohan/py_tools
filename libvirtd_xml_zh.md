@@ -877,102 +877,6 @@ FC SAN 可以根据 VMID 提供各种 QoS 级别和访问控制。它还可以�
 
 NUMA 硬件架构支持 NUMA cell 之间距离的概念。自 3.10.0 起，可以使用 NUMA cell 描述中的 distances 元素定义 NUMA cell 之间的距离。sibling 子元素用于指定兄弟 NUMA cell 之间的距离值。有关更多详细信息，请参阅 ACPI（高级配置和电源接口）规范中解释系统 SLIT（系统局部性信息表）的章节。
 
-```
-...
-<cpu>
-  ...
-  <numa>
-    <cell id='0' cpus='0,4-7' memory='512000' unit='KiB'>
-      <distances>
-        <sibling id='0' value='10'/>
-        <sibling id='1' value='21'/>
-        <sibling id='2' value='31'/>
-        <sibling id='3' value='41'/>
-      </distances>
-    </cell>
-    <cell id='1' cpus='1,8-10,12-15' memory='512000' unit='KiB' memAccess='shared'>
-      <distances>
-        <sibling id='0' value='21'/>
-        <sibling id='1' value='10'/>
-        <sibling id='2' value='21'/>
-        <sibling id='3' value='31'/>
-      </distances>
-    </cell>
-    <cell id='2' cpus='2,11' memory='512000' unit='KiB' memAccess='shared'>
-      <distances>
-        <sibling id='0' value='31'/>
-        <sibling id='1' value='21'/>
-        <sibling id='2' value='10'/>
-        <sibling id='3' value='21'/>
-      </distances>
-    </cell>
-    <cell id='3' cpus='3' memory='512000' unit='KiB'>
-      <distances>
-        <sibling id='0' value='41'/>
-        <sibling id='1' value='31'/>
-        <sibling id='2' value='21'/>
-        <sibling id='3' value='10'/>
-      </distances>
-    </cell>
-  </numa>
-  ...
-</cpu>
-...
-```
-
-描述 NUMA cell 之间的距离目前仅由 Xen 和 QEMU 支持。如果没有提供距离来描述不同 cell 之间的 SLIT 数据，将默认为本地距离为 10，远程距离为 20 的方案。
-
-### 14.1 [ACPI 异构内存属性表](https://www.libvirt.org/formatdomain.html#id21)
-
-```
-...
-<cpu>
-  ...
-  <numa>
-    <cell id='0' cpus='0-3' memory='2097152' unit='KiB' discard='yes'>
-      <cache level='1' associativity='direct' policy='writeback'>
-        <size value='10' unit='KiB'/>
-        <line value='8' unit='B'/>
-      </cache>
-    </cell>
-    <cell id='1' cpus='4-7' memory='512000' unit='KiB' memAccess='shared'/>
-    <interconnects>
-      <latency initiator='0' target='0' type='access' value='5'/>
-      <latency initiator='0' target='0' cache='1' type='access' value='10'/>
-      <bandwidth initiator='0' target='0' type='access' value='204800' unit='KiB'/>
-    </interconnects>
-  </numa>
-  ...
-</cpu>
-...
-```
-
-自 6.6.0 起，cell 元素可以有一个 cache 子元素，描述内存邻近域的内存侧缓存。cache 元素具有描述缓存级别的 level 属性，因此该元素可以重复多次以描述缓存的不同级别。
-
-cache 元素具有以下强制属性：
-
-- level
-
-  此描述所指的缓存级别。
-
-- associativity
-
-  描述缓存关联性（接受的值为 none、direct 和 full）。
-
-- policy
-
-  描述缓存写入关联性（接受的值为 none、writeback 和 writethrough）。
-
-cache 元素有两个强制子元素：size 和 line，分别描述缓存大小和缓存行大小。两个元素都接受两个属性：value 和 unit，用于设置相应缓存属性的值。
-
-NUMA 描述有一个可选的 interconnects 元素，描述规范化的内存读/写延迟、发起方邻近域（处理器或 I/O）和目标邻近域（内存）之间的读/写带宽。
-
-interconnects 元素可以有零个或多个 latency 子元素来描述两个内存节点之间的延迟，以及零个或多个 bandwidth 子元素来描述两个内存节点之间的带宽。两者都具有以下强制属性：
-
-- initiator
-
-  指源 NUMA 节点
-
 - target
 
   指目标 NUMA 节点
@@ -987,9 +891,347 @@ interconnects 元素可以有零个或多个 latency 子元素来描述两个内
 
 要描述从一个 NUMA 节点到另一个 NUMA 节点的缓存的延迟，latency 元素具有可选的 cache 属性，该属性与 target 属性结合使用，创建对远程 NUMA 节点缓存级别的完整引用。例如，target='0' cache='1' 指的是 NUMA 节点 0 的第一级缓存。
 
-- model
+## 15 [事件配置](https://www.libvirt.org/formatdomain.html#id22)
 
-  model 元素的内容指定客户机请求的 CPU 模型。可用的 CPU 模型及其定义可以在安装在 libvirt 数据目录中的 cpu_map 目录中找到。如果 hypervisor 无法使用确切的 CPU 模型，libvirt 会自动回退到 hypervisor 支持的最接近的模型，同时保持 CPU 功能列表。自 0.9.10 起，可以使用可选的 fallback 属性来禁止此行为，在这种情况下，尝试启动请求不支持的 CPU 模型的域将失败。fallback 属性支持的值为：allow（默认值）和 forbid。可选的 vendor_id 属性（自 0.10.0 起）可用于设置客户机看到的供应商 ID。它必须恰好 12 个字符长。如果未设置，则使用主机的供应商 ID。典型的可能值是 "AuthenticAMD" 和 "GenuineIntel"。
+有时需要覆盖对各种事件采取的默认操作。并非所有 hypervisor 都支持所有事件和操作。这些操作可能是调用 libvirt API [virDomainReboot](https://www.libvirt.org/html/libvirt-libvirt-domain.html#virDomainReboot)、[virDomainShutdown](https://www.libvirt.org/html/libvirt-libvirt-domain.html#virDomainShutdown) 或 [virDomainShutdownFlags](https://www.libvirt.org/html/libvirt-libvirt-domain.html#virDomainShutdownFlags) 的结果。使用 virsh reboot 或 virsh shutdown 也会触发该事件。
+
+```
+...
+<on_poweroff>destroy</on_poweroff>
+<on_reboot>restart</on_reboot>
+<on_crash>restart</on_crash>
+<on_lockfailure>poweroff</on_lockfailure>
+...
+```
+
+以下元素集合允许在客户机 OS 触发生命周期操作时指定操作。一个常见的用例是在进行初始 OS 安装时强制将重启视为关机。这允许 VM 在首次安装后启动时重新配置。
+
+- on_poweroff
+
+  此元素的内容指定当客户机请求关机时要采取的操作。
+
+- on_reboot
+
+  此元素的内容指定当客户机请求重启时要采取的操作。
+
+- on_crash
+
+  此元素的内容指定当客户机崩溃时要采取的操作。
+
+这些状态中的每一个都允许相同的四个可能操作。
+
+- destroy
+
+  域将被完全终止，所有资源将被释放。
+
+- restart
+
+  域将被终止，然后使用相同的配置重新启动。
+
+- preserve
+
+  域将被终止，其资源将被保留以允许分析。
+
+- rename-restart
+
+  域将被终止，然后使用新名称重新启动。（仅由 libxl hypervisor 驱动程序支持。）
+
+QEMU/KVM/HVF 支持处理 destroy 和 restart 操作的 on_poweroff 和 on_reboot 事件，但禁止将 on_poweroff 设置为 restart 和将 on_reboot 设置为 destroy 的组合。
+
+自 0.8.4 起，on_crash 事件支持这些额外的操作。
+
+- coredump-destroy
+
+  崩溃域的核心将被转储，然后域将被完全终止，所有资源将被释放
+
+- coredump-restart
+
+  崩溃域的核心将被转储，然后域将使用相同的配置重新启动
+
+自 3.9.0 起，可以通过 [virDomainSetLifecycleAction](https://www.libvirt.org/html/libvirt-libvirt-domain.html#virDomainSetLifecycleAction) API 配置生命周期事件。
+
+on_lockfailure 元素（自 1.0.0 起）可用于配置当锁管理器失去资源锁时应采取的操作。libvirt 识别以下操作，尽管并非所有操作都需要由各个锁管理器支持。当未指定操作时，每个锁管理器将采取其默认操作。
+
+- poweroff
+
+  域将被强制关机。
+
+- restart
+
+  域将被关机并重新启动以重新获取其锁。
+
+- pause
+
+  域将被暂停，以便在锁问题解决后可以手动恢复。
+
+- ignore
+
+  保持域运行，就像什么都没发生一样。
+
+## 16 [电源管理](https://www.libvirt.org/formatdomain.html#id23)
+
+自 0.10.2 起，可以强制启用或禁用对客户机 OS 的 BIOS 广告。（注意：仅 qemu 驱动程序支持）
+
+```
+...
+<pm>
+  <suspend-to-disk enabled='no'/>
+  <suspend-to-mem enabled='yes'/>
+</pm>
+...
+```
+
+- pm
+
+  这些元素启用（'yes'）或禁用（'no'）对 S3（挂起到内存）和 S4（挂起到磁盘）ACPI 睡眠状态的 BIOS 支持。如果未指定任何内容，则 hypervisor 将保持其默认值。注意：此设置不能阻止客户机 OS 执行挂起，因为客户机 OS 本身可以选择规避睡眠状态的不可用性（例如，通过完全关闭来实现 S4）。
+
+## 17 [磁盘节流组管理](https://www.libvirt.org/formatdomain.html#id24)
+
+自 11.2.0 起，可以创建多个命名的节流组，然后在 throttlefilters（disk 元素的子元素）中引用它们，以在 QEMU 中为特定磁盘形成过滤器链。限制（throttlegroups）在域内共享，因此同一组可以被不同的过滤器引用。
+
+```
+<domain>
+  ...
+  <throttlegroups>
+    <throttlegroup>
+      <group_name>limit0</group_name>
+      <total_bytes_sec>10000000</total_bytes_sec>
+      <read_iops_sec>400000</read_iops_sec>
+      <write_iops_sec>100000</write_iops_sec>
+    </throttlegroup>
+  </throttlegroups>
+  ...
+</domain>
+```
+
+- throttlegroup
+
+  它具有与 iotune 相同的子元素（请参阅 [硬盘、软盘、光盘](https://www.libvirt.org/formatdomain.html#hard-drives-floppy-disks-cdroms)），区别在于 group_name> 是必需的。
+
+## 18 [Hypervisor 功能](https://www.libvirt.org/formatdomain.html#id25)
+
+Hypervisor 可能允许开启/关闭某些 CPU / 机器功能。
+
+```xml
+...
+<features>
+  <pae/>
+  <acpi/>
+  <apic/>
+  <hap/>
+  <privnet/>
+  <hyperv mode='custom'>
+    <relaxed state='on'/>
+    <vapic state='on'/>
+    <spinlocks state='on' retries='4096'/>
+    <vpindex state='on'/>
+    <runtime state='on'/>
+    <synic state='on'/>
+    <stimer state='on'>
+      <direct state='on'/>
+    </stimer>
+    <reset state='on'/>
+    <vendor_id state='on' value='KVM Hv'/>
+    <frequencies state='on'/>
+    <reenlightenment state='on'/>
+    <tlbflush state='on'>
+      <direct state='on'/>
+      <extended state='on'/>
+    </tlbflush>
+    <ipi state='on'/>
+    <evmcs state='on'/>
+    <emsr_bitmap state='on'/>
+    <xmm_input state='on'/>
+  </hyperv>
+  <kvm>
+    <hidden state='on'/>
+    <hint-dedicated state='on'/>
+    <poll-control state='on'/>
+    <pv-ipi state='off'/>
+    <dirty-ring state='on' size='4096'/>
+  </kvm>
+  <xen>
+    <e820_host state='on'/>
+    <passthrough state='on' mode='share_pt'/>
+  </xen>
+  <pvspinlock state='on'/>
+  <gic version='2'/>
+  <ioapic driver='qemu'/>
+  <hpt resizing='required'>
+    <maxpagesize unit='MiB'>16</maxpagesize>
+  </hpt>
+  <vmcoreinfo state='on'/>
+  <smm state='on'>
+    <tseg unit='MiB'>48</tseg>
+  </smm>
+  <htm state='on'/>
+  <ccf-assist state='on'/>
+  <msrs unknown='ignore'/>
+  <cfpc value='workaround'/>
+  <sbbc value='workaround'/>
+  <ibs value='fixed-na'/>
+  <tcg>
+    <tb-cache unit='MiB'>128</tb-cache>
+  </tcg>
+  <async-teardown enabled='yes'/>
+  <ras state='on'/>
+  <ps2 state='on'/>
+  <aia value='aplic-imsic'/>
+</features>
+...
+```
+
+所有功能都列在 features 元素中，省略可切换的功能标签将其关闭。可以通过请求 [capabilities XML](https://www.libvirt.org/formatcaps.html) 和 [domain capabilities XML](https://www.libvirt.org/formatdomaincaps.html) 找到可用功能，但完全虚拟化域的常见集是：
+
+- pae
+
+  物理地址扩展模式允许 32 位客户机寻址超过 4 GB 的内存。
+
+- acpi
+
+  ACPI 对电源管理很有用，例如，对于 KVM 或 HVF 客户机，它是正常关机工作所必需的。
+
+- apic
+
+  APIC 允许使用可编程 IRQ 管理。自 0.10.2 起（仅 QEMU），有一个可选的 eoi 属性，值为 on 和 off，用于切换客户机的 EOI（中断结束）可用性。
+
+- hap
+
+  根据 state 属性（值 on、off）启用或禁用硬件辅助分页的使用。默认值是如果 hypervisor 检测到硬件辅助分页可用，则为 on。
+
+- viridian
+
+  为半虚拟化客户机操作系统启用 Viridian hypervisor 扩展
+
+- privnet
+
+  始终创建私有网络命名空间。如果定义了任何接口设备，这将自动设置。此功能仅与基于容器的虚拟化驱动程序（如 LXC）相关。
+
+- hyperv
+
+  启用各种功能，改善运行 Microsoft Windows 的客户机的行为。自 11.3.0 起，其中一些标志也可用于运行 Microsoft Windows 的 Xen 域。
+  | 功能 | 描述 | 值 | 自 |
+  | --- | --- | --- | --- |
+  | relaxed | 放宽对计时器的约束 | on, off | 1.0.0 (QEMU 2.0), 11.3.0 (Xen, 始终开启) |
+  | vapic | 启用虚拟 APIC | on, off | 1.1.0 (QEMU 2.0), 11.3.0 (Xen) |
+  | spinlocks | 启用自旋锁支持 - retries 属性定义在多少次失败的获取尝试后通知 hypervisor | on, off; retries - 4095 到 4294967295 之间，特殊值 4294967295 表示永远不通知 hypervisor（如果省略则为默认值） | 1.1.0 (QEMU 2.0), 永远不通知模式 11.9.0 (QEMU 2.0) |
+  | vpindex | 虚拟处理器索引 | on, off | 1.3.3 (QEMU 2.5), 11.3.0 (Xen, 始终开启) |
+  | runtime | 处理器在运行客户机代码和代表客户机代码上花费的时间 | on, off | 1.3.3 (QEMU 2.5) |
+  | synic | 启用合成中断控制器 (SynIC) | on, off | 1.3.3 (QEMU 2.6), 11.3.0 (Xen) |
+  | stimer | 启用 SynIC 计时器，可选支持直接模式 | on, off; direct - on,off | 1.3.3 (QEMU 2.6), 直接模式 5.7.0 (QEMU 4.1), 11.3.0 (Xen, 仅 on/off) |
+  | reset | 启用 hypervisor 重置 | on, off | 1.3.3 (QEMU 2.5) |
+  | vendor_id | 设置 hypervisor 供应商 ID | on, off; value - 字符串，最多 12 个字符 | 1.3.3 (QEMU 2.5) |
+  | frequencies | 公开频率 MSR | on, off | 4.7.0 (QEMU 2.12), 11.3.0 (Xen) |
+  | reenlightenment | 在迁移时启用重新启蒙通知 | on, off | 4.7.0 (QEMU 3.0) |
+  | tlbflush | 启用 PV TLB 刷新支持 | on, off; direct - on,off; extended - on,off | 4.7.0 (QEMU 3.0), 直接和扩展模式 11.0.0 (QEMU 7.1.0), 11.3.0 (Xen, 仅 on/off) |
+  | ipi | 启用 PV IPI 支持 | on, off | 4.10.0 (QEMU 3.1), 11.3.0 (Xen) |
+  | evmcs | 启用 Enlightened VMCS | on, off | 4.10.0 (QEMU 3.1) |
+  | avic | 启用使用 Hyper-V SynIC 与硬件 APICv/AVIC | on, off | 8.10.0 (QEMU 6.2) |
+  | emsr_bitmap | 避免在 vmexits 时对 L2 MSR 位图进行不必要的更新。 | on, off | 10.7.0 (QEMU 7.1) |
+  | xmm_input | 启用 XMM 快速 hypercall 输入 | on, off | 10.7.0 (QEMU 7.1) |
+  自 8.0.0 起（QEMU）自 11.3.0 起（Xen），可以通过将 mode 属性设置为以下值之一来进一步配置 hypervisor：custom 精确设置指定的功能。passthrough 启用 hypervisor 当前支持的所有功能，即使是 libvirt 不理解的功能。使用 passthrough 迁移客户机是危险的，如果源主机和目标主机在硬件、QEMU 版本、微码版本和配置方面不相同。如果尝试这种迁移，客户机可能会在目标主机上恢复执行时挂起或崩溃。根据 hypervisor 版本，虚拟 CPU 可能包含可能阻止迁移到相同主机的功能。host-model 类似于 passthrough 模式，除了 libvirt 检测 hypervisor 支持的哪些启蒙，并在域启动时将它们扩展到活动 XML 中。从某种意义上说，这类似于 host-model CPU 模式（请参阅 [CPU 模型和拓扑](https://www.libvirt.org/formatdomain.html#cpu-model-and-topology)）。自 11.9.0 起，也可以像在 custom 模式中一样设置功能。这些功能将保持不变，不会对它们进行扩展。自 12.1.0 起，mode 属性可以省略，默认为 custom。
+
+- pvspinlock
+
+  通知客户机主机支持半虚拟化自旋锁，例如通过公开 pvticketlocks 机制。可以通过使用 state='off' 属性显式禁用此功能。
+
+- kvm
+
+  更改 KVM hypervisor 行为的各种功能。
+  | 功能 | 描述 | 值 | 自 |
+  | --- | --- | --- | --- |
+  | hidden | 对标准 MSR 基于发现隐藏 KVM hypervisor | on, off | 1.2.8 (QEMU 2.1.0) |
+  | hint-dedicated | 允许客户机在运行在专用 vCPU 上时启用优化 | on, off | 5.7.0 (QEMU 2.12.0) |
+  | poll-control | 通过引入忙等待的宽限期来减少 IO 完成延迟 | on, off | 6.10.0 (QEMU 4.2) |
+  | pv-ipi | 半虚拟化发送 IPI | on, off | 7.10.0 (QEMU 3.1) |
+  | dirty-ring | 启用脏环功能 | on, off; size - 必须是 2 的幂，范围 [1024,65536] | 8.0.0 (QEMU 6.1) |
+
+- xen
+
+  更改 Xen hypervisor 行为的各种功能。
+  | 功能 | 描述 | 值 | 自 |
+  | --- | --- | --- | --- |
+  | e820_host | 向客户机公开主机 e820（仅 PV） | on, off | 6.3.0 |
+  | passthrough | 启用 IOMMU 映射，允许 PCI 直通 | on, off; mode - 可选字符串 sync_pt 或 share_pt | 6.3.0 |
+
+- pmu
+
+  根据 state 属性（值 on、off、default on）启用或禁用客户机的性能监控单元。自 1.2.12 起
+
+- vmport
+
+  根据 state 属性（值 on、off、default on）启用或禁用 VMware IO 端口的模拟，用于 vmmouse 等。自 1.2.16 起
+
+- gic
+
+  为使用通用中断控制器而不是 APIC 来处理中断的架构启用。例如，'aarch64' 架构使用 gic 而不是 apic。可选属性 version 指定 GIC 版本；但是，并非所有 hypervisor 都支持它。接受的值为 2、3 和 host。自 1.2.16 起
+
+- smm
+
+  根据 state 属性（值 on、off、default on）启用或禁用系统管理模式。自 2.1.0 起，可选子元素 tseg 可用于指定专用于 SMM 扩展 TSEG 的内存量。这提供了第四个选项大小，除了客户机 OS（或更确切地说，加载程序）可以选择的现有选项（1 MiB、2 MiB 和 8 MiB）之外。大小可以指定为该元素的值，可选属性 unit 可用于指定上述值的单位（默认为 'MiB'）。如果设置为 0，则不广告扩展大小，仅提供默认大小（见上文）。**如果 VM 正在启动，您应该保持此选项不变，除非您非常确定您知道自己在做什么。** 此值是可配置的，因为无法保证计算正确且能正常工作。在 QEMU 中，用户可配置的扩展 TSEG 功能在 pc-q35-2.9 及之前版本中不可用。从 pc-q35-2.10 开始，该功能可用，默认大小为 16 MiB。这应该足以支持最多约 272 个 vCPU、总共 5 GiB 客户机 RAM、无热插拔内存范围和 32 GiB 64 位 PCI MMIO 孔径。或者，对于 48 个 vCPU，1TB 客户机 RAM，无热插拔 DIMM 范围，以及 32GB 64 位 PCI MMIO 孔径。这些值也可能因 VM 使用的加载程序而异。对于显著更高的 vCPU 计数或增加的地址空间（可以是内存、maxMemory、64 位 PCI MMIO 孔径大小；大约每 1 TiB 地址空间 8 MiB TSEG），可能需要额外的大小，这也可以四舍五入。由于此设置的性质类似于 "客户机应该有多少 RAM"，建议用户要么查阅客户机 OS 或加载程序的文档（如果有），要么通过试错更改值，直到 VM 成功启动。用户的另一个指导值可能是 48 MiB 应该足够用于相当大的客户机（240 个 vCPU 和 4TB 客户机 RAM）。
+
+- ioapic
+
+  调整 I/O APIC。driver 属性的可能值为：kvm（KVM 域的默认值）和 qemu，这会将 I/O APIC 放在用户空间，也称为拆分 I/O APIC 模式。自 3.4.0 起（仅 QEMU/KVM）
+
+- hpt
+
+  配置 pSeries 客户机的 HPT（哈希页表）。resizing 属性的可能值为 enabled，这会在客户机和主机都支持时启用 HPT 调整大小；disabled，这会禁用 HPT 调整大小，无论客户机和主机支持如何；以及 required，这会阻止客户机启动，除非客户机和主机都支持 HPT 调整大小。如果未定义该属性，将使用 hypervisor 默认值。自 3.10.0 起（仅 QEMU/KVM）。可选的 maxpagesize 子元素可用于限制 HPT 客户机的可用页面大小。常见值为 64 KiB、16 MiB 和 16 GiB；未指定时，将使用 hypervisor 默认值。自 4.5.0 起（仅 QEMU/KVM）。
+
+- vmcoreinfo
+
+  启用 QEMU vmcoreinfo 设备，让客户机内核保存调试详细信息。自 4.4.0 起（仅 QEMU）
+
+- htm
+
+  配置 pSeries 客户机的 HTM（硬件事务内存）可用性。state 属性的可能值为 on 和 off。如果未定义该属性，将使用 hypervisor 默认值。自 4.6.0 起（仅 QEMU/KVM）
+
+- nested-hv
+
+  配置 pSeries 客户机的嵌套 HV 可用性。这需要从主机 (L0) 启用才能生效；如果计划在 (L1) 客户机中运行嵌套 (L2) 客户机，(L1) 客户机中具有 HV 支持是非常理想的，因为这将导致这些嵌套客户机具有比使用 KVM PR 或 TCG 时更好的性能。state 属性的可能值为 on 和 off。如果未定义该属性，将使用 hypervisor 默认值。自 4.10.0 起（仅 QEMU/KVM）
+
+- msrs
+
+  一些客户机可能需要忽略未知的模型特定寄存器 (MSR) 读取和写入。可以通过将 msrs 的 unknown 属性设置为 ignore 来切换此功能。如果未定义该属性，或设置为 fault，则不会忽略未知的读取和写入。自 5.1.0 起（仅 bhyve）
+
+- ccf-assist
+
+  配置 pSeries 客户机的 ccf-assist（计数缓存刷新辅助）可用性。state 属性的可能值为 on 和 off。如果未定义该属性，将使用 hypervisor 默认值。自 5.9.0 起（仅 QEMU/KVM）
+
+- cfpc
+
+  配置 pSeries 客户机的 cfpc（特权更改时缓存刷新）可用性。value 属性的可能值为 broken（无保护）、workaround（可用软件解决方法）和 fixed（硬件中已修复）。如果未定义该属性，将使用 hypervisor 默认值。自 6.3.0 起（仅 QEMU/KVM）
+
+- sbbc
+
+  配置 pSeries 客户机的 sbbc（推测屏障边界检查）可用性。value 属性的可能值为 broken（无保护）、workaround（可用软件解决方法）和 fixed（硬件中已修复）。如果未定义该属性，将使用 hypervisor 默认值。自 6.3.0 起（仅 QEMU/KVM）
+
+- ibs
+
+  配置 pSeries 客户机的 ibs（间接分支推测）可用性。value 属性的可能值为 broken（无保护）、workaround（计数缓存刷新）、fixed-ibs（通过序列化间接分支修复）、fixed-ccd（通过禁用缓存计数修复）和 fixed-na（硬件中已修复 - 不再适用）。如果未定义该属性，将使用 hypervisor 默认值。自 6.3.0 起（仅 QEMU/KVM）
+
+- tcg
+
+  更改 TCG 加速器行为的各种功能。
+  | 功能 | 描述 | 值 | 自 |
+  | --- | --- | --- | --- |
+  | tb-cache | 翻译块缓存大小 | 整数（MiB 的倍数） | 8.0.0 |
+
+- async-teardown
+
+  启用异步拆卸，这可以加快域关闭速度。自 8.6.0 起（仅 QEMU）
+
+- ras
+
+  启用 RAS（可靠性、可用性和可服务性）功能。自 8.10.0 起（仅 QEMU）
+
+- ps2
+
+  根据 state 属性（值 on、off、default on）启用或禁用 PS/2 控制器。自 9.6.0 起（仅 QEMU）
+
+- aia
+
+  配置 AIA（高级中断架构）。value 属性的可能值为 aplic-imsic（启用 APIC 编程中断控制器和中断消息签名中断控制器）。自 10.2.0 起（仅 QEMU）
 
 - vendor
 

@@ -187,9 +187,7 @@ class DevicesConfig:
             elif isinstance(inp, list):
                 self.input = [Input.from_dict(d) if isinstance(d, dict) else d for d in inp]
         if 'inputs' in data:
-            self.input = [
-                Input.from_dict(d) if isinstance(d, dict) else d for d in data['inputs']
-            ]
+            self.input = [Input.from_dict(d) if isinstance(d, dict) else d for d in data['inputs']]
         if 'hostdev' in data:
             self.hostdev = [
                 Hostdev.from_dict(d) if isinstance(d, dict) else d for d in data['hostdev']
@@ -262,11 +260,13 @@ class DevicesConfig:
             self.panic = [Panic.from_dict(d) if isinstance(d, dict) else d for d in data['panics']]
         if 'filesystem' in data:
             self.filesystem = [
-                self._convert_filesystem_dict(d) if isinstance(d, dict) else d for d in data['filesystem']
+                self._convert_filesystem_dict(d) if isinstance(d, dict) else d
+                for d in data['filesystem']
             ]
         if 'filesystems' in data:
             self.filesystem = [
-                self._convert_filesystem_dict(d) if isinstance(d, dict) else d for d in data['filesystems']
+                self._convert_filesystem_dict(d) if isinstance(d, dict) else d
+                for d in data['filesystems']
             ]
         if 'nvram' in data:
             self.nvram = [Nvram.from_dict(d) if isinstance(d, dict) else d for d in data['nvram']]
@@ -294,10 +294,7 @@ class DevicesConfig:
             ]
         if 'redirfilter' in data:
             self.redirfilter = [
-                Redirfilter.from_dict(d)
-                if isinstance(d, dict)
-                else d
-                for d in data['redirfilter']
+                Redirfilter.from_dict(d) if isinstance(d, dict) else d for d in data['redirfilter']
             ]
         if 'usb_controller' in data:
             # 处理 USB 控制器配置
@@ -317,19 +314,21 @@ class DevicesConfig:
         # 注意：type 字段在 Disk 类中表示磁盘格式（qcow2, raw 等），不是磁盘源类型（file, block 等）
         # driver_type 或 format 才是磁盘格式
         driver_type = d.get('driver_type') or d.get('format', 'qcow2')
-        return Disk.from_dict({
-            'type': driver_type,  # 磁盘格式（qcow2, raw 等）
-            'device': d.get('device') or d.get('disk_device') or d.get('device_type', 'disk'),
-            'bus': d.get('bus', 'virtio'),
-            'target': d.get('target') or d.get('target_dev', 'vda'),
-            'source_file': d.get('source_file') or d.get('source') or d.get('path', ''),
-            'driver': d.get('driver') or d.get('driver_type'),
-            'cache': d.get('cache', 'none'),
-            'readonly': d.get('readonly', False),
-            'shareable': d.get('shareable', False),
-            'discard': 'unmap' if d.get('discard') else None,
-            'boot_order': d.get('boot_order', ''),
-        })
+        return Disk.from_dict(
+            {
+                'type': driver_type,  # 磁盘格式（qcow2, raw 等）
+                'device': d.get('device') or d.get('disk_device') or d.get('device_type', 'disk'),
+                'bus': d.get('bus', 'virtio'),
+                'target': d.get('target') or d.get('target_dev', 'vda'),
+                'source_file': d.get('source_file') or d.get('source') or d.get('path', ''),
+                'driver': d.get('driver') or d.get('driver_type'),
+                'cache': d.get('cache', 'none'),
+                'readonly': d.get('readonly', False),
+                'shareable': d.get('shareable', False),
+                'discard': 'unmap' if d.get('discard') else None,
+                'boot_order': d.get('boot_order', ''),
+            }
+        )
 
     def _convert_filesystem_dict(self, d: Any) -> dict | Filesystem:
         """转换 filesystem 配置字典，将模块格式转换为 Filesystem 格式."""

@@ -59,64 +59,55 @@ from .virtio import VirtioOptionsTab as VirtioTab
 from .vsock import VsockTab
 
 __all__ = [
-    # 主模块
-    'DevicesTab',
-
-    # 基础设备
-    'GraphicsTab',
-    'VideoDevicesTab',
-    'HardDisksTab',
-    'FilesystemsTab',
-    'NetworkInterfacesTab',
-    'ControllersTab',
-    'DiskDevicesTab',
-    'DiskConfigDialog',
-
-    # 其他设备
-    'InputDevicesTab',
-    'HubDevicesTab',
-    'GraphicalFramebuffersTab',
-    'SoundDevicesTab',
-    'WatchdogDevicesTab',
-    'MemoryBalloonTab',
-    'TPMDeviceTab',
-    'ConsolesDevicesTab',
-    'OthersTab',
-
-    # 控制台和串口
-    'SerialPortTab',
-    'ParallelPortTab',
-    'ConsoleTab',
-    'ChannelTab',
-    'DomainLogfileTab',
-
-    # 主机设备
-    'HostDeviceAssignmentTab',
-    'RedirectedDevicesTab',
-    'SmartcardDevicesTab',
-    'USBHostdevTab',
-    'PCIHostdevTab',
-    'SCSIHostdevTab',
-    'MdevHostdevTab',
-
-    # 特殊设备
-    'RandomNumberGeneratorTab',
-    'NVRAMDeviceTab',
-    'PanicDeviceTab',
-    'VsockTab',
-    'CryptoTab',
-    'PstoreTab',
-
-    # 内存设备
-    'MemoryDevicesTab',
-    'SharedMemoryDeviceTab',
-
-    # 高级功能
-    'IOMMUDevicesTab',
-    'DeviceAddressesTab',
-    'DeviceLeasesTab',
-    'VirtioTab',
-
     # 音频后端
     'AudioBackendsTab',
+    # 控制台和串口
+    'ChannelTab',
+    'ConsoleTab',
+    'ConsolesDevicesTab',
+    'ControllersTab',
+    'CryptoTab',
+    'DeviceAddressesTab',
+    'DeviceLeasesTab',
+    # 主模块
+    'DevicesTab',
+    'DiskConfigDialog',
+    'DiskDevicesTab',
+    'DomainLogfileTab',
+    'FilesystemsTab',
+    'GraphicalFramebuffersTab',
+    # 基础设备
+    'GraphicsTab',
+    'HardDisksTab',
+    # 主机设备
+    'HostDeviceAssignmentTab',
+    'HubDevicesTab',
+    # 高级功能
+    'IOMMUDevicesTab',
+    'InputDevicesTab',
+    'MdevHostdevTab',
+    'MemoryBalloonTab',
+    # 内存设备
+    'MemoryDevicesTab',
+    'NVRAMDeviceTab',
+    'NetworkInterfacesTab',
+    # 其他设备
+    'OthersTab',
+    'PCIHostdevTab',
+    'PanicDeviceTab',
+    'ParallelPortTab',
+    'PstoreTab',
+    'RandomNumberGeneratorTab',
+    'RedirectedDevicesTab',
+    'SCSIHostdevTab',
+    'SerialPortTab',
+    'SharedMemoryDeviceTab',
+    'SmartcardDevicesTab',
+    'SoundDevicesTab',
+    'TPMDeviceTab',
+    'USBHostdevTab',
+    'VideoDevicesTab',
+    'VirtioTab',
+    'VsockTab',
+    'WatchdogDevicesTab',
 ]
