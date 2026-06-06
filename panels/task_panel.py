@@ -134,13 +134,12 @@ class AddTaskDialog(ctk.CTkToplevel):
         )
         self.label_filter.grid(row=6, column=0, padx=20, pady=(0, 5), sticky='ew')
 
-        # 已选标签显示
-        self.selected_labels_frame = ctk.CTkScrollableFrame(
+        # 已选标签显示区域
+        self.selected_labels_frame = ctk.CTkFrame(
             self,
-            fg_color='transparent',
-            height=50,
-            label_text='已选标签',
-            label_font=CTK_FONT_SMALL,
+            fg_color=BG_COLOR_CONTENT,
+            corner_radius=4,
+            border_width=1,
         )
         self.selected_labels_frame.grid(row=7, column=0, padx=20, pady=(0, 15), sticky='ew')
         self.selected_labels_frame.grid_columnconfigure(0, weight=1)
@@ -190,40 +189,48 @@ class AddTaskDialog(ctk.CTkToplevel):
             self.label_filter.clear_search()
 
     def update_selected_labels_display(self) -> None:
-        """更新已选标签的显示."""
+        """更新已选标签的显示（同一行显示）."""
         # 清空已有显示
         for widget in self.selected_labels_frame.winfo_children():
             widget.destroy()
 
-        # 显示每个标签
+        # 标签容器框架（使用pack横向排列）
+        tags_container = ctk.CTkFrame(self.selected_labels_frame, fg_color='transparent')
+        tags_container.pack(fill='x', padx=2, pady=2)
+
+        # 显示每个标签（同一行横向排列）
         for i, label in enumerate(self.selected_labels):
+            # 标签框架
             tag_frame = ctk.CTkFrame(
-                self.selected_labels_frame,
-                fg_color=BG_COLOR_CONTENT,
+                tags_container,
+                fg_color='#404040',
                 corner_radius=4,
             )
-            tag_frame.grid(row=i, column=0, pady=2, sticky='ew')
-            tag_frame.grid_columnconfigure(0, weight=1)
+            tag_frame.pack(side='left', padx=2, pady=2)
 
+            # 标签文字
             tag_label = ctk.CTkLabel(
                 tag_frame,
                 text=label,
                 font=CTK_FONT_SMALL,
-                text_color='#f0f0f0',
+                text_color='white',
+                anchor='w',
             )
-            tag_label.grid(row=0, column=0, padx=8, pady=4, sticky='w')
+            tag_label.pack(side='left', padx=6, pady=2)
 
+            # 删除按钮
             remove_btn = ctk.CTkButton(
                 tag_frame,
                 text='×',
-                width=24,
-                height=24,
-                font=CTK_FONT_SMALL,
-                fg_color='transparent',
-                hover_color='#555555',
+                width=20,
+                height=20,
+                font=('Microsoft YaHei UI', 12),
+                fg_color='#5a5a5a',
+                hover_color='#ff5252',
+                corner_radius=4,
                 command=lambda lbl=label: self.remove_label(lbl),
             )
-            remove_btn.grid(row=0, column=1, padx=4, pady=4)
+            remove_btn.pack(side='left', padx=2, pady=2)
 
     def remove_label(self, label) -> None:
         """移除已选标签.
