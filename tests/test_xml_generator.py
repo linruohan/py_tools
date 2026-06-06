@@ -184,7 +184,7 @@ class TestErrorHandling:
 
 class TestFullConfig:
     def test_full_config_from_vmconfig(self):
-        from model.vm_model.core.vm_config import VMConfig
+        from vm.model.core.vm_config import VMConfig
         cfg = VMConfig()
         cfg.basic.name = 'full-test'
         xml = _gen(cfg.to_dict())

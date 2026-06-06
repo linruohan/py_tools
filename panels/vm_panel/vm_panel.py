@@ -7,7 +7,7 @@ from tkinter import END, filedialog, messagebox
 import customtkinter as ctk
 
 from components.tab_toggle import TABS_CONFIG, TabTogglePanel
-from model.vm_model.core.vm_config import VMConfig
+from vm.model.core.vm_config import VMConfig
 from utils.styles import (
     BG_COLOR_CONTENT,
     BG_COLOR_MAIN,

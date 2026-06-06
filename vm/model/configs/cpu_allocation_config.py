@@ -2,7 +2,7 @@
 
 from dataclasses import dataclass, field
 
-from model.vm_model.cpu.topology import CPUTopology
+from ..cpu.topology import CPUTopology
 
 
 @dataclass

@@ -1,9 +1,9 @@
 """测试虚拟机配置类 - 使用当前模型结构."""
 
-from model.vm_model.core.vm_config import VMConfig
-from model.vm_model.configs.basic_config import BasicConfig
-from model.vm_model.configs.memory_allocation_config import MemoryAllocationConfig
-from model.vm_model.configs.throttlegroups import ThrottleGroups, ThrottleGroup
+from vm.model.core.vm_config import VMConfig
+from vm.model.configs.basic_config import BasicConfig
+from vm.model.configs.memory_allocation_config import MemoryAllocationConfig
+from vm.model.configs.throttlegroups import ThrottleGroups, ThrottleGroup
 from utils.xml_generator import LibvirtXMLGenerator, XMLGenerationError
 
 

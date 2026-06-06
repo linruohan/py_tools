@@ -1,6 +1,6 @@
 """测试配置验证功能."""
 
-from model.vm_model.core.vm_config import VMConfig
+from vm.model.core.vm_config import VMConfig
 
 
 def test_validate_empty_name():
@@ -93,7 +93,7 @@ def test_validate_current_memory_exceeds_max():
 
 def test_validate_cpu_topology_mismatch():
     """测试 CPU 拓扑不匹配验证."""
-    from model.vm_model.cpu.topology import CPUTopology
+    from vm.model.cpu.topology import CPUTopology
     
     config = VMConfig()
     config.basic.name = 'test-vm'
@@ -107,7 +107,7 @@ def test_validate_cpu_topology_mismatch():
 
 def test_validate_cpu_topology_match():
     """测试 CPU 拓扑匹配验证."""
-    from model.vm_model.cpu.topology import CPUTopology
+    from vm.model.cpu.topology import CPUTopology
     
     config = VMConfig()
     config.basic.name = 'test-vm'

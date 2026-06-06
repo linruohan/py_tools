@@ -4,7 +4,7 @@ from tkinter import END
 
 import customtkinter as ctk
 
-from utils.task_db import TaskDatabase
+from task.task_db import TaskDatabase
 
 # 全局字体配置
 CTK_FONT_MAIN = ('Microsoft YaHei UI', 12)

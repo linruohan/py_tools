@@ -9,7 +9,7 @@ from utils.xml_generator import LibvirtXMLGenerator
 def test_complete_os_tab_flow():
     """测试完整的 OS Tab 数据流：UI -> to_xml() -> VMConfig -> XML."""
 
-    from model.vm_model.configs.os_booting_config import OSBootingConfig
+    from vm.model.configs.os_booting_config import OSBootingConfig
 
     # 使用 OSBootingConfig 来正确生成配置
     os_config = OSBootingConfig()
@@ -113,7 +113,7 @@ def test_complete_os_tab_flow():
 def test_bootmenu_only_change():
     """测试仅点击 bootmenu 时，其他配置不丢失."""
 
-    from model.vm_model.configs.os_booting_config import OSBootingConfig
+    from vm.model.configs.os_booting_config import OSBootingConfig
 
     # 模拟用户先配置了 arch/machine/firmware 等
     # 然后点击 bootmenu 复选框

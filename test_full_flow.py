@@ -4,7 +4,7 @@ import sys
 
 sys.path.insert(0, 'D:/codehub/py_tools')
 
-from model.vm_model.core.vm_config import VMConfig
+from vm.model.core.vm_config import VMConfig
 from utils.xml_generator import LibvirtXMLGenerator
 
 # 1. 模拟 devices tab 的 to_xml 方法返回的配置

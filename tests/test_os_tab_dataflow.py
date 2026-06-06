@@ -3,7 +3,7 @@
 import sys
 sys.path.insert(0, 'D:\\codehub\\py_tools')
 
-from model.vm_model.configs.os_booting_config import OSBootingConfig
+from vm.model.configs.os_booting_config import OSBootingConfig
 
 
 def test_os_booting_config_update():
@@ -80,7 +80,7 @@ def test_os_booting_config_update():
 
 def test_vm_config_integration():
     """测试 VMConfig 与 OSBootingConfig 的集成."""
-    from model.vm_model.core.vm_config import VMConfig
+    from vm.model.core.vm_config import VMConfig
 
     vm_config = VMConfig()
 
