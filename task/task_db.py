@@ -35,22 +35,38 @@ class TaskDatabase:
             return
 
         cursor = self.conn.cursor()
-        cursor.execute('''
+        cursor.execute("""
             CREATE TABLE IF NOT EXISTS tasks (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
-                text TEXT NOT NULL,
+                content TEXT NOT NULL,
+                description TEXT,
+                due TEXT,
+                priority INTEGER DEFAULT 0,
+                labels TEXT,
                 completed INTEGER DEFAULT 0,
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                completed_at TIMESTAMP
             )
-        ''')
+        """)
         self.conn.commit()
 
-    def add_task(self, text: str) -> int:
+    def add_task(
+        self,
+        content: str,
+        description: str = '',
+        due: str = '',
+        priority: int = 0,
+        labels: str = '',
+    ) -> int:
         """添加新任务.
 
         Args:
-            text: 任务内容
+            content: 任务内容
+            description: 任务描述
+            due: 截止日期
+            priority: 优先级 (0-3)
+            labels: 标签
 
         Returns:
             新任务的 ID
@@ -60,8 +76,9 @@ class TaskDatabase:
 
         cursor = self.conn.cursor()
         cursor.execute(
-            'INSERT INTO tasks (text, completed) VALUES (?, 0)',
-            (text,)
+            """INSERT INTO tasks (content, description, due, priority, labels, completed) 
+               VALUES (?, ?, ?, ?, ?, 0)""",
+            (content, description, due, priority, labels),
         )
         self.conn.commit()
         return cursor.lastrowid
@@ -77,18 +94,31 @@ class TaskDatabase:
 
         cursor = self.conn.cursor()
         cursor.execute(
-            'SELECT id, text, completed FROM tasks ORDER BY created_at ASC'
+            'SELECT id, content, description, due, priority, labels, completed FROM tasks ORDER BY created_at ASC'
         )
         rows = cursor.fetchall()
         return [dict(row) for row in rows]
 
-    def update_task(self, task_id: int, completed: bool | None = None, text: str | None = None) -> None:
+    def update_task(
+        self,
+        task_id: int,
+        completed: bool | None = None,
+        content: str | None = None,
+        description: str | None = None,
+        due: str | None = None,
+        priority: int | None = None,
+        labels: str | None = None,
+    ) -> None:
         """更新任务.
 
         Args:
             task_id: 任务 ID
             completed: 完成状态
-            text: 任务内容
+            content: 任务内容
+            description: 任务描述
+            due: 截止日期
+            priority: 优先级
+            labels: 标签
         """
         if self.conn is None:
             return
@@ -100,10 +130,28 @@ class TaskDatabase:
         if completed is not None:
             updates.append('completed = ?')
             params.append(1 if completed else 0)
+            if completed:
+                updates.append('completed_at = CURRENT_TIMESTAMP')
 
-        if text is not None:
-            updates.append('text = ?')
-            params.append(text)
+        if content is not None:
+            updates.append('content = ?')
+            params.append(content)
+
+        if description is not None:
+            updates.append('description = ?')
+            params.append(description)
+
+        if due is not None:
+            updates.append('due = ?')
+            params.append(due)
+
+        if priority is not None:
+            updates.append('priority = ?')
+            params.append(priority)
+
+        if labels is not None:
+            updates.append('labels = ?')
+            params.append(labels)
 
         if updates:
             updates.append('updated_at = CURRENT_TIMESTAMP')
