@@ -460,8 +460,8 @@ class TaskPanel(ctk.CTkFrame):
         self.grid_columnconfigure(0, weight=1)
 
         self.init_ui()
-        self.load_tasks_from_db()
         self.load_labels_from_db()
+        self.load_tasks_from_db()
 
     def init_ui(self) -> None:
         """初始化 UI 组件."""
@@ -734,17 +734,47 @@ class TaskPanel(ctk.CTkFrame):
         Args:
             task: 更新后的任务数据
         """
+        # 更新任务内容
         if 'label' in task:
-            # 更新任务内容显示
-            content_text = task['content']
+            task['label'].configure(text=task['content'])
+        
+        # 更新截止日期
+        if 'due_label' in task:
             if task['due']:
-                content_text += f' (截止: {task["due"]})'
+                task['due_label'].configure(text=f'截止: {task["due"]}')
+                task['due_label'].grid()
+            else:
+                task['due_label'].grid_remove()
+        
+        # 更新标签
+        if 'labels_frame' in task:
+            # 清除现有标签
+            for widget in task['labels_frame'].winfo_children():
+                widget.destroy()
+            
             if task['labels']:
-                content_text += f' [{task["labels"]}]'
-            task['label'].configure(text=content_text)
+                label_names = task['labels'].split(',')
+                for label_name in label_names:
+                    label_info = next((l for l in self.labels if l['name'] == label_name.strip()), None)
+                    bg_color = label_info['color'] if label_info else '#666666'
+                    
+                    tag_label = ctk.CTkLabel(
+                        task['labels_frame'],
+                        text=label_name.strip(),
+                        font=CTK_FONT_SMALL,
+                        text_color='white',
+                        fg_color=bg_color,
+                        corner_radius=4,
+                        padx=6,
+                        pady=2,
+                    )
+                    tag_label.pack(side='left', padx=2)
+                task['labels_frame'].grid()
+            else:
+                task['labels_frame'].grid_remove()
 
     def create_task_row(self, task: dict) -> None:
-        """创建任务行 UI.
+        """创建任务行 UI（美化版）.
 
         Args:
             task: 任务数据字典
@@ -765,54 +795,88 @@ class TaskPanel(ctk.CTkFrame):
         )
         if task['completed']:
             checkbox.select()
-        checkbox.grid(row=0, column=0, padx=10, pady=10)
+        checkbox.grid(row=0, column=0, padx=10, pady=8)
 
-        # 任务内容标签
-        content_text = task['content']
-        if task['due']:
-            content_text += f' (截止: {task["due"]})'
-        if task['labels']:
-            content_text += f' [{task["labels"]}]'
-
+        # 任务内容
         task_label = ctk.CTkLabel(
             row_frame,
-            text=content_text,
+            text=task['content'],
             font=CTK_FONT_MAIN,
             text_color='#888888' if task['completed'] else '#f0f0f0',
             anchor='w',
         )
-        task_label.grid(row=0, column=1, padx=5, pady=10, sticky='ew')
+        task_label.grid(row=0, column=1, padx=(5, 10), pady=8, sticky='ew')
+
+        # 截止日期
+        due_label = ctk.CTkLabel(
+            row_frame,
+            text=f'截止: {task["due"]}' if task['due'] else '',
+            font=CTK_FONT_SMALL,
+            text_color='#ffa726',
+            anchor='w',
+        )
+        due_label.grid(row=0, column=2, padx=(0, 10), pady=8, sticky='w')
+        due_label.grid_remove() if not task['due'] else None
+
+        # 标签（带背景颜色）
+        labels_frame = ctk.CTkFrame(row_frame, fg_color='transparent')
+        labels_frame.grid(row=0, column=3, padx=(0, 10), pady=8, sticky='w')
+        
+        if task['labels']:
+            label_names = task['labels'].split(',')
+            for i, label_name in enumerate(label_names):
+                # 查找标签颜色
+                label_info = next((l for l in self.labels if l['name'] == label_name.strip()), None)
+                bg_color = label_info['color'] if label_info else '#666666'
+                
+                tag_label = ctk.CTkLabel(
+                    labels_frame,
+                    text=label_name.strip(),
+                    font=CTK_FONT_SMALL,
+                    text_color='white',
+                    fg_color=bg_color,
+                    corner_radius=4,
+                    padx=6,
+                    pady=2,
+                )
+                tag_label.pack(side='left', padx=2)
+        else:
+            labels_frame.grid_remove()
 
         # 编辑按钮
         edit_btn = ctk.CTkButton(
             row_frame,
             text='编辑',
-            width=60,
-            height=28,
+            width=55,
+            height=26,
             font=CTK_FONT_SMALL,
             fg_color='#64b5f6',
             hover_color='#42a5f5',
+            corner_radius=4,
             command=lambda: self.open_edit_task_dialog(task),
         )
-        edit_btn.grid(row=0, column=2, padx=(5, 5), pady=10)
+        edit_btn.grid(row=0, column=4, padx=(0, 5), pady=8)
 
         # 删除按钮
         delete_btn = ctk.CTkButton(
             row_frame,
             text='删除',
-            width=60,
-            height=28,
+            width=55,
+            height=26,
             font=CTK_FONT_SMALL,
             fg_color='#f44336',
             hover_color='#d32f2f',
+            corner_radius=4,
             command=lambda: self.delete_task(task['id'], row_frame),
         )
-        delete_btn.grid(row=0, column=3, padx=(0, 10), pady=10)
+        delete_btn.grid(row=0, column=5, padx=(0, 10), pady=8)
 
         # 保存 UI 引用
         task['row_frame'] = row_frame
         task['checkbox'] = checkbox
         task['label'] = task_label
+        task['due_label'] = due_label
+        task['labels_frame'] = labels_frame
         task['edit_btn'] = edit_btn
         task['delete_btn'] = delete_btn
 
