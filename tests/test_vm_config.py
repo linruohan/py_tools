@@ -30,9 +30,9 @@ def test_vmconfig_validate_empty_name():
     """测试空名称的验证."""
     config = VMConfig()
     config.basic.name = ''
-    is_valid, msg = config.validate()
+    is_valid, errors = config.validate()
     assert not is_valid
-    assert '名称' in msg
+    assert any('名称' in err for err in errors)
 
 
 def test_vmconfig_to_dict():

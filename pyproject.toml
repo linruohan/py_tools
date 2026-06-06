@@ -89,6 +89,8 @@ warn_return_any = true
 warn_unused_configs = true
 disallow_untyped_defs = false  # 逐步启用
 ignore_missing_imports = true
+no_implicit_optional = true  # 禁止隐式 Optional
+check_untyped_defs = true  # 检查未类型化的定义
 
 # 排除的目录
 exclude = [

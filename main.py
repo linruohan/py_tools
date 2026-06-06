@@ -9,6 +9,7 @@ from PIL import Image
 
 from panels.home_panel import HomePanel
 from panels.json_panel import JsonPanel
+from panels.task_panel import TaskPanel
 from panels.vm_panel import VmPanel
 from utils.logger import setup_logger
 
@@ -39,7 +40,7 @@ class App(ctk.CTk):
         # create navigation frame
         self.navigation_frame = ctk.CTkFrame(self, corner_radius=0)
         self.navigation_frame.grid(row=0, column=0, sticky='nsew')
-        self.navigation_frame.grid_rowconfigure(5, weight=1)
+        self.navigation_frame.grid_rowconfigure(6, weight=1)
         self.navigation_frame.grid_columnconfigure(0, weight=1)
 
         self.navigation_frame_label = ctk.CTkLabel(
@@ -78,14 +79,25 @@ class App(ctk.CTk):
             grid=(3, 0),
         )
 
+        self.task_button = self.sidebar_btn(
+            self.navigation_frame,
+            name='Task',
+            dark_image_name='image_icon_light',
+            light_image_name='image_icon_light',
+            command=lambda: self.select_frame_by_name('task'),
+            grid=(4, 0),
+        )
+
         # create home frame
         self.home_panel = HomePanel(self)
         self.json_panel = JsonPanel(self)
         self.vm_panel = VmPanel(self)
+        self.task_panel = TaskPanel(self)
         self.frame_mapping = {
             'home': (self.home_button, self.home_panel),
             'json': (self.json_button, self.json_panel),
             'vm': (self.vm_button, self.vm_panel),
+            'task': (self.task_button, self.task_panel),
         }
         # select default frame
         self.select_frame_by_name('home')

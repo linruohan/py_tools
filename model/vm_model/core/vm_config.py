@@ -1,5 +1,7 @@
 """VM 配置管理类 - 基于组合模式和工厂模式."""
 
+from __future__ import annotations
+
 from ..configs.basic_config import BasicConfig
 from ..configs.block_io_config import BlockIOConfig
 from ..configs.cpu_allocation_config import CPUAllocationConfig as CPUConfig
@@ -434,32 +436,55 @@ class VMConfig:
 
         return config
 
-    def validate(self) -> tuple[bool, str]:
+    def validate(self) -> tuple[bool, list[str]]:
         """验证配置的有效性.
 
         Returns:
-            (是否有效，错误信息)
+            (是否有效，错误信息列表)
         """
         errors = []
+        warnings = []
 
-        # 验证必要的配置
+        # 必填项验证
         if not self.basic.name:
             errors.append('虚拟机名称不能为空')
+        elif not self.basic.name.replace('_', '').replace('-', '').isalnum():
+            errors.append('虚拟机名称只能包含字母、数字、下划线和连字符')
 
+        # 数值范围验证
         if hasattr(self.memory, 'memory') and self.memory.memory <= 0:
             errors.append('内存大小必须大于 0')
+        elif hasattr(self.memory, 'memory') and 0 < self.memory.memory < 512:
+            warnings.append('警告：内存大小建议不小于 512MB')
 
         if hasattr(self.cpu, 'vcpu') and self.cpu.vcpu <= 0:
             errors.append('CPU 数量必须大于 0')
+        elif hasattr(self.cpu, 'vcpu') and self.cpu.vcpu > 256:
+            warnings.append('警告：CPU 数量不建议超过 256')
 
-        # 验证 OS 引导配置
+        # 逻辑验证
+        if hasattr(self.memory, 'current_memory') and self.memory.current_memory is not None:
+            if hasattr(self.memory, 'memory') and self.memory.memory > 0:
+                if self.memory.current_memory > self.memory.memory:
+                    errors.append('当前内存不能大于最大内存')
+
+        # CPU 拓扑验证
+        if hasattr(self.cpu, 'topology') and self.cpu.topology:
+            topo = self.cpu.topology
+            total = topo.sockets * topo.cores * topo.threads
+            if hasattr(self.cpu, 'vcpu') and self.cpu.vcpu > 0 and total != self.cpu.vcpu:
+                errors.append(
+                    f'CPU 拓扑不匹配：{topo.sockets}×{topo.cores}×{topo.threads} '
+                    f'!= {self.cpu.vcpu}'
+                )
+
+        # OS 引导配置验证
         if hasattr(self.os, 'os_type') and self.os.os_type == 'direct_kernel':
             if not hasattr(self.os, 'kernel') or not self.os.kernel:
                 errors.append('直接内核引导模式下必须指定内核路径')
 
-        if errors:
-            return False, '; '.join(errors)
-        return True, '配置有效'
+        # 只返回错误，不返回警告（警告仅用于提示）
+        return len(errors) == 0, errors
 
     def reset(self) -> None:
         """重置配置为默认值."""
