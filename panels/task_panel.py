@@ -25,22 +25,24 @@ DEFAULT_LABEL_COLORS = [
 
 
 class AddTaskDialog(ctk.CTkToplevel):
-    """添加任务对话框."""
+    """添加/编辑任务对话框."""
 
-    def __init__(self, parent, callback, existing_labels=None) -> None:
-        """初始化添加任务对话框.
+    def __init__(self, parent, callback, existing_labels=None, task_data=None) -> None:
+        """初始化添加/编辑任务对话框.
 
         Args:
             parent: 父窗口
             callback: 保存成功后的回调函数
             existing_labels: 已有的标签列表
+            task_data: 任务数据（编辑模式时传入）
         """
         super().__init__(parent)
         self.parent = parent
         self.callback = callback
         self.existing_labels = existing_labels or []
+        self.task_data = task_data  # 编辑模式时的任务数据
         self.selected_labels = []
-        self.title('添加新任务')
+        self.title('编辑任务' if task_data else '添加新任务')
         self.geometry('450x500')
         self.resizable(False, False)
         self.attributes('-topmost', True)
@@ -177,6 +179,32 @@ class AddTaskDialog(ctk.CTkToplevel):
         # 绑定标签选择回调
         self.label_filter.on_select_callback = self.on_label_selected
 
+        # 如果是编辑模式，填充已有数据
+        if self.task_data:
+            self._populate_task_data()
+
+    def _populate_task_data(self) -> None:
+        """填充编辑模式的任务数据."""
+        # 填充任务内容
+        self.content_entry.insert(0, self.task_data['content'])
+        
+        # 填充任务描述
+        self.desc_entry.insert('1.0', self.task_data.get('description', ''))
+        
+        # 填充截止日期
+        if self.task_data.get('due'):
+            self.due_picker.set_date(self.task_data['due'])
+        
+        # 填充优先级
+        priority_map_inv = {0: '普通', 1: '低', 2: '中', 3: '高'}
+        priority = priority_map_inv.get(self.task_data.get('priority', 0), '普通')
+        self.priority_combobox.set(priority)
+        
+        # 填充已选标签
+        if self.task_data.get('labels'):
+            self.selected_labels = self.task_data['labels'].split(',')
+            self.update_selected_labels_display()
+
     def on_label_selected(self, label) -> None:
         """标签被选择时的回调.
 
@@ -243,7 +271,7 @@ class AddTaskDialog(ctk.CTkToplevel):
             self.update_selected_labels_display()
 
     def on_save(self) -> None:
-        """保存任务."""
+        """保存任务（添加或更新）."""
         content = self.content_entry.get().strip()
         if not content:
             return
@@ -257,8 +285,11 @@ class AddTaskDialog(ctk.CTkToplevel):
         # 组合标签
         labels = ','.join(self.selected_labels)
 
-        # 调用回调函数保存任务
-        self.callback(content, description, due, priority, labels)
+        # 调用回调函数保存任务（编辑模式时传递任务ID）
+        if self.task_data:
+            self.callback(self.task_data['id'], content, description, due, priority, labels)
+        else:
+            self.callback(content, description, due, priority, labels)
         self.destroy()
 
 
@@ -516,6 +547,15 @@ class TaskPanel(ctk.CTkFrame):
         existing_labels = self.get_all_labels()
         AddTaskDialog(self.master, self.add_task, existing_labels)
 
+    def open_edit_task_dialog(self, task: dict) -> None:
+        """打开编辑任务对话框.
+
+        Args:
+            task: 要编辑的任务数据
+        """
+        existing_labels = self.get_all_labels()
+        AddTaskDialog(self.master, self.update_task, existing_labels, task)
+
     def init_tabview(self) -> None:
         """初始化 TabView，包含任务列表和标签管理."""
         tab_frame = ctk.CTkFrame(self, fg_color=BG_COLOR_MAIN, corner_radius=8)
@@ -648,6 +688,61 @@ class TaskPanel(ctk.CTkFrame):
         # 更新统计
         self.update_stats()
 
+    def update_task(
+        self,
+        task_id: int,
+        content: str,
+        description: str = '',
+        due: str = '',
+        priority: int = 0,
+        labels: str = '',
+    ) -> None:
+        """更新任务.
+
+        Args:
+            task_id: 任务ID
+            content: 任务内容
+            description: 任务描述
+            due: 截止日期
+            priority: 优先级 (0-3)
+            labels: 标签
+        """
+        # 更新数据库
+        self.db.update_task(task_id, content=content, description=description,
+                           due=due, priority=priority, labels=labels)
+
+        # 找到并更新任务数据
+        task = next(t for t in self.tasks if t['id'] == task_id)
+        task['content'] = content
+        task['description'] = description
+        task['due'] = due
+        task['priority'] = priority
+        task['labels'] = labels
+
+        # 更新任务行显示
+        self.update_task_row(task)
+
+        # 重新排列任务行（考虑筛选条件）
+        self.redisplay_tasks()
+
+        # 更新统计
+        self.update_stats()
+
+    def update_task_row(self, task: dict) -> None:
+        """更新任务行的显示.
+
+        Args:
+            task: 更新后的任务数据
+        """
+        if 'label' in task:
+            # 更新任务内容显示
+            content_text = task['content']
+            if task['due']:
+                content_text += f' (截止: {task["due"]})'
+            if task['labels']:
+                content_text += f' [{task["labels"]}]'
+            task['label'].configure(text=content_text)
+
     def create_task_row(self, task: dict) -> None:
         """创建任务行 UI.
 
@@ -688,6 +783,19 @@ class TaskPanel(ctk.CTkFrame):
         )
         task_label.grid(row=0, column=1, padx=5, pady=10, sticky='ew')
 
+        # 编辑按钮
+        edit_btn = ctk.CTkButton(
+            row_frame,
+            text='编辑',
+            width=60,
+            height=28,
+            font=CTK_FONT_SMALL,
+            fg_color='#64b5f6',
+            hover_color='#42a5f5',
+            command=lambda: self.open_edit_task_dialog(task),
+        )
+        edit_btn.grid(row=0, column=2, padx=(5, 5), pady=10)
+
         # 删除按钮
         delete_btn = ctk.CTkButton(
             row_frame,
@@ -699,12 +807,14 @@ class TaskPanel(ctk.CTkFrame):
             hover_color='#d32f2f',
             command=lambda: self.delete_task(task['id'], row_frame),
         )
-        delete_btn.grid(row=0, column=2, padx=10, pady=10)
+        delete_btn.grid(row=0, column=3, padx=(0, 10), pady=10)
 
         # 保存 UI 引用
         task['row_frame'] = row_frame
         task['checkbox'] = checkbox
         task['label'] = task_label
+        task['edit_btn'] = edit_btn
+        task['delete_btn'] = delete_btn
 
     def toggle_task(self, task_id: int, checkbox: ctk.CTkCheckBox, label: ctk.CTkLabel) -> None:
         """切换任务完成状态.
