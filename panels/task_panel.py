@@ -4,6 +4,8 @@ from tkinter import END
 
 import customtkinter as ctk
 
+from utils.task_db import TaskDatabase
+
 # 全局字体配置
 CTK_FONT_MAIN = ('Microsoft YaHei UI', 12)
 CTK_FONT_BOLD = ('Microsoft YaHei UI', 12, 'bold')
@@ -23,6 +25,9 @@ class TaskPanel(ctk.CTkFrame):
         self.corner_radius = 0
         self.fg_color = 'transparent'
 
+        # 初始化数据库
+        self.db = TaskDatabase()
+
         # 任务列表数据
         self.tasks = []
 
@@ -31,6 +36,7 @@ class TaskPanel(ctk.CTkFrame):
         self.grid_columnconfigure(0, weight=1)
 
         self.init_ui()
+        self.load_tasks_from_db()
 
     def init_ui(self) -> None:
         """初始化 UI 组件."""
@@ -116,14 +122,29 @@ class TaskPanel(ctk.CTkFrame):
         )
         self.stats_label.pack(padx=20, pady=8)
 
+    def load_tasks_from_db(self) -> None:
+        """从数据库加载任务."""
+        db_tasks = self.db.get_all_tasks()
+        for db_task in db_tasks:
+            task_data = {
+                'id': db_task['id'],
+                'text': db_task['text'],
+                'completed': bool(db_task['completed'])
+            }
+            self.tasks.append(task_data)
+            self.create_task_row(task_data)
+        self.update_stats()
+
     def add_task(self) -> None:
         """添加新任务."""
         task_text = self.task_entry.get().strip()
         if not task_text:
             return
 
+        # 保存到数据库
+        task_id = self.db.add_task(task_text)
+
         # 创建任务项
-        task_id = len(self.tasks)
         task_data = {'id': task_id, 'text': task_text, 'completed': False}
         self.tasks.append(task_data)
 
@@ -147,7 +168,7 @@ class TaskPanel(ctk.CTkFrame):
             fg_color=BG_COLOR_CONTENT,
             corner_radius=6,
         )
-        row_frame.grid(row=task['id'], column=0, pady=5, sticky='ew')
+        row_frame.grid(row=len(self.tasks) - 1, column=0, pady=5, sticky='ew')
         row_frame.grid_columnconfigure(1, weight=1)
 
         # 复选框
@@ -156,6 +177,8 @@ class TaskPanel(ctk.CTkFrame):
             text='',
             command=lambda: self.toggle_task(task['id'], checkbox, task_label),
         )
+        if task['completed']:
+            checkbox.select()
         checkbox.grid(row=0, column=0, padx=10, pady=10)
 
         # 任务文本标签
@@ -163,7 +186,7 @@ class TaskPanel(ctk.CTkFrame):
             row_frame,
             text=task['text'],
             font=CTK_FONT_MAIN,
-            text_color='#f0f0f0',
+            text_color='#888888' if task['completed'] else '#f0f0f0',
             anchor='w',
         )
         task_label.grid(row=0, column=1, padx=5, pady=10, sticky='ew')
@@ -197,6 +220,9 @@ class TaskPanel(ctk.CTkFrame):
         task = next(t for t in self.tasks if t['id'] == task_id)
         task['completed'] = checkbox.get() == 1
 
+        # 更新到数据库
+        self.db.update_task(task_id, completed=task['completed'])
+
         # 更新文本样式
         if task['completed']:
             label.configure(text_color='#888888')
@@ -213,10 +239,20 @@ class TaskPanel(ctk.CTkFrame):
             task_id: 任务 ID
             row_frame: 任务行框架
         """
+        # 从数据库删除
+        self.db.delete_task(task_id)
+
         # 从列表中移除
         self.tasks = [t for t in self.tasks if t['id'] != task_id]
+
         # 销毁 UI
         row_frame.destroy()
+
+        # 重新排列任务行
+        for i, task in enumerate(self.tasks):
+            if 'row_frame' in task:
+                task['row_frame'].grid(row=i, column=0, pady=5, sticky='ew')
+
         # 更新统计
         self.update_stats()
 
@@ -228,3 +264,8 @@ class TaskPanel(ctk.CTkFrame):
         self.stats_label.configure(
             text=f'总计: {total} | 已完成: {completed} | 未完成: {pending}'
         )
+
+    def destroy(self) -> None:
+        """销毁面板时关闭数据库连接."""
+        self.db.close()
+        super().destroy()
