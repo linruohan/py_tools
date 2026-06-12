@@ -3,8 +3,10 @@
 from __future__ import annotations
 
 import logging
+
+from collections.abc import Callable
 from functools import wraps
-from typing import TYPE_CHECKING, Any, Callable, ParamSpec, TypeVar
+from typing import TYPE_CHECKING, Any, ParamSpec, TypeVar
 
 if TYPE_CHECKING:
     from collections.abc import Callable
@@ -18,7 +20,7 @@ P = ParamSpec('P')
 R = TypeVar('R')
 
 
-def xml_generation_method(func: Callable[P, R]) -> Callable[P, R]:
+def xml_generation_method[**P, R](func: Callable[P, R]) -> Callable[P, R]:
     """XML 生成方法装饰器 - 自动处理异常和日志记录.
 
     Args:

@@ -7,7 +7,6 @@ from tkinter import END, filedialog, messagebox
 import customtkinter as ctk
 
 from components.tab_toggle import TABS_CONFIG, TabTogglePanel
-from vm.model.core.vm_config import VMConfig
 from utils.styles import (
     BG_COLOR_CONTENT,
     BG_COLOR_MAIN,
@@ -16,6 +15,7 @@ from utils.styles import (
     CTK_FONT_SMALL,
 )
 from utils.xml_generator import LibvirtXMLGenerator
+from vm.model.core.vm_config import VMConfig
 
 # Tab 类映射 - 延迟导入
 _TAB_CLASSES = None

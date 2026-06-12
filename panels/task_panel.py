@@ -1,7 +1,8 @@
 """Task Panel - 任务管理面板."""
 
-import customtkinter as ctk
 import uuid
+
+import customtkinter as ctk
 
 from components.date_picker import DatePicker
 from components.search_filter import SearchFilter
@@ -227,7 +228,7 @@ class AddTaskDialog(ctk.CTkToplevel):
         tags_container.pack(fill='x', padx=2, pady=2)
 
         # 显示每个标签（同一行横向排列）
-        for i, label in enumerate(self.selected_labels):
+        for _, label in enumerate(self.selected_labels):
             # 标签框架
             tag_frame = ctk.CTkFrame(
                 tags_container,
@@ -755,7 +756,7 @@ class TaskPanel(ctk.CTkFrame):
             if task['labels']:
                 label_names = task['labels'].split(',')
                 for label_name in label_names:
-                    label_info = next((l for l in self.labels if l['name'] == label_name.strip()), None)
+                    label_info = next((label for label in self.labels if label['name'] == label_name.strip()), None)
                     bg_color = label_info['color'] if label_info else '#666666'
                     
                     tag_label = ctk.CTkLabel(
@@ -824,9 +825,9 @@ class TaskPanel(ctk.CTkFrame):
         
         if task['labels']:
             label_names = task['labels'].split(',')
-            for i, label_name in enumerate(label_names):
+            for _, label_name in enumerate(label_names):
                 # 查找标签颜色
-                label_info = next((l for l in self.labels if l['name'] == label_name.strip()), None)
+                label_info = next((label for label in self.labels if label['name'] == label_name.strip()), None)
                 bg_color = label_info['color'] if label_info else '#666666'
                 
                 tag_label = ctk.CTkLabel(
@@ -1003,7 +1004,7 @@ class TaskPanel(ctk.CTkFrame):
         for i, label in enumerate(self.labels):
             self.create_label_row(label, i)
 
-    def create_label_row(self, label: dict, row_index: int = None) -> None:
+    def create_label_row(self, label: dict, row_index: int | None = None) -> None:
         """创建标签行 UI.
 
         Args:
@@ -1087,7 +1088,7 @@ class TaskPanel(ctk.CTkFrame):
             name: 标签名称
             color: 标签颜色
         """
-        existing_label = next((l for l in self.labels if l['id'] == label_id), None)
+        existing_label = next((label for label in self.labels if label['id'] == label_id), None)
 
         if existing_label:
             self.db.update_label(label_id, name=name, color=color)
@@ -1128,7 +1129,7 @@ class TaskPanel(ctk.CTkFrame):
             row_frame: 标签行框架
         """
         self.db.delete_label(label_id)
-        self.labels = [l for l in self.labels if l['id'] != label_id]
+        self.labels = [label for label in self.labels if label['id'] != label_id]
         row_frame.destroy()
 
         visible_index = 0
