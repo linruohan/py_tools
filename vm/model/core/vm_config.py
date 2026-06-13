@@ -457,9 +457,9 @@ class VMConfig:
         elif hasattr(self.memory, 'memory') and 0 < self.memory.memory < 512:
             warnings.append('警告:内存大小建议不小于 512MB')
 
-        if hasattr(self.cpu, 'vcpu') and self.cpu.vcpu <= 0:
+        if hasattr(self.cpu, 'max_vcpu') and self.cpu.max_vcpu <= 0:
             errors.append('CPU 数量必须大于 0')
-        elif hasattr(self.cpu, 'vcpu') and self.cpu.vcpu > 256:
+        elif hasattr(self.cpu, 'max_vcpu') and self.cpu.max_vcpu > 256:
             warnings.append('警告:CPU 数量不建议超过 256')
 
         # 逻辑验证
@@ -472,13 +472,17 @@ class VMConfig:
         if hasattr(self.cpu, 'topology') and self.cpu.topology:
             topo = self.cpu.topology
             total = topo.sockets * topo.cores * topo.threads
-            if hasattr(self.cpu, 'vcpu') and self.cpu.vcpu > 0 and total != self.cpu.vcpu:
+            if (
+                hasattr(self.cpu, 'max_vcpu')
+                and self.cpu.max_vcpu > 0
+                and total != self.cpu.max_vcpu
+            ):
                 errors.append(
-                    f'CPU 拓扑不匹配:{topo.sockets}×{topo.cores}×{topo.threads} != {self.cpu.vcpu}'
+                    f'CPU 拓扑不匹配:{topo.sockets}×{topo.cores}×{topo.threads} != {self.cpu.max_vcpu}'
                 )
 
         # OS 引导配置验证
-        if hasattr(self.os, 'os_type') and self.os.os_type == 'direct_kernel':
+        if hasattr(self.os, 'type') and self.os.type == 'direct_kernel':
             if not hasattr(self.os, 'kernel') or not self.os.kernel:
                 errors.append('直接内核引导模式下必须指定内核路径')
 

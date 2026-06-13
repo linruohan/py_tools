@@ -63,7 +63,7 @@ def test_validate_cpu_too_large():
     config.cpu.max_vcpu = 300  # 超过 256
     # 需要重置 current_memory 和 topology 以避免验证失败
     config.memory.current_memory = None
-    config.cpu.topology = CPUTopology()  # 清除拓扑以避免不匹配错误
+    config.cpu.topology = None  # 清除拓扑以避免不匹配错误
     is_valid, errors = config.validate()
     # 应该通过(只是警告,不是错误)
     assert is_valid

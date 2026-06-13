@@ -1,8 +1,38 @@
 """测试表单构建器组件."""
 
+import os
+import pytest
 import customtkinter as ctk
 
 from components.form_builder import FormBuilder
+
+# 检查是否在无显示器的 headless 环境中
+def is_headless():
+    """检测是否在无显示器的 headless 环境中运行."""
+    # 检查常见 CI 环境变量
+    ci_envs = ['CI', 'GITHUB_ACTIONS', 'GITLAB_CI', 'JENKINS_URL', 'BUILD_NUMBER']
+    if any(os.environ.get(var) for var in ci_envs):
+        # 在 CI 环境中，使用更严格的检测
+        if os.name == 'nt':
+            try:
+                import ctypes
+                user32 = ctypes.windll.user32
+                return user32.GetSystemMetrics(0) == 0
+            except Exception:
+                return True
+        else:
+            return os.environ.get('DISPLAY') is None
+
+    # 检测 MSYS/Git Bash 环境（Windows 子系统不支持 tkinter 事件）
+    if os.name == 'nt' and os.environ.get('MSYSTEM'):
+        return True
+
+    return False
+
+SKIP_IF_HEADLESS = pytest.mark.skipif(
+    is_headless(),
+    reason="需要图形显示器环境"
+)
 
 
 def test_create_label_entry():
@@ -27,6 +57,7 @@ def test_create_label_entry():
     root.destroy()
 
 
+@SKIP_IF_HEADLESS
 def test_create_label_entry_with_callback():
     """测试创建带回调的输入框."""
     root = ctk.CTk()
@@ -84,6 +115,7 @@ def test_create_label_combobox():
     root.destroy()
 
 
+@SKIP_IF_HEADLESS
 def test_create_label_combobox_with_callback():
     """测试创建带回调的下拉框."""
     root = ctk.CTk()
