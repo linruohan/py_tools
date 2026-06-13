@@ -13,10 +13,10 @@ class ClockTab(BaseConfigTab):
         super().__init__(master, on_change_callback, **kwargs)
 
         # 控件引用
-        self.watchdog_model = None
-        self.watchdog_action = None
-        self.rtc_clock = None
-        self.kvm_clock_check = None
+        self.watchdog_model: ctk.CTkOptionMenu | None = None
+        self.watchdog_action: ctk.CTkOptionMenu | None = None
+        self.rtc_clock: ctk.CTkOptionMenu | None = None
+        self.kvm_clock_check: ctk.CTkCheckBox | None = None
 
         # 初始化 UI
         self._init_ui()
@@ -91,16 +91,16 @@ class ClockTab(BaseConfigTab):
 
     def get_watchdog_config(self):
         """获取看门狗配置."""
-        if self.watchdog_model.get() != 'none':
+        if self.watchdog_model.get() != 'none':  # type: ignore[union-attr]
             return {
-                'model': self.watchdog_model.get(),
-                'action': self.watchdog_action.get(),
+                'model': self.watchdog_model.get(),  # type: ignore[union-attr]
+                'action': self.watchdog_action.get(),  # type: ignore[union-attr]
             }
         return None
 
     def get_clock_config(self):
         """获取时钟配置."""
         return {
-            'rtc': self.rtc_clock.get(),
-            'kvm_clock': self.kvm_clock_check.get(),
+            'rtc': self.rtc_clock.get(),  # type: ignore[union-attr]
+            'kvm_clock': self.kvm_clock_check.get(),  # type: ignore[union-attr]
         }

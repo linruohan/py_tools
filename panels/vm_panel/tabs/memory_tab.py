@@ -13,8 +13,8 @@ class MemoryTab(BaseConfigTab):
         super().__init__(master, on_change_callback, **kwargs)
 
         # 控件引用
-        self.balloon_check = None
-        self.balloon_target_entry = None
+        self.balloon_check: ctk.CTkCheckBox | None = None
+        self.balloon_target_entry: ctk.CTkEntry | None = None
 
         # 初始化 UI
         self._init_ui()
@@ -51,18 +51,18 @@ class MemoryTab(BaseConfigTab):
         self.balloon_target_entry.insert(0, '2048')
         self.balloon_target_entry.configure(state='disabled')
 
-    def _toggle_balloon_entry(self):
+    def _toggle_balloon_entry(self) -> None:
         """切换内存平衡输入框状态."""
-        if self.balloon_check.get():
-            self.balloon_target_entry.configure(state='normal')
+        if self.balloon_check.get():  # type: ignore[union-attr]
+            self.balloon_target_entry.configure(state='normal')  # type: ignore[union-attr]
         else:
-            self.balloon_target_entry.configure(state='disabled')
+            self.balloon_target_entry.configure(state='disabled')  # type: ignore[union-attr]
         self._trigger_change()
 
     def get_balloon_config(self):
         """获取内存平衡配置."""
-        if self.balloon_check.get():
+        if self.balloon_check.get():  # type: ignore[union-attr]
             return {
-                'target': int(self.balloon_target_entry.get().strip() or '2048'),
+                'target': int(self.balloon_target_entry.get().strip() or '2048'),  # type: ignore[union-attr]
             }
         return None

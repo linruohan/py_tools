@@ -12,24 +12,24 @@ class GraphicsTab(BaseConfigTab):
     def __init__(self, master, on_change_callback=None, **kwargs):
         super().__init__(master, on_change_callback, **kwargs)
 
-        self.graphics_type = None
-        self.autoport = None
-        self.port = None
-        self.tls_port = None
-        self.listen = None
-        self.passwd = None
-        self.keymap = None
-        self.share_policy = None
-        self.power_control = None
-        self.wait = None
+        self.graphics_type: ctk.CTkOptionMenu = None  # type: ignore[assignment]
+        self.autoport: ctk.CTkCheckBox = None  # type: ignore[assignment]
+        self.port: ctk.CTkEntry = None  # type: ignore[assignment]
+        self.tls_port: ctk.CTkEntry = None  # type: ignore[assignment]
+        self.listen: ctk.CTkEntry = None  # type: ignore[assignment]
+        self.passwd: ctk.CTkEntry = None  # type: ignore[assignment]
+        self.keymap: ctk.CTkEntry = None  # type: ignore[assignment]
+        self.share_policy: ctk.CTkOptionMenu = None  # type: ignore[assignment]
+        self.power_control: ctk.CTkOptionMenu = None  # type: ignore[assignment]
+        self.wait: ctk.CTkOptionMenu = None  # type: ignore[assignment]
 
         # SPICE specific
-        self.spice_default_mode = None
-        self.spice_image_compression = None
-        self.spice_streaming_mode = None
-        self.spice_clipboard = None
-        self.spice_mouse_mode = None
-        self.spice_filetransfer = None
+        self.spice_default_mode: ctk.CTkOptionMenu = None  # type: ignore[assignment]
+        self.spice_image_compression: ctk.CTkOptionMenu = None  # type: ignore[assignment]
+        self.spice_streaming_mode: ctk.CTkOptionMenu = None  # type: ignore[assignment]
+        self.spice_clipboard: ctk.CTkOptionMenu = None  # type: ignore[assignment]
+        self.spice_mouse_mode: ctk.CTkOptionMenu = None  # type: ignore[assignment]
+        self.spice_filetransfer: ctk.CTkOptionMenu = None  # type: ignore[assignment]
 
         self._init_ui()
 

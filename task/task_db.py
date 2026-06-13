@@ -35,7 +35,8 @@ class TaskDatabase:
             return
 
         cursor = self.conn.cursor()
-        cursor.execute("""
+        cursor.execute(
+            """
             CREATE TABLE IF NOT EXISTS tasks (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 content TEXT NOT NULL,
@@ -48,8 +49,10 @@ class TaskDatabase:
                 updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 completed_at TIMESTAMP
             )
-        """)
-        cursor.execute("""
+        """
+        )
+        cursor.execute(
+            """
             CREATE TABLE IF NOT EXISTS labels (
                 id TEXT PRIMARY KEY,
                 name TEXT NOT NULL,
@@ -60,7 +63,8 @@ class TaskDatabase:
                 backend_type TEXT,
                 source_id TEXT
             )
-        """)
+        """
+        )
         self.conn.commit()
 
     def add_task(
@@ -88,7 +92,7 @@ class TaskDatabase:
 
         cursor = self.conn.cursor()
         cursor.execute(
-            """INSERT INTO tasks (content, description, due, priority, labels, completed) 
+            """INSERT INTO tasks (content, description, due, priority, labels, completed)
                VALUES (?, ?, ?, ?, ?, 0)""",
             (content, description, due, priority, labels),
         )
@@ -137,7 +141,7 @@ class TaskDatabase:
 
         cursor = self.conn.cursor()
         updates = []
-        params = []
+        params: list[Any] = []
 
         if completed is not None:
             updates.append('completed = ?')
@@ -214,7 +218,7 @@ class TaskDatabase:
 
         cursor = self.conn.cursor()
         cursor.execute(
-            """INSERT OR REPLACE INTO labels 
+            """INSERT OR REPLACE INTO labels
                (id, name, color, item_order, is_deleted, is_favorite, backend_type, source_id)
                VALUES (?, ?, ?, ?, ?, ?, ?, ?)""",
             (label_id, name, color, item_order, is_deleted, is_favorite, backend_type, source_id),
@@ -286,7 +290,7 @@ class TaskDatabase:
 
         cursor = self.conn.cursor()
         updates = []
-        params = []
+        params: list[Any] = []
 
         if name is not None:
             updates.append('name = ?')
@@ -349,7 +353,9 @@ class TaskDatabase:
             return []
 
         cursor = self.conn.cursor()
-        cursor.execute('SELECT * FROM labels WHERE is_favorite = 1 AND is_deleted = 0 ORDER BY item_order ASC')
+        cursor.execute(
+            'SELECT * FROM labels WHERE is_favorite = 1 AND is_deleted = 0 ORDER BY item_order ASC'
+        )
         rows = cursor.fetchall()
         return [dict(row) for row in rows]
 

@@ -189,7 +189,9 @@ class TestFullConfig:
         cfg.basic.name = 'full-test'
         xml = _gen(cfg.to_dict())
         root = ET.fromstring(xml)
-        assert root.find('name').text == 'full-test'
+        name_elem = root.find('name')
+        assert name_elem is not None
+        assert name_elem.text == 'full-test'
 
     def test_power_management(self):
         xml = _gen(_base({'power_management': {

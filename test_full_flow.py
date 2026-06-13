@@ -2,17 +2,18 @@
 
 import sys
 
-sys.path.insert(0, 'D:/codehub/py_tools')
+from typing import Any
 
 from utils.xml_generator import LibvirtXMLGenerator
 from vm.model.core.vm_config import VMConfig
 
+sys.path.insert(0, 'D:/codehub/py_tools')
 # 1. 模拟 devices tab 的 to_xml 方法返回的配置
 print('=' * 60)
 print('步骤 1: Devices Tab to_xml() 输出')
 print('=' * 60)
 
-devices_tab_xml = {
+devices_tab_xml: dict[str, list[dict[str, Any]]] = {
     'disks': [
         {
             'type': 'file',

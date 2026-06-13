@@ -1,7 +1,7 @@
 """设备配置模块 - 整合所有设备配置到一个 Tab (根据 libvirt devices 文档)."""
 
 from collections.abc import Callable
-from typing import ClassVar
+from typing import Any, ClassVar
 
 import customtkinter as ctk
 
@@ -240,13 +240,13 @@ class DevicesConfigTab(BaseConfigTab):
     def _on_category_change(self, selected_label: str) -> None:
         """类别改变时的处理。"""
         # 获取选中的类别值
-        category_value = None
+        category_value: str | None = None
         for key, label in self.DEVICE_CATEGORIES.items():
             if label == selected_label:
                 category_value = key
                 break
 
-        self.current_category = category_value
+        self.current_category = category_value or 'all'
 
         # 更新设备类型选项
         if category_value == 'all':
@@ -1578,7 +1578,7 @@ class DevicesConfigTab(BaseConfigTab):
 
     def to_xml(self) -> dict:
         """生成 XML 配置字典。"""
-        devices = {}
+        devices: dict[str, list[Any]] = {}
         for device in self.devices_list:
             device_type = device['type']
             if device_type not in devices:

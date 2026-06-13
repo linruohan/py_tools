@@ -2,7 +2,7 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import ClassVar
+from typing import Any, ClassVar
 
 import customtkinter as ctk
 
@@ -231,13 +231,13 @@ class DevicesConfigTab(BaseConfigTab):
 
     def _on_category_change(self, selected_label: str) -> None:
         """类别改变时的处理。"""
-        category_value = None
+        category_value: str | None = None
         for key, label in self.DEVICE_CATEGORIES.items():
             if label == selected_label:
                 category_value = key
                 break
 
-        self.current_category = category_value
+        self.current_category = category_value or 'all'
         self._update_device_type_options()
 
     def _update_device_type_options(self) -> None:
@@ -304,9 +304,9 @@ class DevicesConfigTab(BaseConfigTab):
         # 重置选择
         self.device_type_menu.set('None')
 
-    def _get_default_config(self, device_type: str) -> dict:
+    def _get_default_config(self, device_type: str) -> dict[str, Any]:
         """获取设备类型的默认配置。"""
-        defaults = {
+        defaults: dict[str, dict[str, Any]] = {
             'disk': {
                 'disk_type': 'file',
                 'disk_device': 'disk',
@@ -616,7 +616,7 @@ class DevicesConfigTab(BaseConfigTab):
         widgets.append(('disk_source', source_entry))
 
         # Readonly
-        ro_check = ctk.CTkCheckBox(
+        ro_check: ctk.CTkCheckBox = ctk.CTkCheckBox(
             parent,
             text='RO',
             width=30,
@@ -650,7 +650,7 @@ class DevicesConfigTab(BaseConfigTab):
         widgets.append(('gfx_type', type_menu))
 
         # Autoport
-        ap_check = ctk.CTkCheckBox(
+        ap_check: ctk.CTkCheckBox = ctk.CTkCheckBox(
             parent,
             text='Autoport',
             width=70,
@@ -732,7 +732,7 @@ class DevicesConfigTab(BaseConfigTab):
         widgets.append(('video_heads', heads_entry))
 
         # 3D Acceleration
-        accel_check = ctk.CTkCheckBox(
+        accel_check: ctk.CTkCheckBox = ctk.CTkCheckBox(
             parent,
             text='3D',
             width=35,
@@ -1317,7 +1317,7 @@ class DevicesConfigTab(BaseConfigTab):
         widgets.append(('iommu_model', model_menu))
 
         # Intremap
-        intremap_check = ctk.CTkCheckBox(
+        intremap_check: ctk.CTkCheckBox = ctk.CTkCheckBox(
             parent,
             text='Intremap',
             width=60,
@@ -1332,7 +1332,7 @@ class DevicesConfigTab(BaseConfigTab):
         widgets.append(('iommu_intremap', intremap_check))
 
         # Caching
-        caching_check = ctk.CTkCheckBox(
+        caching_check: ctk.CTkCheckBox = ctk.CTkCheckBox(
             parent,
             text='Caching',
             width=60,
@@ -1483,7 +1483,9 @@ class DevicesConfigTab(BaseConfigTab):
         # 检查是否已存在该类型的 controller
         for ctrl in self.controllers_list:
             if ctrl.get('type') == controller_type:
-                return ctrl.get('id')
+                controller_id = ctrl.get('id')
+                if controller_id:
+                    return controller_id
 
         # 创建新的 controller
         if controller_type not in self.controller_counter:
@@ -1556,9 +1558,9 @@ class DevicesConfigTab(BaseConfigTab):
             'controllers': self.controllers_list,
         }
 
-    def to_xml(self) -> dict:
+    def to_xml(self) -> dict[str, Any]:
         """生成 XML 配置字典 - 与 xml_generator.py 期望的格式匹配。"""
-        result = {}
+        result: dict[str, Any] = {}
 
         # 按设备类型分组
         for device in self.devices_list:

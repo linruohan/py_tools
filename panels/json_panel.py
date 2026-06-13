@@ -36,7 +36,7 @@ class DragSortListbox(Listbox):
             'relief': 'flat',  # 扁平样式
         }
         default_kwargs.update(kwargs)
-        super().__init__(master, **default_kwargs)
+        super().__init__(master, **default_kwargs)  # type: ignore[arg-type]
 
         self.drag_index = None  # 记录拖动项的初始索引
         self.bind('<Button-1>', self._on_click)

@@ -53,8 +53,8 @@ class XMLEnhancedGenerator:
                     element.set(key, str(value))
             return element
         except Exception as e:
-            logger.error(f"添加 XML 元素失败：tag={tag}, error={e}")
-            self._errors.append(f"添加元素 {tag} 失败：{e}")
+            logger.error(f'添加 XML 元素失败：tag={tag}, error={e}')
+            self._errors.append(f'添加元素 {tag} 失败：{e}')
             return None
 
     def get_value(
@@ -80,17 +80,15 @@ class XMLEnhancedGenerator:
             if expected_type is not None and value is not None:
                 if not isinstance(value, expected_type):
                     logger.warning(
-                        f"配置项 {key} 类型不匹配：期望 {expected_type}, 得到 {type(value)}"
+                        f'配置项 {key} 类型不匹配：期望 {expected_type}, 得到 {type(value)}'
                     )
                     return default
             return value
         except Exception as e:
-            logger.error(f"获取配置项 {key} 失败：{e}")
+            logger.error(f'获取配置项 {key} 失败：{e}')
             return default
 
-    def get_nested_config(
-        self, config: ConfigDict, key: str, required: bool = False
-    ) -> ConfigDict:
+    def get_nested_config(self, config: ConfigDict, key: str, required: bool = False) -> ConfigDict:
         """安全地获取嵌套配置.
 
         Args:
@@ -107,10 +105,10 @@ class XMLEnhancedGenerator:
         try:
             nested = config.get(key, {})
             if required and not nested:
-                raise ValueError(f"缺少必需的嵌套配置：{key}")
+                raise ValueError(f'缺少必需的嵌套配置：{key}')
             return nested if isinstance(nested, dict) else {}
         except Exception as e:
-            logger.error(f"获取嵌套配置 {key} 失败：{e}")
+            logger.error(f'获取嵌套配置 {key} 失败：{e}')
             if required:
                 raise
             return {}
@@ -134,20 +132,18 @@ class XMLEnhancedGenerator:
             int_value = int(value)
             if allow_zero:
                 if int_value < 0:
-                    logger.warning(f"{field_name} 不能为负数：{int_value}")
+                    logger.warning(f'{field_name} 不能为负数：{int_value}')
                     return None
             else:
                 if int_value <= 0:
-                    logger.warning(f"{field_name} 必须为正数：{int_value}")
+                    logger.warning(f'{field_name} 必须为正数：{int_value}')
                     return None
             return int_value
         except (TypeError, ValueError) as e:
-            logger.warning(f"{field_name} 不是有效的整数：{value}, error={e}")
+            logger.warning(f'{field_name} 不是有效的整数：{value}, error={e}')
             return None
 
-    def validate_string(
-        self, value: Any, field_name: str, allow_empty: bool = False
-    ) -> str | None:
+    def validate_string(self, value: Any, field_name: str, allow_empty: bool = False) -> str | None:
         """验证字符串值.
 
         Args:
@@ -163,11 +159,11 @@ class XMLEnhancedGenerator:
                 return None
             str_value = str(value).strip()
             if not allow_empty and not str_value:
-                logger.warning(f"{field_name} 不能为空字符串")
+                logger.warning(f'{field_name} 不能为空字符串')
                 return None
             return str_value
         except Exception as e:
-            logger.warning(f"{field_name} 转换字符串失败：{value}, error={e}")
+            logger.warning(f'{field_name} 转换字符串失败：{value}, error={e}')
             return None
 
     def add_metadata(self, config: ConfigDict) -> None:
@@ -199,8 +195,8 @@ class XMLEnhancedGenerator:
                 self.safe_add_element(self.domain, 'genid', text=genid)
 
         except Exception as e:
-            logger.exception(f"添加元数据失败：{e}")
-            self._errors.append(f"元数据添加失败：{e}")
+            logger.exception(f'添加元数据失败：{e}')
+            self._errors.append(f'元数据添加失败：{e}')
 
     def add_memory(self, config: ConfigDict) -> None:
         """添加内存配置（带异常处理）.
@@ -239,7 +235,10 @@ class XMLEnhancedGenerator:
                 )
                 if current_memory is not None:
                     self.safe_add_element(
-                        self.domain, 'currentMemory', text=str(current_memory), attribs={'unit': unit}
+                        self.domain,
+                        'currentMemory',
+                        text=str(current_memory),
+                        attribs={'unit': unit},
                     )
 
             # 添加 maxMemory
@@ -261,8 +260,8 @@ class XMLEnhancedGenerator:
                     )
 
         except Exception as e:
-            logger.exception(f"添加内存配置失败：{e}")
-            self._errors.append(f"内存配置添加失败：{e}")
+            logger.exception(f'添加内存配置失败：{e}')
+            self._errors.append(f'内存配置添加失败：{e}')
 
     def get_errors(self) -> list[str]:
         """获取所有收集的错误.

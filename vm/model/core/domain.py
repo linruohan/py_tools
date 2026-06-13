@@ -1,7 +1,7 @@
 """Domain 模型 - 整合 Config 策略模式的 libvirt domain 配置."""
 
 from dataclasses import dataclass, field
-from enum import StrEnum
+from enum import Enum
 from typing import Any, TypeVar
 
 # 引入策略模式
@@ -23,7 +23,7 @@ from ..cpu.numa import NUMA
 T = TypeVar('T')
 
 
-class VirtType(StrEnum):
+class VirtType(str, Enum):
     """虚拟化类型"""
 
     KVM = 'kvm'
@@ -36,7 +36,7 @@ class VirtType(StrEnum):
     VZ = 'vz'
 
 
-class OSType(StrEnum):
+class OSType(str, Enum):
     """OS 类型"""
 
     HVM = 'hvm'
@@ -47,7 +47,7 @@ class OSType(StrEnum):
     PVM = 'pvm'
 
 
-class MachineType(StrEnum):
+class MachineType(str, Enum):
     """机型类型"""
 
     Q35 = 'q35'
@@ -57,7 +57,7 @@ class MachineType(StrEnum):
     ARM_VIRT = 'arm-virt'
 
 
-class CpuMode(StrEnum):
+class CpuMode(str, Enum):
     """CPU 模式"""
 
     CUSTOM = 'custom'
@@ -188,7 +188,7 @@ class CPU:
         deprecated_features: 废弃特性开关 (on, off) - Since 11.0.0, S390 专用
     """
 
-    mode: CpuMode | None = CpuMode.HOST_MODEL
+    mode: CpuMode | None = CpuMode.HOST_MODEL  # type: ignore[assignment]
     model: CPUModel | None = None
     topology: CPUTopology | None = None
     features: list[CPUFeature] = field(default_factory=list)
@@ -237,7 +237,7 @@ class CPU:
             features=features if isinstance(features, list) else [],
             match=data.get('match') if data.get('match') != 'None' else None,
             check=data.get('check') if data.get('check') != 'None' else None,
-            migratable=data.get('migratable') if data.get('migratable') != 'None' else None,
+            migratable=(data.get('migratable') if data.get('migratable') != 'None' else None),
             vendor_id=data.get('vendor_id'),
             placeholder=data.get('placeholder'),
             numa=numa,
@@ -307,7 +307,7 @@ class Memory:
     """内存配置"""
 
     size: int = 2097152  # KiB
-    unit: MemoryUnit = MemoryUnit.KIB
+    unit: MemoryUnit = MemoryUnit.KIB  # type: ignore[assignment]
     dump_core: bool | None = None
 
     @classmethod
@@ -337,7 +337,7 @@ class MaxMemory:
     """最大内存配置"""
 
     size: int = 4194304  # KiB
-    unit: MemoryUnit = MemoryUnit.KIB
+    unit: MemoryUnit = MemoryUnit.KIB  # type: ignore[assignment]
     slots: int | None = None
 
     @classmethod
@@ -367,7 +367,7 @@ class CurrentMemory:
     """当前内存配置"""
 
     size: int = 2097152  # KiB
-    unit: MemoryUnit = MemoryUnit.KIB
+    unit: MemoryUnit = MemoryUnit.KIB  # type: ignore[assignment]
 
     @classmethod
     def from_dict(cls, data: dict[str, Any]) -> 'CurrentMemory':
@@ -502,10 +502,10 @@ class Nvram:
 class OS:
     """操作系统配置"""
 
-    type: OSType = OSType.HVM
+    type: OSType = OSType.HVM  # type: ignore[assignment]
     arch: str = 'x86_64'
-    machine: MachineType = MachineType.Q35
-    firmware: FirmwareType = FirmwareType.BIOS
+    machine: MachineType = MachineType.Q35  # type: ignore[assignment]
+    firmware: FirmwareType = FirmwareType.BIOS  # type: ignore[assignment]
     firmware_features: list[dict[str, Any]] = field(default_factory=list)
     loader: Loader | None = None
     nvram: Nvram | None = None
@@ -628,12 +628,12 @@ class OS:
 class Disk:
     """磁盘设备配置"""
 
-    type: DiskType = DiskType.QCOW2
+    type: DiskType = DiskType.QCOW2  # type: ignore[assignment]
     device: str = 'disk'  # disk, cdrom, floppy, lun
-    bus: DiskBusType = DiskBusType.VIRTIO
+    bus: DiskBusType = DiskBusType.VIRTIO  # type: ignore[assignment]
     target: str = 'vda'
     driver: str | None = None
-    cache: CacheMode = CacheMode.NONE
+    cache: CacheMode = CacheMode.NONE  # type: ignore[assignment]
     io: str | None = None
     discard: str | None = None
     detect_zeroes: bool | None = None
@@ -714,7 +714,7 @@ class Disk:
 class Graphics:
     """图形设备配置"""
 
-    type: GraphicsType = GraphicsType.VNC
+    type: GraphicsType = GraphicsType.VNC  # type: ignore[assignment]
     port: str = '-1'
     tls_port: str | None = None
     listen: str = '0.0.0.0'
@@ -774,7 +774,7 @@ class Graphics:
 class Video:
     """视频设备配置"""
 
-    model: VideoModel = VideoModel.QXL
+    model: VideoModel = VideoModel.QXL  # type: ignore[assignment]
     vram: int = 64  # MiB
     heads: int = 1
     primary: bool | None = None
@@ -1124,7 +1124,7 @@ class Clock:
 class Domain:
     """虚拟机域配置 - 整合 Config 策略模式"""
 
-    type: VirtType = VirtType.KVM
+    type: VirtType = VirtType.KVM  # type: ignore[assignment]
     name: str = 'vm0'
     uuid: str | None = None
     hwuuid: str | None = None
@@ -1195,7 +1195,7 @@ class Domain:
                 if key in cpu_data:
                     cpu_model_data[key] = cpu_data[key]
             # 提取 CPU 子元素
-            features = []
+            cpu_features: list[Any] = []
             if 'children' in cpu_data:
                 for child in cpu_data['children']:
                     if 'model' in child:
@@ -1219,10 +1219,10 @@ class Domain:
                         cpu_model_data['maxphysaddr'] = child['maxphysaddr']
                     elif 'feature' in child:
                         # 处理 feature 元素
-                        features.append(child['feature'])
+                        cpu_features.append(child['feature'])
             # 添加 features 列表
-            if features:
-                cpu_model_data['features'] = features
+            if cpu_features:
+                cpu_model_data['features'] = cpu_features
         else:
             # 如果没有 cpu 键，使用默认值
             cpu_model_data = {}
@@ -1334,7 +1334,7 @@ class Domain:
         Returns:
             配置字典
         """
-        config = {
+        config: dict[str, Any] = {
             'name': self.name,
             'uuid': self.uuid,
             'hwuuid': self.hwuuid,
@@ -1356,10 +1356,10 @@ class Domain:
             config['memory_allocation'] = {
                 'memory': self.memory.size,
                 'unit': self.memory.unit.value,
-                'current_memory': self.current_memory.size
-                if self.current_memory
-                else self.memory.size,
-                'max_memory': self.max_memory.size if self.max_memory else self.memory.size,
+                'current_memory': (
+                    self.current_memory.size if self.current_memory else self.memory.size
+                ),
+                'max_memory': (self.max_memory.size if self.max_memory else self.memory.size),
                 'memory_slots': self.max_memory.slots if self.max_memory else None,
             }
 
@@ -1472,7 +1472,11 @@ class Domain:
             if hasattr(self.cpu, 'mode') and self.cpu.mode:
                 cpu_elem.set(
                     'mode',
-                    self.cpu.mode.value if hasattr(self.cpu.mode, 'value') else str(self.cpu.mode),
+                    (
+                        self.cpu.mode.value
+                        if hasattr(self.cpu.mode, 'value')
+                        else str(self.cpu.mode)
+                    ),
                 )
             if hasattr(self.cpu, 'match') and self.cpu.match:
                 cpu_elem.set('match', self.cpu.match)

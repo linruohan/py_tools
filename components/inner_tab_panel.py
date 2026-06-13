@@ -39,9 +39,9 @@ class InnerTabPanel(ctk.CTkFrame):
         self.tabs_config = tabs_config
         self.title = title
         self.on_change_callback = on_change_callback
-        self.tab_instances = {}
-        self.current_tab = None
-        self.tab_buttons = {}
+        self.tab_instances: dict = {}
+        self.current_tab: str | None = None
+        self.tab_buttons: dict = {}
         self.content_frame = content_frame
 
         self._init_ui()
@@ -198,7 +198,7 @@ class InnerTabPanel(ctk.CTkFrame):
         if self.on_change_callback and not initial:
             self.on_change_callback()
 
-    def get_current_tab(self) -> str:
+    def get_current_tab(self) -> str | None:
         """获取当前显示的 Tab 键名."""
         return self.current_tab
 

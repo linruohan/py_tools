@@ -96,8 +96,8 @@ class VmPanel(ctk.CTkFrame):
         self._updating_xml = False  # 防止递归更新
 
         # Tab 管理
-        self.tab_instances = {}  # 存储已创建的 Tab 实例
-        self.tab_enabled = {}  # 存储 Tab 启用状态
+        self.tab_instances: dict[str, dict[str, object]] = {}  # 存储已创建的 Tab 实例
+        self.tab_enabled: dict[str, bool] = {}  # 存储 Tab 启用状态
 
         # 初始化 UI
         self.init_ui()
@@ -440,7 +440,7 @@ class VmPanel(ctk.CTkFrame):
             defaultextension='.xml',
             filetypes=[('XML 文件', '*.xml'), ('所有文件', '*.*')],
             title='保存 XML 文件',
-            initialfile=f'{self.vm_config.basic.get("name", "vm")}.xml',
+            initialfile=f'{self.vm_config.basic.name or "vm"}.xml',
         )
 
         if not file_path:
@@ -475,7 +475,7 @@ class VmPanel(ctk.CTkFrame):
             )
 
             if result.returncode == 0:
-                vm_name = self.vm_config.basic.get('name', 'vm')
+                vm_name = self.vm_config.basic.name or 'vm'
                 messagebox.showinfo(
                     '成功',
                     f'虚拟机 {vm_name} 定义成功!\n\n请运行以下命令启动:\n  virsh start {vm_name}',

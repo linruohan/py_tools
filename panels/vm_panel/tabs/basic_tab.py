@@ -1,5 +1,7 @@
 """基础配置 Tab - 虚拟机名称、UUID、机型、CPU、内存等."""
 
+from typing import Any
+
 import customtkinter as ctk
 
 from components.base_tab import BaseConfigTab
@@ -11,24 +13,24 @@ class BasicTab(BaseConfigTab):
 
     def __init__(self, master, on_change_callback=None, **kwargs):
         # 架构类型变量
-        self.arch_type = ctk.StringVar(value='x86')
+        self.arch_type: ctk.StringVar = ctk.StringVar(value='x86')
 
         # 控件引用
-        self.vm_name_entry = None
+        self.vm_name_entry: ctk.CTkEntry | None = None
         # CPU 分配控件
-        self.max_vcpu = None
-        self.current_vcpu = None
-        self.placement = None
-        self.cpuset = None
+        self.max_vcpu: ctk.CTkEntry | None = None
+        self.current_vcpu: ctk.CTkEntry | None = None
+        self.placement: ctk.CTkOptionMenu | None = None
+        self.cpuset: ctk.CTkEntry | None = None
         # vCPU 实例列表
-        self.vcpu_instances = []
+        self.vcpu_instances: list[dict[str, Any]] = []
         # 内存分配控件
-        self.memory = None
-        self.current_memory = None
-        self.max_memory = None
-        self.memory_slots = None
-        self.memory_unit = None
-        self.dump_core = None
+        self.memory: ctk.CTkOptionMenu | None = None
+        self.current_memory: ctk.CTkOptionMenu | None = None
+        self.max_memory: ctk.CTkOptionMenu | None = None
+        self.memory_slots: ctk.CTkEntry | None = None
+        self.memory_unit: ctk.CTkOptionMenu | None = None
+        self.dump_core: ctk.CTkOptionMenu | None = None
 
         super().__init__(master, on_change_callback, **kwargs)
 
@@ -318,7 +320,7 @@ class BasicTab(BaseConfigTab):
             # 触发配置变更
             self._trigger_change()
 
-    def get_basic_config(self) -> dict:
+    def get_basic_config(self) -> dict:  # type: ignore[override]
         """获取基础配置.
 
         Returns:
@@ -326,25 +328,25 @@ class BasicTab(BaseConfigTab):
         """
         from utils.parsers import parse_integer_value, parse_memory_value
 
-        max_vcpu_raw = self.max_vcpu.get().strip()
+        max_vcpu_raw = self.max_vcpu.get().strip()  # type: ignore[union-attr]
         max_vcpu = parse_integer_value(max_vcpu_raw, default=2) if max_vcpu_raw else None
 
-        current_vcpu_raw = self.current_vcpu.get().strip()
+        current_vcpu_raw = self.current_vcpu.get().strip()  # type: ignore[union-attr]
         current_vcpu = (
             parse_integer_value(current_vcpu_raw, default=1) if current_vcpu_raw else None
         )
 
-        target_unit = self.memory_unit.get()
-        memory = parse_memory_value(self.memory.get(), target_unit=target_unit)
+        target_unit = self.memory_unit.get()  # type: ignore[union-attr]
+        memory = parse_memory_value(self.memory.get(), target_unit=target_unit)  # type: ignore[union-attr]
 
-        current_memory_raw = self.current_memory.get()
+        current_memory_raw = self.current_memory.get()  # type: ignore[union-attr]
         current_memory = (
             None
             if current_memory_raw == 'None'
             else parse_memory_value(current_memory_raw, target_unit=target_unit)
         )
 
-        max_memory_raw = self.max_memory.get()
+        max_memory_raw = self.max_memory.get()  # type: ignore[union-attr]
         max_memory = (
             None
             if max_memory_raw == 'None'
@@ -359,37 +361,37 @@ class BasicTab(BaseConfigTab):
         if current_memory is not None and max_memory is not None and current_memory > max_memory:
             current_memory = max_memory
 
-        memory_config = {
+        memory_config: dict[str, Any] = {
             'memory': memory,
-            'unit': self.memory_unit.get(),
+            'unit': self.memory_unit.get(),  # type: ignore[union-attr]
         }
-        dump_core_value = self.dump_core.get()
+        dump_core_value = self.dump_core.get()  # type: ignore[union-attr]
         if dump_core_value != 'None':
             memory_config['dump_core'] = dump_core_value == 'on'
         if current_memory is not None:
             memory_config['current_memory'] = current_memory
         if max_memory is not None:
             memory_config['max_memory'] = max_memory
-            memory_config['memory_slots'] = parse_integer_value(self.memory_slots.get(), default=16)
+            memory_config['memory_slots'] = parse_integer_value(self.memory_slots.get(), default=16)  # type: ignore[union-attr]
 
         return {
             'arch': self.arch_type.get(),
-            'name': self.vm_name_entry.get().strip() or 'vm0',
+            'name': self.vm_name_entry.get().strip() or 'vm0',  # type: ignore[union-attr]
             'title': '',
             'description': '',
             'cpu_allocation': {
                 'max_vcpu': max_vcpu,
                 'current_vcpu': current_vcpu,
-                'placement': None if self.placement.get() == 'None' else self.placement.get(),
-                'cpuset': self.cpuset.get().strip() or None,
+                'placement': None if self.placement.get() == 'None' else self.placement.get(),  # type: ignore[union-attr]
+                'cpuset': self.cpuset.get().strip() or None,  # type: ignore[union-attr]
                 'vcpu_instances': [
                     {
-                        'id': parse_integer_value(instance['id'].get(), default=i),
-                        'enabled': instance['enabled'].get(),
-                        'hotpluggable': instance['hotpluggable'].get(),
+                        'id': parse_integer_value(instance['id'].get(), default=i),  # type: ignore[union-attr]
+                        'enabled': instance['enabled'].get(),  # type: ignore[union-attr]
+                        'hotpluggable': instance['hotpluggable'].get(),  # type: ignore[union-attr]
                         **(
-                            {'order': parse_integer_value(instance['order'].get())}
-                            if instance['order'].get().strip()
+                            {'order': parse_integer_value(instance['order'].get())}  # type: ignore[union-attr]
+                            if instance['order'].get().strip()  # type: ignore[union-attr]
                             else {}
                         ),
                     }
@@ -413,7 +415,7 @@ class BasicTab(BaseConfigTab):
         # 直接返回 get_basic_config 的结果，确保所有配置都被正确包含
         return config
 
-    def load_config(self, config: dict):
+    def load_config(self, config: dict) -> None:
         """加载配置数据到 UI.
 
         Args:
@@ -421,8 +423,8 @@ class BasicTab(BaseConfigTab):
         """
         # 系统配置
         if 'name' in config:
-            self.vm_name_entry.delete(0, ctk.END)
-            self.vm_name_entry.insert(0, config['name'])
+            self.vm_name_entry.delete(0, ctk.END)  # type: ignore[union-attr]
+            self.vm_name_entry.insert(0, config['name'])  # type: ignore[union-attr]
         if 'arch' in config:
             self.arch_type.set(config['arch'])
             self._on_arch_change()
@@ -431,21 +433,21 @@ class BasicTab(BaseConfigTab):
         if 'cpu_allocation' in config:
             cpu_alloc = config['cpu_allocation']
             if 'max_vcpu' in cpu_alloc:
-                self.max_vcpu.delete(0, ctk.END)
+                self.max_vcpu.delete(0, ctk.END)  # type: ignore[union-attr]
                 if cpu_alloc['max_vcpu'] is not None:
-                    self.max_vcpu.insert(0, str(cpu_alloc['max_vcpu']))
+                    self.max_vcpu.insert(0, str(cpu_alloc['max_vcpu']))  # type: ignore[union-attr]
             if 'current_vcpu' in cpu_alloc:
-                self.current_vcpu.delete(0, ctk.END)
+                self.current_vcpu.delete(0, ctk.END)  # type: ignore[union-attr]
                 if cpu_alloc['current_vcpu'] is not None:
-                    self.current_vcpu.insert(0, str(cpu_alloc['current_vcpu']))
+                    self.current_vcpu.insert(0, str(cpu_alloc['current_vcpu']))  # type: ignore[union-attr]
             if 'placement' in cpu_alloc:
-                self.placement.set(
+                self.placement.set(  # type: ignore[union-attr]
                     'None' if cpu_alloc['placement'] is None else cpu_alloc['placement']
                 )
             if 'cpuset' in cpu_alloc:
-                self.cpuset.delete(0, ctk.END)
+                self.cpuset.delete(0, ctk.END)  # type: ignore[union-attr]
                 if cpu_alloc['cpuset']:
-                    self.cpuset.insert(0, cpu_alloc['cpuset'])
+                    self.cpuset.insert(0, cpu_alloc['cpuset'])  # type: ignore[union-attr]
             if 'vcpu_instances' in cpu_alloc:
                 # 清空现有实例
                 for instance in self.vcpu_instances:
@@ -580,29 +582,29 @@ class BasicTab(BaseConfigTab):
                     # 从 KiB 转换为 GB
                     memory_gb = memory // (1024 * 1024)
                     if memory_gb > 0:
-                        self.memory.set(f'{memory_gb}G')
+                        self.memory.set(f'{memory_gb}G')  # type: ignore[union-attr]
                     else:
-                        self.memory.set('1G')
+                        self.memory.set('1G')  # type: ignore[union-attr]
             if 'current_memory' in mem_alloc:
                 current_memory = mem_alloc['current_memory']
                 if isinstance(current_memory, int):
                     current_memory_gb = current_memory // (1024 * 1024)
                     if current_memory_gb > 0:
-                        self.current_memory.set(f'{current_memory_gb}G')
+                        self.current_memory.set(f'{current_memory_gb}G')  # type: ignore[union-attr]
                     else:
-                        self.current_memory.set('1G')
+                        self.current_memory.set('1G')  # type: ignore[union-attr]
             if 'max_memory' in mem_alloc:
                 max_memory = mem_alloc['max_memory']
                 if isinstance(max_memory, int):
                     max_memory_gb = max_memory // (1024 * 1024)
                     if max_memory_gb > 0:
-                        self.max_memory.set(f'{max_memory_gb}G')
+                        self.max_memory.set(f'{max_memory_gb}G')  # type: ignore[union-attr]
                     else:
-                        self.max_memory.set('4G')
+                        self.max_memory.set('4G')  # type: ignore[union-attr]
             if 'memory_slots' in mem_alloc:
-                self.memory_slots.delete(0, ctk.END)
-                self.memory_slots.insert(0, str(mem_alloc['memory_slots']))
+                self.memory_slots.delete(0, ctk.END)  # type: ignore[union-attr]
+                self.memory_slots.insert(0, str(mem_alloc['memory_slots']))  # type: ignore[union-attr]
             if 'unit' in mem_alloc:
-                self.memory_unit.set(mem_alloc['unit'])
+                self.memory_unit.set(mem_alloc['unit'])  # type: ignore[union-attr]
             if 'dump_core' in mem_alloc:
-                self.dump_core.set(mem_alloc['dump_core'])
+                self.dump_core.set(mem_alloc['dump_core'])  # type: ignore[union-attr]

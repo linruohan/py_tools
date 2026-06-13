@@ -4891,4 +4891,3 @@ Example configurations for each driver are provide on the driver specific pages 
 
 - [Xen examples](https://www.libvirt.org/drvxen.html#example-domain-xml-config)
 - [QEMU/KVM examples](https://www.libvirt.org/drvqemu.html#example-domain-xml-config)
-

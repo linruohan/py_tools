@@ -154,6 +154,7 @@ class SearchFilter(ctk.CTkFrame):
             width=entry_width,  # 使用输入框的宽度
         )
         # 使用grid布局将下拉框显示在输入框下方
+        assert self.dropdown_frame is not None
         self.dropdown_frame.grid(row=1, column=0, sticky='ew', padx=0, pady=0)
         self.dropdown_frame.grid_columnconfigure(0, weight=1)
 

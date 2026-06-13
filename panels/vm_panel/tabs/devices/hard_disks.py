@@ -512,7 +512,7 @@ class HardDiskConfigDialog:
 
         # 分析设备名称模式
         prefixes = ['vd', 'sd', 'hd', 'nvme']
-        max_numbers = {}
+        max_numbers: dict[str, int] = {}
 
         for target in existing_targets:
             for prefix in prefixes:

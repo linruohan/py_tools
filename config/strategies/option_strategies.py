@@ -1,9 +1,9 @@
 """选项策略枚举类型定义"""
 
-from enum import StrEnum
+from enum import Enum
 
 
-class DiskBusType(StrEnum):
+class DiskBusType(str, Enum):
     """磁盘总线类型"""
 
     IDE = 'ide'
@@ -16,7 +16,7 @@ class DiskBusType(StrEnum):
     NVME = 'nvme'
 
 
-class DiskType(StrEnum):
+class DiskType(str, Enum):
     """磁盘类型"""
 
     RAW = 'raw'
@@ -28,7 +28,7 @@ class DiskType(StrEnum):
     LVM = 'lvm'
 
 
-class CacheMode(StrEnum):
+class CacheMode(str, Enum):
     """缓存模式"""
 
     NONE = 'none'
@@ -39,7 +39,7 @@ class CacheMode(StrEnum):
     WRITEBACK_PARENT = 'writeback-parent'
 
 
-class GraphicsType(StrEnum):
+class GraphicsType(str, Enum):
     """图形类型"""
 
     VNC = 'vnc'
@@ -50,7 +50,7 @@ class GraphicsType(StrEnum):
     CURSES = 'curses'
 
 
-class VideoModel(StrEnum):
+class VideoModel(str, Enum):
     """视频模型"""
 
     QXL = 'qxl'
@@ -62,14 +62,14 @@ class VideoModel(StrEnum):
     RAMFB = 'ramfb'
 
 
-class FirmwareType(StrEnum):
+class FirmwareType(str, Enum):
     """固件类型"""
 
     BIOS = 'bios'
     EFI = 'efi'
 
 
-class MemoryUnit(StrEnum):
+class MemoryUnit(str, Enum):
     """内存单位"""
 
     B = 'b'

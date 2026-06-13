@@ -77,7 +77,7 @@ class TabToggleSwitch(ctk.CTkFrame):
         Returns:
             bool: 是否启用
         """
-        return self.toggle_var.get()
+        return bool(self.toggle_var.get())
 
 
 class TabTogglePanel(ctk.CTkFrame):
@@ -202,11 +202,8 @@ class TabTogglePanel(ctk.CTkFrame):
         Returns:
             bool: 是否启用
         """
-        return (
-            self.toggle_switches.get(tab_key, TabToggleSwitch).is_enabled()
-            if hasattr(TabToggleSwitch, 'is_enabled')
-            else False
-        )
+        switch = self.toggle_switches.get(tab_key)
+        return switch.is_enabled() if switch else False
 
     def get_all_states(self) -> dict[str, bool]:
         """获取所有 Tab 的开关状态.

@@ -116,4 +116,4 @@ class EventToggleSwitch(ctk.CTkFrame):
         Returns:
             bool: 是否启用
         """
-        return self.enabled_var.get()
+        return bool(self.enabled_var.get())

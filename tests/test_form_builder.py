@@ -10,7 +10,7 @@ def test_create_label_entry():
     root = ctk.CTk()
     frame = ctk.CTkFrame(root)
     frame.pack()
-    
+
     builder = FormBuilder()
     entry = builder.create_label_entry(
         parent=frame,
@@ -19,10 +19,10 @@ def test_create_label_entry():
         row=0,
         column=0,
     )
-    
+
     assert entry is not None
     assert entry.get() == '默认值'
-    
+
     # 清理
     root.destroy()
 
@@ -32,12 +32,12 @@ def test_create_label_entry_with_callback():
     root = ctk.CTk()
     frame = ctk.CTkFrame(root)
     frame.pack()
-    
+
     callback_called = []
-    
+
     def on_change(value):
         callback_called.append(value)
-    
+
     builder = FormBuilder()
     entry = builder.create_label_entry(
         parent=frame,
@@ -46,17 +46,17 @@ def test_create_label_entry_with_callback():
         row=0,
         on_change=on_change,
     )
-    
+
     # 模拟输入
     entry.delete(0, 'end')
     entry.insert(0, 'new value')
-    
+
     # 触发 KeyRelease 事件
     entry.event_generate('<KeyRelease>')
-    
+
     assert len(callback_called) > 0
     assert 'new value' in callback_called
-    
+
     # 清理
     root.destroy()
 
@@ -66,7 +66,7 @@ def test_create_label_combobox():
     root = ctk.CTk()
     frame = ctk.CTkFrame(root)
     frame.pack()
-    
+
     builder = FormBuilder()
     combobox = builder.create_label_combobox(
         parent=frame,
@@ -76,10 +76,10 @@ def test_create_label_combobox():
         row=0,
         column=0,
     )
-    
+
     assert combobox is not None
     assert combobox.get() == '选项 2'
-    
+
     # 清理
     root.destroy()
 
@@ -89,12 +89,12 @@ def test_create_label_combobox_with_callback():
     root = ctk.CTk()
     frame = ctk.CTkFrame(root)
     frame.pack()
-    
+
     callback_called = []
-    
+
     def on_change(value):
         callback_called.append(value)
-    
+
     builder = FormBuilder()
     combobox = builder.create_label_combobox(
         parent=frame,
@@ -104,12 +104,12 @@ def test_create_label_combobox_with_callback():
         row=0,
         on_change=on_change,
     )
-    
+
     # 改变选择
     combobox.set('选项 3')
-    
+
     assert len(callback_called) > 0
-    
+
     # 清理
     root.destroy()
 
@@ -119,7 +119,7 @@ def test_create_label_switch():
     root = ctk.CTk()
     frame = ctk.CTkFrame(root)
     frame.pack()
-    
+
     builder = FormBuilder()
     switch = builder.create_label_switch(
         parent=frame,
@@ -128,10 +128,10 @@ def test_create_label_switch():
         row=0,
         column=0,
     )
-    
+
     assert switch is not None
     assert switch.get() == 1  # 选中状态
-    
+
     # 清理
     root.destroy()
 
@@ -141,12 +141,12 @@ def test_create_label_switch_with_callback():
     root = ctk.CTk()
     frame = ctk.CTkFrame(root)
     frame.pack()
-    
+
     callback_called = []
-    
+
     def on_change(value):
         callback_called.append(value)
-    
+
     builder = FormBuilder()
     switch = builder.create_label_switch(
         parent=frame,
@@ -155,13 +155,13 @@ def test_create_label_switch_with_callback():
         row=0,
         on_change=on_change,
     )
-    
+
     # 切换开关
     switch.toggle()
-    
+
     assert len(callback_called) > 0
     assert True in callback_called
-    
+
     # 清理
     root.destroy()
 
@@ -171,7 +171,7 @@ def test_create_label_textbox():
     root = ctk.CTk()
     frame = ctk.CTkFrame(root)
     frame.pack()
-    
+
     builder = FormBuilder()
     textbox = builder.create_label_textbox(
         parent=frame,
@@ -182,11 +182,11 @@ def test_create_label_textbox():
         width=300,
         height=100,
     )
-    
+
     assert textbox is not None
     content = textbox.get("1.0", "end").strip()
     assert content == '默认文本'
-    
+
     # 清理
     root.destroy()
 
@@ -196,9 +196,9 @@ def test_form_builder_grid_layout():
     root = ctk.CTk()
     frame = ctk.CTkFrame(root)
     frame.pack()
-    
+
     builder = FormBuilder()
-    
+
     # 创建多个表单项
     entry1 = builder.create_label_entry(
         parent=frame,
@@ -206,21 +206,21 @@ def test_form_builder_grid_layout():
         row=0,
         column=0,
     )
-    
+
     entry2 = builder.create_label_entry(
         parent=frame,
         label_text='第二行:',
         row=1,
         column=0,
     )
-    
+
     # 验证网格位置
     info1 = entry1.grid_info()
     info2 = entry2.grid_info()
-    
+
     assert info1['row'] == 0
     assert info2['row'] == 1
-    
+
     # 清理
     root.destroy()
 
@@ -230,7 +230,7 @@ def test_form_builder_custom_width():
     root = ctk.CTk()
     frame = ctk.CTkFrame(root)
     frame.pack()
-    
+
     builder = FormBuilder()
     entry = builder.create_label_entry(
         parent=frame,
@@ -239,10 +239,10 @@ def test_form_builder_custom_width():
         row=0,
         column=0,
     )
-    
+
     # 验证宽度（CTkEntry 的 winfo_width 可能需要更新后才能获取）
     entry.update()
     assert entry.winfo_width() > 200  # 应该比默认宽度大
-    
+
     # 清理
     root.destroy()

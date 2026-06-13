@@ -1,6 +1,7 @@
 """测试配置验证功能."""
 
 from vm.model.core.vm_config import VMConfig
+from vm.model.cpu.topology import CPUTopology
 
 
 def test_validate_empty_name():
@@ -59,10 +60,10 @@ def test_validate_cpu_too_large():
     """测试 CPU 数量过大警告."""
     config = VMConfig()
     config.basic.name = 'test-vm'
-    config.cpu.vcpu = 300  # 超过 256
+    config.cpu.max_vcpu = 300  # 超过 256
     # 需要重置 current_memory 和 topology 以避免验证失败
     config.memory.current_memory = None
-    config.cpu.topology = None  # 清除拓扑以避免不匹配错误
+    config.cpu.topology = CPUTopology()  # 清除拓扑以避免不匹配错误
     is_valid, errors = config.validate()
     # 应该通过（只是警告，不是错误）
     assert is_valid
@@ -74,7 +75,7 @@ def test_validate_cpu_zero():
     """测试零 CPU 验证."""
     config = VMConfig()
     config.basic.name = 'test-vm'
-    config.cpu.vcpu = 0
+    config.cpu.max_vcpu = 0
     is_valid, errors = config.validate()
     assert not is_valid
     assert 'CPU 数量必须大于 0' in errors
@@ -93,11 +94,9 @@ def test_validate_current_memory_exceeds_max():
 
 def test_validate_cpu_topology_mismatch():
     """测试 CPU 拓扑不匹配验证."""
-    from vm.model.cpu.topology import CPUTopology
-    
     config = VMConfig()
     config.basic.name = 'test-vm'
-    config.cpu.vcpu = 4
+    config.cpu.max_vcpu = 4
     # 设置不匹配的拓扑：2 sockets * 2 cores * 2 threads = 8 != 4
     config.cpu.topology = CPUTopology(sockets=2, cores=2, threads=2)
     is_valid, errors = config.validate()
@@ -107,11 +106,9 @@ def test_validate_cpu_topology_mismatch():
 
 def test_validate_cpu_topology_match():
     """测试 CPU 拓扑匹配验证."""
-    from vm.model.cpu.topology import CPUTopology
-    
     config = VMConfig()
     config.basic.name = 'test-vm'
-    config.cpu.vcpu = 8
+    config.cpu.max_vcpu = 8
     # 设置匹配的拓扑：2 sockets * 2 cores * 2 threads = 8
     config.cpu.topology = CPUTopology(sockets=2, cores=2, threads=2)
     is_valid, errors = config.validate()
@@ -123,7 +120,7 @@ def test_validate_direct_kernel_without_kernel():
     """测试直接内核模式缺少内核路径验证."""
     config = VMConfig()
     config.basic.name = 'test-vm'
-    config.os.os_type = 'direct_kernel'
+    config.os.type = 'direct_kernel'
     config.os.kernel = ''  # 空内核路径
     is_valid, errors = config.validate()
     assert not is_valid
@@ -135,7 +132,7 @@ def test_validate_direct_kernel_with_kernel():
     """测试直接内核模式有内核路径验证."""
     config = VMConfig()
     config.basic.name = 'test-vm'
-    config.os.os_type = 'direct_kernel'
+    config.os.type = 'direct_kernel'
     config.os.kernel = '/path/to/kernel'
     is_valid, errors = config.validate()
     assert is_valid
@@ -147,7 +144,7 @@ def test_validate_multiple_errors():
     config = VMConfig()
     config.basic.name = ''  # 空名称
     config.memory.memory = 0  # 零内存
-    config.cpu.vcpu = 0  # 零 CPU
+    config.cpu.max_vcpu = 0  # 零 CPU
     is_valid, errors = config.validate()
     assert not is_valid
     assert len(errors) >= 3
@@ -163,8 +160,8 @@ def test_validate_valid_config():
     # 使用 KiB 单位，2GB = 2097152 KiB
     config.memory.memory = 2 * 1024 * 1024  # 2GB in KiB
     config.memory.current_memory = None  # 避免验证失败
-    config.cpu.vcpu = 2
-    config.os.os_type = 'hvm'
+    config.cpu.max_vcpu = 2
+    config.os.type = 'hvm'
     is_valid, errors = config.validate()
     assert is_valid
     assert len(errors) == 0

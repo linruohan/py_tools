@@ -93,7 +93,7 @@ class App(ctk.CTk):
         self.json_panel = JsonPanel(self)
         self.vm_panel = VmPanel(self)
         self.task_panel = TaskPanel(self)
-        self.frame_mapping = {
+        self.frame_mapping: dict[str, tuple[ctk.CTkButton, ctk.CTkBaseClass]] = {
             'home': (self.home_button, self.home_panel),
             'json': (self.json_button, self.json_panel),
             'vm': (self.vm_button, self.vm_panel),

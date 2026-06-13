@@ -1,5 +1,7 @@
 """PCI 直通设备配置框架 - 使用通用可滚动配置框架基类."""
 
+from typing import Any
+
 import customtkinter as ctk
 
 from utils.styles import CTK_FONT_SMALL
@@ -66,9 +68,9 @@ class ScrollableHostdevFrame(ScrollableConfigFrame):
         self._remove_entry(frame, self.hostdev_entries)
         self.hostdev_count -= 1
 
-    def get_hostdevs(self):
+    def get_hostdevs(self) -> list[dict[str, Any]]:
         """获取所有 PCI 直通设备配置."""
-        hostdevs = []
+        hostdevs: list[dict[str, Any]] = []
         for entry in self.hostdev_entries:
             name = entry['name'].get().strip()
             pci = entry['pci'].get().strip()

@@ -1,6 +1,10 @@
 """Task Panel - 任务管理面板."""
 
+from __future__ import annotations
+
 import uuid
+
+from typing import Any
 
 import customtkinter as ctk
 
@@ -19,9 +23,21 @@ BG_COLOR_CONTENT = '#1e1e1e'
 
 # 默认标签颜色列表
 DEFAULT_LABEL_COLORS = [
-    '#ef5350', '#ec407a', '#ab47bc', '#7e57c2', '#5c6bc0',
-    '#42a5f5', '#29b6f6', '#26c6da', '#26a69a', '#66bb6a',
-    '#9ccc65', '#d4e157', '#ffca28', '#ffa726', '#ff7043',
+    '#ef5350',
+    '#ec407a',
+    '#ab47bc',
+    '#7e57c2',
+    '#5c6bc0',
+    '#42a5f5',
+    '#29b6f6',
+    '#26c6da',
+    '#26a69a',
+    '#66bb6a',
+    '#9ccc65',
+    '#d4e157',
+    '#ffca28',
+    '#ffa726',
+    '#ff7043',
 ]
 
 
@@ -42,7 +58,7 @@ class AddTaskDialog(ctk.CTkToplevel):
         self.callback = callback
         self.existing_labels = existing_labels or []
         self.task_data = task_data  # 编辑模式时的任务数据
-        self.selected_labels = []
+        self.selected_labels: list[str] = []
         self.title('编辑任务' if task_data else '添加新任务')
         self.geometry('450x500')
         self.resizable(False, False)
@@ -188,19 +204,19 @@ class AddTaskDialog(ctk.CTkToplevel):
         """填充编辑模式的任务数据."""
         # 填充任务内容
         self.content_entry.insert(0, self.task_data['content'])
-        
+
         # 填充任务描述
         self.desc_entry.insert('1.0', self.task_data.get('description', ''))
-        
+
         # 填充截止日期
         if self.task_data.get('due'):
             self.due_picker.set_date(self.task_data['due'])
-        
+
         # 填充优先级
         priority_map_inv = {0: '普通', 1: '低', 2: '中', 3: '高'}
         priority = priority_map_inv.get(self.task_data.get('priority', 0), '普通')
         self.priority_combobox.set(priority)
-        
+
         # 填充已选标签
         if self.task_data.get('labels'):
             self.selected_labels = self.task_data['labels'].split(',')
@@ -332,9 +348,7 @@ class AddLabelDialog(ctk.CTkToplevel):
 
     def init_widgets(self) -> None:
         """初始化对话框组件."""
-        name_label = ctk.CTkLabel(
-            self, text='标签名称 *', font=CTK_FONT_MAIN, text_color='#f0f0f0'
-        )
+        name_label = ctk.CTkLabel(self, text='标签名称 *', font=CTK_FONT_MAIN, text_color='#f0f0f0')
         name_label.grid(row=0, column=0, padx=20, pady=(20, 5), sticky='w')
         self.name_entry = ctk.CTkEntry(
             self,
@@ -345,9 +359,7 @@ class AddLabelDialog(ctk.CTkToplevel):
         )
         self.name_entry.grid(row=1, column=0, padx=20, pady=(0, 10), sticky='ew')
 
-        color_label = ctk.CTkLabel(
-            self, text='标签颜色', font=CTK_FONT_MAIN, text_color='#f0f0f0'
-        )
+        color_label = ctk.CTkLabel(self, text='标签颜色', font=CTK_FONT_MAIN, text_color='#f0f0f0')
         color_label.grid(row=2, column=0, padx=20, pady=(0, 5), sticky='w')
 
         self.color_frame = ctk.CTkFrame(self, fg_color='transparent')
@@ -447,10 +459,10 @@ class TaskPanel(ctk.CTkFrame):
         self.db = TaskDatabase()
 
         # 任务列表数据
-        self.tasks = []
+        self.tasks: list[dict[str, Any]] = []
 
         # 标签列表数据
-        self.labels = []
+        self.labels: list[dict[str, Any]] = []
 
         # 搜索和筛选状态
         self.search_keyword = ''
@@ -709,8 +721,14 @@ class TaskPanel(ctk.CTkFrame):
             labels: 标签
         """
         # 更新数据库
-        self.db.update_task(task_id, content=content, description=description,
-                           due=due, priority=priority, labels=labels)
+        self.db.update_task(
+            task_id,
+            content=content,
+            description=description,
+            due=due,
+            priority=priority,
+            labels=labels,
+        )
 
         # 找到并更新任务数据
         task = next(t for t in self.tasks if t['id'] == task_id)
@@ -738,7 +756,7 @@ class TaskPanel(ctk.CTkFrame):
         # 更新任务内容
         if 'label' in task:
             task['label'].configure(text=task['content'])
-        
+
         # 更新截止日期
         if 'due_label' in task:
             if task['due']:
@@ -746,19 +764,22 @@ class TaskPanel(ctk.CTkFrame):
                 task['due_label'].grid()
             else:
                 task['due_label'].grid_remove()
-        
+
         # 更新标签
         if 'labels_frame' in task:
             # 清除现有标签
             for widget in task['labels_frame'].winfo_children():
                 widget.destroy()
-            
+
             if task['labels']:
                 label_names = task['labels'].split(',')
                 for label_name in label_names:
-                    label_info = next((label for label in self.labels if label['name'] == label_name.strip()), None)
+                    label_info = next(
+                        (label for label in self.labels if label['name'] == label_name.strip()),
+                        None,
+                    )
                     bg_color = label_info['color'] if label_info else '#666666'
-                    
+
                     tag_label = ctk.CTkLabel(
                         task['labels_frame'],
                         text=label_name.strip(),
@@ -789,7 +810,7 @@ class TaskPanel(ctk.CTkFrame):
         row_frame.grid_columnconfigure(1, weight=1)
 
         # 复选框
-        checkbox = ctk.CTkCheckBox(
+        checkbox: ctk.CTkCheckBox = ctk.CTkCheckBox(
             row_frame,
             text='',
             command=lambda: self.toggle_task(task['id'], checkbox, task_label),
@@ -799,7 +820,7 @@ class TaskPanel(ctk.CTkFrame):
         checkbox.grid(row=0, column=0, padx=10, pady=8)
 
         # 任务内容
-        task_label = ctk.CTkLabel(
+        task_label: ctk.CTkLabel = ctk.CTkLabel(
             row_frame,
             text=task['content'],
             font=CTK_FONT_MAIN,
@@ -822,14 +843,17 @@ class TaskPanel(ctk.CTkFrame):
         # 标签（带背景颜色）
         labels_frame = ctk.CTkFrame(row_frame, fg_color='transparent')
         labels_frame.grid(row=0, column=3, padx=(0, 10), pady=8, sticky='w')
-        
+
         if task['labels']:
             label_names = task['labels'].split(',')
             for _, label_name in enumerate(label_names):
                 # 查找标签颜色
-                label_info = next((label for label in self.labels if label['name'] == label_name.strip()), None)
+                label_info = next(
+                    (label for label in self.labels if label['name'] == label_name.strip()),
+                    None,
+                )
                 bg_color = label_info['color'] if label_info else '#666666'
-                
+
                 tag_label = ctk.CTkLabel(
                     labels_frame,
                     text=label_name.strip(),

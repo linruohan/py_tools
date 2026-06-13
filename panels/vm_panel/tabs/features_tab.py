@@ -13,10 +13,10 @@ class FeaturesTab(BaseConfigTab):
         super().__init__(master, on_change_callback, **kwargs)
 
         # 控件引用
-        self.acpi_check = None
-        self.apic_check = None
-        self.hyperv_check = None
-        self.iommu_check = None
+        self.acpi_check: ctk.CTkCheckBox | None = None
+        self.apic_check: ctk.CTkCheckBox | None = None
+        self.hyperv_check: ctk.CTkCheckBox | None = None
+        self.iommu_check: ctk.CTkCheckBox | None = None
 
         # 初始化 UI
         self._init_ui()
@@ -64,8 +64,8 @@ class FeaturesTab(BaseConfigTab):
     def get_features(self):
         """获取功能特性配置."""
         return {
-            'acpi': self.acpi_check.get(),
-            'apic': self.apic_check.get(),
-            'hyperv': self.hyperv_check.get(),
-            'iommu': self.iommu_check.get(),
+            'acpi': self.acpi_check.get(),  # type: ignore[union-attr]
+            'apic': self.apic_check.get(),  # type: ignore[union-attr]
+            'hyperv': self.hyperv_check.get(),  # type: ignore[union-attr]
+            'iommu': self.iommu_check.get(),  # type: ignore[union-attr]
         }

@@ -3,6 +3,7 @@
 import uuid
 
 from tkinter import END
+from typing import Any
 
 import customtkinter as ctk
 
@@ -139,13 +140,13 @@ class ScrollableNetworkFrame(ScrollableConfigFrame):
 
     def generate_mac(self, mac_entry: ctk.CTkEntry):
         """生成随机 MAC 地址."""
-        mac = ':'.join([f'{uuid.random().int % 256:02x}' for _ in range(6)])
+        mac = ':'.join([f'{uuid.uuid4().int % 256:02x}' for _ in range(6)])
         mac_entry.delete(0, END)
         mac_entry.insert(0, mac)
 
-    def get_networks(self):
+    def get_networks(self) -> list[dict[str, Any]]:
         """获取所有网络配置."""
-        networks = []
+        networks: list[dict[str, Any]] = []
         for entry in self.network_entries:
             name = entry['name'].get().strip()
             bridge = entry['bridge'].get().strip()
@@ -168,4 +169,4 @@ class ScrollableNetworkFrame(ScrollableConfigFrame):
 
     def _generate_mac(self):
         """生成随机 MAC 地址."""
-        return ':'.join([f'{uuid.random().int % 256:02x}' for _ in range(6)])
+        return ':'.join([f'{uuid.uuid4().int % 256:02x}' for _ in range(6)])

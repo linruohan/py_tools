@@ -1,5 +1,7 @@
 """SMBIOS 系统信息配置 Tab - BIOS、系统、主板、机箱、OEM Strings 和 FwCfg 信息."""
 
+from typing import Any
+
 import customtkinter as ctk
 
 from components.base_tab import BaseConfigTab
@@ -115,7 +117,7 @@ class SMBIOSSystemTab(BaseConfigTab):
 
         self.oem_strings_frame = ctk.CTkFrame(oem_frame, fg_color='transparent')
         self.oem_strings_frame.pack(fill='x', padx=10, pady=5, anchor='w')
-        self.oem_entries = []
+        self.oem_entries: list[tuple[ctk.CTkEntry, ctk.BooleanVar, ctk.CTkFrame]] = []
         self._add_oem_entry(self.oem_strings_frame)
 
         add_oem_btn = ctk.CTkButton(
@@ -151,7 +153,9 @@ class SMBIOSSystemTab(BaseConfigTab):
 
         self.fwcfg_entries_frame = ctk.CTkFrame(fwcfg_frame, fg_color='transparent')
         self.fwcfg_entries_frame.pack(fill='x', padx=10, pady=5, anchor='w')
-        self.fwcfg_entries = []
+        self.fwcfg_entries: list[
+            tuple[ctk.CTkEntry, ctk.CTkEntry, ctk.CTkEntry, ctk.BooleanVar, ctk.CTkFrame]
+        ] = []
         self._add_fwcfg_entry(self.fwcfg_entries_frame)
 
         add_fwcfg_btn = ctk.CTkButton(
@@ -289,9 +293,9 @@ class SMBIOSSystemTab(BaseConfigTab):
                 break
         self._trigger_change()
 
-    def get_config(self) -> dict:
+    def get_config(self) -> dict[str, Any]:
         """获取配置数据."""
-        config = {}
+        config: dict[str, Any] = {}
 
         # 收集 BIOS 信息
         bios = {}
@@ -361,7 +365,7 @@ class SMBIOSSystemTab(BaseConfigTab):
 
         # 优先使用 FwCfg，如果只有 SMBIOS 内容则使用 SMBIOS
         if has_fwcfg_content:
-            sysinfo_data = {'type': 'fwcfg', 'fwcfg_entries': fwcfg_entries}
+            sysinfo_data: dict[str, Any] = {'type': 'fwcfg', 'fwcfg_entries': fwcfg_entries}
         elif has_smbios_content:
             sysinfo_data = {'type': 'smbios'}
             if bios:
@@ -394,12 +398,12 @@ class SMBIOSSystemTab(BaseConfigTab):
         # 清空现有 OEM 条目
         for _, _, frame in list(self.oem_entries):
             frame.destroy()
-        self.oem_entries = []
+        self.oem_entries = []  # type: ignore[assignment]
 
         # 清空现有 FwCfg 条目
         for _, _, _, _, frame in list(self.fwcfg_entries):
             frame.destroy()
-        self.fwcfg_entries = []
+        self.fwcfg_entries = []  # type: ignore[assignment]
 
         # 重置所有 BIOS 字段
         for field in ['vendor', 'version', 'date', 'release']:

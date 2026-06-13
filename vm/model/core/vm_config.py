@@ -474,8 +474,7 @@ class VMConfig:
             total = topo.sockets * topo.cores * topo.threads
             if hasattr(self.cpu, 'vcpu') and self.cpu.vcpu > 0 and total != self.cpu.vcpu:
                 errors.append(
-                    f'CPU 拓扑不匹配：{topo.sockets}×{topo.cores}×{topo.threads} '
-                    f'!= {self.cpu.vcpu}'
+                    f'CPU 拓扑不匹配：{topo.sockets}×{topo.cores}×{topo.threads} != {self.cpu.vcpu}'
                 )
 
         # OS 引导配置验证

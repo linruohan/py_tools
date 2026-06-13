@@ -29,7 +29,7 @@ class TestXMLGenerationMethodDecorator:
 
         @xml_generation_method
         def test_func():
-            config = {}
+            config: dict = {}
             return config["missing"]
 
         with pytest.raises(KeyError):

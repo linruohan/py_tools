@@ -1,5 +1,7 @@
 """磁盘配置框架 - 提供可滚动配置框架基类和磁盘配置实现."""
 
+from typing import Any
+
 import customtkinter as ctk
 
 from utils.styles import CTK_FONT_SMALL
@@ -249,9 +251,9 @@ class ScrollableDiskFrame(ScrollableConfigFrame):
         )
         self.disk_count += 1
 
-    def get_disks(self):
+    def get_disks(self) -> list[dict[str, Any]]:
         """获取所有磁盘配置."""
-        disks = []
+        disks: list[dict[str, Any]] = []
         for entry in self.disk_entries:
             name = entry['name'].get().strip()
             path = entry['path'].get().strip()

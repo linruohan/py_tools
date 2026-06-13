@@ -1,5 +1,7 @@
 """存储配置 Tab."""
 
+from typing import Any
+
 import customtkinter as ctk
 
 from components.base_tab import BaseConfigTab
@@ -13,7 +15,7 @@ class StorageTab(BaseConfigTab):
 
     def __init__(self, master, on_change_callback=None, **kwargs):
         super().__init__(master, on_change_callback, **kwargs)
-        self.disk_frame = None
+        self.disk_frame: ScrollableDiskFrame | None = None
 
         # 初始化 UI
         self._init_ui()
@@ -31,7 +33,7 @@ class StorageTab(BaseConfigTab):
         add_disk_btn = ctk.CTkButton(
             toolbar,
             text='添加磁盘',
-            command=lambda: (self.add_disk(), self._trigger_change()),
+            command=self._on_add_disk,
             fg_color='#4caf50',
             hover_color='#388e3c',
             width=100,
@@ -42,7 +44,7 @@ class StorageTab(BaseConfigTab):
         add_cdrom_btn = ctk.CTkButton(
             toolbar,
             text='添加光驱',
-            command=lambda: (self.add_cdrom(), self._trigger_change()),
+            command=self._on_add_cdrom,
             fg_color='#ff9800',
             hover_color='#f57c00',
             width=100,
@@ -62,17 +64,27 @@ class StorageTab(BaseConfigTab):
         # 默认添加一个磁盘
         self.add_disk()
 
-    def add_disk(self):
+    def _on_add_disk(self) -> None:
+        """添加磁盘并触发变更."""
+        self.add_disk()
+        self._trigger_change()
+
+    def _on_add_cdrom(self) -> None:
+        """添加光驱并触发变更."""
+        self.add_cdrom()
+        self._trigger_change()
+
+    def add_disk(self) -> None:
         """添加磁盘配置行."""
         if self.disk_frame:
             self.disk_frame.add_disk()
 
-    def add_cdrom(self):
+    def add_cdrom(self) -> None:
         """添加光驱配置行."""
         if self.disk_frame:
             self.disk_frame.add_cdrom()
 
-    def get_disks(self):
+    def get_disks(self) -> list[Any]:
         """获取所有磁盘配置."""
         if self.disk_frame:
             return self.disk_frame.get_disks()

@@ -1,5 +1,7 @@
 """网络配置 Tab."""
 
+from typing import Any
+
 import customtkinter as ctk
 
 from components.base_tab import BaseConfigTab
@@ -13,7 +15,7 @@ class NetworkTab(BaseConfigTab):
 
     def __init__(self, master, on_change_callback=None, **kwargs):
         super().__init__(master, on_change_callback, **kwargs)
-        self.network_frame = None
+        self.network_frame: ScrollableNetworkFrame | None = None
 
         # 初始化 UI
         self._init_ui()
@@ -31,7 +33,7 @@ class NetworkTab(BaseConfigTab):
         add_net_btn = ctk.CTkButton(
             toolbar,
             text='添加网卡',
-            command=lambda: (self.add_network(), self._trigger_change()),
+            command=self._on_add_network,
             fg_color='#4caf50',
             hover_color='#388e3c',
             width=100,
@@ -51,12 +53,17 @@ class NetworkTab(BaseConfigTab):
         # 默认添加一个网卡
         self.add_network()
 
-    def add_network(self):
+    def _on_add_network(self) -> None:
+        """添加网卡并触发变更."""
+        self.add_network()
+        self._trigger_change()
+
+    def add_network(self) -> None:
         """添加网络配置行."""
         if self.network_frame:
             self.network_frame.add_network()
 
-    def get_networks(self):
+    def get_networks(self) -> list[Any]:
         """获取所有网络配置."""
         if self.network_frame:
             return self.network_frame.get_networks()

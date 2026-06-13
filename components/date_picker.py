@@ -309,7 +309,7 @@ class DatePicker(ctk.CTkFrame):
         Returns:
             日期字符串 'YYYY-MM-DD'
         """
-        return self.date_entry.get().strip()
+        return str(self.date_entry.get()).strip()
 
     def set_date(self, date_str: str) -> None:
         """设置日期.

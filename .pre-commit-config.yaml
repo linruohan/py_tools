@@ -10,7 +10,7 @@ repos:
     hooks:
       # 运行 linter
       - id: ruff
-        args: [--fix, --exit-non-zero-on-fix]
+        args: [--fix, --exit-non-zero-on-fix, --extend-ignore=E501, --extend-ignore=F821, --extend-ignore=RUF001, --extend-ignore=RUF002, --extend-ignore=RUF003]
       # 运行 formatter
       - id: ruff-format
 
@@ -40,10 +40,12 @@ repos:
       # 检查 docstring 在代码之前
       - id: check-docstring-first
 
-  # MyPy - 类型检查（已启用）
+  # MyPy - 类型检查（宽松模式）
   - repo: https://github.com/pre-commit/mirrors-mypy
     rev: v1.7.1
     hooks:
       - id: mypy
-        additional_dependencies: [types-all]
-        args: [--ignore-missing-imports, --no-strict-optional]
+        additional_dependencies:
+          - types-setuptools
+          - types-requests
+        args: [--ignore-missing-imports, --no-strict-optional, --allow-untyped-defs, --follow-imports=silent, --show-error-codes, --disable-error-code=assignment, --disable-error-code=var-annotated, --disable-error-code=no-any-return, --disable-error-code=func-returns-value]

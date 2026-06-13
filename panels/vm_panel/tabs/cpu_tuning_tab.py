@@ -14,6 +14,8 @@
 - memorytune: 内存带宽分配 (resctrl)
 """
 
+from typing import Any
+
 import customtkinter as ctk
 
 from components.base_tab import BaseConfigTab
@@ -25,10 +27,14 @@ class CPUTuningTab(BaseConfigTab):
     def _init_ui(self) -> None:
         """初始化 UI - 5 列布局."""
         # 先初始化列表，避免在创建 UI 时访问未定义的属性
-        self.vcpupin_entries = []  # [(id_entry, cpuset_entry, frame), ...]
-        self.iothreadpin_entries = []  # [(id_entry, cpuset_entry, frame), ...]
-        self.cachetune_entries = []
-        self.memorytune_entries = []
+        self.vcpupin_entries: list[
+            tuple[ctk.CTkEntry, ctk.CTkEntry, ctk.CTkFrame]
+        ] = []  # [(id_entry, cpuset_entry, frame), ...]
+        self.iothreadpin_entries: list[
+            tuple[ctk.CTkEntry, ctk.CTkEntry, ctk.CTkFrame]
+        ] = []  # [(id_entry, cpuset_entry, frame), ...]
+        self.cachetune_entries: list[dict[str, Any]] = []
+        self.memorytune_entries: list[dict[str, Any]] = []
 
         # 主框架使用网格布局
         self.grid_columnconfigure(0, weight=1)
@@ -813,9 +819,9 @@ class CPUTuningTab(BaseConfigTab):
         self.memorytune_entries = [e for e in self.memorytune_entries if e['frame'] != frame]
         self._trigger_change()
 
-    def get_config(self) -> dict:
+    def get_config(self) -> dict[str, Any]:
         """获取配置数据."""
-        config = {}
+        config: dict[str, Any] = {}
 
         # vcpupin
         vcpupins = []

@@ -8,6 +8,14 @@ from xml.dom import minidom
 logger = logging.getLogger(__name__)
 
 
+def _attrs(**kwargs: str) -> dict[str, str]:
+    """创建符合 SubElement 签名的属性字典.
+
+    用于解决 dict 类型在解包时的 invariant 问题.
+    """
+    return kwargs
+
+
 class XMLGenerationError(Exception):
     """XML 生成错误."""
 
@@ -33,6 +41,7 @@ class LibvirtXMLGenerator:
         """
         try:
             self.domain = ET.Element('domain', type=config.get('hypervisor', 'kvm'))
+            assert self.domain is not None
 
             self._add_metadata(config)
             self._add_memory(config)
@@ -66,6 +75,7 @@ class LibvirtXMLGenerator:
 
     def _add_metadata(self, config: dict) -> None:
         """添加元数据."""
+        assert self.domain is not None, 'domain must be set'
         if config.get('name'):
             name = ET.SubElement(self.domain, 'name')
             name.text = config['name']
@@ -88,6 +98,7 @@ class LibvirtXMLGenerator:
 
     def _add_memory(self, config: dict) -> None:
         """添加内存配置."""
+        assert self.domain is not None, 'domain must be set'
         memory_config = config.get('memory_allocation', {})
 
         memory = memory_config.get('memory', 2097152)
@@ -113,6 +124,7 @@ class LibvirtXMLGenerator:
 
     def _add_cpu(self, config: dict) -> None:
         """添加 CPU 配置."""
+        assert self.domain is not None, 'domain must be set'
         cpu_alloc = config.get('cpu_allocation', {})
         cpu_model = config.get('cpu_model_topology', {})
 
@@ -259,6 +271,7 @@ class LibvirtXMLGenerator:
 
     def _add_os(self, config: dict) -> None:
         """添加操作系统配置."""
+        assert self.domain is not None, 'domain must be set'
         os_booting = config.get('os_booting', {})
 
         os_elem = ET.SubElement(self.domain, 'os')
@@ -308,14 +321,14 @@ class LibvirtXMLGenerator:
                 loader_attrs['stateless'] = 'yes'
             if loader.get('format'):
                 loader_attrs['format'] = loader['format']
-            loader_elem = ET.SubElement(os_elem, 'loader', **loader_attrs)
+            loader_elem = ET.SubElement(os_elem, 'loader', _attrs(**loader_attrs))
             loader_elem.text = loader['path']
         elif os_booting.get('loader_path'):
             # Legacy support
             loader_attrs = {}
             if secure_boot:
                 loader_attrs['secure'] = 'yes'
-            loader_elem = ET.SubElement(os_elem, 'loader', **loader_attrs)
+            loader_elem = ET.SubElement(os_elem, 'loader', _attrs(**loader_attrs))
             loader_elem.text = os_booting['loader_path']
         elif secure_boot:
             # 如果没有loader路径但启用了secure_boot,创建一个带secure属性的loader元素
@@ -405,7 +418,7 @@ class LibvirtXMLGenerator:
                         bootmenu_attrs['timeout'] = str(timeout_val)
                 except (ValueError, TypeError):
                     pass
-            ET.SubElement(os_elem, 'bootmenu', **bootmenu_attrs)
+            ET.SubElement(os_elem, 'bootmenu', _attrs(**bootmenu_attrs))
 
         # BIOS configuration
         bios = os_booting.get('bios', {})
@@ -423,7 +436,7 @@ class LibvirtXMLGenerator:
                 except (ValueError, TypeError):
                     pass
             if bios_attrs:
-                ET.SubElement(os_elem, 'bios', **bios_attrs)
+                ET.SubElement(os_elem, 'bios', _attrs(**bios_attrs))
 
         # SMBIOS
         smbios = os_booting.get('smbios', {})
@@ -535,6 +548,7 @@ class LibvirtXMLGenerator:
 
         参考：https://www.libvirt.org/formatdomain.html#smbios-system-information
         """
+        assert self.domain is not None, 'domain must be set'
         sysinfo_config = config.get('sysinfo', {})
         if not sysinfo_config:
             return
@@ -624,16 +638,18 @@ class LibvirtXMLGenerator:
         - xen: Xen 特性
         - tcg: TCG 加速器特性
         """
+        assert self.domain is not None, 'domain must be set'
         features_config = config.get('hypervisor_features', {})
-        features_elem = None  # <features> 元素，按需创建
+        domain = self.domain
+        features_elem: ET.Element | None = None  # <features> 元素，按需创建
 
-        def get_features_elem():
+        def get_features_elem() -> ET.Element:
             """获取或创建 features 元素."""
             nonlocal features_elem
             if features_elem is None:
-                features_elem = self.domain.find('features')
+                features_elem = domain.find('features')
                 if features_elem is None:
-                    features_elem = ET.SubElement(self.domain, 'features')
+                    features_elem = ET.SubElement(domain, 'features')
             return features_elem
 
         # ========== 通用特性 ==========
@@ -849,6 +865,7 @@ class LibvirtXMLGenerator:
         - offset: utc, localtime, timezone, variable, absolute
         - timers: rtc, pit, tsc, hpet, kvmclock
         """
+        assert self.domain is not None, 'domain must be set'
         time_config = config.get('time_keeping', {})
         if not time_config:
             return
@@ -893,7 +910,7 @@ class LibvirtXMLGenerator:
             if rtc_present == 'no':
                 rtc_attrs['present'] = 'no'
 
-            rtc_elem = ET.SubElement(clock, 'timer', **rtc_attrs)
+            rtc_elem = ET.SubElement(clock, 'timer', _attrs(**rtc_attrs))
 
             # 添加 catchup 子元素 (仅当 tickpolicy=catchup 时)
             if rtc_tickpolicy == 'catchup':
@@ -924,7 +941,7 @@ class LibvirtXMLGenerator:
             if pit_present == 'no':
                 pit_attrs['present'] = 'no'
 
-            ET.SubElement(clock, 'timer', **pit_attrs)
+            ET.SubElement(clock, 'timer', _attrs(**pit_attrs))
 
         # TSC timer
         tsc = timers.get('tsc', {})
@@ -941,7 +958,7 @@ class LibvirtXMLGenerator:
             if tsc_present == 'no':
                 tsc_attrs['present'] = 'no'
 
-            ET.SubElement(clock, 'timer', **tsc_attrs)
+            ET.SubElement(clock, 'timer', _attrs(**tsc_attrs))
 
         # HPET timer
         hpet = timers.get('hpet', {})
@@ -966,6 +983,7 @@ class LibvirtXMLGenerator:
 
         None 值表示不生成对应的 XML 元素。
         """
+        assert self.domain is not None, 'domain must be set'
         pm_config = config.get('power_management', {})
         if not pm_config:
             return
@@ -987,6 +1005,7 @@ class LibvirtXMLGenerator:
 
         None 值表示不生成对应的 XML 元素。
         """
+        assert self.domain is not None, 'domain must be set'
         events_config = config.get('events_configuration', {})
         if not events_config:
             return
@@ -1009,6 +1028,7 @@ class LibvirtXMLGenerator:
 
     def _add_devices(self, config: dict) -> None:
         """添加设备配置."""
+        assert self.domain is not None, 'domain must be set'
         devices_config = config.get('devices', {})
         if not devices_config:
             return
@@ -1173,7 +1193,7 @@ class LibvirtXMLGenerator:
                 source_elem = ET.SubElement(
                     disk_elem, 'source', type='pci', managed='yes', namespace=namespace
                 )
-                ET.SubElement(source_elem, 'address', **addr_attrs)
+                ET.SubElement(source_elem, 'address', _attrs(**addr_attrs))
         elif disk_type == 'vhostuser':
             source = disk.get('source', '')
             if source:
@@ -1204,9 +1224,10 @@ class LibvirtXMLGenerator:
         # 启动策略
         startup_policy = disk.get('startup_policy')
         if startup_policy:
-            source_elem = disk_elem.find('source')
-            if source_elem is not None:
-                source_elem.set('startupPolicy', startup_policy)
+            src_elem: ET.Element | None = disk_elem.find('source')
+            if src_elem is not None:
+                assert isinstance(src_elem, ET.Element)
+                src_elem.set('startupPolicy', startup_policy)
 
     def _add_disk(self, devices: ET.Element, disk: dict) -> None:
         """添加磁盘设备."""
@@ -1539,7 +1560,7 @@ class LibvirtXMLGenerator:
             driver_attrs['bus'] = str(iommu['bus'])
 
         if driver_attrs:
-            ET.SubElement(iommu_elem, 'driver', **driver_attrs)
+            ET.SubElement(iommu_elem, 'driver', _attrs(**driver_attrs))
         else:
             ET.SubElement(iommu_elem, 'driver')
 
@@ -1591,6 +1612,7 @@ class LibvirtXMLGenerator:
 
     def _add_memory_backing(self, config: dict) -> None:
         """添加内存后端配置."""
+        assert self.domain is not None, 'domain must be set'
         backing_config = config.get('memory_backing', {})
         if not backing_config:
             return
@@ -1654,6 +1676,7 @@ class LibvirtXMLGenerator:
 
     def _add_memory_tuning(self, config: dict) -> None:
         """添加内存优化配置."""
+        assert self.domain is not None, 'domain must be set'
         tuning_config = config.get('memory_tuning', {})
         if not tuning_config:
             return
@@ -1731,6 +1754,7 @@ class LibvirtXMLGenerator:
         - cachetune: 缓存分配 (resctrl)
         - memorytune: 内存带宽分配 (resctrl)
         """
+        assert self.domain is not None, 'domain must be set'
         tuning_config = config.get('cpu_tuning', {})
         if not tuning_config:
             return
@@ -1878,14 +1902,14 @@ class LibvirtXMLGenerator:
                         cache_attrs['size'] = str(cache['size'])
                     if cache.get('unit'):
                         cache_attrs['unit'] = cache['unit']
-                    ET.SubElement(cachetune_elem, 'cache', **cache_attrs)
+                    ET.SubElement(cachetune_elem, 'cache', _attrs(**cache_attrs))
                 monitor = ct.get('monitor')
                 if monitor and isinstance(monitor, dict):
                     monitor_attrs = {
                         'level': str(monitor.get('level', 3)),
-                        'vcpus': monitor.get('vcpus', vcpus),
+                        'vcpus': str(monitor.get('vcpus', vcpus)),
                     }
-                    ET.SubElement(cachetune_elem, 'monitor', **monitor_attrs)
+                    ET.SubElement(cachetune_elem, 'monitor', _attrs(**monitor_attrs))
 
         # ========== 内存带宽调优 (memorytune) ==========
         memorytunes = tuning_config.get('memorytune', [])
@@ -1904,10 +1928,11 @@ class LibvirtXMLGenerator:
                     }
                     if node.get('bandwidth') is not None:
                         node_attrs['bandwidth'] = str(node['bandwidth'])
-                    ET.SubElement(memorytune_elem, 'node', **node_attrs)
+                    ET.SubElement(memorytune_elem, 'node', _attrs(**node_attrs))
 
     def _add_numa_tuning(self, config: dict) -> None:
         """添加 NUMA 优化配置."""
+        assert self.domain is not None, 'domain must be set'
         numa_config = config.get('numa_node_tuning', {})
         if not numa_config:
             return
@@ -1956,10 +1981,11 @@ class LibvirtXMLGenerator:
             if node_nodeset:
                 memnode_attrs['nodeset'] = node_nodeset
 
-            ET.SubElement(numatune, 'memnode', **memnode_attrs)
+            ET.SubElement(numatune, 'memnode', _attrs(**memnode_attrs))
 
     def _add_block_io_tuning(self, config: dict) -> None:
         """添加块 IO 优化配置."""
+        assert self.domain is not None, 'domain must be set'
         io_config = config.get('block_io_tuning', {})
         if not io_config:
             return
@@ -2013,6 +2039,7 @@ class LibvirtXMLGenerator:
         - iothreadids: 自定义 IOThread ID 列表
         - defaultiothread: 默认事件 loop 的 worker 线程边界
         """
+        assert self.domain is not None, 'domain must be set'
         iothreads_config = config.get('iothreads_allocation', {})
         if not iothreads_config:
             return
@@ -2046,7 +2073,9 @@ class LibvirtXMLGenerator:
                 if iothread.get('thread_pool_max') is not None:
                     iothread_attrs['thread_pool_max'] = str(iothread['thread_pool_max'])
 
-                iothread_elem = ET.SubElement(iothreadids_elem, 'iothread', **iothread_attrs)
+                iothread_elem = ET.SubElement(
+                    iothreadids_elem, 'iothread', _attrs(**iothread_attrs)
+                )
 
                 # poll 子元素
                 poll_max = iothread.get('poll_max')
@@ -2061,7 +2090,7 @@ class LibvirtXMLGenerator:
                         poll_attrs['grow'] = str(poll_grow)
                     if poll_shrink is not None:
                         poll_attrs['shrink'] = str(poll_shrink)
-                    ET.SubElement(iothread_elem, 'poll', **poll_attrs)
+                    ET.SubElement(iothread_elem, 'poll', _attrs(**poll_attrs))
 
         # 生成 defaultiothread 元素
         defaultiothread = iothreads_config.get('defaultiothread')
@@ -2073,10 +2102,11 @@ class LibvirtXMLGenerator:
                 default_attrs['thread_pool_max'] = str(defaultiothread['thread_pool_max'])
 
             if default_attrs:
-                ET.SubElement(self.domain, 'defaultiothread', **default_attrs)
+                ET.SubElement(self.domain, 'defaultiothread', _attrs(**default_attrs))
 
     def _add_resource(self, config: dict) -> None:
         """添加资源配置."""
+        assert self.domain is not None, 'domain must be set'
         resource_config = config.get('resource_partitioning', {})
         fc_config = config.get('fibre_channel_vmid', {})
 
@@ -2101,6 +2131,7 @@ class LibvirtXMLGenerator:
         - dynamic: libvirt 自动生成标签，relabel 固定为 yes
         - static: 手动指定标签，relabel 默认为 no
         """
+        assert self.domain is not None, 'domain must be set'
         security_config = config.get('security_label') or config.get('seclabel', {})
         if not security_config:
             return
@@ -2174,6 +2205,7 @@ class LibvirtXMLGenerator:
         支持 AMD SEV/SEV-SNP, Intel TDX, IBM s390-pv 四种类型。
         参考：https://www.libvirt.org/formatdomain.html#launch-security
         """
+        assert self.domain is not None, 'domain must be set'
         launch_config = config.get('launch_security', {})
         if not launch_config:
             return
@@ -2298,6 +2330,7 @@ class LibvirtXMLGenerator:
 
         参考：https://www.libvirt.org/formatdomain.html#key-wrap
         """
+        assert self.domain is not None, 'domain must be set'
         key_wrap_config = config.get('key_wrap', {})
         if not key_wrap_config:
             return
@@ -2323,6 +2356,7 @@ class LibvirtXMLGenerator:
 
         参考：https://www.libvirt.org/formatdomain.html#perf
         """
+        assert self.domain is not None, 'domain must be set'
         perf_config = config.get('performance_monitoring', {})
         if not perf_config or not perf_config.get('enabled'):
             return
@@ -2343,6 +2377,7 @@ class LibvirtXMLGenerator:
 
         参考：https://www.libvirt.org/formatdomain.html#throttle-groups
         """
+        assert self.domain is not None, 'domain must be set'
         throttlegroups_config = config.get('throttlegroups', {})
         if not throttlegroups_config:
             return
@@ -2410,6 +2445,7 @@ class LibvirtXMLGenerator:
 
     def _pretty_print(self) -> str:
         """格式化输出XML."""
+        assert self.domain is not None, 'domain must be set'
         xml_str = ET.tostring(self.domain, encoding='unicode')
         parsed = minidom.parseString(xml_str)
         return parsed.toprettyxml(indent='  ')
