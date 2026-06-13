@@ -40,12 +40,12 @@ class BasicTab(BaseConfigTab):
 
         # 配置单列布局
         self.grid_columnconfigure(0, weight=1)
-        # 配置行权重，让 vCPU 列表区域可以伸展
+        # 配置行权重,让 vCPU 列表区域可以伸展
         for i in range(3):
             self.grid_rowconfigure(i, weight=0)
         self.grid_rowconfigure(2, weight=1)
 
-        # ===== 第 1 部分：System Configuration =====
+        # ===== 第 1 部分:System Configuration =====
         sys_frame = ctk.CTkFrame(self, fg_color=BG_COLOR_CONTENT, corner_radius=8)
         sys_frame.grid(row=0, column=0, sticky='ew', padx=5, pady=5)
         sys_frame.grid_columnconfigure(0, weight=1)
@@ -93,10 +93,10 @@ class BasicTab(BaseConfigTab):
         self.vm_name_entry.insert(0, 'vm0')
         self.vm_name_entry.bind('<KeyRelease>', lambda e: self._trigger_change())
 
-        # ===== 第 2 部分：内存分配 =====
+        # ===== 第 2 部分:内存分配 =====
         mem_frame = ctk.CTkFrame(self, fg_color=BG_COLOR_CONTENT, corner_radius=8)
         mem_frame.grid(row=1, column=0, sticky='ew', padx=5, pady=5)
-        # 为6个控件配置12列（每个控件占2列）
+        # 为6个控件配置12列(每个控件占2列)
         for i in range(12):
             mem_frame.grid_columnconfigure(i, weight=1)
 
@@ -158,10 +158,10 @@ class BasicTab(BaseConfigTab):
             label_width=80,
         )
 
-        # ===== 第 3 部分：CPU 分配 =====
+        # ===== 第 3 部分:CPU 分配 =====
         cpu_frame = ctk.CTkFrame(self, fg_color=BG_COLOR_CONTENT, corner_radius=8)
         cpu_frame.grid(row=2, column=0, sticky='ew', padx=5, pady=5)
-        # 为4个控件配置8列（每个控件占2列）
+        # 为4个控件配置8列(每个控件占2列)
         for i in range(8):
             cpu_frame.grid_columnconfigure(i, weight=1)
 
@@ -210,7 +210,7 @@ class BasicTab(BaseConfigTab):
             label_width=80,
         )
 
-        # ===== 第 4 部分：vCPU 实例 =====
+        # ===== 第 4 部分:vCPU 实例 =====
         self._create_section_title(cpu_frame, 'vCPU 实例', row=2, column=0, columnspan=8)
         btn_frame = ctk.CTkFrame(cpu_frame, fg_color='transparent')
         btn_frame.grid(row=3, column=0, columnspan=8, sticky='ew', pady=5)
@@ -409,10 +409,10 @@ class BasicTab(BaseConfigTab):
         """生成 XML 配置字典.
 
         Returns:
-            包含 XML 配置的字典，用于 XML 生成器
+            包含 XML 配置的字典,用于 XML 生成器
         """
         config = self.get_basic_config()
-        # 直接返回 get_basic_config 的结果，确保所有配置都被正确包含
+        # 直接返回 get_basic_config 的结果,确保所有配置都被正确包含
         return config
 
     def load_config(self, config: dict) -> None:

@@ -10,7 +10,7 @@ from utils.styles import BG_COLOR_CONTENT, CTK_FONT_BOLD, CTK_FONT_MAIN, CTK_FON
 
 
 class DevicesConfigTab(BaseConfigTab):
-    """设备配置 Tab - 整合所有设备配置，支持 XML 动态预览。"""
+    """设备配置 Tab - 整合所有设备配置,支持 XML 动态预览."""
 
     # 所有设备类型 (根据 libvirt devices 文档)
     DEVICE_TYPES: ClassVar[dict] = {
@@ -99,18 +99,18 @@ class DevicesConfigTab(BaseConfigTab):
         self._init_ui()
 
     def _init_ui(self) -> None:
-        """初始化界面 - 上下布局：上部设备选择和配置，下部已添加设备列表。"""
+        """初始化界面 - 上下布局:上部设备选择和配置,下部已添加设备列表."""
         self.grid_columnconfigure(0, weight=1)
-        self.grid_rowconfigure(0, weight=1)  # 上部：设备配置
-        self.grid_rowconfigure(1, weight=0)  # 下部：设备列表
+        self.grid_rowconfigure(0, weight=1)  # 上部:设备配置
+        self.grid_rowconfigure(1, weight=0)  # 下部:设备列表
 
-        # ===== 上部：设备选择和配置 =====
+        # ===== 上部:设备选择和配置 =====
         top_frame = ctk.CTkFrame(self, fg_color=BG_COLOR_CONTENT, corner_radius=6)
         top_frame.grid(row=0, column=0, sticky='nsew', padx=5, pady=5)
         top_frame.grid_columnconfigure(0, weight=1)
         top_frame.grid_rowconfigure(2, weight=1)
 
-        # 第一行：类别筛选
+        # 第一行:类别筛选
         category_toolbar = ctk.CTkFrame(top_frame, fg_color='transparent')
         category_toolbar.grid(row=0, column=0, sticky='ew', padx=5, pady=5)
 
@@ -156,7 +156,7 @@ class DevicesConfigTab(BaseConfigTab):
         )
         self.add_btn.pack(side='right', padx=5)
 
-        # 第二行：XML 预览开关
+        # 第二行:XML 预览开关
         xml_toolbar = ctk.CTkFrame(top_frame, fg_color='transparent')
         xml_toolbar.grid(row=1, column=0, sticky='ew', padx=5, pady=2)
 
@@ -172,7 +172,7 @@ class DevicesConfigTab(BaseConfigTab):
         )
         self.xml_preview_check.pack(side='left', padx=5)
 
-        # 第三行：设备配置 + XML 预览
+        # 第三行:设备配置 + XML 预览
         config_container = ctk.CTkFrame(top_frame, fg_color='transparent')
         config_container.grid(row=2, column=0, sticky='nsew', padx=5, pady=5)
         config_container.grid_columnconfigure(0, weight=1)
@@ -206,7 +206,7 @@ class DevicesConfigTab(BaseConfigTab):
         )
         self.xml_preview_label.pack(fill='both', expand=True, padx=5, pady=5)
 
-        # ===== 下部：已添加设备列表 =====
+        # ===== 下部:已添加设备列表 =====
         bottom_frame = ctk.CTkFrame(self, fg_color=BG_COLOR_CONTENT, corner_radius=6)
         bottom_frame.grid(row=1, column=0, sticky='ew', padx=5, pady=5)
         bottom_frame.grid_columnconfigure(0, weight=1)
@@ -238,7 +238,7 @@ class DevicesConfigTab(BaseConfigTab):
         self.devices_list_frame.grid(row=1, column=0, sticky='ew', padx=5, pady=3)
 
     def _on_category_change(self, selected_label: str) -> None:
-        """类别改变时的处理。"""
+        """类别改变时的处理."""
         # 获取选中的类别值
         category_value: str | None = None
         for key, label in self.DEVICE_CATEGORIES.items():
@@ -262,7 +262,7 @@ class DevicesConfigTab(BaseConfigTab):
         self._on_device_type_change('None')
 
     def _on_device_type_change(self, selected_label: str) -> None:
-        """设备类型改变时的处理 - 动态生成配置界面。"""
+        """设备类型改变时的处理 - 动态生成配置界面."""
         # 清空配置框架
         for widget in self.config_frame.winfo_children():
             widget.destroy()
@@ -291,7 +291,7 @@ class DevicesConfigTab(BaseConfigTab):
         self._update_xml_preview()
 
     def _build_device_config_ui(self) -> None:
-        """根据选中的设备类型动态构建配置界面。"""
+        """根据选中的设备类型动态构建配置界面."""
         device_type = self.selected_device_type
         if not device_type:
             return
@@ -354,7 +354,7 @@ class DevicesConfigTab(BaseConfigTab):
             self._build_generic_config(device_type)
 
     def _create_row(self, parent, label_text: str, widgets: list | None = None, **kwargs):
-        """创建一行配置（label + widgets），pack 布局，左对齐。"""
+        """创建一行配置(label + widgets),pack 布局,左对齐."""
         row_frame = ctk.CTkFrame(parent, fg_color='transparent')
         row_frame.pack(fill='x', padx=5, pady=2, anchor='w')
 
@@ -375,8 +375,8 @@ class DevicesConfigTab(BaseConfigTab):
         return row_frame
 
     def _build_disk_config(self) -> None:
-        """构建磁盘设备配置界面。"""
-        # 第一行：type, device, bus
+        """构建磁盘设备配置界面."""
+        # 第一行:type, device, bus
         self._create_row(
             self.config_frame,
             'Type:',
@@ -414,14 +414,14 @@ class DevicesConfigTab(BaseConfigTab):
             ],
         )
 
-        # 第二行：source path
+        # 第二行:source path
         self._create_row(
             self.config_frame,
             'Source Path:',
             [self._create_entry('disk_source', '/var/lib/libvirt/images/disk.qcow2', 400)],
         )
 
-        # 第三行：driver format
+        # 第三行:driver format
         self._create_row(
             self.config_frame,
             'Driver Format:',
@@ -432,12 +432,12 @@ class DevicesConfigTab(BaseConfigTab):
             ],
         )
 
-        # 第四行：target dev
+        # 第四行:target dev
         self._create_row(
             self.config_frame, 'Target Device:', [self._create_entry('disk_target', 'vda', 100)]
         )
 
-        # 第五行：readonly, boot_order, startup_policy
+        # 第五行:readonly, boot_order, startup_policy
         self._create_row(
             self.config_frame,
             'Options:',
@@ -451,8 +451,8 @@ class DevicesConfigTab(BaseConfigTab):
         )
 
     def _build_graphics_config(self) -> None:
-        """构建图形显示配置界面。"""
-        # 第一行：type, autoport
+        """构建图形显示配置界面."""
+        # 第一行:type, autoport
         self._create_row(
             self.config_frame,
             'Type:',
@@ -468,7 +468,7 @@ class DevicesConfigTab(BaseConfigTab):
             self.config_frame, 'Autoport:', [self._create_checkbox('gfx_autoport', 'Enabled', True)]
         )
 
-        # 第二行：port, listen, tls_port (SPICE)
+        # 第二行:port, listen, tls_port (SPICE)
         self._create_row(self.config_frame, 'Port:', [self._create_entry('gfx_port', '-1', 80)])
         self._create_row(
             self.config_frame, 'Listen:', [self._create_entry('gfx_listen', '0.0.0.0', 120)]
@@ -477,7 +477,7 @@ class DevicesConfigTab(BaseConfigTab):
             self.config_frame, 'TLS Port:', [self._create_entry('gfx_tls_port', '-1', 80)]
         )
 
-        # 第三行：passwd, keymap
+        # 第三行:passwd, keymap
         self._create_row(
             self.config_frame, 'Password:', [self._create_entry('gfx_passwd', '', 150, show='*')]
         )
@@ -485,7 +485,7 @@ class DevicesConfigTab(BaseConfigTab):
             self.config_frame, 'Keymap:', [self._create_entry('gfx_keymap', 'en-us', 100)]
         )
 
-        # 第四行：share_policy (VNC), power_control
+        # 第四行:share_policy (VNC), power_control
         self._create_row(
             self.config_frame,
             'Share Policy:',
@@ -534,7 +534,7 @@ class DevicesConfigTab(BaseConfigTab):
         )
 
     def _build_video_config(self) -> None:
-        """构建视频设备配置界面。"""
+        """构建视频设备配置界面."""
         self._create_row(
             self.config_frame,
             'Model:',
@@ -557,7 +557,7 @@ class DevicesConfigTab(BaseConfigTab):
         )
 
     def _build_sound_config(self) -> None:
-        """构建音频设备配置界面。"""
+        """构建音频设备配置界面."""
         self._create_row(
             self.config_frame,
             'Model:',
@@ -580,7 +580,7 @@ class DevicesConfigTab(BaseConfigTab):
         )
 
     def _build_controller_config(self) -> None:
-        """构建控制器配置界面。"""
+        """构建控制器配置界面."""
         self._create_row(
             self.config_frame,
             'Type:',
@@ -611,7 +611,7 @@ class DevicesConfigTab(BaseConfigTab):
         )
 
     def _build_interface_config(self) -> None:
-        """构建网络接口配置界面。"""
+        """构建网络接口配置界面."""
         self._create_row(
             self.config_frame,
             'Type:',
@@ -647,7 +647,7 @@ class DevicesConfigTab(BaseConfigTab):
         )
 
     def _build_input_config(self) -> None:
-        """构建输入设备配置界面。"""
+        """构建输入设备配置界面."""
         self._create_row(
             self.config_frame,
             'Type:',
@@ -660,7 +660,7 @@ class DevicesConfigTab(BaseConfigTab):
         )
 
     def _build_hostdev_config(self) -> None:
-        """构建主机设备配置界面。"""
+        """构建主机设备配置界面."""
         self._create_row(
             self.config_frame,
             'Type:',
@@ -703,7 +703,7 @@ class DevicesConfigTab(BaseConfigTab):
         )
 
     def _build_watchdog_config(self) -> None:
-        """构建看门狗设备配置界面。"""
+        """构建看门狗设备配置界面."""
         self._create_row(
             self.config_frame,
             'Model:',
@@ -726,7 +726,7 @@ class DevicesConfigTab(BaseConfigTab):
         )
 
     def _build_memballoon_config(self) -> None:
-        """构建内存气球配置界面。"""
+        """构建内存气球配置界面."""
         self._create_row(
             self.config_frame,
             'Model:',
@@ -739,7 +739,7 @@ class DevicesConfigTab(BaseConfigTab):
         )
 
     def _build_rng_config(self) -> None:
-        """构建随机数发生器配置界面。"""
+        """构建随机数发生器配置界面."""
         self._create_row(
             self.config_frame,
             'Model:',
@@ -766,7 +766,7 @@ class DevicesConfigTab(BaseConfigTab):
         )
 
     def _build_tpm_config(self) -> None:
-        """构建 TPM 设备配置界面。"""
+        """构建 TPM 设备配置界面."""
         self._create_row(
             self.config_frame,
             'Model:',
@@ -795,7 +795,7 @@ class DevicesConfigTab(BaseConfigTab):
         )
 
     def _build_filesystem_config(self) -> None:
-        """构建文件系统配置界面。"""
+        """构建文件系统配置界面."""
         self._create_row(
             self.config_frame,
             'Type:',
@@ -829,7 +829,7 @@ class DevicesConfigTab(BaseConfigTab):
         )
 
     def _build_console_config(self) -> None:
-        """构建控制台配置界面。"""
+        """构建控制台配置界面."""
         self._create_row(
             self.config_frame,
             'Type:',
@@ -858,7 +858,7 @@ class DevicesConfigTab(BaseConfigTab):
         )
 
     def _build_serial_config(self) -> None:
-        """构建串口配置界面。"""
+        """构建串口配置界面."""
         self._create_row(
             self.config_frame,
             'Type:',
@@ -878,7 +878,7 @@ class DevicesConfigTab(BaseConfigTab):
         )
 
     def _build_parallel_config(self) -> None:
-        """构建并口配置界面。"""
+        """构建并口配置界面."""
         self._create_row(
             self.config_frame,
             'Type:',
@@ -892,7 +892,7 @@ class DevicesConfigTab(BaseConfigTab):
         )
 
     def _build_channel_config(self) -> None:
-        """构建通道配置界面。"""
+        """构建通道配置界面."""
         self._create_row(
             self.config_frame,
             'Type:',
@@ -918,7 +918,7 @@ class DevicesConfigTab(BaseConfigTab):
         )
 
     def _build_iommu_config(self) -> None:
-        """构建 IOMMU 设备配置界面。"""
+        """构建 IOMMU 设备配置界面."""
         self._create_row(
             self.config_frame,
             'Model:',
@@ -939,7 +939,7 @@ class DevicesConfigTab(BaseConfigTab):
         )
 
     def _build_memory_config(self) -> None:
-        """构建内存设备配置界面。"""
+        """构建内存设备配置界面."""
         self._create_row(
             self.config_frame,
             'Model:',
@@ -964,7 +964,7 @@ class DevicesConfigTab(BaseConfigTab):
         )
 
     def _build_shmem_config(self) -> None:
-        """构建共享内存配置界面。"""
+        """构建共享内存配置界面."""
         self._create_row(
             self.config_frame, 'Name:', [self._create_entry('shmem_name', 'my_shmem', 150)]
         )
@@ -987,7 +987,7 @@ class DevicesConfigTab(BaseConfigTab):
         )
 
     def _build_generic_config(self, device_type: str) -> None:
-        """通用配置界面（用于其他设备类型）。"""
+        """通用配置界面(用于其他设备类型)."""
         info_label = ctk.CTkLabel(
             self.config_frame,
             text=f'Configuration for {self.DEVICE_TYPES.get(device_type, device_type)}\n\nUse XML editing for advanced configuration.',
@@ -997,11 +997,11 @@ class DevicesConfigTab(BaseConfigTab):
         )
         info_label.pack(padx=10, pady=30)
 
-    # ===== 辅助方法：创建 widget =====
+    # ===== 辅助方法:创建 widget =====
     def _create_optionmenu(
         self, name: str, values: list, default: str | None = None, width: int = 120
     ) -> ctk.CTkOptionMenu:
-        """创建 OptionMenu widget。"""
+        """创建 OptionMenu widget."""
         widget = ctk.CTkOptionMenu(
             self.config_frame,
             values=values,
@@ -1022,7 +1022,7 @@ class DevicesConfigTab(BaseConfigTab):
         placeholder: str = '',
         show: str | None = None,
     ) -> ctk.CTkEntry:
-        """创建 Entry widget。"""
+        """创建 Entry widget."""
         widget = ctk.CTkEntry(
             self.config_frame,
             width=width,
@@ -1037,7 +1037,7 @@ class DevicesConfigTab(BaseConfigTab):
         return widget
 
     def _create_checkbox(self, name: str, text: str, default: bool = False) -> ctk.CTkCheckBox:
-        """创建 Checkbox widget。"""
+        """创建 Checkbox widget."""
         widget = ctk.CTkCheckBox(
             self.config_frame,
             text=text,
@@ -1053,7 +1053,7 @@ class DevicesConfigTab(BaseConfigTab):
 
     # ===== XML 预览 =====
     def _toggle_xml_preview(self) -> None:
-        """切换 XML 预览显示。"""
+        """切换 XML 预览显示."""
         if self.xml_preview_check.get():
             self.xml_frame.grid()
             self.config_frame.grid_remove()
@@ -1063,12 +1063,12 @@ class DevicesConfigTab(BaseConfigTab):
         self._update_xml_preview()
 
     def _update_xml_preview(self) -> None:
-        """更新 XML 预览。"""
+        """更新 XML 预览."""
         xml_text = self._generate_device_xml()
         self.xml_preview_label.configure(text=xml_text)
 
     def _generate_device_xml(self) -> str:
-        """根据当前配置生成 XML。"""
+        """根据当前配置生成 XML."""
         if not self.selected_device_type:
             return '<!-- No device selected -->'
 
@@ -1168,7 +1168,7 @@ class DevicesConfigTab(BaseConfigTab):
         return '\n'.join(xml_lines) if xml_lines else f'<{device_type}/>'
 
     def _get_widget_value(self, name: str, default=None):
-        """获取 widget 的值。"""
+        """获取 widget 的值."""
         widget = self.config_widgets.get(name)
         if widget:
             if hasattr(widget, 'get'):
@@ -1178,7 +1178,7 @@ class DevicesConfigTab(BaseConfigTab):
         return default
 
     def _generate_disk_xml(self) -> list:
-        """生成磁盘设备 XML。"""
+        """生成磁盘设备 XML."""
         disk_type = self._get_widget_value('disk_type', 'file')
         disk_device = self._get_widget_value('disk_device', 'disk')
         disk_bus = self._get_widget_value('disk_bus', 'virtio')
@@ -1215,7 +1215,7 @@ class DevicesConfigTab(BaseConfigTab):
         return xml
 
     def _generate_graphics_xml(self) -> list:
-        """生成图形显示 XML。"""
+        """生成图形显示 XML."""
         gfx_type = self._get_widget_value('gfx_type', 'vnc')
         gfx_autoport = self._get_widget_value('gfx_autoport', True)
         gfx_port = self._get_widget_value('gfx_port', '-1')
@@ -1260,7 +1260,7 @@ class DevicesConfigTab(BaseConfigTab):
         return xml
 
     def _generate_video_xml(self) -> list:
-        """生成视频设备 XML。"""
+        """生成视频设备 XML."""
         video_model = self._get_widget_value('video_model', 'qxl')
         video_vram = self._get_widget_value('video_vram', '16384')
         video_heads = self._get_widget_value('video_heads', '1')
@@ -1278,7 +1278,7 @@ class DevicesConfigTab(BaseConfigTab):
         return xml
 
     def _generate_sound_xml(self) -> list:
-        """生成音频设备 XML。"""
+        """生成音频设备 XML."""
         sound_model = self._get_widget_value('sound_model', 'ich9')
         sound_codec = self._get_widget_value('sound_codec', 'duplex')
 
@@ -1292,7 +1292,7 @@ class DevicesConfigTab(BaseConfigTab):
         return xml
 
     def _generate_controller_xml(self) -> list:
-        """生成控制器 XML。"""
+        """生成控制器 XML."""
         ctrl_type = self._get_widget_value('ctrl_type', 'usb')
         ctrl_model = self._get_widget_value('ctrl_model', 'usb-xhci')
         ctrl_index = self._get_widget_value('ctrl_index', '0')
@@ -1305,7 +1305,7 @@ class DevicesConfigTab(BaseConfigTab):
         return xml
 
     def _generate_interface_xml(self) -> list:
-        """生成网络接口 XML。"""
+        """生成网络接口 XML."""
         iface_type = self._get_widget_value('iface_type', 'network')
         iface_source = self._get_widget_value('iface_source', 'default')
         iface_model = self._get_widget_value('iface_model', 'virtio')
@@ -1336,7 +1336,7 @@ class DevicesConfigTab(BaseConfigTab):
         return xml
 
     def _generate_input_xml(self) -> list:
-        """生成输入设备 XML。"""
+        """生成输入设备 XML."""
         input_type = self._get_widget_value('input_type', 'tablet')
         input_bus = self._get_widget_value('input_bus', 'usb')
 
@@ -1344,7 +1344,7 @@ class DevicesConfigTab(BaseConfigTab):
         return xml
 
     def _generate_watchdog_xml(self) -> list:
-        """生成看门狗 XML。"""
+        """生成看门狗 XML."""
         watchdog_model = self._get_widget_value('watchdog_model', 'i6300esb')
         watchdog_action = self._get_widget_value('watchdog_action', 'reset')
 
@@ -1352,7 +1352,7 @@ class DevicesConfigTab(BaseConfigTab):
         return xml
 
     def _generate_rng_xml(self) -> list:
-        """生成随机数发生器 XML。"""
+        """生成随机数发生器 XML."""
         rng_model = self._get_widget_value('rng_model', 'virtio')
         rng_backend = self._get_widget_value('rng_backend', 'random')
         rng_source = self._get_widget_value('rng_source', '/dev/urandom')
@@ -1366,7 +1366,7 @@ class DevicesConfigTab(BaseConfigTab):
         return xml
 
     def _generate_tpm_xml(self) -> list:
-        """生成 TPM 设备 XML。"""
+        """生成 TPM 设备 XML."""
         tpm_model = self._get_widget_value('tpm_model', 'tpm-tis')
         tpm_backend = self._get_widget_value('tpm_backend', 'emulator')
         tpm_device = self._get_widget_value('tpm_device', '/dev/tpm0')
@@ -1380,7 +1380,7 @@ class DevicesConfigTab(BaseConfigTab):
         return xml
 
     def _generate_filesystem_xml(self) -> list:
-        """生成文件系统 XML。"""
+        """生成文件系统 XML."""
         fs_type = self._get_widget_value('fs_type', 'mount')
         fs_access = self._get_widget_value('fs_access', 'passthrough')
         fs_source = self._get_widget_value('fs_source', '/export/to/guest')
@@ -1396,7 +1396,7 @@ class DevicesConfigTab(BaseConfigTab):
         return xml
 
     def _generate_console_xml(self) -> list:
-        """生成控制台 XML。"""
+        """生成控制台 XML."""
         console_type = self._get_widget_value('console_type', 'pty')
         console_target = self._get_widget_value('console_target', 'virtio')
 
@@ -1406,7 +1406,7 @@ class DevicesConfigTab(BaseConfigTab):
         return xml
 
     def _generate_serial_xml(self) -> list:
-        """生成串口 XML。"""
+        """生成串口 XML."""
         serial_type = self._get_widget_value('serial_type', 'pty')
         serial_port = self._get_widget_value('serial_port', '0')
         serial_path = self._get_widget_value('serial_path', '')
@@ -1419,7 +1419,7 @@ class DevicesConfigTab(BaseConfigTab):
         return xml
 
     def _generate_iommu_xml(self) -> list:
-        """生成 IOMMU XML。"""
+        """生成 IOMMU XML."""
         iommu_model = self._get_widget_value('iommu_model', 'intel')
         iommu_intremap = self._get_widget_value('iommu_intremap', False)
         iommu_caching = self._get_widget_value('iommu_caching', False)
@@ -1442,7 +1442,7 @@ class DevicesConfigTab(BaseConfigTab):
         return xml
 
     def _generate_memory_xml(self) -> list:
-        """生成内存设备 XML。"""
+        """生成内存设备 XML."""
         memory_model = self._get_widget_value('memory_model', 'dimm')
         memory_size = self._get_widget_value('memory_size', '524288')
         memory_node = self._get_widget_value('memory_node', '0')
@@ -1458,7 +1458,7 @@ class DevicesConfigTab(BaseConfigTab):
 
     # ===== 设备列表管理 =====
     def _add_device(self) -> None:
-        """添加设备到列表。"""
+        """添加设备到列表."""
         if not self.selected_device_type:
             return
 
@@ -1478,7 +1478,7 @@ class DevicesConfigTab(BaseConfigTab):
         self._trigger_change()
 
     def _get_current_config(self) -> dict:
-        """获取当前配置。"""
+        """获取当前配置."""
         config = {}
         for name, widget in self.config_widgets.items():
             if hasattr(widget, 'get'):
@@ -1486,7 +1486,7 @@ class DevicesConfigTab(BaseConfigTab):
         return config
 
     def _update_devices_list_display(self) -> None:
-        """更新设备列表显示。"""
+        """更新设备列表显示."""
         # 清空列表
         for widget in self.devices_list_frame.winfo_children():
             widget.destroy()
@@ -1540,7 +1540,7 @@ class DevicesConfigTab(BaseConfigTab):
             del_btn.pack(side='right', padx=3)
 
     def _edit_device(self, index: int) -> None:
-        """编辑设备。"""
+        """编辑设备."""
         if 0 <= index < len(self.devices_list):
             device = self.devices_list[index]
             # 设置设备类型
@@ -1552,32 +1552,32 @@ class DevicesConfigTab(BaseConfigTab):
             # TODO: 加载配置到界面
 
     def _delete_device(self, index: int) -> None:
-        """删除设备。"""
+        """删除设备."""
         if 0 <= index < len(self.devices_list):
             self.devices_list.pop(index)
             self._update_devices_list_display()
             self._trigger_change()
 
     def _clear_all_devices(self) -> None:
-        """清空所有设备。"""
+        """清空所有设备."""
         self.devices_list.clear()
         self._update_devices_list_display()
         self._trigger_change()
 
     # ===== 配置变更回调 =====
     def _on_config_change(self) -> None:
-        """配置变更时的处理。"""
+        """配置变更时的处理."""
         self._update_xml_preview()
         self._trigger_change()
 
     def get_config(self) -> dict:
-        """获取配置（供父类调用）。"""
+        """获取配置(供父类调用)."""
         return {
             'devices': self.devices_list,
         }
 
     def to_xml(self) -> dict:
-        """生成 XML 配置字典。"""
+        """生成 XML 配置字典."""
         devices: dict[str, list[Any]] = {}
         for device in self.devices_list:
             device_type = device['type']
@@ -1588,6 +1588,6 @@ class DevicesConfigTab(BaseConfigTab):
         return {'devices': devices}
 
     def _config_change(self) -> None:
-        """配置变更通知。"""
+        """配置变更通知."""
         if self.on_change_callback:
             self.on_change_callback()

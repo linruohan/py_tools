@@ -72,7 +72,7 @@ class TestXMLEnhancedGenerator:
         # 类型正确
         assert generator.get_value(config, 'name', expected_type=str) == 'test-vm'
 
-        # 类型错误，返回默认值
+        # 类型错误,返回默认值
         assert generator.get_value(config, 'count', default=0, expected_type=int) == 0
 
     def test_get_nested_config_exists(self):
@@ -232,7 +232,7 @@ class TestXMLEnhancedGenerator:
         assert max_elem.get('slots') == '8'
 
     def test_add_memory_invalid_values(self):
-        """测试添加无效内存值（应使用默认值）."""
+        """测试添加无效内存值(应使用默认值)."""
         domain = ET.Element('domain')
         generator = XMLEnhancedGenerator(domain)
 

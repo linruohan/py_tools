@@ -18,12 +18,12 @@ class PerformanceMonitoringTab(BaseConfigTab):
         # 在调用父类 __init__ 之前初始化实例属性
         self._event_switches = {}
         self._perf_events = {}
-        # 先不调用 _init_ui，让父类调用
+        # 先不调用 _init_ui,让父类调用
         super().__init__(master, on_change_callback, **kwargs)
 
     def _init_ui(self) -> None:
         """初始化界面."""
-        # 定义所有性能监控事件，按类别分组
+        # 定义所有性能监控事件,按类别分组
         self._perf_events = {
             '缓存监控': {
                 'cmt': 'L3 缓存使用量',
@@ -62,7 +62,7 @@ class PerformanceMonitoringTab(BaseConfigTab):
         info_frame.pack(fill='x', padx=10, pady=5)
         info_label = ctk.CTkLabel(
             info_frame,
-            text='提示：勾选事件启用，选择 enabled 值；取消勾选则不生成该事件的 XML',
+            text='提示:勾选事件启用,选择 enabled 值;取消勾选则不生成该事件的 XML',
             font=CTK_FONT_SMALL,
             text_color='#888888',
         )
@@ -127,7 +127,7 @@ class PerformanceMonitoringTab(BaseConfigTab):
         """获取配置数据.
 
         Returns:
-            配置字典，格式为:
+            配置字典,格式为:
             {
                 'enabled': True/False,
                 'events': {event_name: enabled_value, ...}

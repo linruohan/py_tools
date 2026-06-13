@@ -3,8 +3,8 @@
 根据 libvirt 文档第 24 章实现:
 https://www.libvirt.org/formatdomain.html#iothreads-allocation
 
-IOThreads 是专用事件循环线程，用于支持磁盘设备的块 I/O 请求，
-可提高 SMP 主机/客户机的可扩展性。
+IOThreads 是专用事件循环线程,用于支持磁盘设备的块 I/O 请求,
+可提高 SMP 主机/客户机的可扩展性.
 """
 
 import customtkinter as ctk
@@ -22,7 +22,7 @@ class IOThreadsAllocationTab(BaseConfigTab):
         self.iothread_entries = []
 
     def _init_ui(self) -> None:
-        """初始化 UI - 所有 section 合并为一个，每行 pack 布局，左对齐."""
+        """初始化 UI - 所有 section 合并为一个,每行 pack 布局,左对齐."""
         # 主容器
         main_frame = ctk.CTkFrame(self, fg_color=BG_COLOR_CONTENT, corner_radius=6)
         main_frame.pack(fill='both', expand=True, padx=5, pady=5)
@@ -53,7 +53,7 @@ class IOThreadsAllocationTab(BaseConfigTab):
 
         ctk.CTkLabel(
             iothreads_frame,
-            text='(建议：每个 IOThread 对应 1-2 个主机 CPU)',
+            text='(建议:每个 IOThread 对应 1-2 个主机 CPU)',
             font=CTK_FONT_SMALL,
             text_color='#888888',
         ).pack(side='left', padx=5)
@@ -82,7 +82,7 @@ class IOThreadsAllocationTab(BaseConfigTab):
         self.iothread_list_frame.pack_propagate(False)
         self.iothread_list_frame.configure(height=40)
 
-        # 初始不添加条目，由用户手动添加
+        # 初始不添加条目,由用户手动添加
 
         # ===== DefaultIOThread 配置行 =====
         defaultiothread_frame = ctk.CTkFrame(main_frame, fg_color='transparent')
@@ -120,11 +120,11 @@ class IOThreadsAllocationTab(BaseConfigTab):
         info_frame.pack(fill='x', padx=10, pady=(15, 5))
 
         info_text = (
-            '说明：选择 "None" 或不填值将不生成对应的 XML 元素\n'
-            'IO 线程数：定义分配给 domain 的 IOThread 总数，默认从 1 开始顺序编号\n'
-            'IOThread IDs：可自定义 IOThread ID，支持设置线程池边界和轮询间隔\n'
-            'DefaultIOThread：设置默认事件 loop 的 worker 线程最小/最大边界\n'
-            '注意：仅 QEMU/KVM 支持 (libvirt 1.2.8+)'
+            '说明:选择 "None" 或不填值将不生成对应的 XML 元素\n'
+            'IO 线程数:定义分配给 domain 的 IOThread 总数,默认从 1 开始顺序编号\n'
+            'IOThread IDs:可自定义 IOThread ID,支持设置线程池边界和轮询间隔\n'
+            'DefaultIOThread:设置默认事件 loop 的 worker 线程最小/最大边界\n'
+            '注意:仅 QEMU/KVM 支持 (libvirt 1.2.8+)'
         )
         ctk.CTkLabel(
             info_frame,

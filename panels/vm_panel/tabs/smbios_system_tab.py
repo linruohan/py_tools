@@ -15,7 +15,7 @@ class SMBIOSSystemTab(BaseConfigTab):
         super().__init__(master, on_change_callback, **kwargs)
 
     def _init_ui(self) -> None:
-        """初始化界面 - 所有 section 合并为一个，每个组的元素在同一行，pack 布局左对齐."""
+        """初始化界面 - 所有 section 合并为一个,每个组的元素在同一行,pack 布局左对齐."""
         # 创建主滚动框架
         main_frame = ctk.CTkScrollableFrame(self, fg_color='transparent')
         main_frame.pack(fill='both', expand=True, padx=5, pady=5)
@@ -140,9 +140,9 @@ class SMBIOSSystemTab(BaseConfigTab):
         info_label = ctk.CTkLabel(
             fwcfg_frame,
             text=(
-                'FwCfg 用于向虚拟机传递固件配置数据。'
-                '名称必须以 opt/ 开头，'
-                '建议使用 opt/$RFQDN/$name 格式避免冲突。'
+                'FwCfg 用于向虚拟机传递固件配置数据.'
+                '名称必须以 opt/ 开头,'
+                '建议使用 opt/$RFQDN/$name 格式避免冲突.'
             ),
             font=CTK_FONT_MAIN,
             text_color='#888888',
@@ -172,7 +172,7 @@ class SMBIOSSystemTab(BaseConfigTab):
 
         Args:
             parent: 父容器
-            fields: 字段列表，每个元素为 (label_text, attr_name, placeholder)
+            fields: 字段列表,每个元素为 (label_text, attr_name, placeholder)
         """
         row_frame = ctk.CTkFrame(parent, fg_color='transparent')
         row_frame.pack(fill='x', padx=10, pady=3, anchor='w')
@@ -363,7 +363,7 @@ class SMBIOSSystemTab(BaseConfigTab):
         has_smbios_content = bios or system or base_board or chassis or oem_strings
         has_fwcfg_content = bool(fwcfg_entries)
 
-        # 优先使用 FwCfg，如果只有 SMBIOS 内容则使用 SMBIOS
+        # 优先使用 FwCfg,如果只有 SMBIOS 内容则使用 SMBIOS
         if has_fwcfg_content:
             sysinfo_data: dict[str, Any] = {'type': 'fwcfg', 'fwcfg_entries': fwcfg_entries}
         elif has_smbios_content:

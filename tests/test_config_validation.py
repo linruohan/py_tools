@@ -35,12 +35,12 @@ def test_validate_memory_too_small():
     """测试内存过小警告."""
     config = VMConfig()
     config.basic.name = 'test-vm'
-    # 设置为 256MB (注意单位是 KiB，所以 256MB = 262144 KiB)
-    # 但要小于默认的 current_memory，所以需要同时设置 current_memory
+    # 设置为 256MB (注意单位是 KiB,所以 256MB = 262144 KiB)
+    # 但要小于默认的 current_memory,所以需要同时设置 current_memory
     config.memory.memory = 256 * 1024  # 256MB in KiB
     config.memory.current_memory = 128 * 1024  # 128MB in KiB, less than memory
     is_valid, errors = config.validate()
-    # 应该通过（只是警告，不是错误）
+    # 应该通过(只是警告,不是错误)
     assert is_valid
     # 警告不应该出现在错误列表中
     assert len(errors) == 0
@@ -65,7 +65,7 @@ def test_validate_cpu_too_large():
     config.memory.current_memory = None
     config.cpu.topology = CPUTopology()  # 清除拓扑以避免不匹配错误
     is_valid, errors = config.validate()
-    # 应该通过（只是警告，不是错误）
+    # 应该通过(只是警告,不是错误)
     assert is_valid
     # 警告不应该出现在错误列表中
     assert len(errors) == 0
@@ -97,7 +97,7 @@ def test_validate_cpu_topology_mismatch():
     config = VMConfig()
     config.basic.name = 'test-vm'
     config.cpu.max_vcpu = 4
-    # 设置不匹配的拓扑：2 sockets * 2 cores * 2 threads = 8 != 4
+    # 设置不匹配的拓扑:2 sockets * 2 cores * 2 threads = 8 != 4
     config.cpu.topology = CPUTopology(sockets=2, cores=2, threads=2)
     is_valid, errors = config.validate()
     assert not is_valid
@@ -109,7 +109,7 @@ def test_validate_cpu_topology_match():
     config = VMConfig()
     config.basic.name = 'test-vm'
     config.cpu.max_vcpu = 8
-    # 设置匹配的拓扑：2 sockets * 2 cores * 2 threads = 8
+    # 设置匹配的拓扑:2 sockets * 2 cores * 2 threads = 8
     config.cpu.topology = CPUTopology(sockets=2, cores=2, threads=2)
     is_valid, errors = config.validate()
     assert is_valid
@@ -157,7 +157,7 @@ def test_validate_valid_config():
     """测试有效配置验证."""
     config = VMConfig()
     config.basic.name = 'test-vm'
-    # 使用 KiB 单位，2GB = 2097152 KiB
+    # 使用 KiB 单位,2GB = 2097152 KiB
     config.memory.memory = 2 * 1024 * 1024  # 2GB in KiB
     config.memory.current_memory = None  # 避免验证失败
     config.cpu.max_vcpu = 2

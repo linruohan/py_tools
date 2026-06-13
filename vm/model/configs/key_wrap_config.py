@@ -7,7 +7,7 @@ from dataclasses import dataclass
 class KeyWrapConfig:
     """密钥包装配置管理类.
 
-    用于 S390 平台的加密密钥管理操作配置。
+    用于 S390 平台的加密密钥管理操作配置.
     """
 
     aes_cipher: str = 'aes'
@@ -23,8 +23,8 @@ class KeyWrapConfig:
         """
         result = {}
 
-        # 输出所有 cipher 配置，包括 state='off'
-        # 当 state='None' 或 None 时，不输出该 cipher
+        # 输出所有 cipher 配置,包括 state='off'
+        # 当 state='None' 或 None 时,不输出该 cipher
         ciphers = []
         # AES - state='None' 或 None 时不输出
         if self.aes_state not in ('None', None, ''):
@@ -84,6 +84,6 @@ class KeyWrapConfig:
         return self.aes_state in ('on', 'off') or self.dea_state in ('on', 'off')
 
     def has_cipher_config(self) -> bool:
-        """检查是否有 cipher 配置（排除 'None' 和 None）。"""
-        # 当 state 不是 'None'、None 或空字符串时，认为有配置
+        """检查是否有 cipher 配置(排除 'None' 和 None)."""
+        # 当 state 不是 'None'、None 或空字符串时,认为有配置
         return self.aes_state not in ('None', None, '') or self.dea_state not in ('None', None, '')

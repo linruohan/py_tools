@@ -10,20 +10,20 @@ from components.base_tab import SectionConfig, StandardConfigTab
 class CPUModelTopologyTab(StandardConfigTab):
     """CPU 模型与拓扑配置 Tab - 使用紧凑布局.
 
-    根据 libvirt 文档第 15 章实现，支持以下配置:
+    根据 libvirt 文档第 15 章实现,支持以下配置:
 
     CPU 元素属性:
     - mode: custom, host-model, host-passthrough, maximum
     - match: exact, minimum, strict (host-model 模式下无效)
     - check: none, partial, full
     - migratable: on, off (host-passthrough/maximum 模式常用)
-    - deprecated_features: on, off (S390 专用，Since 11.0.0)
+    - deprecated_features: on, off (S390 专用,Since 11.0.0)
 
     子元素:
-    - model: CPU 模型名称，支持 fallback 属性
-    - vendor: 厂商名称，支持 id 属性 (vendor_id)
+    - model: CPU 模型名称,支持 fallback 属性
+    - vendor: 厂商名称,支持 id 属性 (vendor_id)
     - topology: sockets, dies, clusters, cores, threads
-    - feature: 可配置多个，支持 policy 属性
+    - feature: 可配置多个,支持 policy 属性
     - cache: level, mode
     - maxphysaddr: mode, bits, limit
     """
@@ -56,7 +56,7 @@ class CPUModelTopologyTab(StandardConfigTab):
         super().__init__(master, on_change_callback, **kwargs)
 
     def _init_sections_ui(self) -> None:
-        """初始化基于 Sections 的 UI，添加自定义布局."""
+        """初始化基于 Sections 的 UI,添加自定义布局."""
         super()._init_sections_ui()
 
         # === CPU 模型部分 ===
@@ -92,7 +92,7 @@ class CPUModelTopologyTab(StandardConfigTab):
         self._create_topology_row1(topology_frame, topology_row)
         topology_row += 1
 
-        # threads 单独一行（带说明）
+        # threads 单独一行(带说明)
         self._create_threads_row(topology_frame, topology_row)
         topology_row += 1
 
@@ -140,7 +140,7 @@ class CPUModelTopologyTab(StandardConfigTab):
         self.section_rows['cache'] = cache_row
 
     def _create_cpu_model_basic_row(self, parent: ctk.CTkFrame, row: int) -> None:
-        """创建 CPU 模型基本信息行：mode、match、check、migratable、deprecated_features."""
+        """创建 CPU 模型基本信息行:mode、match、check、migratable、deprecated_features."""
         frame = ctk.CTkFrame(parent, fg_color='transparent')
         frame.grid(row=row, column=0, columnspan=2, padx=10, pady=3, sticky='w')
 
@@ -206,14 +206,14 @@ class CPUModelTopologyTab(StandardConfigTab):
         """根据 mode 自动调整 match 和 migratable 默认值.
 
         根据 libvirt 文档:
-        - host-model 模式下，match 属性无效（不应设置）
+        - host-model 模式下,match 属性无效(不应设置)
         - host-passthrough 和 maximum 模式通常搭配 migratable 属性
         - custom 模式下 match 默认为 exact
 
         Args:
             value: mode 值 (custom, host-model, host-passthrough, maximum)
         """
-        # host-model 模式下 match 属性无效，但保持用户设置不变
+        # host-model 模式下 match 属性无效,但保持用户设置不变
         # host-passthrough 和 maximum 模式通常与 migratable 属性一起使用
         self._trigger_change(value)
 
@@ -225,10 +225,10 @@ class CPUModelTopologyTab(StandardConfigTab):
         """
         mode = self.cpu_mode.get()
         help_texts = {
-            'custom': '自定义 CPU 模型，guest 看到的硬件与配置一致',
-            'host-model': '匹配主机 CPU 模型，match 属性无效',
-            'host-passthrough': '直通主机 CPU，迁移需目标主机相同',
-            'maximum': '最大 CPU 特性集，类似 host-passthrough',
+            'custom': '自定义 CPU 模型,guest 看到的硬件与配置一致',
+            'host-model': '匹配主机 CPU 模型,match 属性无效',
+            'host-passthrough': '直通主机 CPU,迁移需目标主机相同',
+            'maximum': '最大 CPU 特性集,类似 host-passthrough',
         }
         return help_texts.get(mode, '')
 
@@ -275,7 +275,7 @@ class CPUModelTopologyTab(StandardConfigTab):
         self.vendor_id.bind('<KeyRelease>', lambda e: self._trigger_change())
 
     def _create_topology_row1(self, parent: ctk.CTkFrame, row: int) -> None:
-        """创建拓扑结构第一行：sockets、dies、clusters、cores."""
+        """创建拓扑结构第一行:sockets、dies、clusters、cores."""
         frame = ctk.CTkFrame(parent, fg_color='transparent')
         frame.grid(row=row, column=0, columnspan=2, padx=10, pady=3, sticky='w')
 
@@ -368,7 +368,7 @@ class CPUModelTopologyTab(StandardConfigTab):
         remove_btn.pack(side='left', padx=2)
 
     def _create_cache_basic_row(self, parent: ctk.CTkFrame, row: int) -> None:
-        """创建缓存配置行：cache_level、cache_mode."""
+        """创建缓存配置行:cache_level、cache_mode."""
         frame = ctk.CTkFrame(parent, fg_color='transparent')
         frame.grid(row=row, column=0, columnspan=2, padx=10, pady=3, sticky='w')
 
@@ -486,16 +486,16 @@ class CPUModelTopologyTab(StandardConfigTab):
             )
 
     def get_config(self) -> dict:
-        """获取配置数据，过滤掉值为 None 的选项."""
+        """获取配置数据,过滤掉值为 None 的选项."""
         result = {}
 
-        # 处理 model 字段，包含 name、fallback、vendor、vendor_id
+        # 处理 model 字段,包含 name、fallback、vendor、vendor_id
         model_name = self.cpu_model.get().strip()
         model_dict = {}
         if model_name:
             model_dict['name'] = model_name
             fallback_value = self.model_fallback.get()
-            # 只有用户明确选择了 forbid 时才添加 fallback（默认 allow 不输出）
+            # 只有用户明确选择了 forbid 时才添加 fallback(默认 allow 不输出)
             if fallback_value and fallback_value == 'forbid':
                 model_dict['fallback'] = fallback_value
         # vendor 和 vendor_id 可以独立于 model_name 添加
@@ -524,11 +524,11 @@ class CPUModelTopologyTab(StandardConfigTab):
             result['migratable'] = migratable_value
 
         deprecated_features_value = self.deprecated_features.get()
-        # deprecated_features 默认值为 'on'，只有用户明确选择了'off'时才添加
+        # deprecated_features 默认值为 'on',只有用户明确选择了'off'时才添加
         if deprecated_features_value == 'off':
             result['deprecated_features'] = 'off'
 
-        # 构建 topology，只有填写了至少一个字段的值才添加
+        # 构建 topology,只有填写了至少一个字段的值才添加
         topology_data = {}
         for field_name, field_widget in [
             ('sockets', self.sockets),
@@ -552,7 +552,7 @@ class CPUModelTopologyTab(StandardConfigTab):
                     feat_dict['policy'] = policy
                 feature_list.append(feat_dict)
 
-        # 构建 cache，只有 mode 不是默认值 emulate 时才添加
+        # 构建 cache,只有 mode 不是默认值 emulate 时才添加
         cache_data = {}
         cache_level = self.cache_level.get()
         cache_mode = self.cache_mode.get()
@@ -561,7 +561,7 @@ class CPUModelTopologyTab(StandardConfigTab):
         if cache_mode and cache_mode != 'emulate':
             cache_data['mode'] = cache_mode
 
-        # 构建 maxphysaddr，只有填写了值才添加
+        # 构建 maxphysaddr,只有填写了值才添加
         maxphysaddr_data = {}
         physaddr_mode = self.physaddr_mode.get()
         physaddr_bits = self.physaddr_bits.get().strip()
@@ -573,7 +573,7 @@ class CPUModelTopologyTab(StandardConfigTab):
         if physaddr_limit:
             maxphysaddr_data['limit'] = physaddr_limit
 
-        # 添加 model 字典（如果有内容）
+        # 添加 model 字典(如果有内容)
         if model_dict:
             result['model'] = model_dict
         if topology_data:
@@ -613,7 +613,7 @@ class CPUModelTopologyTab(StandardConfigTab):
             self.cpu_migratable.set('None')
         if 'deprecated_features' in model:
             self.deprecated_features.set(model['deprecated_features'])
-        # 处理model字段（现在是字典）
+        # 处理model字段(现在是字典)
         if 'model' in model and isinstance(model['model'], dict):
             model_dict = model['model']
             if 'name' in model_dict:

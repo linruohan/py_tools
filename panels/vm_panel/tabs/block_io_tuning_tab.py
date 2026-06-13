@@ -38,7 +38,7 @@ class BlockIOTuningTab(BaseConfigTab):
         self.weight_menu.pack(side='left', padx=5)
         ctk.CTkLabel(
             weight_row,
-            text='(100-1000，None 表示不生成)',
+            text='(100-1000,None 表示不生成)',
             font=CTK_FONT_SMALL,
             text_color='#888888',
         ).pack(side='left', padx=5)
@@ -68,7 +68,7 @@ class BlockIOTuningTab(BaseConfigTab):
         self.devices_container.pack(fill='both', expand=True, padx=10, pady=5)
 
         # 说明信息
-        info_text = '路径：主机块设备的绝对路径 (如/dev/sda) | 权重：100-1000 | 吞吐量：字节/秒 | IOPS: 次/秒 | None 或留空不生成 XML'
+        info_text = '路径:主机块设备的绝对路径 (如/dev/sda) | 权重:100-1000 | 吞吐量:字节/秒 | IOPS: 次/秒 | None 或留空不生成 XML'
         ctk.CTkLabel(
             main_frame,
             text=info_text,

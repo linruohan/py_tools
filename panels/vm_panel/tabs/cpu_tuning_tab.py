@@ -1,6 +1,6 @@
 """CPU 调优配置 Tab - CPU Tuning (cputune).
 
-根据 libvirt 文档实现完整的 cputune 配置，包括:
+根据 libvirt 文档实现完整的 cputune 配置,包括:
 - vcpupin: vCPU 亲和性绑定
 - emulatorpin: 模拟器线程亲和性
 - iothreadpin: IOThread 亲和性
@@ -26,7 +26,7 @@ class CPUTuningTab(BaseConfigTab):
 
     def _init_ui(self) -> None:
         """初始化 UI - 5 列布局."""
-        # 先初始化列表，避免在创建 UI 时访问未定义的属性
+        # 先初始化列表,避免在创建 UI 时访问未定义的属性
         self.vcpupin_entries: list[
             tuple[ctk.CTkEntry, ctk.CTkEntry, ctk.CTkFrame]
         ] = []  # [(id_entry, cpuset_entry, frame), ...]
@@ -45,38 +45,38 @@ class CPUTuningTab(BaseConfigTab):
         main_container.grid(row=0, column=0, sticky='nsew')
         main_container.grid_columnconfigure((0, 1, 2, 3, 4), weight=1)
 
-        # === 第 1 列：CPU 亲和性 ===
+        # === 第 1 列:CPU 亲和性 ===
         self.affinity_frame = ctk.CTkFrame(main_container, fg_color='#1a1a1a', corner_radius=8)
         self.affinity_frame.grid(row=0, column=0, padx=5, pady=5, sticky='nsew')
         self.affinity_frame.grid_columnconfigure(0, weight=1)
         self._create_affinity_section(self.affinity_frame)
 
-        # === 第 2 列：CPU 带宽控制 ===
+        # === 第 2 列:CPU 带宽控制 ===
         self.bandwidth_frame = ctk.CTkFrame(main_container, fg_color='#1a1a1a', corner_radius=8)
         self.bandwidth_frame.grid(row=0, column=1, padx=5, pady=5, sticky='nsew')
         self.bandwidth_frame.grid_columnconfigure(0, weight=1)
         self._create_bandwidth_section(self.bandwidth_frame)
 
-        # === 第 3 列：调度器配置 ===
+        # === 第 3 列:调度器配置 ===
         self.scheduler_frame = ctk.CTkFrame(main_container, fg_color='#1a1a1a', corner_radius=8)
         self.scheduler_frame.grid(row=0, column=2, padx=5, pady=5, sticky='nsew')
         self.scheduler_frame.grid_columnconfigure(0, weight=1)
         self._create_scheduler_section(self.scheduler_frame)
 
-        # === 第 4 列：缓存调优 ===
+        # === 第 4 列:缓存调优 ===
         self.cachetune_frame = ctk.CTkFrame(main_container, fg_color='#1a1a1a', corner_radius=8)
         self.cachetune_frame.grid(row=0, column=3, padx=5, pady=5, sticky='nsew')
         self.cachetune_frame.grid_columnconfigure(0, weight=1)
         self._create_cachetune_section(self.cachetune_frame)
 
-        # === 第 5 列：内存带宽调优 ===
+        # === 第 5 列:内存带宽调优 ===
         self.memorytune_frame = ctk.CTkFrame(main_container, fg_color='#1a1a1a', corner_radius=8)
         self.memorytune_frame.grid(row=0, column=4, padx=5, pady=5, sticky='nsew')
         self.memorytune_frame.grid_columnconfigure(0, weight=1)
         self._create_memorytune_section(self.memorytune_frame)
 
     def _create_affinity_section(self, parent: ctk.CTkFrame) -> None:
-        """创建第 1 列：CPU 亲和性."""
+        """创建第 1 列:CPU 亲和性."""
         row = 0
 
         # 标题
@@ -88,7 +88,7 @@ class CPUTuningTab(BaseConfigTab):
         ).grid(row=row, column=0, padx=10, pady=8, sticky='w')
         row += 1
 
-        # === 第一组：vCPU Pin ===
+        # === 第一组:vCPU Pin ===
         vcpu_header_frame = ctk.CTkFrame(parent, fg_color='transparent')
         vcpu_header_frame.grid(row=row, column=0, padx=10, pady=2, sticky='ew')
         ctk.CTkLabel(vcpu_header_frame, text='vCPU Pin:', font=ctk.CTkFont(size=9)).pack(
@@ -121,7 +121,7 @@ class CPUTuningTab(BaseConfigTab):
         parent.grid_rowconfigure(row, weight=1)
         row += 1
 
-        # === 第二组：模拟器 Pin ===
+        # === 第二组:模拟器 Pin ===
         emu_header_frame = ctk.CTkFrame(parent, fg_color='transparent')
         emu_header_frame.grid(row=row, column=0, padx=10, pady=2, sticky='ew')
         ctk.CTkLabel(emu_header_frame, text='模拟器 Pin:', font=ctk.CTkFont(size=9)).pack(
@@ -142,7 +142,7 @@ class CPUTuningTab(BaseConfigTab):
         self.emulatorpin_state = 'enabled'
         row += 1
 
-        # === 第三组：IOThread Pin ===
+        # === 第三组:IOThread Pin ===
         io_header_frame = ctk.CTkFrame(parent, fg_color='transparent')
         io_header_frame.grid(row=row, column=0, padx=10, pady=2, sticky='ew')
         ctk.CTkLabel(io_header_frame, text='IOThread Pin:', font=ctk.CTkFont(size=9)).pack(
@@ -178,7 +178,7 @@ class CPUTuningTab(BaseConfigTab):
         self._update_frame_visibility()
 
     def _create_bandwidth_section(self, parent: ctk.CTkFrame) -> None:
-        """创建第 2 列：CPU 带宽控制."""
+        """创建第 2 列:CPU 带宽控制."""
         row = 0
 
         # 标题
@@ -190,7 +190,7 @@ class CPUTuningTab(BaseConfigTab):
         ).grid(row=row, column=0, padx=10, pady=8, sticky='w')
         row += 1
 
-        # 第一行：shares, period, quota, global_period (4 个)
+        # 第一行:shares, period, quota, global_period (4 个)
         row_frame = ctk.CTkFrame(parent, fg_color='transparent')
         row_frame.grid(row=row, column=0, padx=5, pady=3, sticky='ew')
         row_frame.grid_columnconfigure((0, 1, 2, 3), weight=1)
@@ -232,7 +232,7 @@ class CPUTuningTab(BaseConfigTab):
         self.global_period.bind('<KeyRelease>', lambda e: self._trigger_change())
         row += 1
 
-        # 第二行：global_quota, emulator_period, emulator_quota, iothread_period (4 个)
+        # 第二行:global_quota, emulator_period, emulator_quota, iothread_period (4 个)
         row_frame2 = ctk.CTkFrame(parent, fg_color='transparent')
         row_frame2.grid(row=row, column=0, padx=5, pady=3, sticky='ew')
         row_frame2.grid_columnconfigure((0, 1, 2, 3), weight=1)
@@ -274,7 +274,7 @@ class CPUTuningTab(BaseConfigTab):
         self.iothread_period.bind('<KeyRelease>', lambda e: self._trigger_change())
         row += 1
 
-        # 第三行：iothread_quota (单独一个)
+        # 第三行:iothread_quota (单独一个)
         ctk.CTkLabel(parent, text='IOThread 配额 (μs):', font=ctk.CTkFont(size=8)).grid(
             row=row, column=0, padx=5, pady=1, sticky='w'
         )
@@ -284,7 +284,7 @@ class CPUTuningTab(BaseConfigTab):
         self.iothread_quota.bind('<KeyRelease>', lambda e: self._trigger_change())
 
     def _create_scheduler_section(self, parent: ctk.CTkFrame) -> None:
-        """创建第 3 列：调度器配置."""
+        """创建第 3 列:调度器配置."""
         row = 0
 
         # 标题
@@ -421,7 +421,7 @@ class CPUTuningTab(BaseConfigTab):
         self.emulatorsched_state = 'enabled'
 
     def _create_cachetune_section(self, parent: ctk.CTkFrame) -> None:
-        """创建第 4 列：缓存调优."""
+        """创建第 4 列:缓存调优."""
         row = 0
 
         # 标题
@@ -450,7 +450,7 @@ class CPUTuningTab(BaseConfigTab):
         parent.grid_rowconfigure(row, weight=1)
 
     def _create_memorytune_section(self, parent: ctk.CTkFrame) -> None:
-        """创建第 5 列：内存带宽调优."""
+        """创建第 5 列:内存带宽调优."""
         row = 0
 
         # 标题
@@ -588,7 +588,7 @@ class CPUTuningTab(BaseConfigTab):
         self._trigger_change()
 
     def _on_vcpusched_scheduler_change(self, value: str) -> None:
-        """调度器类型变化时，启用/禁用优先级."""
+        """调度器类型变化时,启用/禁用优先级."""
         if value in ('fifo', 'rr'):
             self.vcpusched_priority.configure(state='normal')
         else:
@@ -611,7 +611,7 @@ class CPUTuningTab(BaseConfigTab):
         self._trigger_change()
 
     def _on_iothreadsched_scheduler_change(self, value: str) -> None:
-        """调度器类型变化时，启用/禁用优先级."""
+        """调度器类型变化时,启用/禁用优先级."""
         if value in ('fifo', 'rr'):
             self.iothreadsched_priority.configure(state='normal')
         else:
@@ -632,7 +632,7 @@ class CPUTuningTab(BaseConfigTab):
         self._trigger_change()
 
     def _on_emulatorsched_scheduler_change(self, value: str) -> None:
-        """调度器类型变化时，启用/禁用优先级."""
+        """调度器类型变化时,启用/禁用优先级."""
         if value in ('fifo', 'rr'):
             self.emulatorsched_priority.configure(state='normal')
         else:
@@ -646,7 +646,7 @@ class CPUTuningTab(BaseConfigTab):
         frame = ctk.CTkFrame(self.cachetune_scroll_frame, fg_color='#2a2a2a', corner_radius=4)
         frame.pack(fill='x', padx=5, pady=3)
 
-        # 第一行：vcpus 和删除按钮
+        # 第一行:vcpus 和删除按钮
         top_row = ctk.CTkFrame(frame, fg_color='transparent')
         top_row.pack(fill='x', padx=5, pady=2)
 
@@ -668,7 +668,7 @@ class CPUTuningTab(BaseConfigTab):
         )
         del_btn.pack(side='left', padx=5)
 
-        # 第二行：cache 配置
+        # 第二行:cache 配置
         cache_row = ctk.CTkFrame(frame, fg_color='transparent')
         cache_row.pack(fill='x', padx=5, pady=1)
 
@@ -710,7 +710,7 @@ class CPUTuningTab(BaseConfigTab):
         cache_unit.pack(side='left', padx=1)
         cache_unit.configure(command=lambda e: self._trigger_change())
 
-        # 第三行：monitor 配置
+        # 第三行:monitor 配置
         monitor_row = ctk.CTkFrame(frame, fg_color='transparent')
         monitor_row.pack(fill='x', padx=5, pady=1)
 
@@ -761,7 +761,7 @@ class CPUTuningTab(BaseConfigTab):
         frame = ctk.CTkFrame(self.memorytune_scroll_frame, fg_color='#2a2a2a', corner_radius=4)
         frame.pack(fill='x', padx=5, pady=3)
 
-        # 第一行：vcpus 和删除按钮
+        # 第一行:vcpus 和删除按钮
         top_row = ctk.CTkFrame(frame, fg_color='transparent')
         top_row.pack(fill='x', padx=5, pady=2)
 
@@ -783,7 +783,7 @@ class CPUTuningTab(BaseConfigTab):
         )
         del_btn.pack(side='left', padx=5)
 
-        # 第二行：node 配置
+        # 第二行:node 配置
         node_row = ctk.CTkFrame(frame, fg_color='transparent')
         node_row.pack(fill='x', padx=5, pady=1)
 

@@ -28,8 +28,8 @@ class NullNetworkTab(BaseConfigTab):
 
         ctk.CTkLabel(
             frame,
-            text='空网络接口提供一个不与任何外部网络连接的网络接口。\n'
-            '这对于需要网络栈但不需要外部连接的虚拟机很有用。',
+            text='空网络接口提供一个不与任何外部网络连接的网络接口.\n'
+            '这对于需要网络栈但不需要外部连接的虚拟机很有用.',
             font=CTK_FONT_SMALL,
             text_color='#666666',
         ).grid(row=1, column=0, padx=10, pady=5, sticky='w')

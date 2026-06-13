@@ -1,6 +1,6 @@
 """虚拟化特性配置 Tab - Hypervisor features.
 
-根据 libvirt 文档第 15 章实现，支持以下虚拟化特性:
+根据 libvirt 文档第 15 章实现,支持以下虚拟化特性:
 
 通用特性 (features 元素):
 - pae, acpi, apic, hap, viridian, privnet
@@ -48,7 +48,7 @@ class GeneralFeaturesSubTab(BaseConfigTab):
         self.grid_columnconfigure(2, weight=1)
         self.grid_columnconfigure(3, weight=1)
 
-        # === 第一列：基础特性 ===
+        # === 第一列:基础特性 ===
         left_frame = ctk.CTkFrame(self, fg_color=BG_COLOR_CONTENT, corner_radius=6)
         left_frame.grid(row=0, column=0, sticky='nsew', padx=5, pady=5)
         left_frame.grid_columnconfigure(1, weight=1)
@@ -64,7 +64,7 @@ class GeneralFeaturesSubTab(BaseConfigTab):
         self._create_checkbox_row(left_frame, 'viridian', 'Hyper-V 扩展', 5)
         self._create_checkbox_row(left_frame, 'privnet', '私有网络命名空间', 6)
 
-        # === 第二列：KVM/QEMU 特性 ===
+        # === 第二列:KVM/QEMU 特性 ===
         mid1_frame = ctk.CTkFrame(self, fg_color=BG_COLOR_CONTENT, corner_radius=6)
         mid1_frame.grid(row=0, column=1, sticky='nsew', padx=5, pady=5)
         mid1_frame.grid_columnconfigure(1, weight=1)
@@ -80,7 +80,7 @@ class GeneralFeaturesSubTab(BaseConfigTab):
         self._create_checkbox_row(mid1_frame, 'smm', '系统管理模式', 5)
         self._create_checkbox_row(mid1_frame, 'ioapic', 'I/O APIC', 6)
 
-        # === 第三列：pSeries/ARM 特性 ===
+        # === 第三列:pSeries/ARM 特性 ===
         mid2_frame = ctk.CTkFrame(self, fg_color=BG_COLOR_CONTENT, corner_radius=6)
         mid2_frame.grid(row=0, column=2, sticky='nsew', padx=5, pady=5)
         mid2_frame.grid_columnconfigure(1, weight=1)
@@ -96,7 +96,7 @@ class GeneralFeaturesSubTab(BaseConfigTab):
         self._create_checkbox_row(mid2_frame, 'ccf-assist', '计数缓存刷新辅助', 5)
         self._create_checkbox_row(mid2_frame, 'ras', '内存错误报告', 6)
 
-        # === 第四列：其他特性 ===
+        # === 第四列:其他特性 ===
         right_frame = ctk.CTkFrame(self, fg_color=BG_COLOR_CONTENT, corner_radius=6)
         right_frame.grid(row=0, column=3, sticky='nsew', padx=5, pady=5)
         right_frame.grid_columnconfigure(1, weight=1)
@@ -112,7 +112,7 @@ class GeneralFeaturesSubTab(BaseConfigTab):
         self._create_checkbox_row(right_frame, 'aia', '高级中断架构', 5)
         self._create_checkbox_row(right_frame, 'virtualization', 'ARM 虚拟化扩展', 6)
 
-        # === 第五行：特殊配置 ===
+        # === 第五行:特殊配置 ===
         special_frame = ctk.CTkFrame(self, fg_color=BG_COLOR_CONTENT, corner_radius=6)
         special_frame.grid(row=1, column=0, columnspan=4, sticky='nsew', padx=5, pady=5)
         special_frame.grid_columnconfigure(1, weight=1)
@@ -213,10 +213,10 @@ class GeneralFeaturesSubTab(BaseConfigTab):
         setattr(self, name.replace('-', '_'), cb)
 
     def get_config(self) -> dict:
-        """获取配置数据，过滤掉 None 和默认值."""
+        """获取配置数据,过滤掉 None 和默认值."""
         config = {}
 
-        # 基础特性 (boolean) - 只返回 True/False，未选中的不返回
+        # 基础特性 (boolean) - 只返回 True/False,未选中的不返回
         for name in ['pae', 'acpi', 'apic', 'hap', 'viridian', 'privnet']:
             widget = getattr(self, name, None)
             if widget:
@@ -317,7 +317,7 @@ class HypervFeaturesSubTab(BaseConfigTab):
         self.grid_columnconfigure(1, weight=1)
         self.grid_columnconfigure(2, weight=1)
 
-        # === 第一列：基础特性 ===
+        # === 第一列:基础特性 ===
         left_frame = ctk.CTkFrame(self, fg_color=BG_COLOR_CONTENT, corner_radius=6)
         left_frame.grid(row=0, column=0, sticky='nsew', padx=5, pady=5)
         left_frame.grid_columnconfigure(1, weight=1)
@@ -331,7 +331,7 @@ class HypervFeaturesSubTab(BaseConfigTab):
             self._create_checkbox_row(left_frame, name, desc, row)
             row += 1
 
-        # === 第二列：高级特性 ===
+        # === 第二列:高级特性 ===
         mid_frame = ctk.CTkFrame(self, fg_color=BG_COLOR_CONTENT, corner_radius=6)
         mid_frame.grid(row=0, column=1, sticky='nsew', padx=5, pady=5)
         mid_frame.grid_columnconfigure(1, weight=1)
@@ -345,7 +345,7 @@ class HypervFeaturesSubTab(BaseConfigTab):
             self._create_checkbox_row(mid_frame, name, desc, row)
             row += 1
 
-        # === 第三列：配置选项 ===
+        # === 第三列:配置选项 ===
         right_frame = ctk.CTkFrame(self, fg_color=BG_COLOR_CONTENT, corner_radius=6)
         right_frame.grid(row=0, column=2, sticky='nsew', padx=5, pady=5)
         right_frame.grid_columnconfigure(1, weight=1)
@@ -421,7 +421,7 @@ class HypervFeaturesSubTab(BaseConfigTab):
         self.stimer_direct.configure(command=self._trigger_change)
 
     def _create_checkbox_row(self, parent: ctk.CTkFrame, name: str, desc: str, row: int) -> None:
-        """创建复选框行，带 None 选项支持."""
+        """创建复选框行,带 None 选项支持."""
         # 使用 OptionMenu 来支持 None/on/off 三态
         ctk.CTkLabel(
             parent, text=f'{name} ({desc})', font=CTK_FONT_SMALL, width=180, anchor='w'
@@ -439,7 +439,7 @@ class HypervFeaturesSubTab(BaseConfigTab):
         setattr(self, name, option)
 
     def get_config(self) -> dict:
-        """获取配置数据，过滤掉 None 值."""
+        """获取配置数据,过滤掉 None 值."""
         config = {}
 
         # 模式
@@ -653,7 +653,7 @@ class XenFeaturesSubTab(BaseConfigTab):
 
         ctk.CTkLabel(
             right_frame,
-            text='Xen 特性用于配置 Xen\nhypervisor 的行为。\n\ne820_host: 暴露主机 e820 给客户机\n\npassthrough: 启用 IOMMU 映射\n允许 PCI passthrough',
+            text='Xen 特性用于配置 Xen\nhypervisor 的行为.\n\ne820_host: 暴露主机 e820 给客户机\n\npassthrough: 启用 IOMMU 映射\n允许 PCI passthrough',
             font=CTK_FONT_SMALL,
             text_color='#888888',
             justify='left',

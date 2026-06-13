@@ -307,16 +307,16 @@ class DevicesConfig:
             self.monitor = data['monitor']
 
     def _convert_disk_dict(self, d: Any) -> Disk:
-        """转换磁盘配置字典，将模块格式转换为 Disk 格式."""
+        """转换磁盘配置字典,将模块格式转换为 Disk 格式."""
         if not isinstance(d, dict):
             return d
         # 将模块格式转换为 Disk.from_dict 期望的格式
-        # 注意：type 字段在 Disk 类中表示磁盘格式（qcow2, raw 等），不是磁盘源类型（file, block 等）
+        # 注意:type 字段在 Disk 类中表示磁盘格式(qcow2, raw 等),不是磁盘源类型(file, block 等)
         # driver_type 或 format 才是磁盘格式
         driver_type = d.get('driver_type') or d.get('format', 'qcow2')
         return Disk.from_dict(
             {
-                'type': driver_type,  # 磁盘格式（qcow2, raw 等）
+                'type': driver_type,  # 磁盘格式(qcow2, raw 等)
                 'device': d.get('device') or d.get('disk_device') or d.get('device_type', 'disk'),
                 'bus': d.get('bus', 'virtio'),
                 'target': d.get('target') or d.get('target_dev', 'vda'),
@@ -331,11 +331,11 @@ class DevicesConfig:
         )
 
     def _convert_filesystem_dict(self, d: Any) -> dict | Filesystem:
-        """转换 filesystem 配置字典，将模块格式转换为 Filesystem 格式."""
+        """转换 filesystem 配置字典,将模块格式转换为 Filesystem 格式."""
         if not isinstance(d, dict):
             return d
         # 直接返回 xml_generator 期望的扁平格式
-        # 不经过 Filesystem 类，避免嵌套字典问题
+        # 不经过 Filesystem 类,避免嵌套字典问题
         return {
             'type': d.get('type', 'mount'),
             'accessmode': d.get('accessmode') or d.get('access_mode', 'passthrough'),

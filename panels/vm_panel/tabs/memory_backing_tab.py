@@ -13,7 +13,7 @@ class MemoryBackingTab(BaseConfigTab):
         super().__init__(master, on_change_callback, **kwargs)
 
     def _init_ui(self) -> None:
-        """初始化界面 - 所有 section 合并为一个，每个组中所有元素放到一行，pack 布局，左对齐."""
+        """初始化界面 - 所有 section 合并为一个,每个组中所有元素放到一行,pack 布局,左对齐."""
         # 初始化 hugepage 列表
         self.hugepage_entries = []
 
@@ -142,11 +142,11 @@ class MemoryBackingTab(BaseConfigTab):
         info_frame.pack(fill='x', padx=10, pady=(15, 5))
 
         info_text = (
-            '说明：选择 "None" 或不填值将不生成对应的 XML 元素\n'
-            'Hugepages: 大页面配置，可指定大小和单位 (GiB/MiB/KiB)\n'
-            '源类型：anonymous(匿名), file(文件), memfd(内存文件描述符)\n'
-            '访问模式：private(私有), shared(共享)\n'
-            '分配模式：immediate(立即), ondemand(按需)'
+            '说明:选择 "None" 或不填值将不生成对应的 XML 元素\n'
+            'Hugepages: 大页面配置,可指定大小和单位 (GiB/MiB/KiB)\n'
+            '源类型:anonymous(匿名), file(文件), memfd(内存文件描述符)\n'
+            '访问模式:private(私有), shared(共享)\n'
+            '分配模式:immediate(立即), ondemand(按需)'
         )
         ctk.CTkLabel(
             info_frame,
@@ -241,17 +241,17 @@ class MemoryBackingTab(BaseConfigTab):
                     }
                 )
 
-        # 处理源类型 - 'None' 转换为 'anonymous' (默认值，不生成 XML)
+        # 处理源类型 - 'None' 转换为 'anonymous' (默认值,不生成 XML)
         source_type = self.source_type.get()
         if source_type == 'None':
             source_type = 'anonymous'
 
-        # 处理访问模式 - 'None' 转换为 'private' (默认值，不生成 XML)
+        # 处理访问模式 - 'None' 转换为 'private' (默认值,不生成 XML)
         access_mode = self.access_mode.get()
         if access_mode == 'None':
             access_mode = 'private'
 
-        # 处理分配模式 - 'None' 转换为 'ondemand' (默认值，不生成 XML)
+        # 处理分配模式 - 'None' 转换为 'ondemand' (默认值,不生成 XML)
         allocation_mode = self.allocation_mode.get()
         if allocation_mode == 'None':
             allocation_mode = 'ondemand'

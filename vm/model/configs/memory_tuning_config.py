@@ -7,8 +7,8 @@ from dataclasses import dataclass
 class MemoryTuningItem:
     """内存调优单项配置类."""
 
-    value: str | None = None  # 值 (字符串，允许空字符串表示 None)
-    unit: str = 'KiB'  # 单位：KiB, MiB, GiB, bytes
+    value: str | None = None  # 值 (字符串,允许空字符串表示 None)
+    unit: str = 'KiB'  # 单位:KiB, MiB, GiB, bytes
 
     def update(self, data: dict) -> None:
         """更新配置."""

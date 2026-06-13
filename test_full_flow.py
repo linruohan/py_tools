@@ -110,7 +110,7 @@ try:
             print('  ... (省略其他内容)')
             break
 except Exception as e:
-    print(f'XML 生成失败：{e}')
+    print(f'XML 生成失败:{e}')
     import traceback
 
     traceback.print_exc()

@@ -240,7 +240,7 @@ def test_form_builder_custom_width():
         column=0,
     )
 
-    # 验证宽度（CTkEntry 的 winfo_width 可能需要更新后才能获取）
+    # 验证宽度(CTkEntry 的 winfo_width 可能需要更新后才能获取)
     entry.update()
     assert entry.winfo_width() > 200  # 应该比默认宽度大
 

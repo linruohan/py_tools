@@ -31,7 +31,7 @@ class InnerTabPanel(ctk.CTkFrame):
                 }
             title: 面板标题
             on_change_callback: 变化回调函数
-            content_frame: 内容显示容器，如果提供则使用该容器
+            content_frame: 内容显示容器,如果提供则使用该容器
         """
         super().__init__(master, **kwargs)
         self.configure(fg_color='transparent')
@@ -50,15 +50,15 @@ class InnerTabPanel(ctk.CTkFrame):
         """初始化界面."""
         self.grid_columnconfigure(0, weight=1)
 
-        # 如果没有提供 content_frame，则创建默认的
+        # 如果没有提供 content_frame,则创建默认的
         if not self.content_frame:
-            # 创建主内容框架，包含标题、按钮和内容
+            # 创建主内容框架,包含标题、按钮和内容
             main_frame = ctk.CTkFrame(self, fg_color=BG_COLOR_CONTENT, corner_radius=6)
             main_frame.grid(row=0, column=0, sticky='nsew', padx=5, pady=5)
             main_frame.grid_columnconfigure(0, weight=1)
             main_frame.grid_rowconfigure(2, weight=1)  # 内容区域权重
 
-            # 添加标题（如果有）
+            # 添加标题(如果有)
             if self.title:
                 title_label = ctk.CTkLabel(
                     main_frame, text=self.title, font=CTK_FONT_BOLD, text_color='#FFFFFF'
@@ -71,7 +71,7 @@ class InnerTabPanel(ctk.CTkFrame):
             # 创建按钮框架
             button_frame = ctk.CTkFrame(main_frame, fg_color='transparent')
             button_frame.grid(row=title_row, column=0, sticky='w', padx=5, pady=5)
-            # 不设置列权重，保持按钮左对齐
+            # 不设置列权重,保持按钮左对齐
 
             col = 0
             max_cols = 6  # 每行最多显示6个按钮
@@ -101,8 +101,8 @@ class InnerTabPanel(ctk.CTkFrame):
             # 使用main_frame作为内容容器
             self.content_frame = main_frame
         else:
-            # 如果提供了content_frame，则直接在其中创建按钮框架
-            # 添加标题（如果有）
+            # 如果提供了content_frame,则直接在其中创建按钮框架
+            # 添加标题(如果有)
             if self.title:
                 title_label = ctk.CTkLabel(
                     self.content_frame, text=self.title, font=CTK_FONT_BOLD, text_color='#FFFFFF'
@@ -115,7 +115,7 @@ class InnerTabPanel(ctk.CTkFrame):
             # 创建按钮框架
             button_frame = ctk.CTkFrame(self.content_frame, fg_color='transparent')
             button_frame.grid(row=title_row, column=0, sticky='w', padx=5, pady=5)
-            # 不设置列权重，保持按钮左对齐
+            # 不设置列权重,保持按钮左对齐
 
             col = 0
             max_cols = 6  # 每行最多显示6个按钮

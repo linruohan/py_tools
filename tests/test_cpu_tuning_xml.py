@@ -87,7 +87,7 @@ def test_emulatorsched_xml():
 
 
 def test_minimal_xml():
-    """测试最小配置 XML 生成（仅 vcpupin）."""
+    """测试最小配置 XML 生成(仅 vcpupin)."""
     config = _make_config(
         {'vcpupin': [{'vcpu': '0', 'cpuset': '0'}, {'vcpu': '1', 'cpuset': '1'}]},
         vcpu=2,

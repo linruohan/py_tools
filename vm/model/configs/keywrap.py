@@ -42,8 +42,8 @@ class Cipher:
 class KeyWrap:
     """S390 密钥包装配置.
 
-    用于指定 guest 是否可以执行 S390 加密密钥管理操作。
-    明文密钥可以通过在唯一包装密钥下加密来保护，该密钥为每个 guest VM 生成。
+    用于指定 guest 是否可以执行 S390 加密密钥管理操作.
+    明文密钥可以通过在唯一包装密钥下加密来保护,该密钥为每个 guest VM 生成.
 
     Attributes:
         aes: AES 包装密钥配置

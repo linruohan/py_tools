@@ -7,7 +7,7 @@ from utils.xml_generator import LibvirtXMLGenerator
 
 
 def test_complete_os_tab_flow():
-    """测试完整的 OS Tab 数据流：UI -> to_xml() -> VMConfig -> XML."""
+    """测试完整的 OS Tab 数据流:UI -> to_xml() -> VMConfig -> XML."""
 
     from vm.model.configs.os_booting_config import OSBootingConfig
 
@@ -53,7 +53,7 @@ def test_complete_os_tab_flow():
     # 转换为字典格式
     os_tab_xml_config = os_config.to_dict()
 
-    # 构建完整的 VM 配置（模拟 vm_panel.py 的 collect_vm_data）
+    # 构建完整的 VM 配置(模拟 vm_panel.py 的 collect_vm_data)
     vm_config = {
         'name': 'TestVM',
         'description': 'Test VM for OS Booting',
@@ -94,7 +94,7 @@ def test_complete_os_tab_flow():
         ('<boot dev="network"/>', 'network 启动设备'),
         ('<bootmenu enable="yes" timeout="3000"/>', 'bootmenu 配置'),
         ('<bios useserial="yes" rebootTimeout="1000"/>', 'bios 配置'),
-        # smbios mode='emulate' 是默认值，不会生成 XML
+        # smbios mode='emulate' 是默认值,不会生成 XML
         ('<kernel>/boot/vmlinuz</kernel>', '内核路径'),
         ('<initrd>/boot/initrd.img</initrd>', 'initrd 路径'),
         ('<cmdline>quiet splash</cmdline>', '命令行参数'),
@@ -111,7 +111,7 @@ def test_complete_os_tab_flow():
 
 
 def test_bootmenu_only_change():
-    """测试仅点击 bootmenu 时，其他配置不丢失."""
+    """测试仅点击 bootmenu 时,其他配置不丢失."""
 
     from vm.model.configs.os_booting_config import OSBootingConfig
 
@@ -174,7 +174,7 @@ def test_bootmenu_only_change():
     assert '/path/to/loader' in xml_before, "Before: loader should be in XML"
     assert '/path/to/nvram' in xml_before, "Before: nvram should be in XML"
 
-    # 验证之后的配置保留所有之前的元素，并添加 bootmenu
+    # 验证之后的配置保留所有之前的元素,并添加 bootmenu
     assert 'arch="x86_64"' in xml_after, "After: arch should still be in XML"
     assert 'machine="q35"' in xml_after, "After: machine should still be in XML"
     assert 'firmware="efi"' in xml_after, "After: firmware should still be in XML"

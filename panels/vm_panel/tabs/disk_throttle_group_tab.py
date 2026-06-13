@@ -16,7 +16,7 @@ class DiskThrottleGroupTab(BaseConfigTab):
 
     def _init_ui(self) -> None:
         """初始化界面."""
-        # 上方：输入区域
+        # 上方:输入区域
         input_frame = ctk.CTkFrame(self, fg_color=BG_COLOR_CONTENT, corner_radius=6)
         input_frame.pack(fill='x', padx=5, pady=5, anchor='w')
 
@@ -88,7 +88,7 @@ class DiskThrottleGroupTab(BaseConfigTab):
         )
         clear_btn.pack(side='left', padx=2)
 
-        # 下方：节流组列表
+        # 下方:节流组列表
         groups_frame = ctk.CTkFrame(self, fg_color=BG_COLOR_CONTENT, corner_radius=6)
         groups_frame.pack(fill='both', expand=True, padx=5, pady=5, anchor='w')
 
@@ -152,7 +152,7 @@ class DiskThrottleGroupTab(BaseConfigTab):
         self._trigger_change()
 
     def _parse_int(self, value: str) -> int | None:
-        """将字符串转换为整数，空字符串返回 None."""
+        """将字符串转换为整数,空字符串返回 None."""
         value = value.strip()
         if not value:
             return None
@@ -245,14 +245,14 @@ class DiskThrottleGroupTab(BaseConfigTab):
             self._trigger_change()
 
     def _set_entry_text(self, entry: ctk.CTkEntry, value: int | None) -> None:
-        """设置 Entry 的文本。"""
+        """设置 Entry 的文本."""
         entry.delete(0, 'end')
         if value is not None:
             entry.insert(0, str(value))
 
     def get_config(self) -> dict:
         """获取配置数据."""
-        # 如果选中了 None 选项，返回空配置
+        # 如果选中了 None 选项,返回空配置
         if self.use_none_var.get():
             return {'throttle_groups': [], 'use_none': True}
         return {'throttle_groups': self.throttle_groups.copy(), 'use_none': False}
@@ -275,7 +275,7 @@ class DiskThrottleGroupTab(BaseConfigTab):
     def to_xml(self) -> dict:
         """生成 XML 配置字典."""
         config = self.get_config()
-        # 如果选中 None，不生成 throttlegroups 元素
+        # 如果选中 None,不生成 throttlegroups 元素
         if config.get('use_none'):
             return {'disk_throttle_group': {'throttle_groups': []}}
         return {'disk_throttle_group': config}

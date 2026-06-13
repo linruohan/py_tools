@@ -34,7 +34,7 @@ class GraphicsTab(BaseConfigTab):
         self._init_ui()
 
     def _init_ui(self) -> None:
-        """初始化界面 - 所有 section 合并，每行紧凑排列。"""
+        """初始化界面 - 所有 section 合并,每行紧凑排列."""
         # 滚动框架
         scroll_frame = ctk.CTkScrollableFrame(self, fg_color='transparent', corner_radius=6)
         scroll_frame.pack(fill='both', expand=True, padx=5, pady=5)
@@ -44,7 +44,7 @@ class GraphicsTab(BaseConfigTab):
             scroll_frame, text='Graphics', font=CTK_FONT_BOLD, text_color='#ba68c8', width=100
         ).pack(side='left', padx=2, pady=2)
 
-        # 第一行：Type, Autoport, Port, Listen
+        # 第一行:Type, Autoport, Port, Listen
         ctk.CTkLabel(scroll_frame, text='Type:', font=CTK_FONT_MAIN, width=40).pack(
             side='left', padx=5, pady=2
         )
@@ -84,7 +84,7 @@ class GraphicsTab(BaseConfigTab):
         self.listen.pack(side='left', padx=2, pady=2)
         self.listen.bind('<KeyRelease>', lambda e: self._trigger_change())
 
-        # 第二行：TLS Port, Password, Keymap
+        # 第二行:TLS Port, Password, Keymap
         ctk.CTkLabel(scroll_frame, text='TLS:', font=CTK_FONT_MAIN, width=30).pack(
             side='left', padx=3, pady=2
         )
@@ -114,7 +114,7 @@ class GraphicsTab(BaseConfigTab):
         self.keymap.pack(side='left', padx=2, pady=2)
         self.keymap.bind('<KeyRelease>', lambda e: self._trigger_change())
 
-        # 第三行：VNC 选项
+        # 第三行:VNC 选项
         ctk.CTkLabel(scroll_frame, text='VNC:', font=CTK_FONT_MAIN, width=35).pack(
             side='left', padx=3, pady=2
         )
@@ -275,7 +275,7 @@ class GraphicsTab(BaseConfigTab):
         """生成 XML 配置字典."""
         gfx_type = self.graphics_type.get()
 
-        # 如果选择了 none，不生成 XML
+        # 如果选择了 none,不生成 XML
         if gfx_type == 'none':
             return {}
 

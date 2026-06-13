@@ -28,7 +28,7 @@ class TimeKeepingTab(BaseConfigTab):
         self._init_ui()
 
     def _init_ui(self) -> None:
-        """初始化界面 - 使用 pack 布局，每组元素一行."""
+        """初始化界面 - 使用 pack 布局,每组元素一行."""
         # ========== 左侧面板 - 时钟偏移配置 ==========
         left_frame = ctk.CTkFrame(self, fg_color=BG_COLOR_CONTENT, corner_radius=8)
         left_frame.pack(side='left', fill='both', expand=True, padx=8, pady=8)
@@ -354,7 +354,7 @@ class TimeKeepingTab(BaseConfigTab):
             right_frame,
             text='定时器策略说明:\n'
             '• catchup: 加速补发错过的滴答\n'
-            '• delay: 延迟交付，保持正常速率\n'
+            '• delay: 延迟交付,保持正常速率\n'
             '• merge: 合并错过的滴答\n'
             '• discard: 丢弃错过的滴答\n'
             '• None: 不生成此配置',

@@ -25,7 +25,7 @@ class EventsConfigurationTab(BaseConfigTab):
             anchor='w', padx=10, pady=5
         )
 
-        # 第一行：关机时、重启时、崩溃时、锁失败时（使用 pack 左对齐）
+        # 第一行:关机时、重启时、崩溃时、锁失败时(使用 pack 左对齐)
         events_frame = ctk.CTkFrame(left_frame, fg_color='transparent')
         events_frame.pack(anchor='w', padx=10, pady=5)
 
@@ -115,7 +115,7 @@ class EventsConfigurationTab(BaseConfigTab):
         info_label.pack(anchor='w', padx=10, pady=5)
 
     def _on_poweroff_changed(self, value: str) -> None:
-        """关机时选项变化回调，处理互斥关系.
+        """关机时选项变化回调,处理互斥关系.
 
         Args:
             value: 新选择的值
@@ -126,7 +126,7 @@ class EventsConfigurationTab(BaseConfigTab):
         self._trigger_change(value)
 
     def _on_reboot_changed(self, value: str) -> None:
-        """重启时选项变化回调，处理互斥关系.
+        """重启时选项变化回调,处理互斥关系.
 
         Args:
             value: 新选择的值
@@ -148,7 +148,7 @@ class EventsConfigurationTab(BaseConfigTab):
     def to_xml(self) -> dict:
         """生成 XML 配置字典.
 
-        None 选项表示不生成对应的 XML 元素。
+        None 选项表示不生成对应的 XML 元素.
         """
         config = {}
 

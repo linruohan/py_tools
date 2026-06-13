@@ -28,7 +28,7 @@ class OSTab(StandardConfigTab):
         'container': SectionConfig(
             title='容器启动',
             fields=[
-                # container section 的标准字段通过自定义代码创建，全部放一行
+                # container section 的标准字段通过自定义代码创建,全部放一行
             ],
             color='#AA96DA',
         ),
@@ -42,12 +42,12 @@ class OSTab(StandardConfigTab):
         super().__init__(master, on_change_callback, **kwargs)
 
     def _init_sections_ui(self) -> None:
-        """初始化基于 Sections 的 UI，添加 boot devices 和 initarg/initenv/idmap 支持."""
+        """初始化基于 Sections 的 UI,添加 boot devices 和 initarg/initenv/idmap 支持."""
         super()._init_sections_ui()
 
         # 在 firmware section 添加自定义 UI
         firmware_frame = self.section_frames['firmware']
-        firmware_row = 1  # 从第1行开始（第0行是标题）
+        firmware_row = 1  # 从第1行开始(第0行是标题)
 
         # === 基本信息 ===
         ctk.CTkLabel(firmware_frame, text='基本信息', font=('', 11), text_color='#FFD93D').grid(
@@ -93,7 +93,7 @@ class OSTab(StandardConfigTab):
 
         # 在 boot section 添加自定义 UI
         boot_frame = self.section_frames['boot']
-        boot_row = 1  # 从第1行开始（第0行是标题）
+        boot_row = 1  # 从第1行开始(第0行是标题)
 
         # === 引导设备 ===
         ctk.CTkLabel(boot_frame, text='引导设备', font=('', 11), text_color='#FFD93D').grid(
@@ -117,7 +117,7 @@ class OSTab(StandardConfigTab):
             boot_header_frame, text='-', width=5, height=10, command=self._remove_boot_device
         ).pack(side='left', padx=2)
 
-        # boot 设备列表紧跟在加减号后面，使用 pack 横向排列
+        # boot 设备列表紧跟在加减号后面,使用 pack 横向排列
         self.boot_devices_frame = ctk.CTkFrame(boot_header_frame, fg_color='transparent')
         self.boot_devices_frame.pack(side='left', padx=(10, 0))
         self._add_boot_device()
@@ -144,7 +144,7 @@ class OSTab(StandardConfigTab):
         ).grid(row=boot_row, column=0, columnspan=2, padx=10, pady=3, sticky='w')
         boot_row += 1
 
-        # kernel 和 initrd 放一行，cmdline 和 shim 放一行，dtb 单独一行
+        # kernel 和 initrd 放一行,cmdline 和 shim 放一行,dtb 单独一行
         self._create_kernel_rows(boot_frame, boot_row)
         boot_row += 3
 
@@ -180,7 +180,7 @@ class OSTab(StandardConfigTab):
 
         # 在 container section 添加 init/initdir/inituser/initgroup 一行显示
         container_frame = self.section_frames['container']
-        container_row = 1  # 从第1行开始（第0行是标题）
+        container_row = 1  # 从第1行开始(第0行是标题)
 
         # init, initdir, inituser, initgroup 全部放一行
         self._create_container_basic_row(container_frame, container_row)
@@ -323,7 +323,7 @@ class OSTab(StandardConfigTab):
             entry.bind('<KeyRelease>', lambda e: self._trigger_change())
             self.idmap_entries[field_name] = entry
 
-        # 初始状态：禁用输入框
+        # 初始状态:禁用输入框
         self._update_idmap_ui_state()
 
     def _create_boot_standard_fields(self, parent: ctk.CTkFrame, start_row: int) -> None:
@@ -417,7 +417,7 @@ class OSTab(StandardConfigTab):
         self.bootloader_args_entry.bind('<KeyRelease>', lambda e: self._trigger_change())
 
     def _create_kernel_rows(self, parent: ctk.CTkFrame, start_row: int) -> None:
-        """创建内核启动行: kernel 和 initrd 放一行，cmdline 和 shim 放一行."""
+        """创建内核启动行: kernel 和 initrd 放一行,cmdline 和 shim 放一行."""
         # 第一行: kernel 和 initrd
         row1_frame = ctk.CTkFrame(parent, fg_color='transparent')
         row1_frame.grid(row=start_row, column=0, columnspan=2, padx=10, pady=3, sticky='w')
@@ -882,13 +882,13 @@ class OSTab(StandardConfigTab):
                 entry.configure(state='disabled')
 
     def _validate_number(self, value: str) -> bool:
-        """验证输入值是否为数字（允许空值）.
+        """验证输入值是否为数字(允许空值).
 
         Args:
             value: 输入框的当前值
 
         Returns:
-            True 如果值为空或纯数字，False 否则
+            True 如果值为空或纯数字,False 否则
         """
         if value == '':
             return True
@@ -899,7 +899,7 @@ class OSTab(StandardConfigTab):
             return False
 
     def _add_boot_device(self) -> None:
-        """添加引导设备，紧跟在加减号后面横向排列."""
+        """添加引导设备,紧跟在加减号后面横向排列."""
         if not hasattr(self, 'boot_devices'):
             self.boot_devices = []
 
@@ -1102,7 +1102,7 @@ class OSTab(StandardConfigTab):
             'boot_devices': config['boot_devices'],
         }
 
-        # arch 和 machine 只在非 None 时才添加（用户选择 None 时不输出）
+        # arch 和 machine 只在非 None 时才添加(用户选择 None 时不输出)
         arch = config.get('arch')
         if arch:
             os_booting_config['arch'] = arch

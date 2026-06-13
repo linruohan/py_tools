@@ -28,8 +28,8 @@ class NetworkInterfacesTab(BaseConfigTab):
 
         ctk.CTkLabel(
             frame,
-            text='网络接口配置允许为虚拟机设置各种网络连接类型。\n'
-            '支持虚拟网络、桥接、用户空间连接等多种网络类型。',
+            text='网络接口配置允许为虚拟机设置各种网络连接类型.\n'
+            '支持虚拟网络、桥接、用户空间连接等多种网络类型.',
             font=CTK_FONT_SMALL,
             text_color='#666666',
         ).grid(row=1, column=0, padx=10, pady=5, sticky='w')

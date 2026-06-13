@@ -28,7 +28,7 @@ class BlockIODevice:
                 setattr(self, key, data[key])
 
     def to_dict(self) -> dict:
-        """转换为字典格式，只包含有值的字段."""
+        """转换为字典格式,只包含有值的字段."""
         result = {}
         if self.path:
             result['path'] = self.path

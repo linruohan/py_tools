@@ -38,7 +38,7 @@ class DatePicker(ctk.CTkFrame):
         self.grid_columnconfigure(0, weight=1)
         self.grid_rowconfigure(0, weight=0)
 
-        # 输入框 - 通过阻止键盘输入来禁止编辑，同时让 placeholder 能正常显示
+        # 输入框 - 通过阻止键盘输入来禁止编辑,同时让 placeholder 能正常显示
         self.date_entry = ctk.CTkEntry(
             self,
             placeholder_text=self.placeholder_text,
@@ -57,7 +57,7 @@ class DatePicker(ctk.CTkFrame):
 
     def _show_calendar(self) -> None:
         """显示日历窗口."""
-        # 如果日历窗口已经显示，关闭它
+        # 如果日历窗口已经显示,关闭它
         if self.date_window is not None:
             try:
                 self.date_window.destroy()
@@ -73,7 +73,7 @@ class DatePicker(ctk.CTkFrame):
         self.date_window.resizable(False, False)
         self.date_window.attributes('-topmost', True)
 
-        # 位置（显示在输入框下方，左对齐）
+        # 位置(显示在输入框下方,左对齐)
         entry_x = self.date_entry.winfo_rootx()
         entry_y = self.date_entry.winfo_rooty()
         entry_height = self.date_entry.winfo_height()
@@ -208,11 +208,11 @@ class DatePicker(ctk.CTkFrame):
         for widget in self.days_frame.winfo_children():
             widget.destroy()
 
-        # 使用grid布局，设置7列
+        # 使用grid布局,设置7列
         for col in range(7):
             self.days_frame.grid_columnconfigure(col, weight=1, uniform='day_col')
 
-        # 获取当前月份第一天的星期几（0是周一，6是周日）
+        # 获取当前月份第一天的星期几(0是周一,6是周日)
         import calendar
 
         first_day_weekday = calendar.monthrange(self.current_year, self.current_month)[0]
@@ -226,7 +226,7 @@ class DatePicker(ctk.CTkFrame):
             else -1
         )
 
-        # 填充上个月的天数（以周日为第一列）
+        # 填充上个月的天数(以周日为第一列)
         adjusted_first_day = (first_day_weekday + 1) % 7
 
         # 当前位置

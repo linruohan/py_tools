@@ -7,11 +7,11 @@ from dataclasses import dataclass
 class LaunchSecurityConfig:
     """启动安全配置 - 支持 AMD SEV/SEV-SNP, Intel TDX, IBM s390-pv."""
 
-    # 安全类型：sev, sev-snp, tdx, s390-pv, none
+    # 安全类型:sev, sev-snp, tdx, s390-pv, none
     sec_type: str = 'none'
 
     # ========== 通用配置 ==========
-    #  Guest 策略 (十六进制字符串，如 0x0001)
+    #  Guest 策略 (十六进制字符串,如 0x0001)
     policy: str = ''
 
     # C-bit 位置启用标志
@@ -40,7 +40,7 @@ class LaunchSecurityConfig:
     # 是否包含 Author Key
     author_key: bool = False
 
-    # 是否使用 VCEK (默认为 True，False 则使用 VLEK)
+    # 是否使用 VCEK (默认为 True,False 则使用 VLEK)
     vcek: bool = True
 
     # Guest 可见的变通方案 (16 字节 Base64 编码)
@@ -94,15 +94,15 @@ class LaunchSecurityConfig:
 
     @classmethod
     def from_dict(cls, data: dict) -> 'LaunchSecurityConfig':
-        """从字典创建实例，支持两种格式:
-        1. Tab 格式：cbitpos_enabled/cbitpos_value, reduced_phys_bits_enabled/reduced_phys_bits_value
-        2. 直接格式：cbitpos, reduced_phys_bits
+        """从字典创建实例,支持两种格式:
+        1. Tab 格式:cbitpos_enabled/cbitpos_value, reduced_phys_bits_enabled/reduced_phys_bits_value
+        2. 直接格式:cbitpos, reduced_phys_bits
         """
         # 支持 Tab 输出的格式 (cbitpos_enabled/cbitpos_value)
         cbitpos_enabled = data.get('cbitpos_enabled', False)
         cbitpos_value = data.get('cbitpos_value', '')
 
-        # 如果没有 cbitpos_enabled，尝试使用旧格式 cbitpos
+        # 如果没有 cbitpos_enabled,尝试使用旧格式 cbitpos
         if 'cbitpos_enabled' not in data and 'cbitpos' in data:
             cbitpos_val = data.get('cbitpos')
             if cbitpos_val is not None:
@@ -112,7 +112,7 @@ class LaunchSecurityConfig:
         reduced_phys_bits_enabled = data.get('reduced_phys_bits_enabled', False)
         reduced_phys_bits_value = data.get('reduced_phys_bits_value', '')
 
-        # 如果没有 reduced_phys_bits_enabled，尝试使用旧格式 reduced_phys_bits
+        # 如果没有 reduced_phys_bits_enabled,尝试使用旧格式 reduced_phys_bits
         if 'reduced_phys_bits_enabled' not in data and 'reduced_phys_bits' in data:
             rpb_val = data.get('reduced_phys_bits')
             if rpb_val is not None:

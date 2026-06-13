@@ -8,7 +8,7 @@ class HugepageItem:
     """Hugepage 配置项."""
 
     size: str | None = None  # 页面大小
-    unit: str = 'GiB'  # 单位：KiB, MiB, GiB
+    unit: str = 'GiB'  # 单位:KiB, MiB, GiB
     nodeset: str | None = None  # 节点集
 
     def update(self, data: dict) -> None:
@@ -85,7 +85,7 @@ class MemoryBackingConfig:
         if hugepages_list:
             result['hugepages'] = hugepages_list
 
-        # source_type - 'anonymous' 为默认值，不生成 XML
+        # source_type - 'anonymous' 为默认值,不生成 XML
         if self.source_type and self.source_type != 'anonymous':
             result['source_type'] = self.source_type
 

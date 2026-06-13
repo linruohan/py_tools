@@ -1,7 +1,7 @@
 """安全标签配置 Tab - Security Label.
 
-支持 SELinux/AppArmor/DAC 安全标签配置。
-参考：https://www.libvirt.org/formatdomain.html#security-label
+支持 SELinux/AppArmor/DAC 安全标签配置.
+参考:https://www.libvirt.org/formatdomain.html#security-label
 """
 
 from typing import ClassVar
@@ -36,7 +36,7 @@ class SecurityLabelTab(StandardConfigTab):
 
     def _create_basic_section(self, parent: ctk.CTkFrame, row: int) -> None:
         """创建基本信息区域 - 紧凑布局."""
-        # 单行布局：类型 + 模型 + 标签 + 基础标签 + relabel + 镜像标签
+        # 单行布局:类型 + 模型 + 标签 + 基础标签 + relabel + 镜像标签
         frame = ctk.CTkFrame(parent, fg_color='transparent')
         frame.grid(row=row, column=0, columnspan=2, padx=10, pady=3, sticky='ew')
 
@@ -114,9 +114,9 @@ class SecurityLabelTab(StandardConfigTab):
 
     def _create_info_section(self, parent: ctk.CTkFrame, row: int) -> None:
         """创建说明区域."""
-        info_text = """类型说明：None=不生成 XML；none=禁用安全标签 <seclabel type='none'/>；dynamic=动态分配 (relabel=yes, baselabel 可选)；static=静态指定 (label 必需，relabel 默认 no)
-模型说明：selinux(默认，格式 user:role:type:level)；apparmor(配置文件路径)；dac(格式 owner:group 如 root:root)
-注意：imagelabel 为运行时输出信息 (只读)；多个 seclabel 可用于多个安全驱动"""
+        info_text = """类型说明:None=不生成 XML;none=禁用安全标签 <seclabel type='none'/>;dynamic=动态分配 (relabel=yes, baselabel 可选);static=静态指定 (label 必需,relabel 默认 no)
+模型说明:selinux(默认,格式 user:role:type:level);apparmor(配置文件路径);dac(格式 owner:group 如 root:root)
+注意:imagelabel 为运行时输出信息 (只读);多个 seclabel 可用于多个安全驱动"""
 
         ctk.CTkLabel(
             parent,
@@ -135,7 +135,7 @@ class SecurityLabelTab(StandardConfigTab):
         is_dynamic = value == 'dynamic'
         is_static = value == 'static'
 
-        # 模型：None 和 none 类型禁用
+        # 模型:None 和 none 类型禁用
         self.model.configure(state='disabled' if (is_none_upper or is_none_lower) else 'normal')
 
         # 标签 (label): 仅 static 类型需要
@@ -150,7 +150,7 @@ class SecurityLabelTab(StandardConfigTab):
         else:
             self.baselabel_value.configure(state='disabled')
 
-        # relabel: static 类型可选，dynamic 类型固定 yes，None/none 类型禁用
+        # relabel: static 类型可选,dynamic 类型固定 yes,None/none 类型禁用
         if is_static:
             self.relabel.configure(state='normal')
         elif is_dynamic:
@@ -160,7 +160,7 @@ class SecurityLabelTab(StandardConfigTab):
             self.relabel.deselect()
             self.relabel.configure(state='disabled')
 
-        # imagelabel: 仅显示，始终禁用
+        # imagelabel: 仅显示,始终禁用
         self.imagelabel.configure(state='disabled')
 
         self._trigger_change()
@@ -181,17 +181,17 @@ class SecurityLabelTab(StandardConfigTab):
         根据 type 生成对应结构的 seclabel 配置:
         - None: 不生成任何 XML
         - none: 返回 {'security_label': {'type': 'none'}}
-        - dynamic: 生成带 baselabel 的配置 (如设置的话)，relabel 固定 yes
+        - dynamic: 生成带 baselabel 的配置 (如设置的话),relabel 固定 yes
         - static: 生成带 label 和 relabel 的配置
         """
         config = self.get_config()
         sec_type = config.get('type', 'None')
 
-        # None 类型：不生成任何 XML
+        # None 类型:不生成任何 XML
         if sec_type == 'None':
             return {}
 
-        # none 类型：生成 type='none'
+        # none 类型:生成 type='none'
         if sec_type == 'none':
             return {'security_label': {'type': 'none'}}
 
@@ -201,7 +201,7 @@ class SecurityLabelTab(StandardConfigTab):
         }
 
         if sec_type == 'dynamic':
-            # dynamic 类型：relabel 固定为 yes
+            # dynamic 类型:relabel 固定为 yes
             seclabel_config['relabel'] = True
 
             # baselabel 可选
@@ -210,7 +210,7 @@ class SecurityLabelTab(StandardConfigTab):
                 seclabel_config['baselabel'] = baselabel
 
         elif sec_type == 'static':
-            # static 类型：relabel 默认 no
+            # static 类型:relabel 默认 no
             relabel = config.get('relabel', False)
             seclabel_config['relabel'] = relabel
 
@@ -225,7 +225,7 @@ class SecurityLabelTab(StandardConfigTab):
         """加载配置数据到 UI.
 
         Args:
-            config: 包含安全标签配置的字典，可以是:
+            config: 包含安全标签配置的字典,可以是:
                 - {'security_label': {...}}
                 - {'seclabel': {...}}
                 - 直接是 seclabel 的配置字典

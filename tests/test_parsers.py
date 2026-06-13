@@ -34,7 +34,7 @@ class TestParseMemoryValue:
         assert parse_memory_value('2048M', target_unit='GiB') == 2
 
     def test_no_unit_treated_as_kib(self):
-        # 无单位按 KiB 处理，转 MiB 结果为 0（1 KiB < 1 MiB）
+        # 无单位按 KiB 处理,转 MiB 结果为 0(1 KiB < 1 MiB)
         result = parse_memory_value('1024', target_unit='KiB')
         assert result == 1024
 
@@ -92,7 +92,7 @@ class TestFormatMemoryValue:
         assert format_memory_value(2 * 1024 * 1024, 'KiB') == '2G'
 
     def test_exact_kib(self):
-        # 1 KiB — 不能整除 MiB，应返回 K 单位
+        # 1 KiB — 不能整除 MiB,应返回 K 单位
         assert format_memory_value(1, 'KiB') == '1K'
 
     def test_mib_to_t(self):

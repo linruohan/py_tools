@@ -73,7 +73,7 @@ def main():
     # 4. 再次检查
     results.append(run_command(['ruff', 'check', '.'], 'Ruff 最终检查'))
 
-    # 5. 运行测试（如果存在）
+    # 5. 运行测试(如果存在)
     if Path('tests').exists():
         # 检查是否安装了 pytest-cov
         import importlib.util
@@ -82,7 +82,7 @@ def main():
             results.append(
                 run_command(
                     ['pytest', 'tests/', '-v', '--cov=.', '--cov-report=term-missing'],
-                    '运行测试（带覆盖率）',
+                    '运行测试(带覆盖率)',
                 )
             )
         else:
@@ -99,10 +99,10 @@ def main():
     print(f'成功: {success_count}/{total_count}')
 
     if success_count == total_count:
-        print('✅ 所有检查通过！')
+        print('✅ 所有检查通过!')
         sys.exit(0)
     else:
-        print('⚠️ 部分检查失败，请查看上面的错误信息')
+        print('⚠️ 部分检查失败,请查看上面的错误信息')
         sys.exit(1)
 
 

@@ -24,7 +24,7 @@ class FibreChannelVMIDTab(BaseConfigTab):
             main_frame, text='FC VMID 配置', font=CTK_FONT_BOLD, text_color='#64b5f6'
         ).pack(anchor='w', padx=10, pady=5)
 
-        # 配置行：FC VMID 启用状态 + App ID 输入
+        # 配置行:FC VMID 启用状态 + App ID 输入
         config_frame = ctk.CTkFrame(main_frame, fg_color='transparent')
         config_frame.pack(anchor='w', padx=10, pady=5)
 
@@ -60,9 +60,9 @@ class FibreChannelVMIDTab(BaseConfigTab):
         info_title.pack(anchor='w')
 
         info_text = (
-            'FC SAN 可以根据 VMID 提供：不同的 QoS 级别、访问控制、收集每 VM 级别的遥测数据\n'
-            'App ID 说明：单个字符串，最大 128 字节，由内核用于创建 VMID\n'
-            '使用此功能需要：支持 Fibre Channel 的硬件、CONFIG_BLK_CGROUP_FC_APPID\n'
+            'FC SAN 可以根据 VMID 提供:不同的 QoS 级别、访问控制、收集每 VM 级别的遥测数据\n'
+            'App ID 说明:单个字符串,最大 128 字节,由内核用于创建 VMID\n'
+            '使用此功能需要:支持 Fibre Channel 的硬件、CONFIG_BLK_CGROUP_FC_APPID\n'
             '自 libvirt 7.7.0 版本起支持'
         )
         info_label = ctk.CTkLabel(
@@ -104,7 +104,7 @@ class FibreChannelVMIDTab(BaseConfigTab):
         """生成 XML 配置字典."""
         appid_value = self.appid.get().strip()
 
-        # 如果没有设置 App ID 或处于禁用状态，返回空字典
+        # 如果没有设置 App ID 或处于禁用状态,返回空字典
         # 这样 vm_config.update_from_tab 不会更新配置
         # 最终 xml_generator._add_resource 不会生成 fibrechannel 元素
         if not appid_value or self.enabled_var.get() == 'none':
@@ -112,8 +112,8 @@ class FibreChannelVMIDTab(BaseConfigTab):
                 'fibre_channel_vmid': {'appid': ''},
             }
 
-        # 如果设置了 App ID，生成 fibre_channel_vmid 配置
-        # 格式：{'fibre_channel_vmid': {'appid': 'xxx'}}
+        # 如果设置了 App ID,生成 fibre_channel_vmid 配置
+        # 格式:{'fibre_channel_vmid': {'appid': 'xxx'}}
         return {
             'fibre_channel_vmid': {'appid': appid_value},
         }

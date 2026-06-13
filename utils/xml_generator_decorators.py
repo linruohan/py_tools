@@ -8,7 +8,7 @@ from collections.abc import Callable
 from functools import wraps
 from typing import Any, TypeVar
 
-# 使用模块级别的 logger，确保测试时能正确捕获
+# 使用模块级别的 logger,确保测试时能正确捕获
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
 
@@ -29,24 +29,24 @@ def xml_generation_method(func: Callable[..., R]) -> Callable[..., R]:
     @wraps(func)
     def wrapper(*args: Any, **kwargs: Any) -> R:
         try:
-            logger.debug(f'开始生成：{func.__name__}')
+            logger.debug(f'开始生成:{func.__name__}')
             result = func(*args, **kwargs)
-            logger.debug(f'生成完成：{func.__name__}')
+            logger.debug(f'生成完成:{func.__name__}')
             return result
         except KeyError as e:
-            error_msg = f'{func.__name__} 缺少必需的键：{e}'
+            error_msg = f'{func.__name__} 缺少必需的键:{e}'
             logger.error(error_msg)
             raise
         except TypeError as e:
-            error_msg = f'{func.__name__} 类型错误：{e}'
+            error_msg = f'{func.__name__} 类型错误:{e}'
             logger.error(error_msg)
             raise
         except ValueError as e:
-            error_msg = f'{func.__name__} 值错误：{e}'
+            error_msg = f'{func.__name__} 值错误:{e}'
             logger.error(error_msg)
             raise
         except Exception as e:
-            error_msg = f'{func.__name__} 未知错误：{type(e).__name__}: {e}'
+            error_msg = f'{func.__name__} 未知错误:{type(e).__name__}: {e}'
             logger.exception(error_msg)
             raise
 
@@ -71,7 +71,7 @@ def safe_xml_generation(
             try:
                 return func(*args, **kwargs)
             except Exception as e:
-                logger.warning(f'{func.__name__} 生成失败，使用默认值：{type(e).__name__}: {e}')
+                logger.warning(f'{func.__name__} 生成失败,使用默认值:{type(e).__name__}: {e}')
                 return default_return  # type: ignore
 
         return wrapper
@@ -97,16 +97,16 @@ def validate_config_keys(
             # 检查配置参数 (可能是第一个或第二个参数)
             config = None
             if len(args) > 0 and isinstance(args[0], dict):
-                # 如果没有 self 参数，config 是第一个参数
+                # 如果没有 self 参数,config 是第一个参数
                 config = args[0]
             elif len(args) > 1 and isinstance(args[1], dict):
-                # 如果有 self 参数，config 是第二个参数
+                # 如果有 self 参数,config 是第二个参数
                 config = args[1]
 
             if config is not None:
                 missing_keys = [key for key in required_keys if key not in config]
                 if missing_keys:
-                    warning_msg = f'{func.__name__} 缺少必需的键：{missing_keys}'
+                    warning_msg = f'{func.__name__} 缺少必需的键:{missing_keys}'
                     logger.warning(warning_msg)
 
             return func(*args, **kwargs)

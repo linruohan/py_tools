@@ -1,4 +1,4 @@
-"""主机设备分配模块 - 包括USB、PCI、SCSI设备，ACPI Generic Initiators和Block/character devices"""
+"""主机设备分配模块 - 包括USB、PCI、SCSI设备,ACPI Generic Initiators和Block/character devices"""
 
 import customtkinter as ctk
 
@@ -28,8 +28,8 @@ class HostDeviceAssignmentTab(BaseConfigTab):
 
         ctk.CTkLabel(
             frame,
-            text='主机设备分配允许将物理设备直接分配给虚拟机使用。\n'
-            '支持USB、PCI、SCSI设备，以及ACPI Generic Initiators和Block/character devices。',
+            text='主机设备分配允许将物理设备直接分配给虚拟机使用.\n'
+            '支持USB、PCI、SCSI设备,以及ACPI Generic Initiators和Block/character devices.',
             font=CTK_FONT_SMALL,
             text_color='#666666',
         ).grid(row=1, column=0, padx=10, pady=5, sticky='w')

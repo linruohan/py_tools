@@ -15,7 +15,7 @@ class HardDisksTab(BaseConfigTab):
         super().__init__(master, on_change_callback, **kwargs)
 
     def _init_ui(self) -> None:
-        """初始化界面 - 紧凑布局。"""
+        """初始化界面 - 紧凑布局."""
         self.grid_columnconfigure(0, weight=1)
         self.grid_rowconfigure(0, weight=0)
         self.grid_rowconfigure(1, weight=1)
@@ -210,7 +210,7 @@ class HardDiskConfigDialog:
             info_frame, text='Target Device:', font=CTK_FONT_MAIN, width=80, anchor='w'
         ).grid(row=1, column=0, padx=5, pady=5, sticky='w')
 
-        # Bus Type (需要先初始化，因为_generate_default_target 需要用到)
+        # Bus Type (需要先初始化,因为_generate_default_target 需要用到)
         ctk.CTkLabel(info_frame, text='Bus:', font=CTK_FONT_MAIN, width=80, anchor='w').grid(
             row=1, column=2, padx=5, pady=5, sticky='w'
         )
@@ -524,7 +524,7 @@ class HardDiskConfigDialog:
                         if prefix not in max_numbers or num > max_numbers[prefix]:
                             max_numbers[prefix] = num
                     elif prefix == 'nvme' and 'n' in suffix:
-                        # 处理nvme格式，如nvme0n1
+                        # 处理nvme格式,如nvme0n1
                         parts = suffix.split('n')
                         if len(parts) == 2 and parts[0].isdigit() and parts[1].isdigit():
                             ctrl_num = int(parts[0])

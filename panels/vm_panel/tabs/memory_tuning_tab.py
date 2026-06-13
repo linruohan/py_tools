@@ -23,7 +23,7 @@ class MemoryTuningTab(BaseConfigTab):
         # 单位选项
         unit_options = ['None', 'KiB', 'MiB', 'GiB', 'bytes']
 
-        # 所有参数放在一行：硬限制 | 软限制 | 交换硬限制 | 最小保证
+        # 所有参数放在一行:硬限制 | 软限制 | 交换硬限制 | 最小保证
         row = ctk.CTkFrame(main_frame, fg_color='transparent')
         row.pack(fill='x', padx=10, pady=3)
 
@@ -84,7 +84,7 @@ class MemoryTuningTab(BaseConfigTab):
         info_frame.pack(fill='x', padx=10, pady=(15, 5))
 
         info_text = (
-            '单位说明：选择 "None" 或不填值将不生成对应的 XML 元素\n'
+            '单位说明:选择 "None" 或不填值将不生成对应的 XML 元素\n'
             '硬限制 (hard_limit): 客户机可使用的最大内存\n'
             '软限制 (soft_limit): 内存争用期间强制执行的限制\n'
             '交换硬限制 (swap_hard_limit): 内存 + 交换的最大值\n'
@@ -107,9 +107,9 @@ class MemoryTuningTab(BaseConfigTab):
         )
 
         warning_text = (
-            '对于 QEMU/KVM，建议不要设置硬限制，因为如果猜测过低，\n'
-            '域可能会被内核杀死。确定进程运行所需的内存是一个不可判定的问题。\n'
-            '如果启用了内存锁定，则需要根据部署情况计算合适的硬限制值。'
+            '对于 QEMU/KVM,建议不要设置硬限制,因为如果猜测过低,\n'
+            '域可能会被内核杀死.确定进程运行所需的内存是一个不可判定的问题.\n'
+            '如果启用了内存锁定,则需要根据部署情况计算合适的硬限制值.'
         )
         ctk.CTkLabel(
             warning_frame,

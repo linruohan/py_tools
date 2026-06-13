@@ -30,7 +30,7 @@ class CPUModel:
         name: CPU 模型名称 (如 core2duo, IvyBridge)
         fallback: 回退策略 (allow, forbid) - 是否允许回退到相似模型
         vendor: CPU 厂商标识 (如 Intel, AMD)
-        vendor_id: CPU 厂商标识符 (12 字符，如 AuthenticAMD, GenuineIntel)
+        vendor_id: CPU 厂商标识符 (12 字符,如 AuthenticAMD, GenuineIntel)
     """
 
     name: str

@@ -33,7 +33,7 @@ class XMLEnhancedGenerator:
         text: str | None = None,
         attribs: dict[str, str] | None = None,
     ) -> ET.Element | None:
-        """安全地添加 XML 元素，包含异常处理.
+        """安全地添加 XML 元素,包含异常处理.
 
         Args:
             parent: 父元素
@@ -42,7 +42,7 @@ class XMLEnhancedGenerator:
             attribs: 属性字典
 
         Returns:
-            创建的元素，失败返回 None
+            创建的元素,失败返回 None
         """
         try:
             element = ET.SubElement(parent, tag)
@@ -53,8 +53,8 @@ class XMLEnhancedGenerator:
                     element.set(key, str(value))
             return element
         except Exception as e:
-            logger.error(f'添加 XML 元素失败：tag={tag}, error={e}')
-            self._errors.append(f'添加元素 {tag} 失败：{e}')
+            logger.error(f'添加 XML 元素失败:tag={tag}, error={e}')
+            self._errors.append(f'添加元素 {tag} 失败:{e}')
             return None
 
     def get_value(
@@ -64,28 +64,28 @@ class XMLEnhancedGenerator:
         default: Any = None,
         expected_type: type | tuple[type, ...] | None = None,
     ) -> Any:
-        """安全地从配置字典获取值，进行类型检查.
+        """安全地从配置字典获取值,进行类型检查.
 
         Args:
             config: 配置字典
             key: 键名
             default: 默认值
-            expected_type: 期望的类型（可以是类型元组）
+            expected_type: 期望的类型(可以是类型元组)
 
         Returns:
-            获取到的值，类型不匹配或不存在时返回默认值
+            获取到的值,类型不匹配或不存在时返回默认值
         """
         try:
             value = config.get(key, default)
             if expected_type is not None and value is not None:
                 if not isinstance(value, expected_type):
                     logger.warning(
-                        f'配置项 {key} 类型不匹配：期望 {expected_type}, 得到 {type(value)}'
+                        f'配置项 {key} 类型不匹配:期望 {expected_type}, 得到 {type(value)}'
                     )
                     return default
             return value
         except Exception as e:
-            logger.error(f'获取配置项 {key} 失败：{e}')
+            logger.error(f'获取配置项 {key} 失败:{e}')
             return default
 
     def get_nested_config(self, config: ConfigDict, key: str, required: bool = False) -> ConfigDict:
@@ -97,7 +97,7 @@ class XMLEnhancedGenerator:
             required: 是否为必需配置
 
         Returns:
-            嵌套配置字典，不存在时返回空字典
+            嵌套配置字典,不存在时返回空字典
 
         Raises:
             ValueError: 当配置为必需但不存在时
@@ -105,10 +105,10 @@ class XMLEnhancedGenerator:
         try:
             nested = config.get(key, {})
             if required and not nested:
-                raise ValueError(f'缺少必需的嵌套配置：{key}')
+                raise ValueError(f'缺少必需的嵌套配置:{key}')
             return nested if isinstance(nested, dict) else {}
         except Exception as e:
-            logger.error(f'获取嵌套配置 {key} 失败：{e}')
+            logger.error(f'获取嵌套配置 {key} 失败:{e}')
             if required:
                 raise
             return {}
@@ -124,7 +124,7 @@ class XMLEnhancedGenerator:
             allow_zero: 是否允许零值
 
         Returns:
-            验证后的整数值，无效时返回 None
+            验证后的整数值,无效时返回 None
         """
         try:
             if value is None:
@@ -132,15 +132,15 @@ class XMLEnhancedGenerator:
             int_value = int(value)
             if allow_zero:
                 if int_value < 0:
-                    logger.warning(f'{field_name} 不能为负数：{int_value}')
+                    logger.warning(f'{field_name} 不能为负数:{int_value}')
                     return None
             else:
                 if int_value <= 0:
-                    logger.warning(f'{field_name} 必须为正数：{int_value}')
+                    logger.warning(f'{field_name} 必须为正数:{int_value}')
                     return None
             return int_value
         except (TypeError, ValueError) as e:
-            logger.warning(f'{field_name} 不是有效的整数：{value}, error={e}')
+            logger.warning(f'{field_name} 不是有效的整数:{value}, error={e}')
             return None
 
     def validate_string(self, value: Any, field_name: str, allow_empty: bool = False) -> str | None:
@@ -152,7 +152,7 @@ class XMLEnhancedGenerator:
             allow_empty: 是否允许空字符串
 
         Returns:
-            验证后的字符串，无效时返回 None
+            验证后的字符串,无效时返回 None
         """
         try:
             if value is None:
@@ -163,11 +163,11 @@ class XMLEnhancedGenerator:
                 return None
             return str_value
         except Exception as e:
-            logger.warning(f'{field_name} 转换字符串失败：{value}, error={e}')
+            logger.warning(f'{field_name} 转换字符串失败:{value}, error={e}')
             return None
 
     def add_metadata(self, config: ConfigDict) -> None:
-        """添加元数据配置（带异常处理）.
+        """添加元数据配置(带异常处理).
 
         Args:
             config: 配置字典
@@ -175,7 +175,7 @@ class XMLEnhancedGenerator:
         try:
             metadata_config = self.get_nested_config(config, 'name')
             if metadata_config:
-                # 注意：这里的逻辑可能需要调整，因为原代码直接从 config 获取
+                # 注意:这里的逻辑可能需要调整,因为原代码直接从 config 获取
                 pass
 
             # 使用安全方法添加元素
@@ -195,11 +195,11 @@ class XMLEnhancedGenerator:
                 self.safe_add_element(self.domain, 'genid', text=genid)
 
         except Exception as e:
-            logger.exception(f'添加元数据失败：{e}')
-            self._errors.append(f'元数据添加失败：{e}')
+            logger.exception(f'添加元数据失败:{e}')
+            self._errors.append(f'元数据添加失败:{e}')
 
     def add_memory(self, config: ConfigDict) -> None:
-        """添加内存配置（带异常处理）.
+        """添加内存配置(带异常处理).
 
         Args:
             config: 配置字典
@@ -260,8 +260,8 @@ class XMLEnhancedGenerator:
                     )
 
         except Exception as e:
-            logger.exception(f'添加内存配置失败：{e}')
-            self._errors.append(f'内存配置添加失败：{e}')
+            logger.exception(f'添加内存配置失败:{e}')
+            self._errors.append(f'内存配置添加失败:{e}')
 
     def get_errors(self) -> list[str]:
         """获取所有收集的错误.

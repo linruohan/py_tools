@@ -23,7 +23,7 @@ def test_vmconfig_validate_valid():
     config = VMConfig()
     config.basic.name = 'test-vm'
     is_valid, msg = config.validate()
-    assert is_valid, f'应该有效，但得到: {msg}'
+    assert is_valid, f'应该有效,但得到: {msg}'
 
 
 def test_vmconfig_validate_empty_name():

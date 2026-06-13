@@ -20,7 +20,7 @@ class CPUAllocationConfig:
     match: str = 'exact'  # exact, minimum, strict
     check: str = 'none'  # none, partial, full
     migratable: str = 'on'  # on, off
-    deprecated_features: str = 'on'  # on, off (S390 专用，Since 11.0.0)
+    deprecated_features: str = 'on'  # on, off (S390 专用,Since 11.0.0)
     model: str = ''  # CPU 模型名称
     fallback: str = 'allow'  # allow, forbid
     vendor: str = ''  # 厂商名称

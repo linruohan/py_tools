@@ -107,7 +107,7 @@ new_code = r'''class CPUFeatureSubTab(BaseConfigTab):
         self.grid_columnconfigure(0, weight=1)
         self.grid_rowconfigure(1, weight=1)
 
-        # 顶部框架：添加新 feature
+        # 顶部框架:添加新 feature
         top_frame = ctk.CTkFrame(self, fg_color=BG_COLOR_CONTENT, corner_radius=6)
         top_frame.grid(row=0, column=0, sticky='ew', padx=5, pady=5)
         top_frame.grid_columnconfigure(1, weight=1)
@@ -146,7 +146,7 @@ new_code = r'''class CPUFeatureSubTab(BaseConfigTab):
         )
         add_btn.grid(row=1, column=4, padx=5, pady=5)
 
-        # 底部框架：显示已添加的 feature 列表
+        # 底部框架:显示已添加的 feature 列表
         bottom_frame = ctk.CTkFrame(self, fg_color=BG_COLOR_CONTENT, corner_radius=6)
         bottom_frame.grid(row=1, column=0, sticky='nsew', padx=5, pady=5)
         bottom_frame.grid_columnconfigure(0, weight=1)
@@ -253,7 +253,7 @@ new_code = r'''class CPUFeatureSubTab(BaseConfigTab):
         self.features_list = config.get('features', []).copy()
         self._refresh_feature_list()'''
 
-# 使用更简单的方法：直接查找并替换类定义
+# 使用更简单的方法:直接查找并替换类定义
 start_marker = 'class CPUFeatureSubTab(BaseConfigTab):'
 end_marker = 'class CPUCacheSubTab(BaseConfigTab):'
 

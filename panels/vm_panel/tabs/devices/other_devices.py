@@ -81,7 +81,7 @@ class HubDevicesTab(BaseConfigTab):
 
         ctk.CTkLabel(
             frame,
-            text='集线器设备用于连接多个USB设备。\n通常使用USB hub来扩展虚拟机的USB设备连接能力。',
+            text='集线器设备用于连接多个USB设备.\n通常使用USB hub来扩展虚拟机的USB设备连接能力.',
             font=CTK_FONT_SMALL,
             text_color='#666666',
         ).grid(row=1, column=0, padx=10, pady=5, sticky='w')
@@ -238,7 +238,7 @@ class ConsolesDevicesTab(BaseConfigTab):
 
         ctk.CTkLabel(
             frame,
-            text='配置虚拟机的控制台、串口、并口和通道设备。',
+            text='配置虚拟机的控制台、串口、并口和通道设备.',
             font=CTK_FONT_SMALL,
             text_color='#666666',
         ).grid(row=1, column=0, padx=10, pady=5, sticky='w')

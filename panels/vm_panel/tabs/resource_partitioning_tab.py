@@ -39,11 +39,11 @@ class ResourcePartitioningTab(BaseConfigTab):
         info_frame.grid(row=2, column=0, columnspan=2, padx=10, pady=5, sticky='w')
 
         info_text = """说明:
-• 资源分区支持嵌套，可设置绝对路径（如：/parent/child）
-• 如不设置分区，domain 将放置在默认分区中
-• 仅默认分区可假设已存在，其他分区需管理员预先创建
+• 资源分区支持嵌套,可设置绝对路径(如:/parent/child)
+• 如不设置分区,domain 将放置在默认分区中
+• 仅默认分区可假设已存在,其他分区需管理员预先创建
 • 启动 guest 前请确保分区路径已存在
-• 当前支持：QEMU 和 LXC 驱动（映射到 cgroups 目录）
+• 当前支持:QEMU 和 LXC 驱动(映射到 cgroups 目录)
 • 自 libvirt 1.0.5 版本起支持"""
 
         ctk.CTkLabel(
@@ -65,14 +65,14 @@ class ResourcePartitioningTab(BaseConfigTab):
         """生成 XML 配置字典."""
         partition_value = self.partition.get().strip()
 
-        # 如果没有设置分区路径，返回空的 resource 元素
+        # 如果没有设置分区路径,返回空的 resource 元素
         # 表示使用默认分区
         if not partition_value:
             return {
                 'resource_partitioning': {},
             }
 
-        # 如果设置了分区路径，包含 partition 子元素
+        # 如果设置了分区路径,包含 partition 子元素
         return {
             'resource_partitioning': {'partition': partition_value},
         }

@@ -300,7 +300,7 @@ class OSBootingConfig:
             'type': self.type,
             'arch': self.arch
             if self.arch
-            else None,  # 空值返回 None，让 XML 生成器决定是否使用默认值
+            else None,  # 空值返回 None,让 XML 生成器决定是否使用默认值
             'machine': self.machine if self.machine else None,
             'firmware': self.firmware if self.firmware else None,
             'boot_devices': [d.dev for d in self.boot_devices],

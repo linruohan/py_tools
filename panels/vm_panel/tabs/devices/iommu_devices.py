@@ -6,14 +6,14 @@ from components.base_tab import BaseConfigTab
 
 
 class IOMMUDevicesTab(BaseConfigTab):
-    """IOMMU 设备配置标签页 - 紧凑布局。"""
+    """IOMMU 设备配置标签页 - 紧凑布局."""
 
     def __init__(self, parent, on_change_callback=None, **kwargs):
         super().__init__(parent, on_change_callback, **kwargs)
 
     def _init_ui(self):
-        """创建 IOMMU 设备配置界面 - 所有元素紧凑排列到一行。"""
-        # 单行布局，所有元素 pack 左对齐
+        """创建 IOMMU 设备配置界面 - 所有元素紧凑排列到一行."""
+        # 单行布局,所有元素 pack 左对齐
         ctk.CTkLabel(self, text='IOMMU:', font=ctk.CTkFont(weight='bold')).pack(
             side='left', padx=5, pady=5
         )
@@ -62,7 +62,7 @@ class IOMMUDevicesTab(BaseConfigTab):
         """生成 XML 配置字典."""
         iommu_type = self.type_var.get()
 
-        # 如果选择了 none，不生成 XML
+        # 如果选择了 none,不生成 XML
         if iommu_type == 'none':
             return {}
 

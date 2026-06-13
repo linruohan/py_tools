@@ -13,17 +13,17 @@ class PowerManagementTab(BaseConfigTab):
     """电源管理配置 Tab.
 
     支持配置 BIOS 对 ACPI 睡眠状态的支持:
-    - S3 (suspend-to-mem): 挂起到内存，功耗较低，唤醒较快
-    - S4 (suspend-to-disk): 挂起到磁盘，功耗最低，唤醒较慢
+    - S3 (suspend-to-mem): 挂起到内存,功耗较低,唤醒较快
+    - S4 (suspend-to-disk): 挂起到磁盘,功耗最低,唤醒较慢
 
-    注意：此设置无法阻止客户机自行执行挂起操作.
+    注意:此设置无法阻止客户机自行执行挂起操作.
     """
 
     def _init_ui(self) -> None:
         """初始化 UI."""
         row = 0
 
-        # ========== 第一行：S3 和 S4 并排显示 ==========
+        # ========== 第一行:S3 和 S4 并排显示 ==========
         row_frame = ctk.CTkFrame(self, fg_color='transparent')
         row_frame.grid(row=row, column=0, padx=10, pady=5, sticky='w')
 
@@ -69,12 +69,12 @@ class PowerManagementTab(BaseConfigTab):
 
         row += 1
 
-        # ========== 第二行：说明信息 ==========
+        # ========== 第二行:说明信息 ==========
         info_text = (
-            'S3 (挂起到内存): 系统状态保存到内存，功耗较低，唤醒较快.\n'
-            'S4 (挂起到磁盘): 系统状态保存到磁盘，功耗最低，唤醒较慢.\n'
-            '注意：此设置无法阻止客户机自行执行挂起操作.\n'
-            '提示：选择 "None" 时不生成对应 XML 元素.'
+            'S3 (挂起到内存): 系统状态保存到内存,功耗较低,唤醒较快.\n'
+            'S4 (挂起到磁盘): 系统状态保存到磁盘,功耗最低,唤醒较慢.\n'
+            '注意:此设置无法阻止客户机自行执行挂起操作.\n'
+            '提示:选择 "None" 时不生成对应 XML 元素.'
         )
         info_label = ctk.CTkLabel(
             self,
@@ -118,6 +118,6 @@ class PowerManagementTab(BaseConfigTab):
         mem_val = config.get('suspend_to_mem')
         disk_val = config.get('suspend_to_disk')
 
-        # 如果配置中没有值，设置为 None
+        # 如果配置中没有值,设置为 None
         self.suspend_to_mem.set(mem_val if mem_val else 'None')
         self.suspend_to_disk.set(disk_val if disk_val else 'None')

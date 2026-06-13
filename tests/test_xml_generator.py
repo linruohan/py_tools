@@ -172,7 +172,7 @@ class TestErrorHandling:
             LibvirtXMLGenerator().generate(None)  # type: ignore
 
     def test_empty_dict_generates_valid_xml(self):
-        # 空字典应该生成最小有效 XML，不应崩溃
+        # 空字典应该生成最小有效 XML,不应崩溃
         xml = _gen({})
         assert '<domain' in xml
 

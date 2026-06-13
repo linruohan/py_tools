@@ -1,4 +1,4 @@
-"""设备配置模块 - 重新设计的 UI，上下布局，选择后直接添加到列表."""
+"""设备配置模块 - 重新设计的 UI,上下布局,选择后直接添加到列表."""
 
 from collections.abc import Callable
 from dataclasses import dataclass
@@ -28,10 +28,10 @@ class DevicesConfigTab(BaseConfigTab):
     """设备配置 Tab - 重新设计的 UI.
 
     功能特性:
-    - 上下布局：上部设备选择（固定一行），下部已添加设备列表（滚动显示）
-    - 上面部分选择一个设备类型后，直接添加到下面的列表
+    - 上下布局:上部设备选择(固定一行),下部已添加设备列表(滚动显示)
+    - 上面部分选择一个设备类型后,直接添加到下面的列表
     - 设备配置参数在列表中每行显示
-    - 支持设备关联（如 SCSI 设备自动添加 controller）
+    - 支持设备关联(如 SCSI 设备自动添加 controller)
     - 删除最后一个关联设备时自动删除 controller
     """
 
@@ -134,12 +134,12 @@ class DevicesConfigTab(BaseConfigTab):
         super().__init__(master, on_change_callback, **kwargs)
 
     def _init_ui(self) -> None:
-        """初始化界面 - 上下布局：上部设备选择（固定一行），下部已添加设备列表（滚动）."""
+        """初始化界面 - 上下布局:上部设备选择(固定一行),下部已添加设备列表(滚动)."""
         self.grid_columnconfigure(0, weight=1)
-        self.grid_rowconfigure(0, weight=0)  # 上部：设备选择（固定一行）
-        self.grid_rowconfigure(1, weight=1)  # 下部：设备列表（滚动）
+        self.grid_rowconfigure(0, weight=0)  # 上部:设备选择(固定一行)
+        self.grid_rowconfigure(1, weight=1)  # 下部:设备列表(滚动)
 
-        # ===== 上部：设备选择（固定一行）=====
+        # ===== 上部:设备选择(固定一行)=====
         top_frame = ctk.CTkFrame(self, fg_color=BG_COLOR_CONTENT, corner_radius=6)
         top_frame.grid(row=0, column=0, sticky='ew', padx=5, pady=5)
         top_frame.grid_columnconfigure(1, weight=1)
@@ -189,7 +189,7 @@ class DevicesConfigTab(BaseConfigTab):
         )
         self.add_btn.grid(row=0, column=4, padx=10, pady=5, sticky='e')
 
-        # ===== 下部：已添加设备列表（滚动）=====
+        # ===== 下部:已添加设备列表(滚动)=====
         bottom_frame = ctk.CTkFrame(self, fg_color=BG_COLOR_CONTENT, corner_radius=6)
         bottom_frame.grid(row=1, column=0, sticky='nsew', padx=5, pady=5)
         bottom_frame.grid_columnconfigure(0, weight=1)
@@ -230,7 +230,7 @@ class DevicesConfigTab(BaseConfigTab):
         self._update_device_type_options()
 
     def _on_category_change(self, selected_label: str) -> None:
-        """类别改变时的处理。"""
+        """类别改变时的处理."""
         category_value: str | None = None
         for key, label in self.DEVICE_CATEGORIES.items():
             if label == selected_label:
@@ -241,7 +241,7 @@ class DevicesConfigTab(BaseConfigTab):
         self._update_device_type_options()
 
     def _update_device_type_options(self) -> None:
-        """更新设备类型选项。"""
+        """更新设备类型选项."""
         if self.current_category == 'all':
             device_types = ['None', *list(self.DEVICE_TYPES.values())]
         else:
@@ -259,11 +259,11 @@ class DevicesConfigTab(BaseConfigTab):
         self.device_type_menu.set('None')
 
     def _on_device_type_select(self, selected_label: str) -> None:
-        """设备类型选择时的处理（仅更新 UI 状态）."""
-        pass  # 不需要额外处理，点击 Add 按钮时才会添加
+        """设备类型选择时的处理(仅更新 UI 状态)."""
+        pass  # 不需要额外处理,点击 Add 按钮时才会添加
 
     def _add_selected_device(self) -> None:
-        """添加选中的设备类型到列表。"""
+        """添加选中的设备类型到列表."""
         selected_label = self.device_type_menu.get()
         if selected_label == 'None':
             return
@@ -305,7 +305,7 @@ class DevicesConfigTab(BaseConfigTab):
         self.device_type_menu.set('None')
 
     def _get_default_config(self, device_type: str) -> dict[str, Any]:
-        """获取设备类型的默认配置。"""
+        """获取设备类型的默认配置."""
         defaults: dict[str, dict[str, Any]] = {
             'disk': {
                 'disk_type': 'file',
@@ -433,7 +433,7 @@ class DevicesConfigTab(BaseConfigTab):
         return defaults.get(device_type, {})
 
     def _update_devices_list_display(self) -> None:
-        """更新设备列表显示。"""
+        """更新设备列表显示."""
         # 清空列表
         for widget in self.devices_scroll_frame.winfo_children():
             widget.destroy()
@@ -456,7 +456,7 @@ class DevicesConfigTab(BaseConfigTab):
             self._create_device_row(device, i)
 
     def _create_device_row(self, device: DeviceConfig, index: int) -> None:
-        """创建设备配置行。"""
+        """创建设备配置行."""
         device_frame = ctk.CTkFrame(self.devices_scroll_frame, fg_color='#3a3a3a', corner_radius=4)
         device_frame.pack(fill='x', padx=5, pady=2)
         device_frame.grid_columnconfigure(0, weight=1)
@@ -493,7 +493,7 @@ class DevicesConfigTab(BaseConfigTab):
         del_btn.pack(side='right', padx=3)
 
     def _create_device_config_widgets(self, parent, device: DeviceConfig, index: int) -> list:
-        """创建设备配置 widget。"""
+        """创建设备配置 widget."""
         widgets = []
 
         if device.device_type == 'disk':
@@ -541,7 +541,7 @@ class DevicesConfigTab(BaseConfigTab):
 
     # ========== 设备配置 Widget 创建方法 ==========
     def _create_disk_widgets(self, parent, device: DeviceConfig, index: int) -> list:
-        """磁盘设备 widget。"""
+        """磁盘设备 widget."""
         widgets = []
         config = device.config
 
@@ -633,7 +633,7 @@ class DevicesConfigTab(BaseConfigTab):
         return widgets
 
     def _create_graphics_widgets(self, parent, device: DeviceConfig, index: int) -> list:
-        """图形显示 widget。"""
+        """图形显示 widget."""
         widgets = []
         config = device.config
 
@@ -695,7 +695,7 @@ class DevicesConfigTab(BaseConfigTab):
         return widgets
 
     def _create_video_widgets(self, parent, device: DeviceConfig, index: int) -> list:
-        """视频设备 widget。"""
+        """视频设备 widget."""
         widgets = []
         config = device.config
 
@@ -749,7 +749,7 @@ class DevicesConfigTab(BaseConfigTab):
         return widgets
 
     def _create_sound_widgets(self, parent, device: DeviceConfig, index: int) -> list:
-        """音频设备 widget。"""
+        """音频设备 widget."""
         widgets = []
         config = device.config
 
@@ -780,7 +780,7 @@ class DevicesConfigTab(BaseConfigTab):
         return widgets
 
     def _create_controller_widgets(self, parent, device: DeviceConfig, index: int) -> list:
-        """控制器 widget。"""
+        """控制器 widget."""
         widgets = []
         config = device.config
 
@@ -830,7 +830,7 @@ class DevicesConfigTab(BaseConfigTab):
         return widgets
 
     def _create_interface_widgets(self, parent, device: DeviceConfig, index: int) -> list:
-        """网络接口 widget。"""
+        """网络接口 widget."""
         widgets = []
         config = device.config
 
@@ -883,7 +883,7 @@ class DevicesConfigTab(BaseConfigTab):
         return widgets
 
     def _create_input_widgets(self, parent, device: DeviceConfig, index: int) -> list:
-        """输入设备 widget。"""
+        """输入设备 widget."""
         widgets = []
         config = device.config
 
@@ -914,7 +914,7 @@ class DevicesConfigTab(BaseConfigTab):
         return widgets
 
     def _create_hostdev_widgets(self, parent, device: DeviceConfig, index: int) -> list:
-        """主机设备 widget。"""
+        """主机设备 widget."""
         widgets = []
         config = device.config
 
@@ -957,7 +957,7 @@ class DevicesConfigTab(BaseConfigTab):
         return widgets
 
     def _create_watchdog_widgets(self, parent, device: DeviceConfig, index: int) -> list:
-        """看门狗 widget。"""
+        """看门狗 widget."""
         widgets = []
         config = device.config
 
@@ -988,7 +988,7 @@ class DevicesConfigTab(BaseConfigTab):
         return widgets
 
     def _create_memballoon_widgets(self, parent, device: DeviceConfig, index: int) -> list:
-        """内存气球 widget。"""
+        """内存气球 widget."""
         widgets = []
         config = device.config
 
@@ -1021,7 +1021,7 @@ class DevicesConfigTab(BaseConfigTab):
         return widgets
 
     def _create_rng_widgets(self, parent, device: DeviceConfig, index: int) -> list:
-        """随机数发生器 widget。"""
+        """随机数发生器 widget."""
         widgets = []
         config = device.config
 
@@ -1064,7 +1064,7 @@ class DevicesConfigTab(BaseConfigTab):
         return widgets
 
     def _create_tpm_widgets(self, parent, device: DeviceConfig, index: int) -> list:
-        """TPM 设备 widget。"""
+        """TPM 设备 widget."""
         widgets = []
         config = device.config
 
@@ -1105,7 +1105,7 @@ class DevicesConfigTab(BaseConfigTab):
         return widgets
 
     def _create_filesystem_widgets(self, parent, device: DeviceConfig, index: int) -> list:
-        """文件系统 widget。"""
+        """文件系统 widget."""
         widgets = []
         config = device.config
 
@@ -1160,7 +1160,7 @@ class DevicesConfigTab(BaseConfigTab):
         return widgets
 
     def _create_console_widgets(self, parent, device: DeviceConfig, index: int) -> list:
-        """控制台 widget。"""
+        """控制台 widget."""
         widgets = []
         config = device.config
 
@@ -1191,7 +1191,7 @@ class DevicesConfigTab(BaseConfigTab):
         return widgets
 
     def _create_serial_widgets(self, parent, device: DeviceConfig, index: int) -> list:
-        """串口 widget。"""
+        """串口 widget."""
         widgets = []
         config = device.config
 
@@ -1230,7 +1230,7 @@ class DevicesConfigTab(BaseConfigTab):
         return widgets
 
     def _create_parallel_widgets(self, parent, device: DeviceConfig, index: int) -> list:
-        """并口 widget。"""
+        """并口 widget."""
         widgets = []
         config = device.config
 
@@ -1271,7 +1271,7 @@ class DevicesConfigTab(BaseConfigTab):
         return widgets
 
     def _create_channel_widgets(self, parent, device: DeviceConfig, index: int) -> list:
-        """通道 widget。"""
+        """通道 widget."""
         widgets = []
         config = device.config
 
@@ -1300,7 +1300,7 @@ class DevicesConfigTab(BaseConfigTab):
         return widgets
 
     def _create_iommu_widgets(self, parent, device: DeviceConfig, index: int) -> list:
-        """IOMMU widget。"""
+        """IOMMU widget."""
         widgets = []
         config = device.config
 
@@ -1349,7 +1349,7 @@ class DevicesConfigTab(BaseConfigTab):
         return widgets
 
     def _create_memory_widgets(self, parent, device: DeviceConfig, index: int) -> list:
-        """内存设备 widget。"""
+        """内存设备 widget."""
         widgets = []
         config = device.config
 
@@ -1388,7 +1388,7 @@ class DevicesConfigTab(BaseConfigTab):
         return widgets
 
     def _create_shmem_widgets(self, parent, device: DeviceConfig, index: int) -> list:
-        """共享内存 widget。"""
+        """共享内存 widget."""
         widgets = []
         config = device.config
 
@@ -1428,25 +1428,25 @@ class DevicesConfigTab(BaseConfigTab):
 
     # ========== 配置变更处理 ==========
     def _on_config_change(self, index: int, key: str, value: str) -> None:
-        """配置变更处理（OptionMenu）。"""
+        """配置变更处理(OptionMenu)."""
         if 0 <= index < len(self.devices_list):
             self.devices_list[index].config[key] = value
             self._trigger_change()
 
     def _on_entry_change(self, index: int, key: str, value: str) -> None:
-        """Entry 变更处理。"""
+        """Entry 变更处理."""
         if 0 <= index < len(self.devices_list):
             self.devices_list[index].config[key] = value
             self._trigger_change()
 
     def _on_checkbox_change(self, index: int, key: str, value: bool) -> None:
-        """Checkbox 变更处理。"""
+        """Checkbox 变更处理."""
         if 0 <= index < len(self.devices_list):
             self.devices_list[index].config[key] = value
             self._trigger_change()
 
     def _on_bus_change(self, index: int, value: str) -> None:
-        """Bus 变更处理（可能需要更新 controller 关联）。"""
+        """Bus 变更处理(可能需要更新 controller 关联)."""
         if 0 <= index < len(self.devices_list):
             device = self.devices_list[index]
             device.config['disk_bus'] = value
@@ -1459,7 +1459,7 @@ class DevicesConfigTab(BaseConfigTab):
                     # 可能需要删除旧的 controller
                     self._check_and_remove_controller(device.controller_ref)
 
-            # 如果需要，创建新的 controller
+            # 如果需要,创建新的 controller
             if value in ['scsi', 'sata', 'ide']:
                 new_controller_ref = self._get_or_create_controller(value)
                 device.controller_ref = new_controller_ref
@@ -1467,7 +1467,7 @@ class DevicesConfigTab(BaseConfigTab):
             self._trigger_change()
 
     def _check_and_remove_controller(self, controller_id: str) -> None:
-        """检查并删除不需要的 controller。"""
+        """检查并删除不需要的 controller."""
         # 检查是否还有其他设备使用该 controller
         in_use = False
         for device in self.devices_list:
@@ -1479,7 +1479,7 @@ class DevicesConfigTab(BaseConfigTab):
             self._remove_controller(controller_id)
 
     def _get_or_create_controller(self, controller_type: str) -> str:
-        """获取或创建 controller，返回 controller 引用 ID。"""
+        """获取或创建 controller,返回 controller 引用 ID."""
         # 检查是否已存在该类型的 controller
         for ctrl in self.controllers_list:
             if ctrl.get('type') == controller_type:
@@ -1513,12 +1513,12 @@ class DevicesConfigTab(BaseConfigTab):
         return controller_id
 
     def _remove_controller(self, controller_id: str) -> None:
-        """删除指定的 controller。"""
+        """删除指定的 controller."""
         self.controllers_list = [c for c in self.controllers_list if c.get('id') != controller_id]
 
     # ========== 设备列表管理 ==========
     def _delete_device(self, index: int) -> None:
-        """删除设备，并处理关联的 controller。"""
+        """删除设备,并处理关联的 controller."""
         if 0 <= index < len(self.devices_list):
             device = self.devices_list[index]
 
@@ -1534,7 +1534,7 @@ class DevicesConfigTab(BaseConfigTab):
                         controller_in_use = True
                         break
 
-                # 如果没有其他设备使用该 controller，删除它
+                # 如果没有其他设备使用该 controller,删除它
                 if not controller_in_use:
                     self._remove_controller(device.controller_ref)
 
@@ -1543,7 +1543,7 @@ class DevicesConfigTab(BaseConfigTab):
             self._trigger_change()
 
     def _clear_all_devices(self) -> None:
-        """清空所有设备。"""
+        """清空所有设备."""
         self.devices_list.clear()
         self.controllers_list.clear()
         self.controller_counter.clear()
@@ -1552,14 +1552,14 @@ class DevicesConfigTab(BaseConfigTab):
 
     # ========== 配置获取 ==========
     def get_config(self) -> dict:
-        """获取配置（供父类调用）。"""
+        """获取配置(供父类调用)."""
         return {
             'devices': self.devices_list,
             'controllers': self.controllers_list,
         }
 
     def to_xml(self) -> dict[str, Any]:
-        """生成 XML 配置字典 - 与 xml_generator.py 期望的格式匹配。"""
+        """生成 XML 配置字典 - 与 xml_generator.py 期望的格式匹配."""
         result: dict[str, Any] = {}
 
         # 按设备类型分组
@@ -1706,7 +1706,7 @@ class DevicesConfigTab(BaseConfigTab):
 
     # ========== 配置转换方法 ==========
     def _convert_disk_config(self, config: dict) -> dict:
-        """转换 disk 配置为 xml_generator 期望的格式。"""
+        """转换 disk 配置为 xml_generator 期望的格式."""
         return {
             'type': config.get('disk_type', 'file'),
             'device': config.get('disk_device', 'disk'),
@@ -1720,7 +1720,7 @@ class DevicesConfigTab(BaseConfigTab):
         }
 
     def _convert_graphics_config(self, config: dict) -> dict:
-        """转换 graphics 配置。"""
+        """转换 graphics 配置."""
         return {
             'type': config.get('gfx_type', 'vnc'),
             'port': config.get('gfx_port', '-1'),
@@ -1731,7 +1731,7 @@ class DevicesConfigTab(BaseConfigTab):
         }
 
     def _convert_video_config(self, config: dict) -> dict:
-        """转换 video 配置。"""
+        """转换 video 配置."""
         return {
             'model': config.get('video_model', 'qxl'),
             'vram': config.get('video_vram', '16384'),
@@ -1740,14 +1740,14 @@ class DevicesConfigTab(BaseConfigTab):
         }
 
     def _convert_sound_config(self, config: dict) -> dict:
-        """转换 sound 配置。"""
+        """转换 sound 配置."""
         return {
             'model': config.get('sound_model', 'ich9'),
             'codec': config.get('sound_codec', 'duplex'),
         }
 
     def _convert_controller_config(self, config: dict) -> dict:
-        """转换 controller 配置。"""
+        """转换 controller 配置."""
         return {
             'type': config.get('ctrl_type', 'usb'),
             'model': config.get('ctrl_model', 'usb-xhci'),
@@ -1756,7 +1756,7 @@ class DevicesConfigTab(BaseConfigTab):
         }
 
     def _convert_interface_config(self, config: dict) -> dict:
-        """转换 interface 配置。"""
+        """转换 interface 配置."""
         return {
             'type': config.get('iface_type', 'network'),
             'source': config.get('iface_source', 'default'),
@@ -1766,14 +1766,14 @@ class DevicesConfigTab(BaseConfigTab):
         }
 
     def _convert_input_config(self, config: dict) -> dict:
-        """转换 input 配置。"""
+        """转换 input 配置."""
         return {
             'type': config.get('input_type', 'tablet'),
             'bus': config.get('input_bus', 'usb'),
         }
 
     def _convert_hostdev_config(self, config: dict) -> dict:
-        """转换 hostdev 配置。"""
+        """转换 hostdev 配置."""
         return {
             'type': config.get('hostdev_type', 'usb'),
             'usb': config.get('hostdev_usb', ''),
@@ -1783,7 +1783,7 @@ class DevicesConfigTab(BaseConfigTab):
         }
 
     def _convert_serial_config(self, config: dict) -> dict:
-        """转换 serial 配置。"""
+        """转换 serial 配置."""
         return {
             'type': config.get('serial_type', 'pty'),
             'port': config.get('serial_port', '0'),
@@ -1791,14 +1791,14 @@ class DevicesConfigTab(BaseConfigTab):
         }
 
     def _convert_console_config(self, config: dict) -> dict:
-        """转换 console 配置。"""
+        """转换 console 配置."""
         return {
             'type': config.get('console_type', 'pty'),
             'target': config.get('console_target', 'virtio'),
         }
 
     def _convert_parallel_config(self, config: dict) -> dict:
-        """转换 parallel 配置。"""
+        """转换 parallel 配置."""
         return {
             'type': config.get('parallel_type', 'pty'),
             'port': config.get('parallel_port', '0'),
@@ -1806,7 +1806,7 @@ class DevicesConfigTab(BaseConfigTab):
         }
 
     def _convert_channel_config(self, config: dict) -> dict:
-        """转换 channel 配置。"""
+        """转换 channel 配置."""
         return {
             'type': config.get('channel_type', 'unix'),
             'name': config.get('channel_name', 'org.qemu.guest_agent.0'),
@@ -1814,7 +1814,7 @@ class DevicesConfigTab(BaseConfigTab):
         }
 
     def _convert_filesystem_config(self, config: dict) -> dict:
-        """转换 filesystem 配置。"""
+        """转换 filesystem 配置."""
         return {
             'type': config.get('fs_type', 'mount'),
             'accessmode': config.get('fs_access', 'passthrough'),
@@ -1824,7 +1824,7 @@ class DevicesConfigTab(BaseConfigTab):
         }
 
     def _convert_rng_config(self, config: dict) -> dict:
-        """转换 rng 配置。"""
+        """转换 rng 配置."""
         return {
             'model': config.get('rng_model', 'virtio'),
             'backend': config.get('rng_backend', 'random'),
@@ -1833,7 +1833,7 @@ class DevicesConfigTab(BaseConfigTab):
         }
 
     def _convert_tpm_config(self, config: dict) -> dict:
-        """转换 tpm 配置。"""
+        """转换 tpm 配置."""
         return {
             'model': config.get('tpm_model', 'tpm-tis'),
             'backend': config.get('tpm_backend', 'emulator'),
@@ -1842,21 +1842,21 @@ class DevicesConfigTab(BaseConfigTab):
         }
 
     def _convert_watchdog_config(self, config: dict) -> dict:
-        """转换 watchdog 配置。"""
+        """转换 watchdog 配置."""
         return {
             'model': config.get('watchdog_model', 'i6300esb'),
             'action': config.get('watchdog_action', 'reset'),
         }
 
     def _convert_memballoon_config(self, config: dict) -> dict:
-        """转换 memballoon 配置。"""
+        """转换 memballoon 配置."""
         return {
             'model': config.get('memballoon_model', 'virtio'),
             'period': config.get('memballoon_period', ''),
         }
 
     def _convert_iommu_config(self, config: dict) -> dict:
-        """转换 iommu 配置。"""
+        """转换 iommu 配置."""
         return {
             'model': config.get('iommu_model', 'intel'),
             'intremap': config.get('iommu_intremap', False),
@@ -1865,7 +1865,7 @@ class DevicesConfigTab(BaseConfigTab):
         }
 
     def _convert_memory_config(self, config: dict) -> dict:
-        """转换 memory 配置。"""
+        """转换 memory 配置."""
         return {
             'model': config.get('memory_model', 'dimm'),
             'size': config.get('memory_size', '524288'),
@@ -1874,7 +1874,7 @@ class DevicesConfigTab(BaseConfigTab):
         }
 
     def _convert_shmem_config(self, config: dict) -> dict:
-        """转换 shmem 配置。"""
+        """转换 shmem 配置."""
         return {
             'name': config.get('shmem_name', 'shmem0'),
             'model': config.get('shmem_model', 'ivshmem-plain'),

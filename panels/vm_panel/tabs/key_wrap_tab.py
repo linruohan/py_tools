@@ -9,8 +9,8 @@ from utils.styles import BG_COLOR_CONTENT, CTK_FONT_BOLD, CTK_FONT_MAIN, CTK_FON
 class KeyWrapTab(BaseConfigTab):
     """密钥包装配置 Tab - S390 平台加密密钥管理.
 
-    根据 libvirt 文档，keywrap 元素指定 guest 是否可以执行 S390 加密密钥管理操作。
-    明文密钥可以通过在唯一包装密钥下加密来保护。
+    根据 libvirt 文档,keywrap 元素指定 guest 是否可以执行 S390 加密密钥管理操作.
+    明文密钥可以通过在唯一包装密钥下加密来保护.
 
     支持的加密算法:
     - aes: AES 包装密钥
@@ -88,18 +88,18 @@ class KeyWrapTab(BaseConfigTab):
         )
 
         info_text = (
-            '密钥包装 (Key Wrap) 用于 S390 平台的加密密钥管理操作。\n\n'
+            '密钥包装 (Key Wrap) 用于 S390 平台的加密密钥管理操作.\n\n'
             '功能说明:\n'
             '• 明文密钥可以通过在唯一包装密钥下加密来保护\n'
             '• 包装密钥为每个 guest VM 生成\n'
-            '• 支持两种加密算法：AES 和 DEA/TDEA\n\n'
+            '• 支持两种加密算法:AES 和 DEA/TDEA\n\n'
             '算法说明:\n'
             '• AES - 高级加密标准 (Advanced Encryption Standard)\n'
             '• DEA/TDEA - 数据加密算法/三重 DEA (同 DES/TDES)\n\n'
             '注意:\n'
             '• 至少需要一个 cipher 元素\n'
             '• state 设为 on 启用该算法的密钥管理操作\n'
-            '• 不配置 keywrap 元素时，默认两种算法都启用'
+            '• 不配置 keywrap 元素时,默认两种算法都启用'
         )
         ctk.CTkLabel(
             info_frame,
@@ -123,7 +123,7 @@ class KeyWrapTab(BaseConfigTab):
         config = self.get_config()
 
         # 构建 cipher 列表
-        # 当 state='None' 时，不输出该 cipher
+        # 当 state='None' 时,不输出该 cipher
         cipher_list = []
 
         aes_state = config.get('aes_state')

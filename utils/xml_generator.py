@@ -133,7 +133,7 @@ class LibvirtXMLGenerator:
         placement = cpu_alloc.get('placement')
         cpuset = cpu_alloc.get('cpuset')
 
-        # 如果 max_vcpu 为 None，不生成 vcpu 元素
+        # 如果 max_vcpu 为 None,不生成 vcpu 元素
         if max_vcpu is None:
             return
 
@@ -164,7 +164,7 @@ class LibvirtXMLGenerator:
                 ET.SubElement(vcpus_elem, 'vcpu', **vcpu_attrs)
 
         # 检查是否需要创建 cpu 元素
-        # 注意：topology 现在是 cpu_model 的顶层键，不是嵌套在 model 里
+        # 注意:topology 现在是 cpu_model 的顶层键,不是嵌套在 model 里
         topology = cpu_model.get('topology', {})
         # mode, match, check, migratable, deprecated_features 是 cpu_model 的顶层键
         cpu_mode = cpu_model.get('mode')
@@ -281,7 +281,7 @@ class LibvirtXMLGenerator:
         arch = os_booting.get('arch')
         machine = os_booting.get('machine')
 
-        # 只在有值时才添加 arch 和 machine 属性（空字符串或 None 都不添加）
+        # 只在有值时才添加 arch 和 machine 属性(空字符串或 None 都不添加)
         type_attrs = {}
         if arch:
             type_attrs['arch'] = arch
@@ -411,7 +411,7 @@ class LibvirtXMLGenerator:
             bootmenu_attrs = {'enable': 'yes'}
             timeout = bootmenu.get('timeout')
             if timeout is not None:
-                # 转换为整数（可能是字符串）
+                # 转换为整数(可能是字符串)
                 try:
                     timeout_val = int(timeout)
                     if timeout_val >= 0:
@@ -428,7 +428,7 @@ class LibvirtXMLGenerator:
                 bios_attrs['useserial'] = 'yes'
             reboot_timeout = bios.get('rebootTimeout')
             if reboot_timeout is not None:
-                # 转换为整数（可能是字符串）
+                # 转换为整数(可能是字符串)
                 try:
                     timeout_val = int(reboot_timeout)
                     if timeout_val >= 0:
@@ -546,7 +546,7 @@ class LibvirtXMLGenerator:
     def _add_sysinfo(self, config: dict) -> None:
         """添加系统信息配置 (SMBIOS/FwCfg).
 
-        参考：https://www.libvirt.org/formatdomain.html#smbios-system-information
+        参考:https://www.libvirt.org/formatdomain.html#smbios-system-information
         """
         assert self.domain is not None, 'domain must be set'
         sysinfo_config = config.get('sysinfo', {})
@@ -555,7 +555,7 @@ class LibvirtXMLGenerator:
 
         sysinfo_type = sysinfo_config.get('type', 'smbios')
 
-        # 如果 type 为 None 或空，不生成 XML
+        # 如果 type 为 None 或空,不生成 XML
         if not sysinfo_type or sysinfo_type == 'None':
             return
 
@@ -641,7 +641,7 @@ class LibvirtXMLGenerator:
         assert self.domain is not None, 'domain must be set'
         features_config = config.get('hypervisor_features', {})
         domain = self.domain
-        features_elem: ET.Element | None = None  # <features> 元素，按需创建
+        features_elem: ET.Element | None = None  # <features> 元素,按需创建
 
         def get_features_elem() -> ET.Element:
             """获取或创建 features 元素."""
@@ -657,7 +657,7 @@ class LibvirtXMLGenerator:
         if any(general.values()):
             features = get_features_elem()
 
-            # Boolean 特性 (on/off -> 生成元素，None/False -> 不生成)
+            # Boolean 特性 (on/off -> 生成元素,None/False -> 不生成)
             bool_features = [
                 'pae',
                 'acpi',
@@ -981,7 +981,7 @@ class LibvirtXMLGenerator:
     def _add_pm(self, config: dict) -> None:
         """添加电源管理配置.
 
-        None 值表示不生成对应的 XML 元素。
+        None 值表示不生成对应的 XML 元素.
         """
         assert self.domain is not None, 'domain must be set'
         pm_config = config.get('power_management', {})
@@ -1003,7 +1003,7 @@ class LibvirtXMLGenerator:
     def _add_events(self, config: dict) -> None:
         """添加事件配置.
 
-        None 值表示不生成对应的 XML 元素。
+        None 值表示不生成对应的 XML 元素.
         """
         assert self.domain is not None, 'domain must be set'
         events_config = config.get('events_configuration', {})
@@ -1116,7 +1116,7 @@ class LibvirtXMLGenerator:
         disk_type = disk.get('type', 'file')
         device_type = disk.get('device', 'disk')
 
-        # 如果选择了 none，不生成 XML
+        # 如果选择了 none,不生成 XML
         if disk_type == 'none':
             return
 
@@ -1234,7 +1234,7 @@ class LibvirtXMLGenerator:
         # 支持 disk_type 和 type 两种字段
         disk_type_val = disk.get('disk_type') or disk.get('type', 'file')
 
-        # 如果选择了 none，不生成 XML
+        # 如果选择了 none,不生成 XML
         if disk_type_val == 'none':
             return
 
@@ -1294,7 +1294,7 @@ class LibvirtXMLGenerator:
         """添加网络接口."""
         iface_type = iface.get('type', 'network')
 
-        # 如果选择了 none，不生成 XML
+        # 如果选择了 none,不生成 XML
         if iface_type == 'none':
             return
 
@@ -1354,7 +1354,7 @@ class LibvirtXMLGenerator:
         """添加视频设备."""
         model = video.get('model', 'qxl')
 
-        # 如果选择了 none，不生成 XML
+        # 如果选择了 none,不生成 XML
         if model == 'none':
             return
 
@@ -1370,7 +1370,7 @@ class LibvirtXMLGenerator:
         """添加控制器."""
         model = ctrl.get('model', '')
 
-        # 如果选择了 none，不生成 XML
+        # 如果选择了 none,不生成 XML
         if model == 'none':
             return
 
@@ -1536,7 +1536,7 @@ class LibvirtXMLGenerator:
         """添加 IOMMU 设备."""
         model = iommu.get('model', 'intel')
 
-        # 如果选择了 none，不生成 XML
+        # 如果选择了 none,不生成 XML
         if model == 'none':
             return
 
@@ -1567,11 +1567,11 @@ class LibvirtXMLGenerator:
     def _add_filesystem(self, devices: ET.Element, fs: dict) -> None:
         """添加文件系统设备 (9p filesystem).
 
-        参考：https://www.libvirt.org/formatdomain.html#filesystems
+        参考:https://www.libvirt.org/formatdomain.html#filesystems
         """
         fs_type = fs.get('type', 'mount')
 
-        # 如果选择了 none，不生成 XML
+        # 如果选择了 none,不生成 XML
         if fs_type == 'none':
             return
 
@@ -1681,7 +1681,7 @@ class LibvirtXMLGenerator:
         if not tuning_config:
             return
 
-        # 检查是否有有效配置（排除 None 和空值）
+        # 检查是否有有效配置(排除 None 和空值)
         has_valid_config = False
         for key in ['hard_limit', 'soft_limit', 'swap_hard_limit', 'min_guarantee']:
             item = tuning_config.get(key)
@@ -1759,7 +1759,7 @@ class LibvirtXMLGenerator:
         if not tuning_config:
             return
 
-        # 检查是否有任何有效配置（排除空值和空列表）
+        # 检查是否有任何有效配置(排除空值和空列表)
         has_config = False
         for key in [
             'vcpupin',
@@ -1782,11 +1782,11 @@ class LibvirtXMLGenerator:
         ]:
             val = tuning_config.get(key)
             if val:
-                # 对于列表类型，检查是否非空
+                # 对于列表类型,检查是否非空
                 if isinstance(val, list) and len(val) > 0:
                     has_config = True
                     break
-                # 对于非列表类型，只要值存在即可
+                # 对于非列表类型,只要值存在即可
                 elif not isinstance(val, list):
                     has_config = True
                     break
@@ -2046,7 +2046,7 @@ class LibvirtXMLGenerator:
 
         iothreads = iothreads_config.get('iothreads')
 
-        # 如果没有设置 iothreads 且没有其他配置，不生成 XML
+        # 如果没有设置 iothreads 且没有其他配置,不生成 XML
         if iothreads is None:
             iothreadids = iothreads_config.get('iothreadids', [])
             defaultiothread = iothreads_config.get('defaultiothread')
@@ -2124,12 +2124,12 @@ class LibvirtXMLGenerator:
     def _add_security(self, config: dict) -> None:
         """添加安全配置.
 
-        参考：https://www.libvirt.org/formatdomain.html#security-label
+        参考:https://www.libvirt.org/formatdomain.html#security-label
 
         支持三种类型:
         - none: <seclabel type='none'/>
-        - dynamic: libvirt 自动生成标签，relabel 固定为 yes
-        - static: 手动指定标签，relabel 默认为 no
+        - dynamic: libvirt 自动生成标签,relabel 固定为 yes
+        - static: 手动指定标签,relabel 默认为 no
         """
         assert self.domain is not None, 'domain must be set'
         security_config = config.get('security_label') or config.get('seclabel', {})
@@ -2138,14 +2138,14 @@ class LibvirtXMLGenerator:
 
         sec_type = security_config.get('type', 'dynamic')
 
-        # none 类型：生成 <seclabel type='none'/>
+        # none 类型:生成 <seclabel type='none'/>
         if sec_type == 'none':
             ET.SubElement(self.domain, 'seclabel', type='none')
             return
         attrs = {'type': sec_type}
         if security_config.get('model'):
             attrs['model'] = security_config['model']
-        # relabel 属性：dynamic 类型默认为 yes，static 类型默认为 no
+        # relabel 属性:dynamic 类型默认为 yes,static 类型默认为 no
         relabel = security_config.get('relabel')
         if sec_type == 'dynamic':
             # dynamic 类型 relabel 默认为 yes (复选框返回 0/1)
@@ -2162,10 +2162,10 @@ class LibvirtXMLGenerator:
 
         seclabel = ET.SubElement(self.domain, 'seclabel', **attrs)
 
-        # label: static 类型必需，dynamic 类型可选
+        # label: static 类型必需,dynamic 类型可选
         if security_config.get('label'):
             ET.SubElement(seclabel, 'label').text = security_config['label']
-        # imagelabel: 输出only 元素，但也可以指定
+        # imagelabel: 输出only 元素,但也可以指定
         if security_config.get('imagelabel'):
             ET.SubElement(seclabel, 'imagelabel').text = security_config['imagelabel']
         # baselabel: dynamic 类型的基础标签
@@ -2202,8 +2202,8 @@ class LibvirtXMLGenerator:
     def _add_launch_security(self, config: dict) -> None:
         """添加启动安全配置.
 
-        支持 AMD SEV/SEV-SNP, Intel TDX, IBM s390-pv 四种类型。
-        参考：https://www.libvirt.org/formatdomain.html#launch-security
+        支持 AMD SEV/SEV-SNP, Intel TDX, IBM s390-pv 四种类型.
+        参考:https://www.libvirt.org/formatdomain.html#launch-security
         """
         assert self.domain is not None, 'domain must be set'
         launch_config = config.get('launch_security', {})
@@ -2236,7 +2236,7 @@ class LibvirtXMLGenerator:
             ET.SubElement(launch_security, 'policy').text = policy
 
         # C-bit 位置 (加密位在页表条目中的位置)
-        # 支持两种字段名：cbitpos_enabled/cbitpos_value (新) 或 cbitpos (旧)
+        # 支持两种字段名:cbitpos_enabled/cbitpos_value (新) 或 cbitpos (旧)
         cbitpos_enabled = launch_config.get('cbitpos_enabled')
         cbitpos_value = launch_config.get('cbitpos_value')
         # 兼容旧格式
@@ -2250,7 +2250,7 @@ class LibvirtXMLGenerator:
             ET.SubElement(launch_security, 'cbitpos').text = cbitpos_value
 
         # 物理地址位减少量
-        # 支持两种字段名：reduced_phys_bits_enabled/reduced_phys_bits_value (新) 或 reduced_phys_bits (旧)
+        # 支持两种字段名:reduced_phys_bits_enabled/reduced_phys_bits_value (新) 或 reduced_phys_bits (旧)
         reduced_phys_bits_enabled = launch_config.get('reduced_phys_bits_enabled')
         reduced_phys_bits_value = launch_config.get('reduced_phys_bits_value')
         # 兼容旧格式
@@ -2323,12 +2323,12 @@ class LibvirtXMLGenerator:
                 qgs_elem.set('path', quote_generation_service)
 
         # ========== s390-pv ==========
-        # IBM s390-pv 不需要额外的子元素，只需要 type='s390-pv'
+        # IBM s390-pv 不需要额外的子元素,只需要 type='s390-pv'
 
     def _add_key_wrap(self, config: dict) -> None:
         """添加密钥包装配置 (S390 Platform).
 
-        参考：https://www.libvirt.org/formatdomain.html#key-wrap
+        参考:https://www.libvirt.org/formatdomain.html#key-wrap
         """
         assert self.domain is not None, 'domain must be set'
         key_wrap_config = config.get('key_wrap', {})
@@ -2354,7 +2354,7 @@ class LibvirtXMLGenerator:
     def _add_perf(self, config: dict) -> None:
         """添加性能监控配置.
 
-        参考：https://www.libvirt.org/formatdomain.html#perf
+        参考:https://www.libvirt.org/formatdomain.html#perf
         """
         assert self.domain is not None, 'domain must be set'
         perf_config = config.get('performance_monitoring', {})
@@ -2375,7 +2375,7 @@ class LibvirtXMLGenerator:
     def _add_throttlegroups(self, config: dict) -> None:
         """添加节流组配置.
 
-        参考：https://www.libvirt.org/formatdomain.html#throttle-groups
+        参考:https://www.libvirt.org/formatdomain.html#throttle-groups
         """
         assert self.domain is not None, 'domain must be set'
         throttlegroups_config = config.get('throttlegroups', {})

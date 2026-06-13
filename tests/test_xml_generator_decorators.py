@@ -76,8 +76,8 @@ class TestXMLGenerationMethodDecorator:
             result = test_func()
 
         assert result == "done"
-        assert "开始生成：test_func" in caplog.text
-        assert "生成完成：test_func" in caplog.text
+        assert "开始生成:test_func" in caplog.text
+        assert "生成完成:test_func" in caplog.text
 
     def test_logging_on_error(self, caplog):
         """测试失败时的日志记录."""
@@ -276,6 +276,6 @@ class TestDecoratorComposition:
         def process_config(config):
             return {"processed": True}
 
-        # 缺少 name 键，但不会抛出异常，只会记录警告
+        # 缺少 name 键,但不会抛出异常,只会记录警告
         result = process_config({})
         assert result == {"processed": True}

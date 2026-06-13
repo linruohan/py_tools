@@ -40,7 +40,7 @@ def setup_logger(
         log_dir = Path.home() / '.py_tools' / 'logs'
         log_dir.mkdir(parents=True, exist_ok=True)
 
-        # 日志文件（按日期）
+        # 日志文件(按日期)
         log_file = log_dir / f'app_{datetime.now():%Y%m%d}.log'
 
         fh = logging.FileHandler(log_file, encoding='utf-8')
@@ -48,7 +48,7 @@ def setup_logger(
         fh.setFormatter(formatter)
         logger.addHandler(fh)
 
-    # 控制台处理器（仅警告及以上）
+    # 控制台处理器(仅警告及以上)
     if log_to_console:
         ch = logging.StreamHandler()
         ch.setLevel(logging.WARNING)
@@ -62,7 +62,7 @@ def get_logger(name: str | None = None) -> logging.Logger:
     """获取日志记录器
 
     Args:
-        name: 日志记录器名称，默认使用调用模块的名称
+        name: 日志记录器名称,默认使用调用模块的名称
 
     Returns:
         日志记录器

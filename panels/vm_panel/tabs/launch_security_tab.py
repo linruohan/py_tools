@@ -1,6 +1,6 @@
 """启动安全配置 Tab - Launch Security.
 
-支持 AMD SEV/SEV-SNP, Intel TDX, IBM s390-pv 启动安全配置。
+支持 AMD SEV/SEV-SNP, Intel TDX, IBM s390-pv 启动安全配置.
 """
 
 from typing import ClassVar
@@ -47,7 +47,7 @@ class LaunchSecurityTab(StandardConfigTab):
     }
 
     def _init_sections_ui(self) -> None:
-        """初始化基于 Sections 的 UI，自定义每行的布局."""
+        """初始化基于 Sections 的 UI,自定义每行的布局."""
         super()._init_sections_ui()
 
         # 在 basic section 添加自定义 UI
@@ -93,7 +93,7 @@ class LaunchSecurityTab(StandardConfigTab):
         self.section_rows['info'] = info_row
 
     def _create_basic_row(self, parent: ctk.CTkFrame, row: int) -> None:
-        """创建基本信息行：类型 + 策略."""
+        """创建基本信息行:类型 + 策略."""
         frame = ctk.CTkFrame(parent, fg_color='transparent')
         frame.grid(row=row, column=0, columnspan=2, padx=10, pady=3, sticky='w')
 
@@ -205,7 +205,7 @@ class LaunchSecurityTab(StandardConfigTab):
 
     def _create_snp_options(self, parent: ctk.CTkFrame, row: int) -> None:
         """创建 SEV-SNP 特有选项."""
-        # 第一行：authorKey + vcek
+        # 第一行:authorKey + vcek
         frame1 = ctk.CTkFrame(parent, fg_color='transparent')
         frame1.grid(row=row, column=0, columnspan=2, padx=10, pady=3, sticky='w')
 
@@ -220,7 +220,7 @@ class LaunchSecurityTab(StandardConfigTab):
         self.vcek.select()  # 默认启用 VCEK
         self.vcek.pack(side='left', padx=(15, 3))
 
-        # 第二行：guestVisibleWorkarounds
+        # 第二行:guestVisibleWorkarounds
         row += 1
         frame2 = ctk.CTkFrame(parent, fg_color='transparent')
         frame2.grid(row=row, column=0, columnspan=2, padx=10, pady=3, sticky='w')
@@ -234,7 +234,7 @@ class LaunchSecurityTab(StandardConfigTab):
         self.guest_visible_workarounds.pack(side='left', padx=3)
         self.guest_visible_workarounds.bind('<KeyRelease>', lambda e: self._trigger_change())
 
-        # 第三行：idBlock
+        # 第三行:idBlock
         row += 1
         frame3 = ctk.CTkFrame(parent, fg_color='transparent')
         frame3.grid(row=row, column=0, columnspan=2, padx=10, pady=3, sticky='w')
@@ -248,7 +248,7 @@ class LaunchSecurityTab(StandardConfigTab):
         self.id_block.pack(side='left', padx=3)
         self.id_block.bind('<KeyRelease>', lambda e: self._trigger_change())
 
-        # 第四行：idAuth
+        # 第四行:idAuth
         row += 1
         frame4 = ctk.CTkFrame(parent, fg_color='transparent')
         frame4.grid(row=row, column=0, columnspan=2, padx=10, pady=3, sticky='w')
@@ -262,7 +262,7 @@ class LaunchSecurityTab(StandardConfigTab):
         self.id_auth.pack(side='left', padx=3)
         self.id_auth.bind('<KeyRelease>', lambda e: self._trigger_change())
 
-        # 第五行：hostData
+        # 第五行:hostData
         row += 1
         frame5 = ctk.CTkFrame(parent, fg_color='transparent')
         frame5.grid(row=row, column=0, columnspan=2, padx=10, pady=3, sticky='w')
@@ -278,7 +278,7 @@ class LaunchSecurityTab(StandardConfigTab):
 
     def _create_tdx_options(self, parent: ctk.CTkFrame, row: int) -> None:
         """创建 Intel TDX 特有选项."""
-        # 第一行：mrConfigId + mrOwner
+        # 第一行:mrConfigId + mrOwner
         frame1 = ctk.CTkFrame(parent, fg_color='transparent')
         frame1.grid(row=row, column=0, columnspan=2, padx=10, pady=3, sticky='w')
 
@@ -300,7 +300,7 @@ class LaunchSecurityTab(StandardConfigTab):
         self.mr_owner.pack(side='left', padx=3)
         self.mr_owner.bind('<KeyRelease>', lambda e: self._trigger_change())
 
-        # 第二行：mrOwnerConfig
+        # 第二行:mrOwnerConfig
         row += 1
         frame2 = ctk.CTkFrame(parent, fg_color='transparent')
         frame2.grid(row=row, column=0, columnspan=2, padx=10, pady=3, sticky='w')
@@ -314,7 +314,7 @@ class LaunchSecurityTab(StandardConfigTab):
         self.mr_owner_config.pack(side='left', padx=3)
         self.mr_owner_config.bind('<KeyRelease>', lambda e: self._trigger_change())
 
-        # 第三行：quoteGenerationService
+        # 第三行:quoteGenerationService
         row += 1
         frame3 = ctk.CTkFrame(parent, fg_color='transparent')
         frame3.grid(row=row, column=0, columnspan=2, padx=10, pady=3, sticky='w')
@@ -332,26 +332,26 @@ class LaunchSecurityTab(StandardConfigTab):
         """创建说明文本."""
         info_text = """启动安全类型说明:
 • SEV - AMD Secure Encrypted Virtualization (安全加密虚拟化)
-  适用于：AMD EPYC 处理器 (Naples, Rome, Milan)
-  功能：内存加密，每个 VM 有唯一的加密密钥
+  适用于:AMD EPYC 处理器 (Naples, Rome, Milan)
+  功能:内存加密,每个 VM 有唯一的加密密钥
 
 • SEV-SNP - AMD Secure Nested Paging (安全嵌套分页)
-  适用于：AMD EPYC 处理器 (Milan 及更新)
-  功能：在 SEV 基础上增加内存完整性和反向追踪保护
+  适用于:AMD EPYC 处理器 (Milan 及更新)
+  功能:在 SEV 基础上增加内存完整性和反向追踪保护
 
 • TDX - Intel Trust Domain Extensions (信任域扩展)
-  适用于：Intel Xeon Scalable 第 4 代及更新
-  功能：创建隔离的信任域，保护内存和 CPU 状态
+  适用于:Intel Xeon Scalable 第 4 代及更新
+  功能:创建隔离的信任域,保护内存和 CPU 状态
 
 • s390-pv - IBM Protected Virtualization (保护虚拟化)
-  适用于：IBM z15 及更新主机
-  功能：保护 VM 免受宿主机和 hypervisor 访问
+  适用于:IBM z15 及更新主机
+  功能:保护 VM 免受宿主机和 hypervisor 访问
 
 要求:
-• 硬件支持：对应平台的 SEV/TDX/s390-pv 功能
-• 固件：AMD SEV 固件、Intel TDX 模块、IBM s390 固件
-• 内核：KVM 支持并启用相应功能
-• QEMU：QEMU 6.0+ (SEV), 7.2+ (SEV-SNP), 8.0+ (TDX)"""
+• 硬件支持:对应平台的 SEV/TDX/s390-pv 功能
+• 固件:AMD SEV 固件、Intel TDX 模块、IBM s390 固件
+• 内核:KVM 支持并启用相应功能
+• QEMU:QEMU 6.0+ (SEV), 7.2+ (SEV-SNP), 8.0+ (TDX)"""
 
         ctk.CTkLabel(
             parent,
@@ -452,7 +452,7 @@ class LaunchSecurityTab(StandardConfigTab):
         """获取配置数据."""
         sec_type = self.sec_type.get()
 
-        # 如果类型为 none，返回空配置
+        # 如果类型为 none,返回空配置
         if sec_type == 'none':
             return {}
 
@@ -493,7 +493,7 @@ class LaunchSecurityTab(StandardConfigTab):
         """生成 XML 配置字典."""
         config = self.get_config()
 
-        # 如果配置为空（类型为 none），返回空字典
+        # 如果配置为空(类型为 none),返回空字典
         if not config:
             return {}
 
@@ -540,7 +540,7 @@ class LaunchSecurityTab(StandardConfigTab):
             launch_security_config['author_key'] = True
 
         vcek = config.get('vcek')
-        if not vcek:  # vcek 默认为 True，只有取消选中时才设置
+        if not vcek:  # vcek 默认为 True,只有取消选中时才设置
             launch_security_config['vcek'] = False
 
         guest_visible_workarounds = config.get('guest_visible_workarounds', '')
@@ -584,13 +584,13 @@ class LaunchSecurityTab(StandardConfigTab):
 
         sec_type = launch_config.get('type', launch_config.get('sec_type', 'none'))
 
-        # 如果没有配置或类型为 none，设置为 none
+        # 如果没有配置或类型为 none,设置为 none
         if not sec_type:
             sec_type = 'none'
 
         self.sec_type.set(sec_type)
 
-        # 触发类型变更处理，更新控件状态
+        # 触发类型变更处理,更新控件状态
         self._on_type_change(sec_type)
 
         # 通用选项

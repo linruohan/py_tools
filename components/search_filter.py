@@ -42,7 +42,7 @@ class SearchFilter(ctk.CTkFrame):
         self.grid_rowconfigure(0, weight=0)
         self.grid_rowconfigure(1, weight=0)
 
-        # 计算并设置最大宽度（在创建输入框之前）
+        # 计算并设置最大宽度(在创建输入框之前)
         self._max_width = self._calculate_max_width()
 
         # 输入框
@@ -63,7 +63,7 @@ class SearchFilter(ctk.CTkFrame):
         self.search_entry.bind('<FocusOut>', self._on_focus_out)
 
     def _calculate_max_width(self) -> int:
-        """计算最大宽度（基于最长列表项）."""
+        """计算最大宽度(基于最长列表项)."""
         if not self.items:
             return 200  # 默认宽度
 
@@ -77,19 +77,19 @@ class SearchFilter(ctk.CTkFrame):
                 max_width = width
         temp_label.destroy()
 
-        # 添加一些额外的空间（边距和滚动条空间）
+        # 添加一些额外的空间(边距和滚动条空间)
         max_width += 60
         return max_width
 
     def _update_max_width(self) -> None:
-        """更新最大宽度（当列表项变化时）."""
+        """更新最大宽度(当列表项变化时)."""
         self._max_width = self._calculate_max_width()
         # 设置输入框的最小宽度
         self.search_entry.configure(width=self._max_width)
 
     def _on_focus_in(self, event) -> None:
         """获得焦点处理."""
-        # 当输入框获得焦点时，显示所有列表项
+        # 当输入框获得焦点时,显示所有列表项
         self.filtered_items = self.items.copy()
         self.current_selection = -1 if not self.filtered_items else 0
         self._show_dropdown()
@@ -124,7 +124,7 @@ class SearchFilter(ctk.CTkFrame):
 
     def _on_focus_out(self, event) -> None:
         """失去焦点处理."""
-        # 延迟隐藏，以便点击下拉项时能触发选择
+        # 延迟隐藏,以便点击下拉项时能触发选择
         self.after(200, self._hide_dropdown)
 
     def _on_item_click(self, item) -> None:
@@ -142,8 +142,8 @@ class SearchFilter(ctk.CTkFrame):
         # 获取输入框的宽度
         entry_width = self.search_entry.winfo_width()
 
-        # 创建下拉框架，显示在输入框下方
-        # width 和 height 必须在构造函数中设置（customtkinter 要求）
+        # 创建下拉框架,显示在输入框下方
+        # width 和 height 必须在构造函数中设置(customtkinter 要求)
         self.dropdown_frame = ctk.CTkFrame(
             self,
             fg_color=BG_COLOR_CONTENT,
@@ -203,7 +203,7 @@ class SearchFilter(ctk.CTkFrame):
         self.search_entry.delete(0, 'end')
         self.search_entry.insert(0, str(item))
 
-        # 让输入框失去焦点，防止下拉列表再次出现
+        # 让输入框失去焦点,防止下拉列表再次出现
         self.master.focus_set()
 
         # 调用回调函数
@@ -226,7 +226,7 @@ class SearchFilter(ctk.CTkFrame):
         """获取当前选中的项.
 
         Returns:
-            当前选中的项，如果没有选中则返回 None
+            当前选中的项,如果没有选中则返回 None
         """
         current_text = self.search_entry.get()
         if current_text in [str(item) for item in self.items]:

@@ -51,7 +51,7 @@ class AddTaskDialog(ctk.CTkToplevel):
             parent: 父窗口
             callback: 保存成功后的回调函数
             existing_labels: 已有的标签列表
-            task_data: 任务数据（编辑模式时传入）
+            task_data: 任务数据(编辑模式时传入)
         """
         super().__init__(parent)
         self.parent = parent
@@ -196,7 +196,7 @@ class AddTaskDialog(ctk.CTkToplevel):
         # 绑定标签选择回调
         self.label_filter.on_select_callback = self.on_label_selected
 
-        # 如果是编辑模式，填充已有数据
+        # 如果是编辑模式,填充已有数据
         if self.task_data:
             self._populate_task_data()
 
@@ -234,16 +234,16 @@ class AddTaskDialog(ctk.CTkToplevel):
             self.label_filter.clear_search()
 
     def update_selected_labels_display(self) -> None:
-        """更新已选标签的显示（同一行显示）."""
+        """更新已选标签的显示(同一行显示)."""
         # 清空已有显示
         for widget in self.selected_labels_frame.winfo_children():
             widget.destroy()
 
-        # 标签容器框架（使用pack横向排列）
+        # 标签容器框架(使用pack横向排列)
         tags_container = ctk.CTkFrame(self.selected_labels_frame, fg_color='transparent')
         tags_container.pack(fill='x', padx=2, pady=2)
 
-        # 显示每个标签（同一行横向排列）
+        # 显示每个标签(同一行横向排列)
         for _, label in enumerate(self.selected_labels):
             # 标签框架
             tag_frame = ctk.CTkFrame(
@@ -288,7 +288,7 @@ class AddTaskDialog(ctk.CTkToplevel):
             self.update_selected_labels_display()
 
     def on_save(self) -> None:
-        """保存任务（添加或更新）."""
+        """保存任务(添加或更新)."""
         content = self.content_entry.get().strip()
         if not content:
             return
@@ -302,7 +302,7 @@ class AddTaskDialog(ctk.CTkToplevel):
         # 组合标签
         labels = ','.join(self.selected_labels)
 
-        # 调用回调函数保存任务（编辑模式时传递任务ID）
+        # 调用回调函数保存任务(编辑模式时传递任务ID)
         if self.task_data:
             self.callback(self.task_data['id'], content, description, due, priority, labels)
         else:
@@ -319,7 +319,7 @@ class AddLabelDialog(ctk.CTkToplevel):
         Args:
             parent: 父窗口
             callback: 保存成功后的回调函数
-            existing_label: 现有标签（编辑模式）
+            existing_label: 现有标签(编辑模式)
         """
         super().__init__(parent)
         self.parent = parent
@@ -478,11 +478,11 @@ class TaskPanel(ctk.CTkFrame):
 
     def init_ui(self) -> None:
         """初始化 UI 组件."""
-        # 顶部区域：搜索筛选 + 添加按钮
+        # 顶部区域:搜索筛选 + 添加按钮
         self.init_top_panel()
-        # 中间区域：TabView（任务列表 + 标签管理）
+        # 中间区域:TabView(任务列表 + 标签管理)
         self.init_tabview()
-        # 底部区域：统计信息
+        # 底部区域:统计信息
         self.init_bottom_panel()
 
     def init_top_panel(self) -> None:
@@ -570,7 +570,7 @@ class TaskPanel(ctk.CTkFrame):
         AddTaskDialog(self.master, self.update_task, existing_labels, task)
 
     def init_tabview(self) -> None:
-        """初始化 TabView，包含任务列表和标签管理."""
+        """初始化 TabView,包含任务列表和标签管理."""
         tab_frame = ctk.CTkFrame(self, fg_color=BG_COLOR_MAIN, corner_radius=8)
         tab_frame.grid(row=1, column=0, padx=10, pady=(0, 10), sticky='nsew')
         tab_frame.grid_rowconfigure(0, weight=1)
@@ -695,7 +695,7 @@ class TaskPanel(ctk.CTkFrame):
         # 创建任务行
         self.create_task_row(task_data)
 
-        # 重新排列任务行（考虑筛选条件）
+        # 重新排列任务行(考虑筛选条件)
         self.redisplay_tasks()
 
         # 更新统计
@@ -741,7 +741,7 @@ class TaskPanel(ctk.CTkFrame):
         # 更新任务行显示
         self.update_task_row(task)
 
-        # 重新排列任务行（考虑筛选条件）
+        # 重新排列任务行(考虑筛选条件)
         self.redisplay_tasks()
 
         # 更新统计
@@ -796,7 +796,7 @@ class TaskPanel(ctk.CTkFrame):
                 task['labels_frame'].grid_remove()
 
     def create_task_row(self, task: dict) -> None:
-        """创建任务行 UI（美化版）.
+        """创建任务行 UI(美化版).
 
         Args:
             task: 任务数据字典
@@ -840,7 +840,7 @@ class TaskPanel(ctk.CTkFrame):
         due_label.grid(row=0, column=2, padx=(0, 10), pady=8, sticky='w')
         due_label.grid_remove() if not task['due'] else None
 
-        # 标签（带背景颜色）
+        # 标签(带背景颜色)
         labels_frame = ctk.CTkFrame(row_frame, fg_color='transparent')
         labels_frame.grid(row=0, column=3, padx=(0, 10), pady=8, sticky='w')
 
@@ -1033,7 +1033,7 @@ class TaskPanel(ctk.CTkFrame):
 
         Args:
             label: 标签数据字典
-            row_index: 行索引，用于设置grid位置
+            row_index: 行索引,用于设置grid位置
         """
         row_frame = ctk.CTkFrame(
             self.label_scrollable_frame,
@@ -1105,7 +1105,7 @@ class TaskPanel(ctk.CTkFrame):
         AddLabelDialog(self.master, self.save_label, label)
 
     def save_label(self, label_id: str, name: str, color: str) -> None:
-        """保存标签（添加或更新）.
+        """保存标签(添加或更新).
 
         Args:
             label_id: 标签ID

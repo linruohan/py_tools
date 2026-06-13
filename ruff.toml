@@ -15,10 +15,15 @@ target-version = "py312"
 # extend = "../shared-ruff.toml" # 继承父目录配置
 # Lint 配置
 [lint]
-select = ["E", "F", "B", "I", "UP", "RUF"]      # 启用规则集
-ignore = ["E501"] # 忽略行长度限制
-fixable = ["ALL"]                               # 允许自动修复所有规则
-unfixable = []                                  # 禁止修复的规则
+select = ["E", "F", "B", "I", "UP", "RUF"] # 启用规则集
+ignore = [
+   "E501",
+   "RUF001",
+   "RUF002",
+   "RUF003",
+] # 忽略行长度限制、中文标点误报、StrEnum和泛型类型参数兼容性
+fixable = ["ALL"] # 允许自动修复所有规则
+unfixable = [] # 禁止修复的规则
 [lint.per-file-ignores]
 "__init__.py" = ["F401"]           # 忽略未使用导入
 "tests/**/*.py" = ["E501", "F841"] # 测试文件忽略部分规则

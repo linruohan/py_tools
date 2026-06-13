@@ -50,16 +50,16 @@ class VMConfig:
         self.cpu_tuning = {}  # CPU 调优配置
         self.sysinfo = {}  # SMBIOS/FwCfg 系统信息配置
 
-        # 简化版本，移除策略管理器
+        # 简化版本,移除策略管理器
         self._sync_context()
 
     def _sync_context(self) -> None:
         """同步配置上下文."""
-        # 简化版本，移除策略管理器
+        # 简化版本,移除策略管理器
         pass
 
     def _resolve_tab_data(self, tab_key: str, data_key: str, tab_data: dict) -> dict | None:
-        """从 tab_data 中提取指定键的数据，支持 tab_key 直接匹配和 data_key 嵌套两种格式.
+        """从 tab_data 中提取指定键的数据,支持 tab_key 直接匹配和 data_key 嵌套两种格式.
 
         Args:
             tab_key: Tab 的键名
@@ -67,7 +67,7 @@ class VMConfig:
             tab_data: Tab 的配置数据
 
         Returns:
-            提取到的数据字典，或 None
+            提取到的数据字典,或 None
         """
         if tab_key == data_key and data_key not in tab_data:
             return tab_data
@@ -154,7 +154,7 @@ class VMConfig:
     def update_from_tab(self, tab_key: str, tab_data: dict) -> None:
         """从 Tab 更新配置.
 
-        使用分发表替代 if-elif 链，每个 tab_key 对应一个处理方法。
+        使用分发表替代 if-elif 链,每个 tab_key 对应一个处理方法.
 
         Args:
             tab_key: Tab 的键名
@@ -189,7 +189,7 @@ class VMConfig:
             _direct[tab_key](tab_data)
 
         # ── 通过 tab_data 键名匹配的补充更新 ─────────────────────────────────
-        # 处理 tab_data 中直接包含配置键的情况（如 {'name': 'vm0', ...}）
+        # 处理 tab_data 中直接包含配置键的情况(如 {'name': 'vm0', ...})
         if 'basic' in tab_data or 'name' in tab_data:
             if tab_key not in ('general_metadata', 'basic_info'):
                 self._update_basic(tab_data)
@@ -292,11 +292,11 @@ class VMConfig:
         # 安全标签配置
         if self.security_label:
             sec_type = self.security_label.get('type')
-            # none 类型：只生成 type='none'
+            # none 类型:只生成 type='none'
             if sec_type == 'none':
                 config['security_label'] = {'type': 'none'}
             elif sec_type and sec_type not in ('none', 'None'):
-                # 构建 security_label 字典，只包含有值的字段
+                # 构建 security_label 字典,只包含有值的字段
                 sec_config = {}
                 sec_config['type'] = sec_type
 
@@ -310,12 +310,12 @@ class VMConfig:
 
                 # dynamic 类型的 baselabel
                 if sec_type == 'dynamic':
-                    # 支持 baselabel（复选框）和 baselabel_value（值）两种格式
+                    # 支持 baselabel(复选框)和 baselabel_value(值)两种格式
                     # 也支持直接使用 baselabel 存储值
                     baselabel_check = self.security_label.get('baselabel')
                     baselabel_value = self.security_label.get('baselabel_value')
 
-                    # 如果 baselabel 是字符串（值），直接使用
+                    # 如果 baselabel 是字符串(值),直接使用
                     if isinstance(baselabel_check, str) and baselabel_check:
                         sec_config['baselabel'] = baselabel_check
                     # 否则使用 baselabel 复选框 + baselabel_value 的组合
@@ -440,7 +440,7 @@ class VMConfig:
         """验证配置的有效性.
 
         Returns:
-            (是否有效，错误信息列表)
+            (是否有效,错误信息列表)
         """
         errors = []
         warnings = []
@@ -455,12 +455,12 @@ class VMConfig:
         if hasattr(self.memory, 'memory') and self.memory.memory <= 0:
             errors.append('内存大小必须大于 0')
         elif hasattr(self.memory, 'memory') and 0 < self.memory.memory < 512:
-            warnings.append('警告：内存大小建议不小于 512MB')
+            warnings.append('警告:内存大小建议不小于 512MB')
 
         if hasattr(self.cpu, 'vcpu') and self.cpu.vcpu <= 0:
             errors.append('CPU 数量必须大于 0')
         elif hasattr(self.cpu, 'vcpu') and self.cpu.vcpu > 256:
-            warnings.append('警告：CPU 数量不建议超过 256')
+            warnings.append('警告:CPU 数量不建议超过 256')
 
         # 逻辑验证
         if hasattr(self.memory, 'current_memory') and self.memory.current_memory is not None:
@@ -474,7 +474,7 @@ class VMConfig:
             total = topo.sockets * topo.cores * topo.threads
             if hasattr(self.cpu, 'vcpu') and self.cpu.vcpu > 0 and total != self.cpu.vcpu:
                 errors.append(
-                    f'CPU 拓扑不匹配：{topo.sockets}×{topo.cores}×{topo.threads} != {self.cpu.vcpu}'
+                    f'CPU 拓扑不匹配:{topo.sockets}×{topo.cores}×{topo.threads} != {self.cpu.vcpu}'
                 )
 
         # OS 引导配置验证
@@ -482,7 +482,7 @@ class VMConfig:
             if not hasattr(self.os, 'kernel') or not self.os.kernel:
                 errors.append('直接内核引导模式下必须指定内核路径')
 
-        # 只返回错误，不返回警告（警告仅用于提示）
+        # 只返回错误,不返回警告(警告仅用于提示)
         return len(errors) == 0, errors
 
     def reset(self) -> None:

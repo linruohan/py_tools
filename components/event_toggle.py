@@ -8,8 +8,8 @@ from utils.styles import CTK_FONT_SMALL
 class EventToggleSwitch(ctk.CTkFrame):
     """事件切换开关组件 - 开关 + enabled 下拉框.
 
-    用于性能监控事件配置，支持:
-    - 开关关闭：不生成该事件的 XML
+    用于性能监控事件配置,支持:
+    - 开关关闭:不生成该事件的 XML
     - 开关开启 + enabled=yes: 生成 enabled='yes' 的事件
     - 开关开启 + enabled=no: 生成 enabled='no' 的事件
     """

@@ -13,7 +13,7 @@ class TaskDatabase:
         """初始化数据库连接.
 
         Args:
-            db_path: 数据库文件路径，默认为项目根目录下的 tasks.db
+            db_path: 数据库文件路径,默认为项目根目录下的 tasks.db
         """
         if db_path is None:
             # 默认在项目根目录下创建数据库
@@ -103,7 +103,7 @@ class TaskDatabase:
         """获取所有任务.
 
         Returns:
-            任务列表，每个任务是一个字典
+            任务列表,每个任务是一个字典
         """
         if self.conn is None:
             return []
@@ -232,7 +232,7 @@ class TaskDatabase:
             include_deleted: 是否包含已删除的标签
 
         Returns:
-            标签列表，每个标签是一个字典
+            标签列表,每个标签是一个字典
         """
         if self.conn is None:
             return []
@@ -252,7 +252,7 @@ class TaskDatabase:
             label_id: 标签ID
 
         Returns:
-            标签字典，如果不存在则返回None
+            标签字典,如果不存在则返回None
         """
         if self.conn is None:
             return None
@@ -331,7 +331,7 @@ class TaskDatabase:
 
         Args:
             label_id: 标签ID
-            soft_delete: 是否软删除（True为软删除，False为硬删除）
+            soft_delete: 是否软删除(True为软删除,False为硬删除)
         """
         if self.conn is None:
             return

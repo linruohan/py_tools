@@ -10,7 +10,7 @@ class NUMANodeTuningTab(BaseConfigTab):
     """NUMA 节点优化配置 Tab."""
 
     def _init_ui(self) -> None:
-        """初始化界面 - 所有 section 合并为一个，使用 pack 布局，左对齐."""
+        """初始化界面 - 所有 section 合并为一个,使用 pack 布局,左对齐."""
         # 主容器
         main_frame = ctk.CTkFrame(self, fg_color=BG_COLOR_CONTENT, corner_radius=6)
         main_frame.pack(fill='both', expand=True, padx=5, pady=5)
@@ -20,7 +20,7 @@ class NUMANodeTuningTab(BaseConfigTab):
             main_frame, text='NUMA 内存策略', font=CTK_FONT_BOLD, text_color='#64b5f6'
         ).pack(anchor='w', padx=10, pady=(10, 10))
 
-        # 第一行：模式 | 节点集 | 放置
+        # 第一行:模式 | 节点集 | 放置
         row1_frame = ctk.CTkFrame(main_frame, fg_color='transparent')
         row1_frame.pack(fill='x', padx=10, pady=3)
 
@@ -75,11 +75,11 @@ class NUMANodeTuningTab(BaseConfigTab):
         btn_frame = ctk.CTkFrame(node_title_frame, fg_color='transparent')
         btn_frame.pack(side='right')
 
-        # 批量添加框架（两行布局）
+        # 批量添加框架(两行布局)
         batch_outer_frame = ctk.CTkFrame(btn_frame, fg_color='transparent')
         batch_outer_frame.pack(side='left')
 
-        # 第一行：数量 | 起始 ID | 模式
+        # 第一行:数量 | 起始 ID | 模式
         batch_row1 = ctk.CTkFrame(batch_outer_frame, fg_color='transparent')
         batch_row1.pack(fill='x')
 
@@ -107,7 +107,7 @@ class NUMANodeTuningTab(BaseConfigTab):
         self.batch_mode.set('strict')
         self.batch_mode.pack(side='left', padx=2)
 
-        # 第二行：节点集 | 批量添加按钮 | 单个添加按钮
+        # 第二行:节点集 | 批量添加按钮 | 单个添加按钮
         batch_row2 = ctk.CTkFrame(batch_outer_frame, fg_color='transparent')
         batch_row2.pack(fill='x')
 
@@ -152,13 +152,13 @@ class NUMANodeTuningTab(BaseConfigTab):
 
         info_text = (
             '模式 (mode): interleave - 在所有节点间均衡分配 |\n'
-            '           strict - 严格限制在指定节点，不足时失败 |\n'
-            '           preferred - 优先使用指定节点，不足时使用其他 |\n'
+            '           strict - 严格限制在指定节点,不足时失败 |\n'
+            '           preferred - 优先使用指定节点,不足时使用其他 |\n'
             '           restrictive - 使用系统默认策略\n'
-            '节点集 (nodeset): 指定 NUMA 节点范围，如 1-4,^3 表示节点 1-4 排除 3\n'
+            '节点集 (nodeset): 指定 NUMA 节点范围,如 1-4,^3 表示节点 1-4 排除 3\n'
             '放置 (placement): static - 静态放置 | auto - 使用 numad 自动放置\n'
             'memnode: 针对每个客户机 NUMA 节点的内存分配策略\n'
-            '批量添加：指定数量、起始 ID、模式和节点集，自动递增 Cell ID'
+            '批量添加:指定数量、起始 ID、模式和节点集,自动递增 Cell ID'
         )
         ctk.CTkLabel(
             info_frame,
@@ -230,7 +230,7 @@ class NUMANodeTuningTab(BaseConfigTab):
         )
 
     def _batch_add_memnode_rows(self) -> None:
-        """批量添加相同配置的 memnode 行，使用用户指定的模式、节点集."""
+        """批量添加相同配置的 memnode 行,使用用户指定的模式、节点集."""
         try:
             count_str = self.batch_count.get().strip()
             start_id_str = self.batch_start_id.get().strip()
@@ -258,7 +258,7 @@ class NUMANodeTuningTab(BaseConfigTab):
             self._trigger_change()
 
         except ValueError:
-            # 输入无效，忽略
+            # 输入无效,忽略
             pass
 
     def _remove_memnode_row(self, row_frame: ctk.CTkFrame) -> None:
