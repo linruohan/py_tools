@@ -4,7 +4,11 @@ import os
 import sys
 
 # 获取项目根目录
-project_root = os.path.dirname(os.path.abspath(__file__))
+# SPECPATH 是 PyInstaller 内置变量，指向 .spec 文件所在目录
+try:
+    project_root = os.path.abspath(SPECPATH)
+except NameError:
+    project_root = os.getcwd()
 
 # 动态获取 customtkinter 路径
 import customtkinter
