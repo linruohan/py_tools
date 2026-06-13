@@ -76,6 +76,9 @@ class JsonPanel(ctk.CTkFrame):
         self.grid_columnconfigure(0, weight=4)  # 左侧占4份
         self.grid_columnconfigure(1, weight=1)  # 右侧占1份
 
+        # 导航历史栈，用于支持多级嵌套回退
+        self.navigation_stack = []
+
         self.init_left_panel()  # 左侧JSON输入面板
         self.init_right_panel()  # 右侧Key列表+操作面板
         self.init_info_bar()  # 底部信息提示栏
@@ -273,16 +276,13 @@ class JsonPanel(ctk.CTkFrame):
                 self.update_info('JSON根节点必须是对象类型', False)
                 return
 
-            # 获取所有原始主Key并显示
-            self.original_main_keys = list(self.json_data.keys())
-            self.current_selected_list_key = None
-            self.current_list_data = None
-            self.current_list_keys = []
+            # 重置导航栈，保存根数据
+            self.navigation_stack = []
+            self.current_data = self.json_data
+            self.current_keys = list(self.json_data.keys())
 
-            # 显示原始主Key(标记列表类型)
-            for key in self.original_main_keys:
-                value_type = ' [LIST]' if isinstance(self.json_data[key], list) else ''
-                self.key_listbox.insert(END, f'{key}{value_type}')
+            # 显示原始主Key(标记类型)
+            self._display_keys(self.current_keys, self.current_data)
 
             # 更新UI状态
             self.key_label.configure(text='JSON Main Key List (Drag to Sort)')
@@ -300,8 +300,20 @@ class JsonPanel(ctk.CTkFrame):
             messagebox.showerror('错误', err_msg)
             self.update_info(err_msg, False)
 
+    def _display_keys(self, keys, data):
+        """显示指定数据对象的Key列表，带类型标记"""
+        self.key_listbox.delete(0, END)
+        for key in keys:
+            value = data.get(key)
+            if isinstance(value, list):
+                self.key_listbox.insert(END, f'{key} [LIST]')
+            elif isinstance(value, dict):
+                self.key_listbox.insert(END, f'{key} [DICT]')
+            else:
+                self.key_listbox.insert(END, key)
+
     def on_key_select(self, event):
-        """选中Key后的回调函数"""
+        """选中Key后的回调函数，支持递归展开嵌套结构"""
         selected_indices = self.key_listbox.curselection()
         if not selected_indices:
             return
@@ -309,91 +321,101 @@ class JsonPanel(ctk.CTkFrame):
         selected_index = selected_indices[0]
         selected_key_display = self.key_listbox.get(selected_index)
 
-        # 如果当前显示的是原始主Key
-        if self.current_selected_list_key is None:
-            # 清理类型标记,获取纯Key名称
-            pure_key = re.sub(r' \[LIST\]$', '', selected_key_display)
+        # 清理类型标记,获取纯Key名称
+        pure_key = re.sub(r' \[(LIST|DICT)\]$', '', selected_key_display)
 
-            # 检查该Key是否为列表类型
-            if pure_key in self.json_data and isinstance(self.json_data[pure_key], list):
-                list_data = self.json_data[pure_key]
-                # 确保列表非空且第一个元素是字典
-                if len(list_data) > 0 and isinstance(list_data[0], dict):
-                    self.current_selected_list_key = pure_key
-                    self.current_list_data = list_data
-                    self.current_list_keys = list(list_data[0].keys())
+        # 检查该Key是否存在于当前数据中
+        if pure_key not in self.current_data:
+            return
 
-                    # 清空列表并显示该列表的内部Key
-                    self.key_listbox.delete(0, END)
-                    for key in self.current_list_keys:
-                        self.key_listbox.insert(END, key)
+        value = self.current_data[pure_key]
 
-                    # 默认选中所有Key
-                    self.key_listbox.selection_set(0, END)
+        # 情况1: 值是字典类型，展开显示其Key
+        if isinstance(value, dict):
+            # 保存当前状态到导航栈
+            self.navigation_stack.append(
+                {
+                    'data': self.current_data,
+                    'keys': self.current_keys,
+                    'label': self.key_label.cget('text'),
+                }
+            )
 
-                    # 更新UI
-                    self.key_label.configure(text=f'{pure_key} Inner Keys')
-                    self.back_btn.configure(state='normal')
-                    self.update_info(f'已选择列表:{pure_key}', True)
+            # 更新当前状态为嵌套字典
+            self.current_data = value
+            self.current_keys = list(value.keys())
+
+            # 显示嵌套字典的Key（不自动选中，让用户选择要展开的Key）
+            self._display_keys(self.current_keys, self.current_data)
+
+            # 更新UI
+            self.key_label.configure(text=f'{pure_key} Inner Keys')
+            self.back_btn.configure(state='normal')
+            self.update_info(f'已进入字典:{pure_key}', True)
+
+        # 情况2: 值是列表类型
+        elif isinstance(value, list):
+            # 确保列表非空且第一个元素是字典
+            if len(value) > 0 and isinstance(value[0], dict):
+                # 保存当前状态到导航栈
+                self.navigation_stack.append(
+                    {
+                        'data': self.current_data,
+                        'keys': self.current_keys,
+                        'label': self.key_label.cget('text'),
+                    }
+                )
+
+                # 更新当前状态为列表数据
+                self.current_data = value
+                self.current_keys = list(value[0].keys())
+
+                # 显示列表元素的Key（默认不选中，让用户自由选择）
+                self._display_keys(self.current_keys, value[0])
+
+                # 更新UI
+                self.key_label.configure(text=f'{pure_key} Inner Keys')
+                self.back_btn.configure(state='normal')
+                self.update_info(f'已进入列表:{pure_key}', True)
 
     def back_to_main_keys(self):
-        """返回显示原始主Key列表"""
-        # 清空列表
-        self.key_listbox.delete(0, END)
+        """返回上一级Key列表（支持多级嵌套回退）"""
+        # 如果导航栈为空，说明已经在根节点
+        if not self.navigation_stack:
+            self.update_info('已经在根节点', False)
+            return
 
-        # 重新显示原始主Key
-        for key in self.original_main_keys:
-            value_type = ' [LIST]' if isinstance(self.json_data[key], list) else ''
-            self.key_listbox.insert(END, f'{key}{value_type}')
+        # 从导航栈弹出上一级状态
+        prev_state = self.navigation_stack.pop()
+        self.current_data = prev_state['data']
+        self.current_keys = prev_state['keys']
 
-        # 重置状态
-        self.key_label.configure(text='JSON 主Key列表(拖动排序)')
-        self.back_btn.configure(state='disabled')
-        self.current_selected_list_key = None
-        self.current_list_data = None
-        self.current_list_keys = []
-        self.update_info('已返回主Key列表', True)
+        # 显示上一级的Key
+        self._display_keys(self.current_keys, self.current_data)
+
+        # 更新UI
+        self.key_label.configure(text=prev_state['label'])
+        # 如果导航栈为空，禁用返回按钮
+        self.back_btn.configure(state='disabled' if not self.navigation_stack else 'normal')
+        self.update_info('已返回上一级', True)
 
     def sort_keys(self, sort_type):
         """对当前显示的Key进行升序/降序排序"""
         try:
-            if self.current_selected_list_key:
-                # 排序列表内部Key
-                if not self.current_list_keys:
-                    messagebox.showwarning('警告', '暂无Key可排序!')
-                    self.update_info('暂无Key可排序', False)
-                    return
+            if not self.current_keys:
+                messagebox.showwarning('警告', '暂无Key可排序!')
+                self.update_info('暂无Key可排序', False)
+                return
 
-                if sort_type == 'asc':
-                    self.current_list_keys.sort()
-                    self.update_info('内部Key已升序排列', True)
-                else:
-                    self.current_list_keys.sort(reverse=True)
-                    self.update_info('内部Key已降序排列', True)
-
-                # 重新显示
-                self.key_listbox.delete(0, END)
-                for key in self.current_list_keys:
-                    self.key_listbox.insert(END, key)
+            if sort_type == 'asc':
+                self.current_keys.sort()
+                self.update_info('Key已升序排列', True)
             else:
-                # 排序原始主Key
-                if not self.original_main_keys:
-                    messagebox.showwarning('警告', '暂无Key可排序!')
-                    self.update_info('暂无Key可排序', False)
-                    return
+                self.current_keys.sort(reverse=True)
+                self.update_info('Key已降序排列', True)
 
-                if sort_type == 'asc':
-                    self.original_main_keys.sort()
-                    self.update_info('主Key已升序排列', True)
-                else:
-                    self.original_main_keys.sort(reverse=True)
-                    self.update_info('主Key已降序排列', True)
-
-                # 重新显示
-                self.key_listbox.delete(0, END)
-                for key in self.original_main_keys:
-                    value_type = ' [LIST]' if isinstance(self.json_data[key], list) else ''
-                    self.key_listbox.insert(END, f'{key}{value_type}')
+            # 重新显示
+            self._display_keys(self.current_keys, self.current_data)
         except Exception as e:
             err_msg = f'排序失败:{e!s}'
             messagebox.showerror('错误', err_msg)
@@ -407,21 +429,20 @@ class JsonPanel(ctk.CTkFrame):
                 self.update_info('请先解析JSON数据', False)
                 return
 
-            # 情况1:选中了列表Key(如authors),显示的是列表内部Key
-            if self.current_selected_list_key and self.current_list_data:
+            # 检查当前数据是否是列表类型（已进入列表内部）
+            if isinstance(self.current_data, list) and len(self.current_data) > 0:
                 # 获取选中的列表内部Key
                 selected_indices = self.key_listbox.curselection()
-                if not selected_indices:
-                    messagebox.showwarning('警告', '请至少选择一个列表内部Key!')
-                    self.update_info('请选择至少一个内部Key', False)
-                    return
 
-                # 收集选中的Key
-                selected_keys = [self.key_listbox.get(idx) for idx in selected_indices]
+                # 如果没有选中任何Key，导出所有字段；否则导出选中的字段
+                if not selected_indices:
+                    selected_keys = self.current_keys.copy()
+                else:
+                    selected_keys = [self.key_listbox.get(idx) for idx in selected_indices]
 
                 # 提取数据
                 excel_data = []
-                for item in self.current_list_data:
+                for item in self.current_data:
                     if isinstance(item, dict):
                         row_data = {k: item.get(k, '') for k in selected_keys}
                         excel_data.append(row_data)
@@ -434,33 +455,44 @@ class JsonPanel(ctk.CTkFrame):
                 # 转换为DataFrame
                 df = pd.DataFrame(excel_data)
 
+                # 获取当前列表的名称（从导航栈获取）
+                list_name = 'data'
+                if self.navigation_stack:
+                    prev_state = self.navigation_stack[-1]
+                    # 查找当前数据在上级数据中的Key名
+                    for key, value in prev_state['data'].items():
+                        if value is self.current_data:
+                            list_name = key
+                            break
+
                 # 选择保存路径
                 file_path = filedialog.asksaveasfilename(
                     defaultextension='.xlsx',
                     filetypes=[('Excel文件', '*.xlsx'), ('所有文件', '*.*')],
                     title='保存Excel文件',
-                    initialfile=f'{self.current_selected_list_key}.xlsx',
+                    initialfile=f'{list_name}.xlsx',
                 )
 
                 if not file_path:
                     self.update_info('已取消保存', False)
                     return
 
-                # 写入Excel文件(工作表名使用选中的列表Key)
+                # 写入Excel文件(工作表名使用列表名称)
                 with pd.ExcelWriter(file_path, engine='openpyxl') as writer:
-                    safe_sheet_name = self.current_selected_list_key[:31]
+                    safe_sheet_name = list_name[:31]
                     df.to_excel(writer, sheet_name=safe_sheet_name, index=False)
 
                 success_msg = f'生成成功:{file_path}'
                 messagebox.showinfo('成功', success_msg)
                 self.update_info(success_msg, True)
 
-            # 情况2:显示的是原始主Key
+            # 情况2:显示的是字典类型的Key
             else:
                 messagebox.showinfo(
-                    '提示', '请先选中一个列表类型的主Key(如authors),进入其内部Key列表后再导出!'
+                    '提示',
+                    '请先选中一个列表类型的Key,进入其内部Key列表后再导出!',
                 )
-                self.update_info('请选择列表类型主Key并进入内部', False)
+                self.update_info('请选择列表类型Key并进入内部', False)
 
         except Exception as e:
             err_msg = f'生成失败:{e!s}'
