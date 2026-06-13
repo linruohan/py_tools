@@ -136,7 +136,7 @@ class CPUModel:
         name: CPU 模型名称 (如 core2duo, IvyBridge)
         fallback: 回退策略 (allow, forbid)
         vendor: CPU 厂商名称 (如 Intel, AMD)
-        vendor_id: CPU 厂商标识符 (12 字符,如 AuthenticAMD, GenuineIntel)
+        vendor_id: CPU 厂商标识符 (12 字符，如 AuthenticAMD, GenuineIntel)
     """
 
     name: str
@@ -155,7 +155,7 @@ class CPUModel:
         )
 
     def to_dict(self) -> dict[str, Any]:
-        """转换为字典,过滤掉None值"""
+        """转换为字典，过滤掉None值"""
         result = {'name': self.name}
 
         if self.fallback is not None:
@@ -222,12 +222,12 @@ class CPU:
             # 这里可以根据需要实现 NUMA 从字典创建的逻辑
             pass
 
-        # 处理mode:只有当mode存在且不为None(包括字符串'None')时才转换为CpuMode
+        # 处理mode：只有当mode存在且不为None（包括字符串'None'）时才转换为CpuMode
         mode_value = data.get('mode')
         if mode_value is not None and mode_value != 'None' and mode_value != '':
             mode = CpuMode(mode_value)
         else:
-            # UI 选中 "None" 时,mode 设为 None(不输出到 XML)
+            # UI 选中 "None" 时，mode 设为 None（不输出到 XML）
             mode = None
 
         return cls(
@@ -247,7 +247,7 @@ class CPU:
         )
 
     def to_dict(self) -> dict[str, Any]:
-        """转换为字典,过滤掉None值"""
+        """转换为字典，过滤掉None值"""
         result = {
             'model': self.model.to_dict() if self.model else None,
             'topology': self.topology.to_dict() if self.topology else None,
@@ -1224,7 +1224,7 @@ class Domain:
             if cpu_features:
                 cpu_model_data['features'] = cpu_features
         else:
-            # 如果没有 cpu 键,使用默认值
+            # 如果没有 cpu 键，使用默认值
             cpu_model_data = {}
 
         # 兼容旧的 cpu_model_topology 键
@@ -1512,7 +1512,7 @@ class Domain:
                     'cores': str(self.cpu.topology.cores),
                     'threads': str(self.cpu.topology.threads),
                 }
-                # 添加 dies 和 clusters 属性(如果存在)
+                # 添加 dies 和 clusters 属性（如果存在）
                 if hasattr(self.cpu.topology, 'dies') and self.cpu.topology.dies:
                     topology_attrib['dies'] = str(self.cpu.topology.dies)
                 if hasattr(self.cpu.topology, 'clusters') and self.cpu.topology.clusters:
@@ -1526,7 +1526,7 @@ class Domain:
                     feat_elem.set('name', feature['name'])
                     if 'policy' in feature:
                         feat_elem.set('policy', feature['policy'])
-            # 处理 features 列表(兼容旧格式)
+            # 处理 features 列表（兼容旧格式）
             elif hasattr(self.cpu, 'features') and self.cpu.features:
                 for feature in self.cpu.features:
                     feat_elem = ET.SubElement(cpu_elem, 'feature')

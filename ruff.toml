@@ -21,6 +21,8 @@ ignore = [
    "RUF001",
    "RUF002",
    "RUF003",
+   "UP042",
+   "UP047",
 ] # 忽略行长度限制、中文标点误报、StrEnum和泛型类型参数兼容性
 fixable = ["ALL"] # 允许自动修复所有规则
 unfixable = [] # 禁止修复的规则

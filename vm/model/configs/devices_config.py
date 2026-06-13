@@ -9,7 +9,6 @@ from ..devices.console import Console
 from ..devices.controller import Controller
 from ..devices.crypto import Crypto
 from ..devices.disk import Disk
-from ..devices.filesystem import Filesystem
 from ..devices.graphics import Graphics
 from ..devices.hostdev import Hostdev
 from ..devices.hub import Hub
@@ -64,7 +63,7 @@ class DevicesConfig:
     crypto: list[Crypto] = field(default_factory=list)
     pstore: list[Pstore] = field(default_factory=list)
     panic: list[Panic] = field(default_factory=list)
-    filesystem: list[Filesystem] = field(default_factory=list)
+    filesystem: list[dict[str, Any]] = field(default_factory=list)
     nvram: list[Nvram] = field(default_factory=list)
     memory: list[Memory] = field(default_factory=list)
 
@@ -309,7 +308,11 @@ class DevicesConfig:
     def _convert_disk_dict(self, d: Any) -> Disk:
         """转换磁盘配置字典,将模块格式转换为 Disk 格式."""
         if not isinstance(d, dict):
-            return d
+            # 如果已经是 Disk 对象,直接返回
+            if isinstance(d, Disk):
+                return d
+            # 否则返回默认 Disk
+            return Disk()
         # 将模块格式转换为 Disk.from_dict 期望的格式
         # 注意:type 字段在 Disk 类中表示磁盘格式(qcow2, raw 等),不是磁盘源类型(file, block 等)
         # driver_type 或 format 才是磁盘格式
@@ -330,10 +333,10 @@ class DevicesConfig:
             }
         )
 
-    def _convert_filesystem_dict(self, d: Any) -> dict | Filesystem:
+    def _convert_filesystem_dict(self, d: Any) -> dict[str, Any]:
         """转换 filesystem 配置字典,将模块格式转换为 Filesystem 格式."""
         if not isinstance(d, dict):
-            return d
+            return {}
         # 直接返回 xml_generator 期望的扁平格式
         # 不经过 Filesystem 类,避免嵌套字典问题
         return {
