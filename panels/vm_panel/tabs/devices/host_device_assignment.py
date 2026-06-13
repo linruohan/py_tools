@@ -257,7 +257,7 @@ class ACPIInitiatorsTab(BaseConfigTab):
             row=2, column=0, padx=10, pady=5, sticky='w'
         )
         self.acpi_path = ctk.CTkEntry(
-            frame, placeholder_text='\_SB.PCI0.I2C0', width=200, font=CTK_FONT_SMALL
+            frame, placeholder_text=r'\_SB.PCI0.I2C0', width=200, font=CTK_FONT_SMALL
         )
         self.acpi_path.grid(row=2, column=1, padx=5, pady=5, sticky='w')
         self.acpi_path.bind('<KeyRelease>', lambda e: self._trigger_change())

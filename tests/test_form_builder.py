@@ -1,10 +1,10 @@
 """测试表单构建器组件."""
 
 import os
-import pytest
-import customtkinter as ctk
+import sys
 
-from components.form_builder import FormBuilder
+sys.path.insert(0, 'D:\\codehub\\py_tools')
+
 
 # 检查是否在无显示器的 headless 环境中
 def is_headless():
@@ -12,22 +12,23 @@ def is_headless():
     # 检查常见 CI 环境变量
     ci_envs = ['CI', 'GITHUB_ACTIONS', 'GITLAB_CI', 'JENKINS_URL', 'BUILD_NUMBER']
     if any(os.environ.get(var) for var in ci_envs):
-        # 在 CI 环境中，使用更严格的检测
-        if os.name == 'nt':
-            try:
-                import ctypes
-                user32 = ctypes.windll.user32
-                return user32.GetSystemMetrics(0) == 0
-            except Exception:
-                return True
-        else:
-            return os.environ.get('DISPLAY') is None
-
-    # 检测 MSYS/Git Bash 环境（Windows 子系统不支持 tkinter 事件）
+        return True
+    # 检测 MSYS/Git Bash 环境
     if os.name == 'nt' and os.environ.get('MSYSTEM'):
         return True
-
     return False
+
+
+# 在 headless 环境中跳过整个模块
+if is_headless():
+    import pytest
+
+    pytest.skip("CI 环境无图形显示器", allow_module_level=True)
+
+import customtkinter as ctk  # noqa: E402
+import pytest  # noqa: E402
+
+from components.form_builder import FormBuilder  # noqa: E402
 
 SKIP_IF_HEADLESS = pytest.mark.skipif(
     is_headless(),
